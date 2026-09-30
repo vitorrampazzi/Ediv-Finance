@@ -40,6 +40,7 @@ export const config = Object.freeze({
   smtpUrl: process.env.SMTP_URL?.trim() || null,
   mailFrom: process.env.MAIL_FROM?.trim() || null,
   trustProxy: process.env.TRUST_PROXY === 'true',
+  brapiApiKey: process.env.BRAPI_API_KEY?.trim() || null,
   sessionCookieName: isProduction ? '__Host-evorix_session' : 'evorix_session',
   sessionHours: 8,
 });

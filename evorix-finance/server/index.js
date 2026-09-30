@@ -1,9 +1,16 @@
 import { app } from './app.js';
 import { config } from './config.js';
-import { pool, runMigrations } from './database.js';
+import { createDatabasePool, pool, runMigrations } from './database.js';
+
+const migrationPool = config.mysqlMigrationUser && config.mysqlMigrationPassword
+  ? createDatabasePool({ user: config.mysqlMigrationUser, password: config.mysqlMigrationPassword })
+  : pool;
 
 try {
-  if (!config.isProduction) await runMigrations();
+  if (!config.isProduction) {
+    await runMigrations(migrationPool);
+    if (migrationPool !== pool) await migrationPool.end();
+  }
   else await pool.execute('SELECT id FROM users LIMIT 0');
 
   const server = app.listen(config.port, config.host, () => {
@@ -31,6 +38,7 @@ try {
   process.once('SIGTERM', () => shutdown('SIGTERM'));
 } catch (error) {
   console.error('API startup failed:', error.code || error.message || 'unknown error');
+  if (migrationPool !== pool) await migrationPool.end();
   await pool.end();
   process.exitCode = 1;
 }

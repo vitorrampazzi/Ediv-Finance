@@ -16,7 +16,7 @@ function AuthShell({ title, description, children }: { title: string; descriptio
         <p className="mt-2 text-sm leading-relaxed text-evo-textSec">{description}</p>
         {children}
         <p className="mt-6 border-t border-evo-border pt-4 text-xs leading-relaxed text-evo-textSec">
-          Esta versão oferece apenas acesso à demonstração do painel. Não conecta corretoras, não movimenta dinheiro e não deve receber senhas de outros serviços.
+          Esta versão permite salvar operações manuais de carteira, mas não conecta corretoras nem movimenta dinheiro. As cotações podem ter atraso; nunca use a senha de outro serviço.
         </p>
       </section>
     </main>
@@ -38,7 +38,7 @@ export function LoginPage() {
   const [resendUrl, setResendUrl] = useState('');
   const [busy, setBusy] = useState(false);
   const [resending, setResending] = useState(false);
-  const destination = (location.state as { from?: string } | null)?.from || '/';
+  const destination = (location.state as { from?: string } | null)?.from || '/app';
 
   useEffect(() => { if (user) navigate(destination, { replace: true }); }, [user, destination, navigate]);
 
@@ -100,7 +100,7 @@ export function RegisterPage() {
   const [verificationUrl, setVerificationUrl] = useState('');
   const [busy, setBusy] = useState(false);
 
-  useEffect(() => { if (user) navigate('/', { replace: true }); }, [user, navigate]);
+  useEffect(() => { if (user) navigate('/app', { replace: true }); }, [user, navigate]);
 
   const submit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault(); setError(''); setMessage(''); setVerificationUrl(''); setBusy(true);

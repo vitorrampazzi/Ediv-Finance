@@ -3,6 +3,9 @@ import helmet from 'helmet';
 import { authRouter } from './auth.js';
 import { config } from './config.js';
 import { pool } from './database.js';
+import { portfolioRouter } from './portfolio.js';
+import { favoritesRouter } from './favorites.js';
+import { marketRouter } from './market.js';
 
 const app = express();
 const safeMethods = new Set(['GET', 'HEAD', 'OPTIONS']);
@@ -32,6 +35,9 @@ app.get('/api/health', async (_req, res) => {
 });
 
 app.use('/api/auth', authRouter);
+app.use('/api/market', marketRouter);
+app.use('/api/portfolio', portfolioRouter);
+app.use('/api/favorites', favoritesRouter);
 
 app.use('/api', (_req, res) => res.status(404).json({ error: 'Rota de API não encontrada.' }));
 

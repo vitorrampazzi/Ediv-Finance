@@ -12,6 +12,7 @@ import { FavoritesProvider } from './context/FavoritesProvider';
 import { AuthProvider } from './context/AuthProvider';
 import { RequireAuth } from './components/RequireAuth';
 import { LoginPage, RegisterPage, VerifyEmailPage } from './pages/Autenticacao';
+import { Home } from './pages/Home';
 
 function App() {
   return (
@@ -19,11 +20,12 @@ function App() {
       <AuthProvider>
         <FavoritesProvider>
           <Routes>
+            <Route path="/" element={<Home />} />
             <Route path="/entrar" element={<LoginPage />} />
             <Route path="/cadastro" element={<RegisterPage />} />
             <Route path="/verificar" element={<VerifyEmailPage />} />
             <Route element={<RequireAuth />}>
-              <Route path="/" element={<DashboardLayout />}>
+              <Route path="/app" element={<DashboardLayout />}>
                 <Route index element={<Dashboard />} />
                 <Route path="analises" element={<Analises />} />
                 <Route path="carteira" element={<Carteira />} />

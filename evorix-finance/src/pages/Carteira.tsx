@@ -1,95 +1,146 @@
-// src/pages/Carteira.tsx
-import { ArrowUpRight, ArrowDownRight } from 'lucide-react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import type { FormEvent } from 'react';
+import { ArrowDownRight, ArrowUpRight, CircleAlert, Plus, RefreshCw } from 'lucide-react';
 import { Card } from '../components/Card';
 import { OrbitCoins } from '../components/OrbitCoins';
-import { mockPortfolio } from '../data/mockData';
+import { apiRequest } from '../lib/api';
+
+type AssetType = 'ACAO' | 'FII' | 'ETF' | 'RENDA_FIXA' | 'CRYPTO' | 'OUTRO';
+type Quote = { source: string; marketTime: string | null; stale?: boolean; unavailable?: boolean };
+type Position = { ticker: string; assetName: string; assetType: AssetType; quantity: string; costBasis: string; averageCost: string; currentPrice: string | null; marketValue: string | null; unrealizedPnl: string | null; quote: Quote | null };
+type PortfolioTransaction = { id: string; side: 'BUY' | 'SELL'; ticker: string; assetName: string; assetType: AssetType; quantity: string; unitPrice: string; fees: string; tradedAt: string };
+type PortfolioData = { positions: Position[]; transactions: PortfolioTransaction[]; transactionHistoryTruncated: boolean };
+
+const typeLabels: Record<AssetType, string> = { ACAO: 'Ações', FII: 'FIIs', ETF: 'ETFs', RENDA_FIXA: 'Renda fixa', CRYPTO: 'Criptoativos', OUTRO: 'Outro' };
+const integerFormat = new Intl.NumberFormat('pt-BR', { maximumFractionDigits: 0 });
+const fetchPortfolio = () => apiRequest<PortfolioData>('/api/portfolio');
+const localToday = () => {
+  const date = new Date();
+  date.setMinutes(date.getMinutes() - date.getTimezoneOffset());
+  return date.toISOString().slice(0, 10);
+};
+
+function formatMoney(value: string) {
+  const [whole, fraction = ''] = value.split('.');
+  const cents = (BigInt(whole) * 100_000_000n + BigInt(fraction.padEnd(8, '0')) + 500_000n) / 1_000_000n;
+  return `R$ ${integerFormat.format(cents / 100n)},${String(cents % 100n).padStart(2, '0')}`;
+}
+
+function formatQuantity(value: string) {
+  const [whole, fraction = ''] = value.split('.');
+  const decimals = fraction.replace(/0+$/, '');
+  return `${integerFormat.format(BigInt(whole))}${decimals ? `,${decimals}` : ''}`;
+}
+
+function sumMoney(values: string[]) {
+  const units = values.reduce((sum, value) => {
+    const [whole, fraction = ''] = value.split('.');
+    return sum + BigInt(whole) * 100_000_000n + BigInt(fraction.padEnd(8, '0'));
+  }, 0n);
+  return `${units / 100_000_000n}.${String(units % 100_000_000n).padStart(8, '0')}`;
+}
+
+function formatDate(value: string) {
+  return new Date(value.replace(' ', 'T') + (value.endsWith('Z') ? '' : 'Z')).toLocaleDateString('pt-BR');
+}
 
 export const Carteira = () => {
-  const posicoes = [
-    { ticker: 'PETR4', nome: 'Petrobras PN', tipo: 'Ações', qtd: 200, precoMedio: 32.50, precoAtual: 38.45 },
-    { ticker: 'ITUB4', nome: 'Itaú Unibanco', tipo: 'Ações', qtd: 150, precoMedio: 29.10, precoAtual: 34.12 },
-    { ticker: 'VALE3', nome: 'Vale ON', tipo: 'Ações', qtd: 100, precoMedio: 68.50, precoAtual: 62.30 },
-    { ticker: 'BTLG11', nome: 'BTG Logística', tipo: 'FIIs', qtd: 85, precoMedio: 102.00, precoAtual: 105.50 },
-    { ticker: 'IVVB11', nome: 'iShares S&P 500', tipo: 'ETFs', qtd: 30, precoMedio: 260.00, precoAtual: 288.90 },
-  ];
+  const [portfolio, setPortfolio] = useState<PortfolioData>({ positions: [], transactions: [], transactionHistoryTruncated: false });
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState('');
+  const [message, setMessage] = useState('');
+  const [form, setForm] = useState({ side: 'BUY' as 'BUY' | 'SELL', ticker: '', assetName: '', assetType: 'ACAO' as AssetType, quantity: '', unitPrice: '', fees: '0', tradedAt: localToday() });
+
+  const loadPortfolio = useCallback(async () => {
+    setError('');
+    try {
+      setPortfolio(await fetchPortfolio());
+    } catch (reason) {
+      setError(reason instanceof Error ? reason.message : 'Não foi possível carregar a carteira.');
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    let active = true;
+    fetchPortfolio()
+      .then(result => { if (active) setPortfolio(result); })
+      .catch(reason => { if (active) setError(reason instanceof Error ? reason.message : 'Não foi possível carregar a carteira.'); })
+      .finally(() => { if (active) setLoading(false); });
+    return () => { active = false; };
+  }, []);
+
+  const investedTotal = useMemo(() => sumMoney(portfolio.positions.map(position => position.costBasis)), [portfolio.positions]);
+  const quotedPositions = useMemo(() => portfolio.positions.filter(position => position.marketValue !== null), [portfolio.positions]);
+  const marketValue = useMemo(() => sumMoney(quotedPositions.map(position => position.marketValue!)), [quotedPositions]);
+
+  const submit = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setSaving(true); setError(''); setMessage('');
+    try {
+      await apiRequest('/api/portfolio/transactions', {
+        method: 'POST',
+        body: JSON.stringify({ ...form, ticker: form.ticker.toUpperCase(), fees: form.fees || '0' }),
+      });
+      setMessage('Operação registrada na sua carteira.');
+      setForm(current => ({ ...current, ticker: '', assetName: '', quantity: '', unitPrice: '', fees: '0' }));
+      await loadPortfolio();
+    } catch (reason) {
+      setError(reason instanceof Error ? reason.message : 'Não foi possível registrar a operação.');
+    } finally { setSaving(false); }
+  };
 
   return (
-    <div className="space-y-6 max-w-7xl mx-auto">
-      {/* Header com botão de Adicionar */}
-      <div className="flex items-center justify-between bg-evo-card border border-evo-border p-6 rounded-xl shadow-lg backdrop-blur-sm relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-r from-evo-green/5 to-transparent pointer-events-none"></div>
-        <div className="relative z-10 flex flex-col md:flex-row md:items-end justify-between gap-4 w-full">
-          <div>
-            <h1 className="text-2xl font-bold text-evo-textMain tracking-tight">Minha Carteira</h1>
-            <p className="text-evo-textSec mt-1">Exemplo de composição de carteira; nenhuma conta ou cotação está conectada.</p>
-          </div>
-          <span className="inline-flex min-h-10 items-center rounded-lg border border-evo-border px-3 text-xs text-evo-textSec">Cadastro indisponível nesta demonstração</span>
+    <div className="mx-auto max-w-7xl space-y-6">
+      <div className="relative flex items-center justify-between overflow-hidden rounded-xl border border-evo-border bg-evo-card p-6 shadow-lg">
+        <div className="absolute inset-0 bg-gradient-to-r from-evo-green/5 to-transparent pointer-events-none" />
+        <div className="relative z-10">
+          <h1 className="text-2xl font-bold tracking-tight text-evo-textMain">Minha Carteira</h1>
+          <p className="mt-1 text-evo-textSec">Registre manualmente compras e vendas e acompanhe uma estimativa pelas cotações disponíveis.</p>
         </div>
         <OrbitCoins variant="portfolio" size="sm" />
       </div>
 
-      {/* Resumo Rápido */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        {Object.entries(mockPortfolio.distribution).map(([key, value]) => (
-          <Card key={key} glow="none" className="p-4 flex items-center justify-between">
-            <span className="text-evo-textSec capitalize font-medium">{key.replace('rendaFixa', 'Renda Fixa')}</span>
-            <span className="text-lg font-bold text-evo-textMain font-numbers">{value}%</span>
-          </Card>
-        ))}
+      {error && <p role="alert" className="flex items-start gap-2 rounded-lg border border-evo-red/20 bg-evo-red/5 p-3 text-sm text-evo-red"><CircleAlert size={17} className="mt-0.5 shrink-0" />{error}</p>}
+      {message && <p role="status" className="rounded-lg border border-evo-green/20 bg-evo-green/5 p-3 text-sm text-evo-green">{message}</p>}
+
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <Card glow="none" className="p-4"><p className="text-sm text-evo-textSec">Ativos na carteira</p><p className="mt-2 text-2xl font-bold text-evo-textMain">{portfolio.positions.length}</p></Card>
+        <Card glow="none" className="p-4"><p className="text-sm text-evo-textSec">Custo registrado</p><p className="mt-2 text-2xl font-bold text-evo-textMain">{formatMoney(String(investedTotal))}</p></Card>
+        <Card glow="none" className="p-4"><p className="text-sm text-evo-textSec">Valor de mercado estimado</p><p className="mt-2 text-2xl font-bold text-evo-textMain">{formatMoney(String(marketValue))}</p><p className="mt-1 text-xs text-evo-textSec">{quotedPositions.length} de {portfolio.positions.length} posições cotadas</p></Card>
+        <Card glow="none" className="flex items-center justify-between p-4"><div><p className="text-sm text-evo-textSec">Operações recentes</p><p className="mt-2 text-2xl font-bold text-evo-textMain">{portfolio.transactions.length}</p></div><button type="button" onClick={() => void loadPortfolio()} aria-label="Atualizar carteira" className="rounded-lg p-2 text-evo-textSec hover:bg-white/5 hover:text-evo-textMain"><RefreshCw size={18} /></button></Card>
       </div>
 
-      {/* Tabela de Posições */}
-      <Card glow="none" className="overflow-hidden p-0">
-        <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse">
-            <caption className="sr-only">Posições de investimento fictícias para demonstração da interface</caption>
-            <thead>
-              <tr className="bg-white/[0.02] border-b border-white/5 text-evo-textSec text-xs uppercase tracking-wider">
-                <th scope="col" className="p-4 font-medium">Ativo</th>
-                <th scope="col" className="p-4 font-medium text-right">Qtd</th>
-                <th scope="col" className="p-4 font-medium text-right">Preço Médio</th>
-                <th scope="col" className="p-4 font-medium text-right">Preço Atual</th>
-                <th scope="col" className="p-4 font-medium text-right">Total Investido</th>
-                <th scope="col" className="p-4 font-medium text-right">Saldo Atual</th>
-                <th scope="col" className="p-4 font-medium text-right">Lucro / Prejuízo</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-white/5">
-              {posicoes.map((ativo) => {
-                const totalInvestido = ativo.qtd * ativo.precoMedio;
-                const saldoAtual = ativo.qtd * ativo.precoAtual;
-                const lucro = saldoAtual - totalInvestido;
-                const rentabilidade = (lucro / totalInvestido) * 100;
-                const isPositivo = lucro >= 0;
+      <Card glow="none" className="space-y-4">
+        <div><h2 className="text-lg font-semibold text-evo-textMain">Registrar operação</h2><p className="mt-1 text-sm text-evo-textSec">Os valores são anotações pessoais; não enviamos ordens à corretora.</p></div>
+        <form onSubmit={submit} className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <label className="text-sm text-evo-textSec">Operação<select value={form.side} onChange={event => setForm({ ...form, side: event.target.value as 'BUY' | 'SELL' })} className="mt-1 block min-h-11 w-full rounded-lg border border-evo-border bg-evo-bgMain px-3 text-evo-textMain"><option value="BUY">Compra</option><option value="SELL">Venda</option></select></label>
+          <label className="text-sm text-evo-textSec">Ticker<input required maxLength={16} pattern="[A-Za-z0-9.-]+" value={form.ticker} onChange={event => setForm({ ...form, ticker: event.target.value.toUpperCase() })} placeholder="Ex.: PETR4" className="mt-1 block min-h-11 w-full rounded-lg border border-evo-border bg-evo-bgMain px-3 text-evo-textMain" /></label>
+          <label className="text-sm text-evo-textSec">Nome do ativo<input required maxLength={120} value={form.assetName} onChange={event => setForm({ ...form, assetName: event.target.value })} placeholder="Nome para identificar" className="mt-1 block min-h-11 w-full rounded-lg border border-evo-border bg-evo-bgMain px-3 text-evo-textMain" /></label>
+          <label className="text-sm text-evo-textSec">Classe<select value={form.assetType} onChange={event => setForm({ ...form, assetType: event.target.value as AssetType })} className="mt-1 block min-h-11 w-full rounded-lg border border-evo-border bg-evo-bgMain px-3 text-evo-textMain">{Object.entries(typeLabels).map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select></label>
+          <label className="text-sm text-evo-textSec">Quantidade<input required inputMode="decimal" pattern="[0-9]+([.,][0-9]{1,8})?" value={form.quantity} onChange={event => setForm({ ...form, quantity: event.target.value.replace(',', '.') })} placeholder="Ex.: 10" className="mt-1 block min-h-11 w-full rounded-lg border border-evo-border bg-evo-bgMain px-3 text-evo-textMain" /></label>
+          <label className="text-sm text-evo-textSec">Preço unitário (R$)<input required inputMode="decimal" pattern="[0-9]+([.,][0-9]{1,8})?" value={form.unitPrice} onChange={event => setForm({ ...form, unitPrice: event.target.value.replace(',', '.') })} placeholder="Ex.: 25,50" className="mt-1 block min-h-11 w-full rounded-lg border border-evo-border bg-evo-bgMain px-3 text-evo-textMain" /></label>
+          <label className="text-sm text-evo-textSec">Taxas (R$)<input inputMode="decimal" pattern="[0-9]+([.,][0-9]{1,8})?" value={form.fees} onChange={event => setForm({ ...form, fees: event.target.value.replace(',', '.') })} className="mt-1 block min-h-11 w-full rounded-lg border border-evo-border bg-evo-bgMain px-3 text-evo-textMain" /></label>
+          <label className="text-sm text-evo-textSec">Data<input type="date" required value={form.tradedAt} onChange={event => setForm({ ...form, tradedAt: event.target.value })} className="mt-1 block min-h-11 w-full rounded-lg border border-evo-border bg-evo-bgMain px-3 text-evo-textMain" /></label>
+          <div className="sm:col-span-2 lg:col-span-4"><button type="submit" disabled={saving} className="inline-flex min-h-11 items-center gap-2 rounded-lg bg-evo-blueMain px-5 font-semibold text-white hover:bg-evo-blueSec disabled:opacity-60"><Plus size={17} />{saving ? 'Salvando…' : 'Adicionar operação'}</button></div>
+        </form>
+      </Card>
 
-                return (
-                  <tr key={ativo.ticker} className="hover:bg-white/[0.02] transition-colors group">
-                    <td className="p-4">
-                      <div className="flex flex-col">
-                        <span className="font-bold text-evo-textMain group-hover:text-evo-blueMain transition-colors">{ativo.ticker}</span>
-                        <span className="text-xs text-evo-textSec">{ativo.tipo}</span>
-                      </div>
-                    </td>
-                    <td className="p-4 text-right font-medium text-evo-textMain font-numbers">{ativo.qtd}</td>
-                    <td className="p-4 text-right text-evo-textSec font-numbers">R$ {ativo.precoMedio.toFixed(2).replace('.', ',')}</td>
-                    <td className="p-4 text-right text-evo-textSec font-numbers">R$ {ativo.precoAtual.toFixed(2).replace('.', ',')}</td>
-                    <td className="p-4 text-right text-evo-textSec font-numbers">R$ {totalInvestido.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
-                    <td className="p-4 text-right font-medium text-evo-textMain font-numbers">R$ {saldoAtual.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
-                    <td className="p-4 text-right">
-                      <div className={`flex flex-col items-end ${isPositivo ? 'text-evo-green' : 'text-evo-red'}`}>
-                        <span className="font-bold flex items-center gap-1 font-numbers">
-                          {isPositivo ? <ArrowUpRight size={16} /> : <ArrowDownRight size={16} />}
-                          R$ {Math.abs(lucro).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-                        </span>
-                        <span className="text-xs font-medium font-numbers">{isPositivo ? '+' : ''}{rentabilidade.toFixed(2)}%</span>
-                      </div>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
+      <Card glow="none" className="overflow-hidden p-0">
+        <div className="border-b border-evo-border p-5"><h2 className="font-semibold text-evo-textMain">Posições e preços estimados</h2><p className="mt-1 text-sm text-evo-textSec">A estimativa usa a cotação mais recente recebida e pode ter atraso. Custos e quantidades vêm das operações que você informou.</p></div>
+        <div className="overflow-x-auto"><table className="w-full text-left"><caption className="sr-only">Posições calculadas a partir de operações registradas e cotações disponíveis</caption><thead><tr className="border-b border-white/5 bg-white/[0.02] text-xs uppercase tracking-wider text-evo-textSec"><th scope="col" className="p-4">Ativo</th><th scope="col" className="p-4 text-right">Quantidade</th><th scope="col" className="p-4 text-right">Preço médio</th><th scope="col" className="p-4 text-right">Último preço</th><th scope="col" className="p-4 text-right">Valor de mercado</th><th scope="col" className="p-4 text-right">Variação estimada</th></tr></thead><tbody className="divide-y divide-white/5">
+          {loading ? <tr><td colSpan={6} className="p-8 text-center text-sm text-evo-textSec">Carregando carteira…</td></tr> : portfolio.positions.length === 0 ? <tr><td colSpan={6} className="p-8 text-center text-sm text-evo-textSec">Sua carteira ainda não tem operações registradas.</td></tr> : portfolio.positions.map(position => <tr key={position.ticker}><th scope="row" className="p-4 font-medium text-evo-textMain"><span>{position.ticker}</span><span className="block text-xs font-normal text-evo-textSec">{position.assetName} · {typeLabels[position.assetType]}</span></th><td className="p-4 text-right text-evo-textMain">{formatQuantity(position.quantity)}</td><td className="p-4 text-right text-evo-textSec">{formatMoney(position.averageCost)}</td><td className="p-4 text-right text-evo-textSec">{position.currentPrice ? formatMoney(position.currentPrice) : 'Indisponível'}</td><td className="p-4 text-right font-medium text-evo-textMain">{position.marketValue ? formatMoney(position.marketValue) : '—'}</td><td className={`p-4 text-right ${Number(position.unrealizedPnl) >= 0 ? 'text-evo-green' : 'text-evo-red'}`}>{position.unrealizedPnl ? formatMoney(position.unrealizedPnl) : '—'}{position.quote?.stale ? <span className="block text-[10px] text-yellow-300">cotação em cache ou indisponível</span> : null}</td></tr>)}
+        </tbody></table></div>
+      </Card>
+
+      <Card glow="none" className="overflow-hidden p-0">
+        <div className="border-b border-evo-border p-5"><h2 className="font-semibold text-evo-textMain">Histórico de operações</h2></div>
+        <div className="overflow-x-auto"><table className="w-full text-left"><caption className="sr-only">Últimas cem operações cadastradas</caption><thead><tr className="border-b border-white/5 bg-white/[0.02] text-xs uppercase tracking-wider text-evo-textSec"><th scope="col" className="p-4">Tipo</th><th scope="col" className="p-4">Ativo</th><th scope="col" className="p-4 text-right">Quantidade</th><th scope="col" className="p-4 text-right">Preço</th><th scope="col" className="p-4 text-right">Data</th></tr></thead><tbody className="divide-y divide-white/5">
+          {portfolio.transactions.length === 0 ? <tr><td colSpan={5} className="p-8 text-center text-sm text-evo-textSec">Nenhuma operação registrada.</td></tr> : portfolio.transactions.map(transaction => <tr key={transaction.id}><td className={`p-4 font-medium ${transaction.side === 'BUY' ? 'text-evo-green' : 'text-evo-red'}`}><span className="inline-flex items-center gap-1">{transaction.side === 'BUY' ? <ArrowDownRight size={15} /> : <ArrowUpRight size={15} />}{transaction.side === 'BUY' ? 'Compra' : 'Venda'}</span></td><th scope="row" className="p-4 font-medium text-evo-textMain">{transaction.ticker}<span className="block text-xs font-normal text-evo-textSec">{transaction.assetName}</span></th><td className="p-4 text-right text-evo-textSec">{formatQuantity(transaction.quantity)}</td><td className="p-4 text-right text-evo-textSec">{formatMoney(transaction.unitPrice)}</td><td className="p-4 text-right text-evo-textSec">{formatDate(transaction.tradedAt)}</td></tr>)}
+        </tbody></table></div>
+        {portfolio.transactionHistoryTruncated && <p className="border-t border-evo-border p-4 text-xs text-evo-textSec">Exibindo as 100 operações mais recentes; todas são consideradas no cálculo das posições.</p>}
       </Card>
     </div>
   );

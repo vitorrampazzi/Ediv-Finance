@@ -1,24 +1,53 @@
 // src/pages/Configuracoes.tsx
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import type { ReactNode } from 'react';
 import { Card } from '../components/Card';
 import { Cpu, Shield, Bell, LockKeyhole } from 'lucide-react';
+import { apiRequest } from '../lib/api';
 
 export const Configuracoes = () => {
   const [abaAtiva, setAbaAtiva] = useState('motor');
 
   const [config, setConfig] = useState({
-    notifEmail: true,
+    notifEmail: false,
     notifWhatsapp: false,
     motorAggressiveness: 75,
   });
+  const [riskProfile, setRiskProfile] = useState<string | null>(null);
+  const [status, setStatus] = useState('');
+  const [erro, setErro] = useState('');
+
+  useEffect(() => {
+    apiRequest<{ riskProfile: string | null; emailNotifications: boolean; whatsappNotifications: boolean }>('/api/portfolio/preferences')
+      .then(preferences => {
+        setRiskProfile(preferences.riskProfile);
+        setConfig(current => ({ ...current, notifEmail: preferences.emailNotifications, notifWhatsapp: preferences.whatsappNotifications }));
+      })
+      .catch(reason => setErro(reason instanceof Error ? reason.message : 'Não foi possível carregar as preferências.'));
+  }, []);
+
+  const saveNotificationPreferences = async (notifEmail: boolean, notifWhatsapp: boolean) => {
+    setErro(''); setStatus('');
+    try {
+      await apiRequest('/api/portfolio/preferences', {
+        method: 'PUT',
+        body: JSON.stringify({ riskProfile, emailNotifications: notifEmail, whatsappNotifications: notifWhatsapp }),
+      });
+      setStatus('Preferências salvas. Esta versão ainda não envia notificações.');
+    } catch (reason) {
+      setErro(reason instanceof Error ? reason.message : 'Não foi possível salvar as preferências.');
+    }
+  };
 
   return (
     <div className="space-y-6 max-w-7xl mx-auto">
       <div>
         <h1 className="text-2xl font-bold text-evo-textMain tracking-tight">Configurações</h1>
-        <p className="text-evo-textSec mt-1">Preferências locais de uma demonstração, sem conexões externas.</p>
+        <p className="text-evo-textSec mt-1">Preferências salvas na sua conta. Recursos de integração externa ainda não estão conectados.</p>
       </div>
+
+      {erro && <p role="alert" className="rounded-lg border border-evo-red/20 bg-evo-red/5 p-3 text-sm text-evo-red">{erro}</p>}
+      {status && <p role="status" className="rounded-lg border border-evo-green/20 bg-evo-green/5 p-3 text-sm text-evo-green">{status}</p>}
 
       <div className="flex flex-wrap gap-2 border-b border-white/5 pb-4">
         <TabBtn ativo={abaAtiva === 'motor'} onClick={() => setAbaAtiva('motor')} icon={<Cpu size={16} />} text="Motor Quantitativo" />
@@ -70,7 +99,7 @@ export const Configuracoes = () => {
         <Card glow="none" className="space-y-4 max-w-3xl">
           <div className="border-b border-evo-border pb-3">
             <h3 className="text-lg font-semibold">Preferências de exemplo</h3>
-            <p className="mt-1 text-xs text-evo-textSec">As alterações duram apenas enquanto esta tela estiver aberta. Nenhuma mensagem é enviada.</p>
+            <p className="mt-1 text-xs text-evo-textSec">As preferências ficam salvas na conta. Nenhuma mensagem é enviada nesta versão.</p>
           </div>
 
           <div className="flex items-center justify-between py-2">
@@ -82,7 +111,7 @@ export const Configuracoes = () => {
               type="checkbox"
               aria-labelledby="email-notifications-label"
               checked={config.notifEmail}
-              onChange={(e) => setConfig({ ...config, notifEmail: e.target.checked })}
+              onChange={(e) => { const enabled = e.target.checked; setConfig(current => ({ ...current, notifEmail: enabled })); void saveNotificationPreferences(enabled, config.notifWhatsapp); }}
               className="w-5 h-5 accent-evo-blueMain cursor-pointer"
             />
           </div>
@@ -96,7 +125,7 @@ export const Configuracoes = () => {
               type="checkbox"
               aria-labelledby="whatsapp-notifications-label"
               checked={config.notifWhatsapp}
-              onChange={(e) => setConfig({ ...config, notifWhatsapp: e.target.checked })}
+              onChange={(e) => { const enabled = e.target.checked; setConfig(current => ({ ...current, notifWhatsapp: enabled })); void saveNotificationPreferences(config.notifEmail, enabled); }}
               className="w-5 h-5 accent-evo-blueMain cursor-pointer"
             />
           </div>

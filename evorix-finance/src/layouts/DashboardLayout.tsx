@@ -7,16 +7,16 @@ import { Link, NavLink, Outlet, useLocation, useNavigate } from 'react-router-do
 import { useAuth } from '../context/authContext';
 
 const navigation = [
-  { to: '/', label: 'Visão geral', shortLabel: 'Início', icon: LayoutDashboard, end: true },
-  { to: '/analises', label: 'Análises', shortLabel: 'Análises', icon: BarChart3, end: false },
-  { to: '/carteira', label: 'Minha carteira', shortLabel: 'Carteira', icon: Briefcase, end: false },
-  { to: '/favoritos', label: 'Favoritos', shortLabel: 'Favoritos', icon: Star, end: false },
+  { to: '/app', label: 'Visão geral', shortLabel: 'Início', icon: LayoutDashboard, end: true },
+  { to: '/app/analises', label: 'Análises', shortLabel: 'Análises', icon: BarChart3, end: false },
+  { to: '/app/carteira', label: 'Minha carteira', shortLabel: 'Carteira', icon: Briefcase, end: false },
+  { to: '/app/favoritos', label: 'Favoritos', shortLabel: 'Favoritos', icon: Star, end: false },
 ];
 
 const pageTitles: Record<string, string> = {
-  '/': 'Visão geral', '/analises': 'Análises', '/carteira': 'Minha carteira',
-  '/favoritos': 'Favoritos', '/assessoria': 'Assessoria', '/perfil': 'Meu perfil',
-  '/config': 'Configurações',
+  '/app': 'Visão geral', '/app/analises': 'Análises', '/app/carteira': 'Minha carteira',
+  '/app/favoritos': 'Favoritos', '/app/assessoria': 'Assessoria', '/app/perfil': 'Meu perfil',
+  '/app/config': 'Configurações',
 };
 
 function NavigationLink({ to, label, icon: Icon, end = false, collapsed = false }: {
@@ -137,8 +137,8 @@ function ProfileMenu({ name, email, onLogout }: { name: string; email: string; o
             <p className="mt-1 break-all text-xs text-evo-textSec">{email}</p>
           </div>
           <div className="p-2">
-            <Link to="/perfil" onClick={() => setOpen(false)} className="flex min-h-10 items-center gap-3 rounded-lg px-3 text-sm text-evo-textSec hover:bg-white/[0.04] hover:text-evo-textMain"><CircleUserRound size={16} aria-hidden="true" /> Perfil</Link>
-            <Link to="/config" onClick={() => setOpen(false)} className="flex min-h-10 items-center gap-3 rounded-lg px-3 text-sm text-evo-textSec hover:bg-white/[0.04] hover:text-evo-textMain"><Settings size={16} aria-hidden="true" /> Configurações</Link>
+            <Link to="/app/perfil" onClick={() => setOpen(false)} className="flex min-h-10 items-center gap-3 rounded-lg px-3 text-sm text-evo-textSec hover:bg-white/[0.04] hover:text-evo-textMain"><CircleUserRound size={16} aria-hidden="true" /> Perfil</Link>
+            <Link to="/app/config" onClick={() => setOpen(false)} className="flex min-h-10 items-center gap-3 rounded-lg px-3 text-sm text-evo-textSec hover:bg-white/[0.04] hover:text-evo-textMain"><Settings size={16} aria-hidden="true" /> Configurações</Link>
             {logoutError && <p role="alert" className="px-3 py-2 text-xs text-evo-red">{logoutError}</p>}
             <button type="button" onClick={async () => {
               setLogoutError('');
@@ -164,7 +164,7 @@ export const DashboardLayout = () => {
     <div className="flex min-h-screen bg-evo-bgMain font-sans text-evo-textMain">
       <a href="#conteudo" className="sr-only z-50 rounded bg-evo-blueMain px-4 py-2 text-white focus:not-sr-only focus:fixed focus:left-4 focus:top-4">Pular para o conteúdo</a>
       <aside className={`hidden shrink-0 border-r border-evo-border bg-evo-bgSec transition-[width] duration-200 md:flex md:flex-col ${collapsed ? 'w-20' : 'w-64'}`}>
-        <Link to="/" aria-label="Evorix Finance, início" className={`flex min-h-20 items-center px-5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-inset focus-visible:outline-evo-blueMain ${collapsed ? 'justify-center' : ''}`}>
+        <Link to="/app" aria-label="Evorix Finance, visão geral" className={`flex min-h-20 items-center px-5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-inset focus-visible:outline-evo-blueMain ${collapsed ? 'justify-center' : ''}`}>
           <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-evo-blueMain to-evo-green text-sm font-bold text-white">E</span>
           {!collapsed && <span className="ml-3 text-base font-bold tracking-tight">Evorix Finance</span>}
         </Link>
@@ -175,7 +175,7 @@ export const DashboardLayout = () => {
           {navigation.map(item => <NavigationLink key={item.to} {...item} collapsed={collapsed} />)}
         </nav>
         <div className="border-t border-evo-border p-3">
-          <Link to="/assessoria" title={collapsed ? 'Assessoria' : undefined} className={`flex min-h-11 items-center gap-3 rounded-lg px-3 text-sm text-evo-textSec transition hover:bg-evo-card hover:text-evo-textMain focus-visible:outline focus-visible:outline-2 focus-visible:outline-evo-blueMain ${collapsed ? 'justify-center' : ''}`}>
+          <Link to="/app/assessoria" title={collapsed ? 'Assessoria' : undefined} className={`flex min-h-11 items-center gap-3 rounded-lg px-3 text-sm text-evo-textSec transition hover:bg-evo-card hover:text-evo-textMain focus-visible:outline focus-visible:outline-2 focus-visible:outline-evo-blueMain ${collapsed ? 'justify-center' : ''}`}>
             <Headset size={20} aria-hidden="true" />{!collapsed && <span>Assessoria</span>}
           </Link>
         </div>
@@ -188,7 +188,7 @@ export const DashboardLayout = () => {
             <h1 className="truncate text-base font-semibold text-evo-textMain md:text-xl">{title}</h1>
           </div>
           <div className="flex shrink-0 items-center gap-2 md:gap-4">
-            <span className="hidden rounded-full border border-yellow-500/20 bg-yellow-500/10 px-3 py-1 text-xs font-medium text-yellow-300 sm:inline-flex">Dados de demonstração</span>
+            <span className="hidden rounded-full border border-evo-blueMain/20 bg-evo-blueMain/10 px-3 py-1 text-xs font-medium text-evo-blueMain sm:inline-flex">Cotações com atraso</span>
             <NotificationDropdown />
             {user && <ProfileMenu name={user.name} email={user.email} onLogout={logout} />}
           </div>
@@ -197,13 +197,13 @@ export const DashboardLayout = () => {
         <main id="conteudo" className="w-full flex-1 px-4 py-5 pb-24 md:px-8 md:py-8">
           <Outlet />
           <footer className="mx-auto mt-10 max-w-7xl border-t border-evo-border pt-4 text-xs leading-relaxed text-evo-textSec">
-            Demonstração com dados fictícios. Não exibe cotações em tempo real, não executa operações e não constitui recomendação de investimento.
+            Cotações podem ter atraso ou indisponibilidade. As operações são registros pessoais, sem envio a corretoras. O conteúdo não constitui recomendação de investimento.
           </footer>
         </main>
       </div>
 
       <nav aria-label="Navegação móvel" className="fixed inset-x-0 bottom-0 z-30 grid grid-cols-5 border-t border-evo-border bg-evo-bgSec/95 px-1 pb-[env(safe-area-inset-bottom)] pt-1 backdrop-blur md:hidden">
-        {[...navigation.map(item => ({ ...item })), { to: '/assessoria', shortLabel: 'Assessoria', icon: Headset, end: false }].map(({ to, shortLabel, icon: Icon, end }) => (
+        {[...navigation.map(item => ({ ...item })), { to: '/app/assessoria', shortLabel: 'Assessoria', icon: Headset, end: false }].map(({ to, shortLabel, icon: Icon, end }) => (
           <NavLink key={to} to={to} end={end} className={({ isActive }) => `flex min-h-14 flex-col items-center justify-center gap-1 rounded-lg text-[10px] focus-visible:outline focus-visible:outline-2 focus-visible:outline-evo-blueMain ${isActive ? 'text-evo-blueMain' : 'text-evo-textSec'}`}>
             <Icon size={19} aria-hidden="true" /><span>{shortLabel}</span>
           </NavLink>

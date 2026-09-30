@@ -141,6 +141,13 @@ async function currentUser(req) {
   return rows[0] ? publicUser(rows[0]) : null;
 }
 
+export async function requireAuthenticatedUser(req, res, next) {
+  const user = await currentUser(req);
+  if (!user) return res.status(401).json({ error: 'Entre na sua conta para continuar.' });
+  req.authenticatedUser = user;
+  return next();
+}
+
 router.post('/register', registrationLimiter, async (req, res) => {
   const parsed = parseBody(registerSchema, req.body);
   if (parsed.error) return res.status(400).json(parsed);

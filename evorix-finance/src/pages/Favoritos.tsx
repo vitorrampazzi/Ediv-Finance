@@ -1,74 +1,39 @@
-// src/pages/Favoritos.tsx
-import { Star, ChevronRight } from 'lucide-react';
+import { useMemo } from 'react';
+import { ArrowDown, ArrowRight, ArrowUp, Clock3, Star } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Card } from '../components/Card';
-import { ScoreIndicator } from '../components/ScoreIndicator';
-import { mockAssets } from '../data/mockData';
 import { useFavoritos } from '../hooks/useFavoritos';
+import { useMarketQuotes } from '../hooks/useMarketQuotes';
+
+const money = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' });
 
 export const Favoritos = () => {
-  const { favoritos, toggleFavorito } = useFavoritos();
-  const ativosFavoritados = mockAssets.filter(asset => favoritos.includes(asset.ticker));
+  const { favoritos, toggleFavorito, error: favoriteError } = useFavoritos();
+  const { quotes, loading, error: quoteError } = useMarketQuotes(favoritos);
+  const quoteBySymbol = useMemo(() => new Map(quotes.map(quote => [quote.symbol, quote])), [quotes]);
 
   return (
-    <div className="space-y-6 max-w-7xl mx-auto">
-      <div>
-        <h1 className="text-2xl font-bold text-evo-textMain tracking-tight">Favoritos</h1>
-        <p className="text-evo-textSec mt-1">Lista local de ativos demonstrativos. Não acompanha preços ou notícias.</p>
-      </div>
+    <div className="mx-auto max-w-7xl space-y-6">
+      <div><h1 className="text-2xl font-bold tracking-tight text-evo-textMain">Favoritos</h1><p className="mt-1 text-evo-textSec">Acompanhe os preços mais recentes disponíveis para seus ativos marcados.</p></div>
+      {(favoriteError || quoteError) && <p role="alert" className="rounded-lg border border-evo-red/20 bg-evo-red/5 p-3 text-sm text-evo-red">{favoriteError || quoteError}</p>}
 
-      {ativosFavoritados.length === 0 ? (
-        <Card glow="none" className="flex flex-col items-center text-center py-16 gap-3">
-          <Star size={40} className="text-evo-textSec" strokeWidth={1.5} />
-          <h3 className="text-lg font-semibold text-evo-textMain">Nenhum favorito ainda</h3>
-          <p className="text-sm text-evo-textSec max-w-sm">
-            Vá até a página de Análises e clique na estrela de qualquer ativo pra acompanhá-lo aqui.
-          </p>
-          <Link
-            to="/analises"
-            className="mt-2 flex items-center gap-1.5 text-evo-blueMain hover:text-evo-blueSec font-medium text-sm transition-colors"
-          >
-            Ir para Análises <ChevronRight size={16} />
-          </Link>
-        </Card>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {ativosFavoritados.map(asset => (
-            <Card key={asset.ticker} glow="none" className="flex flex-col relative overflow-hidden group hover:border-evo-blueMain/50 transition-all">
-              <button
-                type="button"
-                aria-label={`Remover ${asset.ticker} dos favoritos`}
-                aria-pressed="true"
-                onClick={() => toggleFavorito(asset.ticker)}
-                className="absolute right-4 top-4 rounded p-1 text-yellow-500 transition-transform hover:scale-110 focus-visible:outline focus-visible:outline-2 focus-visible:outline-evo-blueMain"
-                title="Remover dos favoritos"
-              >
-                <Star size={20} fill="currentColor" />
-              </button>
-
-              <div className="flex justify-between items-start mb-4 pr-8">
-                <div>
-                  <h3 className="text-xl font-bold text-evo-textMain group-hover:text-evo-blueMain transition-colors">{asset.ticker}</h3>
-                  <p className="text-sm text-evo-textSec">{asset.name}</p>
-                </div>
-                <div className="font-numbers">
-                  <ScoreIndicator score={asset.score} />
-                </div>
-              </div>
-
-              <div className="mt-auto pt-4 border-t border-white/5 flex justify-between items-center">
-                <span className={`text-sm font-bold ${
-                  asset.category === 'Excelente' ? 'text-evo-green' :
-                  asset.category === 'Muito Bom' ? 'text-evo-blueMain' : 'text-yellow-500'
-                }`}>
-                  {asset.category}
-                </span>
-                <span className="text-xs text-evo-textSec">Nota de exemplo</span>
-              </div>
-            </Card>
-          ))}
+      {favoritos.length === 0 ? <Card glow="none" className="flex flex-col items-center gap-3 py-16 text-center"><Star size={40} className="text-evo-textSec" strokeWidth={1.5} /><h2 className="text-lg font-semibold">Nenhum favorito ainda</h2><p className="max-w-sm text-sm text-evo-textSec">Abra a lista de cotações e use a estrela para adicionar ativos à sua lista.</p><Link to="/app/analises" className="mt-2 inline-flex min-h-10 items-center gap-1.5 font-medium text-evo-blueMain">Ver cotações <ArrowRight size={16} /></Link></Card> : <>
+        {favoritos.length > 8 && <p className="rounded-lg border border-evo-border bg-evo-card p-3 text-sm leading-relaxed text-evo-textSec">A fonte atual permite consultar até oito ativos por atualização. Os primeiros oito favoritos recebem cotações; todos continuam salvos na sua lista.</p>}
+        {loading && <p role="status" className="text-sm text-evo-textSec">Buscando cotações…</p>}
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+          {favoritos.map(ticker => {
+            const quote = quoteBySymbol.get(ticker);
+            const percentage = quote?.changePercent === null || quote?.changePercent === undefined ? null : Number(quote.changePercent);
+            return <Card key={ticker} glow="none" className="relative flex flex-col gap-4">
+              <button type="button" aria-label={`Remover ${ticker} dos favoritos`} aria-pressed="true" onClick={() => void toggleFavorito(ticker)} className="absolute right-4 top-4 rounded p-1 text-yellow-400 hover:scale-110" title="Remover dos favoritos"><Star size={19} fill="currentColor" /></button>
+              <div><h2 className="font-bold">{ticker}</h2><p className="mt-1 max-w-[85%] truncate text-xs text-evo-textSec">{quote?.name || 'Cotação não disponível'}</p></div>
+              <div><p className="font-numbers text-2xl font-semibold">{quote?.price ? money.format(Number(quote.price)) : '—'}</p><p className={`mt-1 flex items-center gap-1 text-sm font-medium ${percentage === null ? 'text-evo-textSec' : percentage >= 0 ? 'text-evo-green' : 'text-evo-red'}`}>{percentage === null ? 'Sem variação disponível' : <>{percentage >= 0 ? <ArrowUp size={14} /> : <ArrowDown size={14} />}{percentage > 0 ? '+' : ''}{percentage.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}% no dia</>}</p></div>
+              <p className="mt-auto border-t border-evo-border pt-3 text-[11px] text-evo-textSec"><Clock3 size={12} className="mr-1 inline" />{quote?.marketTime ? new Date(quote.marketTime).toLocaleString('pt-BR') : 'Horário indisponível'}{quote?.stale ? ' · cotação em cache' : ''}</p>
+            </Card>;
+          })}
         </div>
-      )}
+        <p className="text-xs leading-relaxed text-evo-textSec">Fonte: brapi.dev. Cotações podem ter atraso ou indisponibilidade; não são recomendações de investimento.</p>
+      </>}
     </div>
   );
 };
