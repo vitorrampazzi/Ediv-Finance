@@ -21,6 +21,7 @@ function App() {
         <FavoritesProvider>
           <Routes>
             <Route path="/" element={<Home />} />
+            <Route path="/mercado" element={<Analises publicView />} />
             <Route path="/entrar" element={<LoginPage />} />
             <Route path="/cadastro" element={<RegisterPage />} />
             <Route path="/verificar" element={<VerifyEmailPage />} />

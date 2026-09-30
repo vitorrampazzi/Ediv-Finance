@@ -6,20 +6,37 @@ import { config } from './config.js';
 const router = Router();
 const quoteCache = new Map();
 const inFlight = new Map();
-const CACHE_TTL_MS = 30 * 60 * 1000;
-const SANDBOX_SYMBOLS = new Set(['PETR4', 'ITUB4', 'VALE3', 'MGLU3']);
+let assetCatalogCache = null;
+let assetCatalogInFlight = null;
+const CACHE_TTL_MS = 15 * 60 * 1000;
+const ASSET_CATALOG_TTL_MS = 15 * 60 * 1000;
 const quoteLimiter = rateLimit({ windowMs: 60_000, limit: 30, standardHeaders: 'draft-8', legacyHeaders: false });
 
 async function fetchQuote(symbol) {
   const cached = quoteCache.get(symbol);
   if (cached && Date.now() - cached.cachedAt < CACHE_TTL_MS) return { ...cached.quote, stale: false };
-  if (!config.brapiApiKey && !SANDBOX_SYMBOLS.has(symbol)) {
-    return { symbol, name: symbol, currency: 'BRL', price: null, change: null, changePercent: null, marketTime: null, source: 'brapi.dev', stale: false, unavailable: true };
-  }
   if (inFlight.has(symbol)) return inFlight.get(symbol);
 
   const request = (async () => {
     try {
+      if (!config.brapiApiKey) {
+        const catalog = await getAssetCatalog();
+        const asset = catalog.stocks.find(result => result.stock === symbol);
+        if (!asset || !Number.isFinite(Number(asset.close))) throw new Error('Quote unavailable');
+        const quote = {
+          symbol,
+          name: String(asset.name || symbol).slice(0, 120),
+          currency: 'BRL',
+          price: Number(asset.close).toFixed(8),
+          change: null,
+          changePercent: Number.isFinite(Number(asset.change)) ? Number(asset.change).toFixed(4) : null,
+          marketTime: null,
+          checkedAt: catalog.requestedAt || new Date().toISOString(),
+          source: 'brapi.dev',
+        };
+        quoteCache.set(symbol, { quote, cachedAt: Date.now() });
+        return { ...quote, stale: false };
+      }
       const url = `https://brapi.dev/api/quote/${encodeURIComponent(symbol)}`;
       const response = await fetch(url, {
         headers: config.brapiApiKey ? { Authorization: `Bearer ${config.brapiApiKey}` } : {},
@@ -38,6 +55,7 @@ async function fetchQuote(symbol) {
         change: Number.isFinite(Number(item.regularMarketChange)) ? Number(item.regularMarketChange).toFixed(8) : null,
         changePercent: Number.isFinite(Number(item.regularMarketChangePercent)) ? Number(item.regularMarketChangePercent).toFixed(4) : null,
         marketTime: typeof item.regularMarketTime === 'string' ? item.regularMarketTime : null,
+        checkedAt: new Date().toISOString(),
         source: 'brapi.dev',
       };
       quoteCache.set(symbol, { quote, cachedAt: Date.now() });
@@ -53,9 +71,82 @@ async function fetchQuote(symbol) {
   return request;
 }
 
+async function getAssetCatalog() {
+  if (assetCatalogCache && Date.now() - assetCatalogCache.cachedAt < ASSET_CATALOG_TTL_MS) return assetCatalogCache.data;
+  if (assetCatalogInFlight) return assetCatalogInFlight;
+  assetCatalogInFlight = (async () => {
+    try {
+      const response = await fetch('https://brapi.dev/api/quote/list?limit=2000&sortBy=volume&sortOrder=desc', {
+        headers: config.brapiApiKey ? { Authorization: `Bearer ${config.brapiApiKey}` } : {},
+        signal: AbortSignal.timeout(12_000),
+      });
+      if (!response.ok) throw new Error(`Market provider returned ${response.status}`);
+      const payload = await response.json();
+      if (!Array.isArray(payload.stocks)) throw new Error('Market provider returned an invalid asset list');
+      const data = {
+        stocks: payload.stocks.filter(asset => typeof asset.stock === 'string' && Number.isFinite(Number(asset.close))),
+        indexes: Array.isArray(payload.indexes) ? payload.indexes : [],
+        availableSectors: Array.isArray(payload.availableSectors) ? payload.availableSectors : [],
+        requestedAt: typeof payload.requestedAt === 'string' ? payload.requestedAt : new Date().toISOString(),
+      };
+      assetCatalogCache = { data, cachedAt: Date.now() };
+      return data;
+    } finally {
+      assetCatalogInFlight = null;
+    }
+  })();
+  return assetCatalogInFlight;
+}
+
 export async function getMarketQuotes(symbols) {
   return Promise.all([...new Set(symbols)].map(fetchQuote));
 }
+
+router.get('/assets', quoteLimiter, async (req, res) => {
+  const schema = z.object({
+    search: z.string().trim().max(80).optional().default(''),
+    type: z.enum(['all', 'stock', 'fund', 'bdr']).optional().default('stock'),
+    sortBy: z.enum(['volume', 'change', 'market_cap', 'name']).optional().default('volume'),
+    sortOrder: z.enum(['asc', 'desc']).optional().default('desc'),
+    page: z.coerce.number().int().min(1).max(500).optional().default(1),
+    limit: z.coerce.number().int().min(1).max(50).optional().default(25),
+  });
+  const parsed = schema.safeParse(req.query);
+  if (!parsed.success) return res.status(400).json({ error: 'Filtros inválidos para a lista de ativos.' });
+  const filters = parsed.data;
+  const catalog = await getAssetCatalog();
+  const normalizedSearch = filters.search.toLocaleLowerCase('pt-BR');
+  const filtered = catalog.stocks
+    .filter(asset => filters.type === 'all' || asset.type === filters.type)
+    .filter(asset => !normalizedSearch || `${asset.stock} ${asset.name} ${asset.sector || ''} ${asset.subsector || ''}`.toLocaleLowerCase('pt-BR').includes(normalizedSearch));
+  filtered.sort((left, right) => {
+    const sign = filters.sortOrder === 'asc' ? 1 : -1;
+    if (filters.sortBy === 'name') return sign * String(left.name).localeCompare(String(right.name), 'pt-BR');
+    const field = filters.sortBy === 'market_cap' ? 'market_cap' : filters.sortBy;
+    return sign * ((Number(left[field]) || 0) - (Number(right[field]) || 0));
+  });
+  const offset = (filters.page - 1) * filters.limit;
+  return res.json({
+    assets: filtered.slice(offset, offset + filters.limit).map(asset => ({
+      symbol: asset.stock,
+      name: String(asset.name || asset.stock).slice(0, 120),
+      price: Number(asset.close).toFixed(8),
+      changePercent: Number.isFinite(Number(asset.change)) ? Number(asset.change).toFixed(4) : null,
+      volume: Number.isFinite(Number(asset.volume)) ? String(asset.volume) : null,
+      marketCap: Number.isFinite(Number(asset.market_cap)) ? String(asset.market_cap) : null,
+      sector: typeof asset.sector === 'string' ? asset.sector : null,
+      subSector: typeof asset.subsector === 'string' ? asset.subsector : null,
+      type: asset.type,
+      subType: asset.subType,
+      source: 'brapi.dev',
+    })),
+    total: filtered.length,
+    page: filters.page,
+    pageSize: filters.limit,
+    requestedAt: catalog.requestedAt,
+    availableSectors: catalog.availableSectors,
+  });
+});
 
 router.get('/quotes', quoteLimiter, async (req, res) => {
   const parsed = z.string().max(160).safeParse(req.query.symbols);
@@ -64,7 +155,7 @@ router.get('/quotes', quoteLimiter, async (req, res) => {
   if (!symbols.length || symbols.length > 8 || symbols.some(symbol => !/^[A-Z0-9.-]{1,16}$/.test(symbol))) {
     return res.status(400).json({ error: 'Informe de 1 a 8 tickers válidos.' });
   }
-  return res.json({ quotes: await getMarketQuotes(symbols), delayMinutes: 30 });
+  return res.json({ quotes: await getMarketQuotes(symbols) });
 });
 
 export { router as marketRouter };

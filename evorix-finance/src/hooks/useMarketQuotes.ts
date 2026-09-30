@@ -9,6 +9,7 @@ export type MarketQuote = {
   change: string | null;
   changePercent: string | null;
   marketTime: string | null;
+  checkedAt?: string | null;
   source: string;
   stale?: boolean;
   unavailable?: boolean;

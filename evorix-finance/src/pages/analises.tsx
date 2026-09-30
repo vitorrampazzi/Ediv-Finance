@@ -1,50 +1,71 @@
-import { useMemo, useState } from 'react';
-import { Activity, ArrowDown, ArrowUp, Clock3, Star } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { ArrowDown, ArrowLeft, ArrowRight, ArrowUp, BriefcaseBusiness, Search, Star } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import { Card } from '../components/Card';
+import { useAuth } from '../context/authContext';
 import { useFavoritos } from '../hooks/useFavoritos';
-import { useMarketQuotes } from '../hooks/useMarketQuotes';
+import { useMarketAssets } from '../hooks/useMarketAssets';
 
-const watchlist = ['PETR4', 'ITUB4', 'VALE3', 'MGLU3'];
 const money = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' });
+const assetTypes = [
+  { value: 'stock', label: 'Ações e units' },
+  { value: 'fund', label: 'Fundos e ETFs' },
+  { value: 'bdr', label: 'BDRs' },
+  { value: 'all', label: 'Todos os ativos' },
+];
 
-export const Analises = () => {
-  const [sort, setSort] = useState<'ticker' | 'change'>('ticker');
-  const { quotes, loading, error: quoteError } = useMarketQuotes(watchlist);
+export function Analises({ publicView = false }: { publicView?: boolean }) {
+  const [search, setSearch] = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [type, setType] = useState('stock');
+  const [sortBy, setSortBy] = useState('volume');
+  const [page, setPage] = useState(1);
+  const { assets, total, requestedAt, loading, error } = useMarketAssets({ search: searchQuery, type, sortBy, page, limit: 24 });
+  const { user } = useAuth();
   const { toggleFavorito, isFavorito, error: favoriteError } = useFavoritos();
-  const ordered = useMemo(() => [...quotes].sort((a, b) => sort === 'ticker'
-    ? a.symbol.localeCompare(b.symbol)
-    : Number(b.changePercent ?? Number.NEGATIVE_INFINITY) - Number(a.changePercent ?? Number.NEGATIVE_INFINITY)), [quotes, sort]);
+  const pages = Math.max(1, Math.ceil(total / 24));
+
+  useEffect(() => {
+    const timeout = window.setTimeout(() => setSearchQuery(search), 300);
+    return () => window.clearTimeout(timeout);
+  }, [search]);
 
   return (
-    <div className="mx-auto max-w-7xl space-y-6">
+    <main className={`mx-auto max-w-7xl space-y-6 ${publicView ? 'min-h-screen px-5 py-6 md:px-8 md:py-10' : ''}`}>
+      {publicView && <header className="flex flex-wrap items-center justify-between gap-3"><Link to="/" className="font-semibold text-evo-textMain">← Evorix Finance</Link><div className="flex gap-2"><Link to="/entrar" className="rounded-lg px-4 py-2 text-sm text-evo-textSec hover:text-evo-textMain">Entrar</Link><Link to="/cadastro" className="rounded-lg bg-evo-blueMain px-4 py-2 text-sm font-semibold text-white">Criar conta</Link></div></header>}
       <div className="rounded-xl border border-evo-border bg-evo-card p-6">
         <p className="text-xs font-semibold uppercase tracking-[.18em] text-evo-blueMain">Mercado brasileiro</p>
-        <h1 className="mt-2 text-2xl font-bold tracking-tight text-evo-textMain">Cotações e ativos</h1>
-        <p className="mt-2 max-w-3xl text-sm leading-relaxed text-evo-textSec">Consulte o último preço e a variação diária dos ativos selecionados. Não mostramos notas de qualidade ou recomendações de compra e venda.</p>
+        <h1 className="mt-2 text-2xl font-bold tracking-tight text-evo-textMain">Ativos negociados na B3</h1>
+        <p className="mt-2 max-w-3xl text-sm leading-relaxed text-evo-textSec">Pesquise ações, units, fundos, ETFs e BDRs. Os preços são informativos e não representam execução de ordens nem recomendação de investimento.</p>
       </div>
 
-      {(quoteError || favoriteError) && <p role="alert" className="rounded-lg border border-evo-red/20 bg-evo-red/5 p-3 text-sm text-evo-red">{quoteError || favoriteError}</p>}
-      <div className="flex flex-wrap items-center gap-2" aria-label="Ordenação das cotações">
-        <span className="mr-1 text-sm text-evo-textSec">Ordenar:</span>
-        <button type="button" aria-pressed={sort === 'ticker'} onClick={() => setSort('ticker')} className={`min-h-10 rounded-lg border px-3 text-sm ${sort === 'ticker' ? 'border-evo-blueMain/40 bg-evo-blueMain/10 text-evo-blueMain' : 'border-evo-border text-evo-textSec'}`}>Ticker</button>
-        <button type="button" aria-pressed={sort === 'change'} onClick={() => setSort('change')} className={`min-h-10 rounded-lg border px-3 text-sm ${sort === 'change' ? 'border-evo-blueMain/40 bg-evo-blueMain/10 text-evo-blueMain' : 'border-evo-border text-evo-textSec'}`}>Variação diária</button>
+      <div className="grid gap-3 md:grid-cols-[minmax(16rem,1fr)_auto_auto]">
+        <label className="flex min-h-11 items-center gap-2 rounded-lg border border-evo-border bg-evo-bgSec px-3"><Search size={17} className="text-evo-textSec" aria-hidden="true" /><span className="sr-only">Buscar ticker, empresa ou setor</span><input value={search} onChange={event => { setSearch(event.target.value); setPage(1); }} placeholder="Buscar ticker, empresa ou setor" className="w-full bg-transparent text-sm text-evo-textMain outline-none placeholder:text-evo-textSec" /></label>
+        <label className="sr-only" htmlFor="asset-type">Tipo de ativo</label><select id="asset-type" value={type} onChange={event => { setType(event.target.value); setPage(1); }} className="min-h-11 rounded-lg border border-evo-border bg-evo-bgSec px-3 text-sm text-evo-textMain">{assetTypes.map(option => <option key={option.value} value={option.value}>{option.label}</option>)}</select>
+        <label className="sr-only" htmlFor="asset-sort">Ordenação</label><select id="asset-sort" value={sortBy} onChange={event => { setSortBy(event.target.value); setPage(1); }} className="min-h-11 rounded-lg border border-evo-border bg-evo-bgSec px-3 text-sm text-evo-textMain"><option value="volume">Maior volume</option><option value="market_cap">Maior valor de mercado</option><option value="change">Maior variação</option><option value="name">Ordem alfabética</option></select>
       </div>
 
-      {loading && <p role="status" className="text-sm text-evo-textSec">Buscando cotações…</p>}
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        {ordered.map(quote => {
-          const percentage = quote.changePercent === null ? null : Number(quote.changePercent);
-          const favorite = isFavorito(quote.symbol);
-          return <Card key={quote.symbol} glow="none" className="relative flex flex-col gap-4">
-            <button type="button" aria-label={favorite ? `Remover ${quote.symbol} dos favoritos` : `Adicionar ${quote.symbol} aos favoritos`} aria-pressed={favorite} onClick={() => void toggleFavorito(quote.symbol)} className={`absolute right-4 top-4 rounded p-1 ${favorite ? 'text-yellow-400' : 'text-evo-textSec hover:text-yellow-400'}`}><Star size={18} fill={favorite ? 'currentColor' : 'none'} /></button>
-            <div><h2 className="font-bold">{quote.symbol}</h2><p className="mt-1 max-w-[85%] truncate text-xs text-evo-textSec">{quote.name}</p></div>
-            <div><p className="font-numbers text-2xl font-semibold">{quote.price ? money.format(Number(quote.price)) : '—'}</p><p className={`mt-1 flex items-center gap-1 text-sm font-medium ${percentage === null ? 'text-evo-textSec' : percentage >= 0 ? 'text-evo-green' : 'text-evo-red'}`}>{percentage === null ? 'Variação indisponível' : <>{percentage >= 0 ? <ArrowUp size={14} /> : <ArrowDown size={14} />}{percentage > 0 ? '+' : ''}{percentage.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}% no dia</>}</p></div>
-            <p className="mt-auto border-t border-evo-border pt-3 text-[11px] text-evo-textSec"><Clock3 size={12} className="mr-1 inline" />{quote.marketTime ? new Date(quote.marketTime).toLocaleString('pt-BR') : 'Horário não disponível'}{quote.stale ? ' · cotação em cache' : ''}</p>
+      {error && <p role="alert" className="rounded-lg border border-evo-red/20 bg-evo-red/5 p-3 text-sm text-evo-red">{error}</p>}
+      {favoriteError && <p role="alert" className="rounded-lg border border-evo-red/20 bg-evo-red/5 p-3 text-sm text-evo-red">{favoriteError}</p>}
+      <div className="flex flex-wrap items-center justify-between gap-2 text-sm text-evo-textSec"><span>{loading ? 'Carregando ativos…' : `${total.toLocaleString('pt-BR')} ativos encontrados`}</span>{requestedAt && <span className="text-xs">Consulta ao provedor: {new Date(requestedAt).toLocaleString('pt-BR')}</span>}</div>
+
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
+        {assets.map(asset => {
+          const percentage = asset.changePercent === null ? null : Number(asset.changePercent);
+          const favorite = isFavorito(asset.symbol);
+          return <Card key={asset.symbol} glow="none" className="relative flex flex-col gap-4">
+            {user ? <button type="button" aria-label={favorite ? `Remover ${asset.symbol} dos favoritos` : `Adicionar ${asset.symbol} aos favoritos`} aria-pressed={favorite} onClick={() => void toggleFavorito(asset.symbol)} className={`absolute right-4 top-4 rounded p-1 ${favorite ? 'text-yellow-400' : 'text-evo-textSec hover:text-yellow-400'}`}><Star size={18} fill={favorite ? 'currentColor' : 'none'} /></button> : <Link to="/entrar" title="Entre para salvar nos favoritos" className="absolute right-4 top-4 rounded p-1 text-evo-textSec"><Star size={18} /></Link>}
+            <div className="pr-8"><h2 className="font-bold text-evo-textMain">{asset.symbol}</h2><p className="mt-1 line-clamp-2 min-h-8 text-xs text-evo-textSec">{asset.name}</p></div>
+            <div className="flex flex-wrap items-end justify-between gap-2"><div><span className="block text-[11px] text-evo-textSec">Preço informado</span><strong className="font-numbers text-xl">{money.format(Number(asset.price))}</strong></div><p className={`flex items-center gap-1 text-sm font-medium ${percentage === null ? 'text-evo-textSec' : percentage >= 0 ? 'text-evo-green' : 'text-evo-red'}`}>{percentage === null ? '—' : <>{percentage >= 0 ? <ArrowUp size={14} /> : <ArrowDown size={14} />}{percentage > 0 ? '+' : ''}{percentage.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}%</>}</p></div>
+            <div className="mt-auto flex flex-wrap items-center justify-between gap-2 border-t border-evo-border pt-3 text-[11px] text-evo-textSec"><span>{asset.sector || asset.subType || 'B3'}</span><span>{asset.volume ? `Volume ${Number(asset.volume).toLocaleString('pt-BR')}` : 'Volume indisponível'}</span></div>
           </Card>;
         })}
       </div>
-      {!loading && ordered.length === 0 && <Card glow="none" className="text-sm text-evo-textSec">Nenhuma cotação disponível no momento.</Card>}
-      <p className="flex items-start gap-2 text-xs leading-relaxed text-evo-textSec"><Activity size={15} className="mt-0.5 shrink-0" />Fonte: brapi.dev. O atraso depende do plano e pode ser de aproximadamente 30 minutos no gratuito. Preços informativos; não representam execução de ordens nem recomendação de investimento.</p>
-    </div>
+      {!loading && assets.length === 0 && !error && <Card glow="none" className="text-sm text-evo-textSec">Nenhum ativo corresponde à sua busca.</Card>}
+
+      <div className="flex flex-wrap items-center justify-between gap-3 border-t border-evo-border pt-4"><p className="max-w-3xl text-xs leading-relaxed text-evo-textSec">Fonte: brapi.dev. Os preços podem ter atraso ou indisponibilidade. “Consulta ao provedor” indica quando a lista foi consultada; não garante o horário exato da negociação.</p><nav aria-label="Paginação dos ativos" className="flex items-center gap-2"><button type="button" disabled={page <= 1 || loading} onClick={() => setPage(current => Math.max(1, current - 1))} className="inline-flex min-h-10 items-center gap-1 rounded-lg border border-evo-border px-3 text-sm text-evo-textMain disabled:opacity-40"><ArrowLeft size={15} /> Anterior</button><span className="text-xs text-evo-textSec">Página {page} de {pages}</span><button type="button" disabled={page >= pages || loading} onClick={() => setPage(current => Math.min(pages, current + 1))} className="inline-flex min-h-10 items-center gap-1 rounded-lg border border-evo-border px-3 text-sm text-evo-textMain disabled:opacity-40">Próxima <ArrowRight size={15} /></button></nav></div>
+
+      {publicView && <footer className="flex items-center gap-2 border-t border-evo-border pt-5 text-xs text-evo-textSec"><BriefcaseBusiness size={15} />Crie uma conta para salvar favoritos e acompanhar sua carteira. <Link to="/cadastro" className="font-semibold text-evo-blueMain">Criar conta</Link></footer>}
+    </main>
   );
-};
+}

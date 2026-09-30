@@ -40,7 +40,7 @@ Aplicação React/Vite com API Node.js/Express e persistência em MySQL. A pági
    npm run dev
    ```
 
-   Para cotar outros ativos além de PETR4, ITUB4, VALE3 e MGLU3, configure opcionalmente `BRAPI_API_KEY` no `.env` local. A chave é usada apenas pelo servidor e nunca deve ser incluída no frontend. A integração usa cache local por 30 minutos e identifica fonte e horário do preço.
+   A lista pública de ativos e cotações da B3 funciona sem token. Configure `BRAPI_API_KEY` no `.env` local apenas se precisar de dados adicionais do provedor; a chave é usada só pelo servidor e nunca deve ser incluída no frontend.
 
    A interface usa o proxy local do Vite para encaminhar `/api` à API em `127.0.0.1:3001`. Em desenvolvimento, sem SMTP configurado, a API devolve um link temporário de confirmação para facilitar o primeiro cadastro. Esse link só é exposto fora de produção.
 
@@ -52,6 +52,7 @@ Aplicação React/Vite com API Node.js/Express e persistência em MySQL. A pági
 - `POST /api/auth/login` — autentica e cria uma sessão no servidor.
 - `GET /api/auth/me` — retorna apenas os dados básicos da sessão atual.
 - `POST /api/auth/logout` — revoga a sessão no banco e limpa o cookie.
+- `GET /api/market/assets?type=stock&search=PETR&page=1` — lista ações, fundos, ETFs e BDRs com busca, filtros e paginação.
 - `GET /api/market/quotes?symbols=PETR4,ITUB4` — devolve cotações da brapi.dev, com limite de oito ativos por chamada.
 - `GET /api/portfolio` — calcula posições e valores estimados usando cotações disponíveis, além do histórico recente.
 - `POST /api/portfolio/transactions` — registra compra/venda manual e rejeita vendas que deixem a posição negativa.
