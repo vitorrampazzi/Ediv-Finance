@@ -7,7 +7,7 @@ import { ScoreIndicator } from '../components/ScoreIndicator';
 import { OrbitCoins } from '../components/OrbitCoins';
 import { useFavoritos } from '../hooks/useFavoritos';
 import { mockAssets } from '../data/mockData';
-import { Trophy, ShieldCheck, DollarSign, BarChart3, ChevronRight, Star } from 'lucide-react';
+import { Trophy, ShieldCheck, DollarSign, BarChart3, Star } from 'lucide-react';
 
 export const Analises = () => {
   const [filtroAtivo, setFiltroAtivo] = useState('score');
@@ -16,7 +16,7 @@ export const Analises = () => {
   const ativosOrdenados = [...mockAssets].sort((a, b) => {
     if (filtroAtivo === 'score') return b.score - a.score;
     if (filtroAtivo === 'valuation') return b.indicators.valuation - a.indicators.valuation;
-    if (filtroAtivo === 'risco') return b.indicators.risco - a.indicators.risco;
+    if (filtroAtivo === 'risco') return a.indicators.risco - b.indicators.risco;
     if (filtroAtivo === 'dividendos') return b.indicators.dividendos - a.indicators.dividendos;
     return 0;
   });
@@ -28,7 +28,7 @@ export const Analises = () => {
         <div className="absolute inset-0 bg-gradient-to-r from-evo-blueMain/5 to-transparent pointer-events-none"></div>
         <div className="relative z-10">
           <h1 className="text-2xl font-bold text-evo-textMain tracking-tight">Análise Quantitativa</h1>
-          <p className="text-evo-textSec mt-1">Oportunidades encontradas pelo nosso algoritmo baseadas em critérios matemáticos.</p>
+          <p className="text-evo-textSec mt-1">Prévia demonstrativa de indicadores; nenhum ativo real foi analisado ou recomendado.</p>
         </div>
         <OrbitCoins variant="scan" size="sm" />
       </div>
@@ -38,7 +38,7 @@ export const Analises = () => {
         <FiltroBtn ativo={filtroAtivo === 'score'} onClick={() => setFiltroAtivo('score')} icon={<Trophy size={16} />} texto="Maior Score Geral" />
         <FiltroBtn ativo={filtroAtivo === 'valuation'} onClick={() => setFiltroAtivo('valuation')} icon={<BarChart3 size={16} />} texto="Melhor Valuation" />
         <FiltroBtn ativo={filtroAtivo === 'risco'} onClick={() => setFiltroAtivo('risco')} icon={<ShieldCheck size={16} />} texto="Menor Risco" />
-        <FiltroBtn ativo={filtroAtivo === 'dividendos'} onClick={() => setFiltroAtivo('dividendos')} icon={<DollarSign size={16} />} texto="Maior Dividend Yield" />
+        <FiltroBtn ativo={filtroAtivo === 'dividendos'} onClick={() => setFiltroAtivo('dividendos')} icon={<DollarSign size={16} />} texto="Maior nota em dividendos" />
       </div>
 
       {/* Lista de Top Oportunidades */}
@@ -47,7 +47,7 @@ export const Analises = () => {
           const favoritado = isFavorito(asset.ticker);
 
           return (
-            <Card key={asset.ticker} glow={filtroAtivo === 'score' && index === 0 ? 'blue' : 'none'} className="flex flex-col relative overflow-hidden group hover:border-evo-blueMain/50 transition-all cursor-pointer">
+            <Card key={asset.ticker} glow={filtroAtivo === 'score' && index === 0 ? 'blue' : 'none'} className="flex flex-col relative overflow-hidden group hover:border-evo-blueMain/50 transition-all">
 
               {filtroAtivo === 'score' && index < 3 && (
                 <div className="absolute top-0 right-0 bg-evo-blueMain/20 text-evo-blueMain text-[10px] font-bold px-3 py-1 rounded-bl-lg border-b border-l border-evo-blueMain/30">
@@ -56,14 +56,16 @@ export const Analises = () => {
               )}
 
               <button
+                type="button"
+                aria-label={favoritado ? `Remover ${asset.ticker} dos favoritos` : `Adicionar ${asset.ticker} aos favoritos`}
+                aria-pressed={favoritado}
                 onClick={(e) => {
                   e.stopPropagation();
                   toggleFavorito(asset.ticker);
                 }}
-                className={`absolute top-4 left-4 transition-all hover:scale-110 ${
+                className={`absolute left-4 top-4 rounded p-1 transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-evo-blueMain ${
                   favoritado ? 'text-yellow-500' : 'text-evo-textSec hover:text-yellow-500'
                 }`}
-                title={favoritado ? 'Remover dos favoritos' : 'Adicionar aos favoritos'}
               >
                 <Star size={18} fill={favoritado ? 'currentColor' : 'none'} />
               </button>
@@ -95,9 +97,7 @@ export const Analises = () => {
                     {asset.category}
                   </span>
                 </div>
-                <button className="text-evo-bgMain bg-evo-blueMain hover:bg-evo-blueSec px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-1">
-                  Ver Detalhes <ChevronRight size={16} />
-                </button>
+                <span className="text-xs text-evo-textSec">Prévia</span>
               </div>
             </Card>
           );
@@ -116,6 +116,8 @@ interface FiltroBtnProps {
 
 const FiltroBtn = ({ ativo, onClick, icon, texto }: FiltroBtnProps) => (
   <button
+    type="button"
+    aria-pressed={ativo}
     onClick={onClick}
     className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
       ativo
@@ -142,7 +144,14 @@ const BarraIndicador = ({ label, valor }: { label: string, valor: number }) => {
         <span className="text-evo-textSec">{label}</span>
         <span className="text-evo-textMain font-medium font-numbers">{valor}%</span>
       </div>
-      <div className="w-full h-1.5 bg-evo-bgMain/60 rounded-full overflow-hidden">
+      <div
+        className="w-full h-1.5 bg-evo-bgMain/60 rounded-full overflow-hidden"
+        role="meter"
+        aria-label={`${label}: ${valor} de 100`}
+        aria-valuemin={0}
+        aria-valuemax={100}
+        aria-valuenow={valor}
+      >
         <motion.div
           className={`h-full rounded-full ${getCorBarra(valor)}`}
           initial={{ width: 0 }}

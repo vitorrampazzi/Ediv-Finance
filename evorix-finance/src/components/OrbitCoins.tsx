@@ -86,7 +86,7 @@ export const OrbitCoins = ({ variant = 'wealth', size = 'hero' }: OrbitCoinsProp
   const orbitSize = size === 'hero' ? 22 : 16;
 
   return (
-    <div className="relative flex items-center justify-center shrink-0" style={{ width: core * 2.3, height: core * 2.3 }}>
+    <div aria-hidden="true" className="relative flex items-center justify-center shrink-0" style={{ width: core * 2.3, height: core * 2.3 }}>
       <div className="absolute inset-0 flex items-center justify-center">
         <div className="absolute w-full h-full blur-2xl rounded-full animate-pulse" style={{ backgroundColor: cfg.glow }} />
         <div

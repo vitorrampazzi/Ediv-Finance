@@ -11,7 +11,7 @@ export const ScoreIndicator = ({ score }: ScoreProps) => {
   };
 
   return (
-    <div className="flex flex-col items-center justify-center">
+    <div className="flex flex-col items-center justify-center" role="img" aria-label={`Pontuação ilustrativa: ${score} de 100`}>
       <div className={`w-14 h-14 rounded-full border-[3px] flex items-center justify-center font-bold text-lg ${getColor()}`}>
         {score}
       </div>

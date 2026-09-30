@@ -14,7 +14,7 @@ export const Favoritos = () => {
     <div className="space-y-6 max-w-7xl mx-auto">
       <div>
         <h1 className="text-2xl font-bold text-evo-textMain tracking-tight">Favoritos</h1>
-        <p className="text-evo-textSec mt-1">Ativos que você está de olho, mesmo sem ter comprado ainda.</p>
+        <p className="text-evo-textSec mt-1">Lista local de ativos demonstrativos. Não acompanha preços ou notícias.</p>
       </div>
 
       {ativosFavoritados.length === 0 ? (
@@ -36,8 +36,11 @@ export const Favoritos = () => {
           {ativosFavoritados.map(asset => (
             <Card key={asset.ticker} glow="none" className="flex flex-col relative overflow-hidden group hover:border-evo-blueMain/50 transition-all">
               <button
+                type="button"
+                aria-label={`Remover ${asset.ticker} dos favoritos`}
+                aria-pressed="true"
                 onClick={() => toggleFavorito(asset.ticker)}
-                className="absolute top-4 right-4 text-yellow-500 hover:scale-110 transition-transform"
+                className="absolute right-4 top-4 rounded p-1 text-yellow-500 transition-transform hover:scale-110 focus-visible:outline focus-visible:outline-2 focus-visible:outline-evo-blueMain"
                 title="Remover dos favoritos"
               >
                 <Star size={20} fill="currentColor" />
@@ -60,12 +63,7 @@ export const Favoritos = () => {
                 }`}>
                   {asset.category}
                 </span>
-                <Link
-                  to="/analises"
-                  className="text-evo-bgMain bg-evo-blueMain hover:bg-evo-blueSec px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-1"
-                >
-                  Ver Detalhes <ChevronRight size={16} />
-                </Link>
+                <span className="text-xs text-evo-textSec">Nota de exemplo</span>
               </div>
             </Card>
           ))}

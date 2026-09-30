@@ -1,5 +1,5 @@
 // src/pages/Carteira.tsx
-import { Plus, MoreHorizontal, ArrowUpRight, ArrowDownRight } from 'lucide-react';
+import { ArrowUpRight, ArrowDownRight } from 'lucide-react';
 import { Card } from '../components/Card';
 import { OrbitCoins } from '../components/OrbitCoins';
 import { mockPortfolio } from '../data/mockData';
@@ -21,12 +21,9 @@ export const Carteira = () => {
         <div className="relative z-10 flex flex-col md:flex-row md:items-end justify-between gap-4 w-full">
           <div>
             <h1 className="text-2xl font-bold text-evo-textMain tracking-tight">Minha Carteira</h1>
-            <p className="text-evo-textSec mt-1">Gerencie seus ativos e acompanhe a rentabilidade real do seu portfólio.</p>
+            <p className="text-evo-textSec mt-1">Exemplo de composição de carteira; nenhuma conta ou cotação está conectada.</p>
           </div>
-          <button className="flex items-center gap-2 bg-evo-blueMain hover:bg-evo-blueSec text-evo-bgMain px-4 py-2.5 rounded-lg font-semibold transition-colors shadow-[0_0_15px_rgba(59,130,246,0.3)]">
-            <Plus size={20} />
-            <span>Lançar Investimento</span>
-          </button>
+          <span className="inline-flex min-h-10 items-center rounded-lg border border-evo-border px-3 text-xs text-evo-textSec">Cadastro indisponível nesta demonstração</span>
         </div>
         <OrbitCoins variant="portfolio" size="sm" />
       </div>
@@ -45,16 +42,16 @@ export const Carteira = () => {
       <Card glow="none" className="overflow-hidden p-0">
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
+            <caption className="sr-only">Posições de investimento fictícias para demonstração da interface</caption>
             <thead>
               <tr className="bg-white/[0.02] border-b border-white/5 text-evo-textSec text-xs uppercase tracking-wider">
-                <th className="p-4 font-medium">Ativo</th>
-                <th className="p-4 font-medium text-right">Qtd</th>
-                <th className="p-4 font-medium text-right">Preço Médio</th>
-                <th className="p-4 font-medium text-right">Preço Atual</th>
-                <th className="p-4 font-medium text-right">Total Investido</th>
-                <th className="p-4 font-medium text-right">Saldo Atual</th>
-                <th className="p-4 font-medium text-right">Lucro / Prejuízo</th>
-                <th className="p-4 font-medium text-center">Ações</th>
+                <th scope="col" className="p-4 font-medium">Ativo</th>
+                <th scope="col" className="p-4 font-medium text-right">Qtd</th>
+                <th scope="col" className="p-4 font-medium text-right">Preço Médio</th>
+                <th scope="col" className="p-4 font-medium text-right">Preço Atual</th>
+                <th scope="col" className="p-4 font-medium text-right">Total Investido</th>
+                <th scope="col" className="p-4 font-medium text-right">Saldo Atual</th>
+                <th scope="col" className="p-4 font-medium text-right">Lucro / Prejuízo</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-white/5">
@@ -86,11 +83,6 @@ export const Carteira = () => {
                         </span>
                         <span className="text-xs font-medium font-numbers">{isPositivo ? '+' : ''}{rentabilidade.toFixed(2)}%</span>
                       </div>
-                    </td>
-                    <td className="p-4 text-center">
-                      <button className="text-evo-textSec hover:text-evo-blueMain transition-colors p-2 rounded-lg hover:bg-white/5">
-                        <MoreHorizontal size={20} />
-                      </button>
                     </td>
                   </tr>
                 );

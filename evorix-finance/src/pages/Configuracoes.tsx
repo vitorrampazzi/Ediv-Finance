@@ -2,23 +2,22 @@
 import { useState } from 'react';
 import type { ReactNode } from 'react';
 import { Card } from '../components/Card';
-import { Cpu, Shield, Bell } from 'lucide-react';
+import { Cpu, Shield, Bell, LockKeyhole } from 'lucide-react';
 
 export const Configuracoes = () => {
   const [abaAtiva, setAbaAtiva] = useState('motor');
 
   const [config, setConfig] = useState({
-    apiKey: 'ev_live_99x8273165abc90123',
     notifEmail: true,
     notifWhatsapp: false,
-    motorAggressiveness: '75%',
+    motorAggressiveness: 75,
   });
 
   return (
     <div className="space-y-6 max-w-7xl mx-auto">
       <div>
         <h1 className="text-2xl font-bold text-evo-textMain tracking-tight">Configurações</h1>
-        <p className="text-evo-textSec mt-1">Ajuste o motor quantitativo, credenciais de integração e notificações.</p>
+        <p className="text-evo-textSec mt-1">Preferências locais de uma demonstração, sem conexões externas.</p>
       </div>
 
       <div className="flex flex-wrap gap-2 border-b border-white/5 pb-4">
@@ -31,65 +30,57 @@ export const Configuracoes = () => {
         <Card glow="blue" className="space-y-6 max-w-3xl">
           <div>
             <h3 className="text-lg font-semibold">Parâmetros do Motor Quantitativo</h3>
-            <p className="text-sm text-evo-textSec mt-1">Ajuste fino de como o algoritmo calcula os scores e prioriza os ativos para o seu perfil.</p>
+            <p className="text-sm text-evo-textSec mt-1">Controle visual para demonstrar uma preferência; não altera análises, scores ou ativos.</p>
           </div>
 
           <div className="bg-evo-bgMain p-4 rounded-xl border border-white/5 space-y-2">
             <div className="flex justify-between items-center">
               <span className="font-medium text-evo-textMain">Agressividade do Algoritmo (Peso de Risco)</span>
-              <span className="font-numbers text-evo-blueMain font-bold">{config.motorAggressiveness}</span>
+              <label htmlFor="risk-weight" className="font-numbers font-bold text-evo-blueMain">{config.motorAggressiveness}%</label>
             </div>
             <input
               type="range"
+              id="risk-weight"
+              aria-label="Peso ilustrativo do indicador de risco"
               min="10"
               max="100"
-              defaultValue="75"
-              onChange={(e) => setConfig({ ...config, motorAggressiveness: `${e.target.value}%` })}
+              value={config.motorAggressiveness}
+              onChange={(e) => setConfig({ ...config, motorAggressiveness: Number(e.target.value) })}
               className="w-full accent-evo-blueMain cursor-pointer"
             />
-            <p className="text-xs text-evo-textSec">Valores mais altos aumentam a tolerância a oscilações em busca de maiores scores de valuation.</p>
+            <p className="text-xs leading-relaxed text-evo-textSec">Este controle é apenas visual e não representa uma estratégia de investimento.</p>
           </div>
         </Card>
       )}
 
       {abaAtiva === 'seguranca' && (
-        <Card glow="none" className="space-y-6 max-w-3xl">
+        <Card glow="none" className="max-w-3xl space-y-5">
           <div>
-            <h3 className="text-lg font-semibold">Credenciais de Integração (API Keys)</h3>
-            <p className="text-sm text-evo-textSec mt-1">Use esta chave para conectar o Evorix com robôs de automação ou planilhas externas.</p>
+            <h3 className="text-lg font-semibold">Integrações indisponíveis</h3>
+            <p className="mt-1 text-sm text-evo-textSec">Este ambiente não possui API, conexão com corretora nem credenciais configuradas.</p>
           </div>
-
-          <div className="space-y-2">
-            <label className="text-xs text-evo-textSec block">Chave de Produção (Bearer Token)</label>
-            <div className="flex gap-2">
-              <input
-                type="password"
-                value={config.apiKey}
-                disabled
-                className="w-full bg-evo-bgMain border border-white/10 rounded-lg px-4 py-2.5 text-evo-textSec font-numbers"
-              />
-              <button
-                onClick={() => alert('Chave copiada para a área de transferência!')}
-                className="bg-white/5 hover:bg-white/10 border border-white/10 px-4 py-2.5 rounded-lg text-sm font-medium transition-colors"
-              >
-                Copiar
-              </button>
-            </div>
+          <div className="flex items-start gap-3 rounded-xl border border-evo-green/20 bg-evo-green/[0.04] p-4">
+            <LockKeyhole size={18} className="mt-0.5 shrink-0 text-evo-green" aria-hidden="true" />
+            <p className="text-sm leading-relaxed text-evo-textSec">Não informe senhas, chaves privadas, tokens ou dados da sua corretora neste protótipo. Uma integração real deve usar armazenamento seguro no servidor.</p>
           </div>
         </Card>
       )}
 
       {abaAtiva === 'notificacoes' && (
         <Card glow="none" className="space-y-4 max-w-3xl">
-          <h3 className="text-lg font-semibold border-b border-white/5 pb-3">Canais de Alerta</h3>
+          <div className="border-b border-evo-border pb-3">
+            <h3 className="text-lg font-semibold">Preferências de exemplo</h3>
+            <p className="mt-1 text-xs text-evo-textSec">As alterações duram apenas enquanto esta tela estiver aberta. Nenhuma mensagem é enviada.</p>
+          </div>
 
           <div className="flex items-center justify-between py-2">
             <div>
-              <h4 className="font-medium text-evo-textMain">Alertas de Mudança de Score</h4>
-              <p className="text-xs text-evo-textSec">Receba e-mails quando um ativo da sua carteira sofrer alteração drástica no motor.</p>
+              <h4 id="email-notifications-label" className="font-medium text-evo-textMain">Exemplo de alertas por e-mail</h4>
+              <p className="text-xs text-evo-textSec">Controle visual sem envio de e-mails.</p>
             </div>
             <input
               type="checkbox"
+              aria-labelledby="email-notifications-label"
               checked={config.notifEmail}
               onChange={(e) => setConfig({ ...config, notifEmail: e.target.checked })}
               className="w-5 h-5 accent-evo-blueMain cursor-pointer"
@@ -98,11 +89,12 @@ export const Configuracoes = () => {
 
           <div className="flex items-center justify-between py-2 border-t border-white/5">
             <div>
-              <h4 className="font-medium text-evo-textMain">Resumo Diário via WhatsApp (VIP)</h4>
-              <p className="text-xs text-evo-textSec">Receba o fechamento do mercado e insights do assessor direto no celular.</p>
+              <h4 id="whatsapp-notifications-label" className="font-medium text-evo-textMain">Exemplo de resumo por WhatsApp</h4>
+              <p className="text-xs text-evo-textSec">Controle visual sem conexão com o WhatsApp.</p>
             </div>
             <input
               type="checkbox"
+              aria-labelledby="whatsapp-notifications-label"
               checked={config.notifWhatsapp}
               onChange={(e) => setConfig({ ...config, notifWhatsapp: e.target.checked })}
               className="w-5 h-5 accent-evo-blueMain cursor-pointer"
@@ -123,6 +115,8 @@ interface TabBtnProps {
 
 const TabBtn = ({ ativo, onClick, icon, text }: TabBtnProps) => (
   <button
+    type="button"
+    aria-pressed={ativo}
     onClick={onClick}
     className={`flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition-all ${
       ativo

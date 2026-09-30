@@ -1,114 +1,72 @@
-// src/pages/Perfil.tsx
 import { useState } from 'react';
-import { Card } from '../components/Card';
 import { Save } from 'lucide-react';
+import { Card } from '../components/Card';
 import { ScoreIndicator } from '../components/ScoreIndicator';
 import { mockRecomendados } from '../data/mockData';
+import { useAuth } from '../context/authContext';
 
 export const Perfil = () => {
-  const [usuario, setUsuario] = useState({
-    nome: 'Vitor Rampazzi Franco',
-    email: 'vitor.franco@fiap.com.br',
-    documento: '***.458.890-**',
-    plano: 'Wealth Premium',
-    perfilRisco: 'Moderado / Crescimento',
-  });
+  const { user } = useAuth();
+  const [perfilRisco, setPerfilRisco] = useState('Moderado / Crescimento');
+  const [salvo, setSalvo] = useState(false);
 
   return (
-    <div className="space-y-6 max-w-7xl mx-auto">
+    <div className="mx-auto max-w-7xl space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-evo-textMain tracking-tight">Meu Perfil</h1>
-        <p className="text-evo-textSec mt-1">Seus dados cadastrais e o que o motor quantitativo recomenda pra você.</p>
+        <h2 className="text-2xl font-bold tracking-tight text-evo-textMain">Meu perfil</h2>
+        <p className="mt-1 text-evo-textSec">Dados básicos usados para identificar sua conta.</p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <Card glow="blue" className="md:col-span-2 space-y-4">
-          <h3 className="text-lg font-semibold border-b border-white/5 pb-3">Informações Cadastrais</h3>
+      <Card glow="blue" className="max-w-3xl">
+        <h3 className="border-b border-evo-border pb-3 text-lg font-semibold">Dados da conta</h3>
+        <dl className="mt-4 grid gap-4 sm:grid-cols-2">
+          <div><dt className="text-xs text-evo-textSec">Nome</dt><dd className="mt-1 break-words font-medium text-evo-textMain">{user?.name}</dd></div>
+          <div><dt className="text-xs text-evo-textSec">E-mail</dt><dd className="mt-1 break-all font-medium text-evo-textMain">{user?.email}</dd></div>
+          <div><dt className="text-xs text-evo-textSec">Confirmação de e-mail</dt><dd className="mt-1 font-medium text-evo-green">{user?.emailVerified ? 'Confirmado' : 'Pendente'}</dd></div>
+        </dl>
+      </Card>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="text-xs text-evo-textSec block mb-1">Nome Completo</label>
-              <input
-                type="text"
-                value={usuario.nome}
-                onChange={(e) => setUsuario({ ...usuario, nome: e.target.value })}
-                className="w-full bg-evo-bgMain border border-white/10 rounded-lg px-4 py-2.5 text-evo-textMain font-medium focus:border-evo-blueMain outline-none transition-colors"
-              />
-            </div>
-            <div>
-              <label className="text-xs text-evo-textSec block mb-1">E-mail Institucional / Principal</label>
-              <input
-                type="email"
-                value={usuario.email}
-                disabled
-                className="w-full bg-evo-bgMain/50 border border-white/5 rounded-lg px-4 py-2.5 text-evo-textSec cursor-not-allowed"
-              />
-            </div>
-            <div>
-              <label className="text-xs text-evo-textSec block mb-1">Documento (CPF / ID)</label>
-              <input
-                type="text"
-                value={usuario.documento}
-                disabled
-                className="w-full bg-evo-bgMain/50 border border-white/5 rounded-lg px-4 py-2.5 text-evo-textSec cursor-not-allowed font-numbers"
-              />
-            </div>
-            <div>
-              <label className="text-xs text-evo-textSec block mb-1">Perfil de Investidor (Suitability)</label>
-              <select
-                value={usuario.perfilRisco}
-                onChange={(e) => setUsuario({ ...usuario, perfilRisco: e.target.value })}
-                className="w-full bg-evo-bgMain border border-white/10 rounded-lg px-4 py-2.5 text-evo-textMain font-medium focus:border-evo-blueMain outline-none transition-colors"
-              >
-                <option>Conservador</option>
-                <option>Moderado / Crescimento</option>
-                <option>Arrojado / Global</option>
-              </select>
-            </div>
-          </div>
+      <Card glow="blue" className="max-w-3xl space-y-5">
+        <div>
+          <h3 className="border-b border-evo-border pb-3 text-lg font-semibold">Preferência demonstrativa</h3>
+          <p className="mt-3 text-sm leading-relaxed text-evo-textSec">A seleção abaixo só altera esta tela. Não é uma avaliação de suitability e não é salva na sua conta.</p>
+        </div>
+        <div>
+          <label htmlFor="perfil-risco" className="mb-1.5 block text-sm font-medium text-evo-textMain">Perfil de exemplo</label>
+          <select
+            id="perfil-risco"
+            value={perfilRisco}
+            onChange={(event) => { setPerfilRisco(event.target.value); setSalvo(false); }}
+            className="min-h-11 w-full rounded-lg border border-white/10 bg-evo-bgMain px-4 text-evo-textMain focus:border-evo-blueMain"
+          >
+            <option>Conservador</option>
+            <option>Moderado / Crescimento</option>
+            <option>Arrojado / Global</option>
+          </select>
+        </div>
+        <div className="flex flex-wrap items-center gap-4">
+          <button type="button" onClick={() => setSalvo(true)} className="inline-flex min-h-11 items-center gap-2 rounded-lg bg-evo-blueMain px-5 font-semibold text-white transition-colors hover:bg-evo-blueSec focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-evo-blueMain">
+            <Save size={18} aria-hidden="true" /> Aplicar nesta tela
+          </button>
+          {salvo && <span role="status" className="text-sm text-evo-green">Preferência aplicada nesta sessão.</span>}
+        </div>
+      </Card>
 
-          <div className="pt-4 flex justify-end">
-            <button className="flex items-center gap-2 bg-evo-blueMain hover:bg-evo-blueSec text-white px-5 py-2.5 rounded-lg font-semibold transition-colors shadow-[0_0_15px_rgba(59,130,246,0.3)]">
-              <Save size={18} /> Salvar Alterações
-            </button>
-          </div>
-        </Card>
-
-        <Card glow="green" className="flex flex-col justify-between">
-          <div>
-            <span className="bg-evo-green/20 text-evo-green text-xs font-bold px-3 py-1 rounded-full border border-evo-green/30 uppercase tracking-wide">
-              Ativo no Sistema
-            </span>
-            <h3 className="text-xl font-bold text-evo-textMain mt-4">{usuario.plano}</h3>
-            <p className="text-sm text-evo-textSec mt-1">
-              Acesso completo ao motor quantitativo e reuniões prioritárias com assessores.
-            </p>
-          </div>
-          <div className="mt-6 pt-4 border-t border-white/5">
-            <span className="text-xs text-evo-textSec block">Próxima Renovação</span>
-            <span className="font-numbers text-evo-textMain font-bold">18/04/2027</span>
-          </div>
-        </Card>
-      </div>
-
-      {/* Combina com seu perfil */}
-      <Card glow="green">
-        <h3 className="text-lg font-semibold mb-1">Combina com seu perfil</h3>
-        <p className="text-sm text-evo-textSec mb-5">
-          Ativos selecionados pelo motor quantitativo considerando seu perfil "{usuario.perfilRisco}".
-        </p>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <Card glow="none">
+        <h3 className="mb-1 text-lg font-semibold">Exemplos de ativos</h3>
+        <p className="mb-5 text-sm leading-relaxed text-evo-textSec">Esses dados são fictícios e independem da preferência selecionada. Não são recomendações nem uma análise do seu perfil.</p>
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
           {mockRecomendados.map(ativo => (
-            <div key={ativo.ticker} className="p-4 rounded-xl border border-white/5 bg-evo-bgMain hover:border-evo-green/30 transition-all">
-              <div className="flex justify-between items-start">
+            <article key={ativo.ticker} className="rounded-xl border border-evo-border bg-evo-bgMain p-4">
+              <div className="flex items-start justify-between gap-3">
                 <div>
                   <h4 className="font-bold text-evo-textMain">{ativo.ticker}</h4>
                   <span className="text-xs text-evo-textSec">{ativo.name}</span>
                 </div>
                 <ScoreIndicator score={ativo.score} />
               </div>
-              <p className="text-xs text-evo-textSec mt-3">{ativo.motivo}</p>
-            </div>
+              <p className="mt-3 text-xs leading-relaxed text-evo-textSec">{ativo.motivo}</p>
+            </article>
           ))}
         </div>
       </Card>

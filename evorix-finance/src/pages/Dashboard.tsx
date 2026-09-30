@@ -40,13 +40,15 @@ export const Dashboard = () => {
         <div className="relative z-10">
           <div className="flex items-center gap-3 mb-1">
             <h2 className="text-2xl font-bold text-evo-textMain">Visão Geral do Portfólio</h2>
-            <span className="flex items-center gap-1 text-[10px] uppercase tracking-wider text-evo-blueMain bg-evo-blueMain/10 px-2 py-1 rounded-full border border-evo-blueMain/20">
-              <Clock size={10} /> Atualizado há 12s
+            <span className="flex items-center gap-1 text-[10px] uppercase tracking-wider text-yellow-300 bg-yellow-500/10 px-2 py-1 rounded-full border border-yellow-500/20">
+              <Clock size={10} /> Valores ilustrativos
             </span>
           </div>
-          <p className="text-evo-textSec">Acompanhe seus rendimentos e análises em tempo real.</p>
+          <p className="text-evo-textSec">Prévia de patrimônio e indicadores com dados fictícios, sem conexão com o mercado.</p>
         </div>
-        <OrbitCoins variant="wealth" size="hero" />
+        <div className="hidden shrink-0 md:block" aria-hidden="true">
+          <OrbitCoins variant="wealth" size="hero" />
+        </div>
       </div>
 
       {/* Top Metrics */}
@@ -78,28 +80,25 @@ export const Dashboard = () => {
           <div className="space-y-4">
             <AlgoInsight
               type="warning"
-              text={<span><strong className="text-evo-textMain">Alerta de Setor:</strong> Você possui exposição elevada ao setor financeiro (35%), o que eleva seu risco direcional em caso de queda nos juros.</span>}
-              ctaLabel="Fale com um CFP sobre diversificação"
-              to="/assessoria"
+              text={<span><strong className="text-evo-textMain">Exemplo de alerta:</strong> em um produto conectado, uma concentração setorial poderia ser sinalizada para análise. Nenhuma carteira real foi analisada aqui.</span>}
             />
 
             <AlgoInsight
               type="info"
-              text={<span><strong className="text-evo-textMain">Oportunidade Detectada:</strong> O algoritmo identificou 3 FIIs de logística sendo negociados abaixo do valor patrimonial com dividend yield superior a 10%.</span>}
-              ctaLabel="Ver relatório completo com Assessor"
-              to="/assessoria"
+              text={<span><strong className="text-evo-textMain">Exemplo de indicador:</strong> esta área demonstra como análises poderiam ser apresentadas. Não há varredura de ativos, relatório ou recomendação disponível.</span>}
             />
           </div>
         </Card>
 
         {/* Top Assets */}
         <Card glow="none">
-          <h3 className="text-lg font-semibold mb-5 border-b border-evo-border pb-3">Top Ativos (Motor Quant)</h3>
+          <h3 className="text-lg font-semibold mb-1">Ativos de exemplo</h3>
+          <p className="mb-5 border-b border-evo-border pb-3 text-xs text-evo-textSec">Notas fictícias; não indicam compra ou venda.</p>
           <div className="space-y-3">
             {mockAssets.map(asset => (
-              <div key={asset.ticker} className="flex items-center justify-between p-3 bg-evo-bgSec rounded-lg border border-evo-border hover:border-evo-blueMain/30 transition-all cursor-pointer group">
+              <div key={asset.ticker} className="flex items-center justify-between rounded-lg border border-evo-border bg-evo-bgSec p-3 transition-colors hover:border-evo-blueMain/30">
                 <div>
-                  <h4 className="font-bold text-evo-textMain group-hover:text-evo-blueMain transition-colors">{asset.ticker}</h4>
+                  <h4 className="font-bold text-evo-textMain">{asset.ticker}</h4>
                   <span className="text-xs text-evo-textSec">{asset.name}</span>
                 </div>
                 <div className="font-numbers">
