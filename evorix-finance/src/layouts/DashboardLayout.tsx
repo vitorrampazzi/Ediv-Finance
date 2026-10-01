@@ -8,7 +8,6 @@ import { useAuth } from '../context/authContext';
 
 const navigation = [
   { to: '/app', label: 'Visão geral', shortLabel: 'Início', icon: LayoutDashboard, end: true },
-  { to: '/app/assessoria', label: 'Assessoria', shortLabel: 'Assessoria', icon: Headset, end: false },
   { to: '/app/analises', label: 'Análises', shortLabel: 'Análises', icon: BarChart3, end: false },
   { to: '/app/carteira', label: 'Minha carteira', shortLabel: 'Carteira', icon: Briefcase, end: false },
   { to: '/app/favoritos', label: 'Favoritos', shortLabel: 'Favoritos', icon: Star, end: false },
@@ -175,6 +174,11 @@ export const DashboardLayout = () => {
         <nav aria-label="Navegação principal" className="min-h-0 flex-1 space-y-1 overflow-y-auto px-3">
           {navigation.map(item => <NavigationLink key={item.to} {...item} collapsed={collapsed} />)}
         </nav>
+        <div className="shrink-0 border-t border-evo-border p-3">
+          <NavLink to="/app/assessoria" title={collapsed ? 'Assessoria' : undefined} className={({ isActive }) => `flex min-h-11 items-center gap-3 rounded-lg px-3 text-sm transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-evo-blueMain ${collapsed ? 'justify-center' : ''} ${isActive ? 'border border-evo-blueMain/20 bg-evo-blueMain/10 text-evo-blueMain' : 'text-evo-textSec hover:bg-evo-card hover:text-evo-textMain'}`}>
+            <Headset size={20} aria-hidden="true" />{!collapsed && <span>Assessoria</span>}
+          </NavLink>
+        </div>
       </aside>
 
       <div className="flex min-h-screen min-w-0 flex-1 flex-col">
@@ -199,7 +203,7 @@ export const DashboardLayout = () => {
       </div>
 
       <nav aria-label="Navegação móvel" className="fixed inset-x-0 bottom-0 z-30 grid grid-cols-5 border-t border-evo-border bg-evo-bgSec/95 px-1 pb-[env(safe-area-inset-bottom)] pt-1 backdrop-blur md:hidden">
-        {navigation.map(({ to, shortLabel, icon: Icon, end }) => (
+        {[...navigation, { to: '/app/assessoria', shortLabel: 'Assessoria', icon: Headset, end: false }].map(({ to, shortLabel, icon: Icon, end }) => (
           <NavLink key={to} to={to} end={end} className={({ isActive }) => `flex min-h-14 flex-col items-center justify-center gap-1 rounded-lg text-[10px] focus-visible:outline focus-visible:outline-2 focus-visible:outline-evo-blueMain ${isActive ? 'text-evo-blueMain' : 'text-evo-textSec'}`}>
             <Icon size={19} aria-hidden="true" /><span>{shortLabel}</span>
           </NavLink>
