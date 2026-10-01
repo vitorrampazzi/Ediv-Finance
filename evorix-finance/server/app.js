@@ -23,7 +23,9 @@ app.use('/api', (req, res, next) => {
   if (safeMethods.has(req.method)) return next();
 
   const origin = req.get('origin');
-  if (!origin || origin !== config.appOrigin || req.get('sec-fetch-site') === 'cross-site') {
+  let requestOrigin;
+  try { requestOrigin = new URL(origin).origin; } catch { requestOrigin = null; }
+  if (!requestOrigin || !config.appOrigins.includes(requestOrigin) || req.get('sec-fetch-site') === 'cross-site') {
     return res.status(403).json({ error: 'Origem da solicitação não permitida.' });
   }
   return next();

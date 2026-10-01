@@ -72,6 +72,23 @@ Crie um usuário de migração com permissões de DDL e configure `MYSQL_MIGRATI
 
 O limitador de tentativas padrão guarda contadores em memória. Em deploy com múltiplas instâncias, configure um armazenamento compartilhado para os limites antes de expor o serviço.
 
+## Deploy na Vercel
+
+O repositório está configurado para build do Vite, servir a SPA também em rotas internas (como `/app/carteira`) e encaminhar `/api/*` para a função Node em `api/[...path].js`. A Vercel não hospeda o MySQL: antes do primeiro deploy, use um MySQL gerenciado com TLS habilitado e acesso de rede liberado para a aplicação. Não use `127.0.0.1` como host do banco em produção.
+
+1. Importe o repositório na Vercel e mantenha o Root Directory apontando para a pasta que contém este `package.json`. O framework é Vite; os comandos são `npm run build` e saída `dist`.
+2. Cadastre no ambiente **Production** as variáveis `NODE_ENV=production`, `MYSQL_HOST`, `MYSQL_PORT`, `MYSQL_DATABASE=evorix_finance`, `MYSQL_USER`, `MYSQL_PASSWORD`, `MYSQL_SSL=true`, `MYSQL_SSL_CA` (conteúdo do CA do provedor, se exigido), `MYSQL_CONNECTION_LIMIT=3`, `APP_BASE_URL` e `APP_ORIGIN` (ambos com a URL HTTPS oficial), `SMTP_URL` e `MAIL_FROM`. Adicione `BRAPI_API_KEY` se tiver uma chave. Segredos devem ser cadastrados nas configurações da Vercel, nunca commitados.
+3. Execute `npm run db:migrate` uma vez contra o MySQL gerenciado com `MYSQL_MIGRATION_USER` e `MYSQL_MIGRATION_PASSWORD` configurados apenas no ambiente seguro de migração. Não conceda DDL ao usuário usado pela API.
+4. Faça deploy e confira `https://SEU-DOMINIO/api/health`, cadastro, confirmação de e-mail, login, carteira e favoritos. Para previews, a função reconhece automaticamente o domínio da implantação Vercel para validação de origem; o link de confirmação continua usando `APP_BASE_URL`, então teste o fluxo completo no domínio oficial.
+
+O limiter atual guarda contadores em memória e caches de cotações/listagem também são por instância. Em escala com múltiplas instâncias, limites de autenticação não são compartilhados e o cache pode repetir chamadas ao provedor. Configure storage compartilhado para os limitadores e cache distribuído antes de depender desses limites para proteção contra abuso. O MySQL gerenciado precisa aceitar conexões de saída da Vercel (ou usar um proxy/serviço de banco compatível), e o plano de hospedagem deve permitir esse padrão de conexão.
+
+### Cópia inicial para Aiven (teste)
+
+O comando `npm run db:transfer:aiven` cria o schema no destino, aplica as migrations e copia usuários, operações, preferências, favoritos e resumos do banco local definido em `.env`. Antes de usar, crie uma instância MySQL no Aiven, copie `.env.aiven.example` para `.env.aiven`, baixe o CA do serviço para `.aiven/ca.pem` e preencha host, porta, usuário e senha. Depois confira os dados do destino e execute o comando. Ele cancela a cópia se as tabelas de dados do destino não estiverem vazias; não sobrescreve dados existentes. Sessões e links de confirmação pendentes não são transferidos por segurança. Use a conta administrativa Aiven somente nessa cópia; para a API de produção, crie um usuário separado com permissões restritas.
+
+Após a transferência, `npm run db:bootstrap:aiven-app` cria o usuário de runtime com privilégios de leitura e escrita e grava os dados de conexão localmente em `.env.aiven.runtime` (ignorado pelo Git). Para rodar a API local apontando para Aiven, inicie `npm run dev:api:aiven` em um terminal e `npm run dev` em outro. Esse perfil pula migrations automáticas porque o usuário da API não tem privilégios de DDL. A credencial de administração continua apenas no arquivo local `.env.aiven`, usada para operações administrativas pontuais.
+
 ## Escopo e próximos passos
 
 Este backend registra operações manuais de carteira, mas não envia ordens nem movimenta dinheiro. O valor total que o usuário informa é exibido como declaração pessoal; a estimativa de mercado usa apenas posições com quantidade cadastrada e cotação disponível. Preços podem atrasar ou falhar e não são saldo de corretora. Também não há recuperação de senha, MFA, exclusão/exportação de conta, pagamentos, conexão com corretoras, KYC ou trilha de auditoria financeira certificada. Antes de publicar, defina requisitos de privacidade, licença de dados, política de retenção, monitoramento e resposta a incidentes, e faça revisão de segurança independente.

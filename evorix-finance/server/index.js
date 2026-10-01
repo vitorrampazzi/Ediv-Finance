@@ -7,7 +7,7 @@ const migrationPool = config.mysqlMigrationUser && config.mysqlMigrationPassword
   : pool;
 
 try {
-  if (!config.isProduction) {
+  if (!config.isProduction && !config.skipStartupMigrations) {
     await runMigrations(migrationPool);
     if (migrationPool !== pool) await migrationPool.end();
   }

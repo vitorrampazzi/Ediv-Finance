@@ -5,11 +5,16 @@ import { config } from './config.js';
 
 export function createDatabasePool(credentials = config.mysql) {
   const connectionOptions = { ...config.mysql, ...credentials };
+  const { sslCa, ...mysqlOptions } = connectionOptions;
   return createPool({
-    ...connectionOptions,
-    ssl: connectionOptions.ssl ? { rejectUnauthorized: true } : undefined,
+    ...mysqlOptions,
+    ssl: connectionOptions.ssl
+      ? { ca: sslCa || undefined, rejectUnauthorized: true }
+      : undefined,
     waitForConnections: true,
-    connectionLimit: 10,
+    // Serverless platforms can create multiple function instances; keep the
+    // per-instance pool small to avoid exhausting managed MySQL connections.
+    connectionLimit: Number(process.env.MYSQL_CONNECTION_LIMIT || (process.env.VERCEL === '1' ? 3 : 10)),
     queueLimit: 0,
     charset: 'utf8mb4',
     timezone: 'Z',

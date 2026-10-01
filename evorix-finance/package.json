@@ -8,6 +8,9 @@
     "dev:api": "node --watch --env-file-if-exists=.env server/index.js",
     "start:api": "node --env-file-if-exists=.env server/index.js",
     "db:migrate": "node --env-file-if-exists=.env server/migrate.js",
+    "db:transfer:aiven": "node --env-file=.env --env-file=.env.aiven server/transfer-aiven.js",
+    "db:bootstrap:aiven-app": "node --env-file=.env --env-file=.env.aiven server/bootstrap-aiven-app.js",
+    "dev:api:aiven": "node --watch --env-file=.env.aiven.runtime server/index.js",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
     "preview": "vite preview"
