@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { ArrowDown, ArrowLeft, ArrowRight, ArrowUp, BriefcaseBusiness, Search, Star } from 'lucide-react';
+import { ArrowDown, ArrowLeft, ArrowRight, ArrowUp, BriefcaseBusiness, Headset, Search, Star } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Card } from '../components/Card';
 import { useAuth } from '../context/authContext';
@@ -32,7 +32,7 @@ export function Analises({ publicView = false }: { publicView?: boolean }) {
 
   return (
     <main className={`mx-auto max-w-7xl space-y-6 ${publicView ? 'min-h-screen px-5 py-6 md:px-8 md:py-10' : ''}`}>
-      {publicView && <header className="flex flex-wrap items-center justify-between gap-3"><Link to="/" className="font-semibold text-evo-textMain">← Evorix Finance</Link><div className="flex gap-2"><Link to="/entrar" className="rounded-lg px-4 py-2 text-sm text-evo-textSec hover:text-evo-textMain">Entrar</Link><Link to="/cadastro" className="rounded-lg bg-evo-blueMain px-4 py-2 text-sm font-semibold text-white">Criar conta</Link></div></header>}
+      {publicView && <header className="flex flex-wrap items-center justify-between gap-3"><Link to="/" className="font-semibold text-evo-textMain">← Evorix Finance</Link><div className="flex items-center gap-2"><Link to="/assessoria" className="inline-flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm text-evo-textSec hover:text-evo-textMain"><Headset size={16} aria-hidden="true" /> Assessoria</Link><Link to="/entrar" className="rounded-lg px-4 py-2 text-sm text-evo-textSec hover:text-evo-textMain">Entrar</Link><Link to="/cadastro" className="rounded-lg bg-evo-blueMain px-4 py-2 text-sm font-semibold text-white">Criar conta</Link></div></header>}
       <div className="rounded-xl border border-evo-border bg-evo-card p-6">
         <p className="text-xs font-semibold uppercase tracking-[.18em] text-evo-blueMain">Mercado brasileiro</p>
         <h1 className="mt-2 text-2xl font-bold tracking-tight text-evo-textMain">Ativos negociados na B3</h1>
