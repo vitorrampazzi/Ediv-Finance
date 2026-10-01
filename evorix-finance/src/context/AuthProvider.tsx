@@ -64,6 +64,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(null);
   }, []);
 
+  const deleteAccount = useCallback(async (password: string) => {
+    await apiRequest('/api/auth/me', {
+      method: 'DELETE',
+      body: JSON.stringify({ password, confirmation: 'EXCLUIR' }),
+    });
+    setUser(null);
+  }, []);
+
   const register = useCallback((name: string, email: string, password: string) => apiRequest('/api/auth/register', {
     method: 'POST',
     body: JSON.stringify({ name, email, password }),
@@ -74,7 +82,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     body: JSON.stringify({ email }),
   }), []);
 
-  const value = useMemo(() => ({ user, loading, login, logout, register, resendVerification }), [user, loading, login, logout, register, resendVerification]);
+  const value = useMemo(() => ({ user, loading, login, logout, deleteAccount, register, resendVerification }), [user, loading, login, logout, deleteAccount, register, resendVerification]);
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 

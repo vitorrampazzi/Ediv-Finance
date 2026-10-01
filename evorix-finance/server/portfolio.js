@@ -94,6 +94,10 @@ function calculatePositions(rows) {
 router.use(requireAuthenticatedUser);
 
 router.get('/', async (req, res) => {
+  const requestedPage = Number(req.query.historyPage ?? 1);
+  if (!Number.isSafeInteger(requestedPage) || requestedPage < 1) {
+    return res.status(400).json({ error: 'Página do histórico inválida.' });
+  }
   const userId = req.authenticatedUser.id;
   const [transactions] = await pool.execute(
     `SELECT id, side, ticker, asset_name, asset_type, quantity, unit_price, fees, traded_at
@@ -112,7 +116,9 @@ router.get('/', async (req, res) => {
     const unrealizedPnl = marketValue === null ? null : fromUnits(toUnits(marketValue) - toUnits(position.costBasis));
     return { ...position, quote: quote || null, currentPrice: currentPrice === null ? null : fromUnits(currentPrice), marketValue, unrealizedPnl };
   });
-  const history = [...transactions].reverse().slice(0, 100).map(row => ({
+  const historyPages = Math.max(1, Math.ceil(transactions.length / 100));
+  const historyPage = Math.min(requestedPage, historyPages);
+  const history = [...transactions].reverse().slice((historyPage - 1) * 100, historyPage * 100).map(row => ({
     id: row.id,
     side: row.side,
     ticker: row.ticker,
@@ -123,7 +129,7 @@ router.get('/', async (req, res) => {
     fees: row.fees,
     tradedAt: row.traded_at,
   }));
-  return res.json({ positions: enrichedPositions, transactions: history, transactionHistoryTruncated: transactions.length > 100 });
+  return res.json({ positions: enrichedPositions, transactions: history, transactionCount: transactions.length, historyPage, historyPages, transactionHistoryTruncated: transactions.length > 100 });
 });
 
 router.post('/transactions', async (req, res) => {
@@ -167,6 +173,54 @@ router.post('/transactions', async (req, res) => {
     );
     await connection.commit();
     return res.status(201).json({ message: 'Operação registrada.' });
+  } catch (error) {
+    await connection.rollback();
+    throw error;
+  } finally {
+    connection.release();
+  }
+});
+
+router.delete('/transactions/:id', async (req, res) => {
+  const transactionId = z.string().uuid().safeParse(req.params.id);
+  if (!transactionId.success) return res.status(400).json({ error: 'Operação inválida.' });
+
+  const connection = await pool.getConnection();
+  try {
+    await connection.beginTransaction();
+    await connection.execute('SELECT id FROM users WHERE id = ? FOR UPDATE', [req.authenticatedUser.id]);
+    const [rows] = await connection.execute(
+      `SELECT id, side, ticker, quantity FROM portfolio_transactions
+       WHERE user_id = ? ORDER BY ticker ASC, traded_at ASC, created_at ASC, id ASC FOR UPDATE`,
+      [req.authenticatedUser.id],
+    );
+    const target = rows.find(row => row.id === transactionId.data);
+    if (!target) {
+      await connection.rollback();
+      return res.status(404).json({ error: 'Operação não encontrada na sua carteira.' });
+    }
+
+    let runningQuantity = 0n;
+    let invalidSequence = false;
+    let currentTicker = '';
+    for (const row of rows) {
+      if (row.ticker !== currentTicker) { currentTicker = row.ticker; runningQuantity = 0n; }
+      if (row.id === target.id) continue;
+      const quantity = toUnits(row.quantity);
+      runningQuantity += row.side === 'BUY' ? quantity : -quantity;
+      if (runningQuantity < 0n) { invalidSequence = true; break; }
+    }
+    if (invalidSequence) {
+      await connection.rollback();
+      return res.status(409).json({ error: 'Não é possível excluir esta compra porque há vendas posteriores que dependem dela. Exclua ou ajuste primeiro as vendas relacionadas.' });
+    }
+
+    await connection.execute(
+      'DELETE FROM portfolio_transactions WHERE id = ? AND user_id = ?',
+      [target.id, req.authenticatedUser.id],
+    );
+    await connection.commit();
+    return res.status(204).end();
   } catch (error) {
     await connection.rollback();
     throw error;

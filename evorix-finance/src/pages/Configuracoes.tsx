@@ -1,11 +1,15 @@
 // src/pages/Configuracoes.tsx
 import { useEffect, useState } from 'react';
-import type { ReactNode } from 'react';
+import type { FormEvent, ReactNode } from 'react';
 import { Card } from '../components/Card';
-import { Cpu, Shield, Bell, LockKeyhole } from 'lucide-react';
+import { Cpu, Shield, Bell, LockKeyhole, Trash2, TriangleAlert } from 'lucide-react';
 import { apiRequest } from '../lib/api';
+import { useAuth } from '../context/authContext';
+import { useNavigate } from 'react-router-dom';
 
 export const Configuracoes = () => {
+  const { deleteAccount } = useAuth();
+  const navigate = useNavigate();
   const [abaAtiva, setAbaAtiva] = useState('motor');
 
   const [config, setConfig] = useState({
@@ -16,6 +20,11 @@ export const Configuracoes = () => {
   const [riskProfile, setRiskProfile] = useState<string | null>(null);
   const [status, setStatus] = useState('');
   const [erro, setErro] = useState('');
+  const [accountDeleteOpen, setAccountDeleteOpen] = useState(false);
+  const [accountPassword, setAccountPassword] = useState('');
+  const [accountConfirmation, setAccountConfirmation] = useState('');
+  const [accountDeleteError, setAccountDeleteError] = useState('');
+  const [deletingAccount, setDeletingAccount] = useState(false);
 
   useEffect(() => {
     apiRequest<{ riskProfile: string | null; emailNotifications: boolean; whatsappNotifications: boolean }>('/api/portfolio/preferences')
@@ -36,6 +45,20 @@ export const Configuracoes = () => {
       setStatus('Preferências salvas. Esta versão ainda não envia notificações.');
     } catch (reason) {
       setErro(reason instanceof Error ? reason.message : 'Não foi possível salvar as preferências.');
+    }
+  };
+
+  const confirmAccountDeletion = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setAccountDeleteError('');
+    setDeletingAccount(true);
+    try {
+      await deleteAccount(accountPassword);
+      navigate('/', { replace: true });
+    } catch (reason) {
+      setAccountDeleteError(reason instanceof Error ? reason.message : 'Não foi possível excluir a conta. Tente novamente.');
+    } finally {
+      setDeletingAccount(false);
     }
   };
 
@@ -131,6 +154,24 @@ export const Configuracoes = () => {
           </div>
         </Card>
       )}
+
+      <Card glow="none" className="max-w-3xl space-y-4 border border-evo-red/30">
+        <div className="flex items-start gap-3">
+          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-evo-red/10 text-evo-red"><TriangleAlert size={20} aria-hidden="true" /></span>
+          <div><h3 className="text-lg font-semibold text-evo-textMain">Zona de atenção</h3><p className="mt-1 text-sm leading-relaxed text-evo-textSec">Você pode apagar sua conta. A exclusão remove permanentemente seu perfil, operações, favoritos e preferências salvas.</p></div>
+        </div>
+        {!accountDeleteOpen ? (
+          <button type="button" onClick={() => { setAccountDeleteOpen(true); setAccountDeleteError(''); }} aria-expanded={accountDeleteOpen} aria-controls="delete-account-form" className="inline-flex min-h-10 items-center gap-2 rounded-lg border border-evo-red/40 px-4 text-sm font-medium text-evo-red transition hover:bg-evo-red/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-evo-red"><Trash2 size={16} aria-hidden="true" /> Excluir minha conta</button>
+        ) : (
+          <form id="delete-account-form" onSubmit={confirmAccountDeletion} className="space-y-4 rounded-xl border border-evo-red/20 bg-evo-red/[0.04] p-4" aria-label="Confirmação de exclusão da conta">
+            <p className="text-sm font-medium text-evo-textMain">Essa ação é permanente e não pode ser desfeita. Para confirmar, informe sua senha e digite <strong>EXCLUIR</strong>.</p>
+            <label htmlFor="delete-account-password" className="block text-sm text-evo-textSec">Senha atual<input id="delete-account-password" type="password" autoComplete="current-password" required maxLength={128} value={accountPassword} onChange={event => setAccountPassword(event.target.value)} className="mt-1 block min-h-11 w-full rounded-lg border border-evo-border bg-evo-bgMain px-3 text-evo-textMain" /></label>
+            <label htmlFor="delete-account-confirmation" className="block text-sm text-evo-textSec">Digite EXCLUIR para confirmar<input id="delete-account-confirmation" required value={accountConfirmation} onChange={event => setAccountConfirmation(event.target.value.toUpperCase())} className="mt-1 block min-h-11 w-full rounded-lg border border-evo-border bg-evo-bgMain px-3 text-evo-textMain" /></label>
+            {accountDeleteError && <p role="alert" className="text-sm text-evo-red">{accountDeleteError}</p>}
+            <div className="flex flex-wrap gap-3"><button type="button" disabled={deletingAccount} onClick={() => { setAccountDeleteOpen(false); setAccountPassword(''); setAccountConfirmation(''); setAccountDeleteError(''); }} className="min-h-10 rounded-lg border border-evo-border px-4 text-sm text-evo-textSec hover:bg-white/5 disabled:opacity-50">Cancelar</button><button type="submit" disabled={deletingAccount || !accountPassword || accountConfirmation !== 'EXCLUIR'} className="inline-flex min-h-10 items-center gap-2 rounded-lg bg-evo-red px-4 text-sm font-semibold text-white hover:bg-evo-red/80 disabled:cursor-not-allowed disabled:opacity-50"><Trash2 size={15} aria-hidden="true" />{deletingAccount ? 'Excluindo conta…' : 'Excluir conta permanentemente'}</button></div>
+          </form>
+        )}
+      </Card>
     </div>
   );
 };

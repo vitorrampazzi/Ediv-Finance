@@ -6,6 +6,7 @@ export const AuthContext = createContext<{
   loading: boolean;
   login: (email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
+  deleteAccount: (password: string) => Promise<void>;
   register: (name: string, email: string, password: string) => Promise<{ message?: string; verificationUrl?: string }>;
   resendVerification: (email: string) => Promise<{ message?: string; verificationUrl?: string }>;
 } | undefined>(undefined);

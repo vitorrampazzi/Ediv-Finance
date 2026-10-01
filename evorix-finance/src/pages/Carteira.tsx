@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import type { FormEvent } from 'react';
-import { ArrowDownRight, ArrowUpRight, CircleAlert, Plus, RefreshCw } from 'lucide-react';
+import { ArrowDownRight, ArrowUpRight, ChevronLeft, ChevronRight, CircleAlert, Plus, RefreshCw, Trash2 } from 'lucide-react';
 import { Card } from '../components/Card';
 import { OrbitCoins } from '../components/OrbitCoins';
 import { apiRequest } from '../lib/api';
@@ -9,11 +9,11 @@ type AssetType = 'ACAO' | 'FII' | 'ETF' | 'RENDA_FIXA' | 'CRYPTO' | 'OUTRO';
 type Quote = { source: string; marketTime: string | null; stale?: boolean; unavailable?: boolean };
 type Position = { ticker: string; assetName: string; assetType: AssetType; quantity: string; costBasis: string; averageCost: string; currentPrice: string | null; marketValue: string | null; unrealizedPnl: string | null; quote: Quote | null };
 type PortfolioTransaction = { id: string; side: 'BUY' | 'SELL'; ticker: string; assetName: string; assetType: AssetType; quantity: string; unitPrice: string; fees: string; tradedAt: string };
-type PortfolioData = { positions: Position[]; transactions: PortfolioTransaction[]; transactionHistoryTruncated: boolean };
+type PortfolioData = { positions: Position[]; transactions: PortfolioTransaction[]; transactionCount: number; historyPage: number; historyPages: number; transactionHistoryTruncated: boolean };
 
 const typeLabels: Record<AssetType, string> = { ACAO: 'Ações', FII: 'FIIs', ETF: 'ETFs', RENDA_FIXA: 'Renda fixa', CRYPTO: 'Criptoativos', OUTRO: 'Outro' };
 const integerFormat = new Intl.NumberFormat('pt-BR', { maximumFractionDigits: 0 });
-const fetchPortfolio = () => apiRequest<PortfolioData>('/api/portfolio');
+const fetchPortfolio = (historyPage = 1) => apiRequest<PortfolioData>(`/api/portfolio?historyPage=${historyPage}`);
 const localToday = () => {
   const date = new Date();
   date.setMinutes(date.getMinutes() - date.getTimezoneOffset());
@@ -45,32 +45,39 @@ function formatDate(value: string) {
 }
 
 export const Carteira = () => {
-  const [portfolio, setPortfolio] = useState<PortfolioData>({ positions: [], transactions: [], transactionHistoryTruncated: false });
+  const [portfolio, setPortfolio] = useState<PortfolioData>({ positions: [], transactions: [], transactionCount: 0, historyPage: 1, historyPages: 1, transactionHistoryTruncated: false });
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [deletingId, setDeletingId] = useState('');
+  const [pendingDeleteId, setPendingDeleteId] = useState('');
+  const [historyPage, setHistoryPage] = useState(1);
   const [error, setError] = useState('');
   const [message, setMessage] = useState('');
   const [form, setForm] = useState({ side: 'BUY' as 'BUY' | 'SELL', ticker: '', assetName: '', assetType: 'ACAO' as AssetType, quantity: '', unitPrice: '', fees: '0', tradedAt: localToday() });
 
-  const loadPortfolio = useCallback(async () => {
+  const loadPortfolio = useCallback(async (page = historyPage) => {
     setError('');
     try {
-      setPortfolio(await fetchPortfolio());
+      const result = await fetchPortfolio(page);
+      setPortfolio(result);
+      if (result.historyPage !== page) setHistoryPage(result.historyPage);
+      return result;
     } catch (reason) {
       setError(reason instanceof Error ? reason.message : 'Não foi possível carregar a carteira.');
     } finally {
       setLoading(false);
     }
-  }, []);
+    return null;
+  }, [historyPage]);
 
   useEffect(() => {
     let active = true;
-    fetchPortfolio()
+    fetchPortfolio(historyPage)
       .then(result => { if (active) setPortfolio(result); })
       .catch(reason => { if (active) setError(reason instanceof Error ? reason.message : 'Não foi possível carregar a carteira.'); })
       .finally(() => { if (active) setLoading(false); });
     return () => { active = false; };
-  }, []);
+  }, [historyPage]);
 
   const investedTotal = useMemo(() => sumMoney(portfolio.positions.map(position => position.costBasis)), [portfolio.positions]);
   const quotedPositions = useMemo(() => portfolio.positions.filter(position => position.marketValue !== null), [portfolio.positions]);
@@ -86,10 +93,23 @@ export const Carteira = () => {
       });
       setMessage('Operação registrada na sua carteira.');
       setForm(current => ({ ...current, ticker: '', assetName: '', quantity: '', unitPrice: '', fees: '0' }));
-      await loadPortfolio();
+      setHistoryPage(1);
+      await loadPortfolio(1);
     } catch (reason) {
       setError(reason instanceof Error ? reason.message : 'Não foi possível registrar a operação.');
     } finally { setSaving(false); }
+  };
+
+  const deleteTransaction = async (transaction: PortfolioTransaction) => {
+    setDeletingId(transaction.id); setError(''); setMessage('');
+    try {
+      await apiRequest(`/api/portfolio/transactions/${encodeURIComponent(transaction.id)}`, { method: 'DELETE' });
+      setPendingDeleteId('');
+      setMessage(`Operação de ${transaction.ticker} excluída. A carteira foi recalculada.`);
+      await loadPortfolio();
+    } catch (reason) {
+      setError(reason instanceof Error ? reason.message : 'Não foi possível excluir a operação.');
+    } finally { setDeletingId(''); }
   };
 
   return (
@@ -110,7 +130,7 @@ export const Carteira = () => {
         <Card glow="none" className="p-4"><p className="text-sm text-evo-textSec">Ativos na carteira</p><p className="mt-2 text-2xl font-bold text-evo-textMain">{portfolio.positions.length}</p></Card>
         <Card glow="none" className="p-4"><p className="text-sm text-evo-textSec">Custo registrado</p><p className="mt-2 text-2xl font-bold text-evo-textMain">{formatMoney(String(investedTotal))}</p></Card>
         <Card glow="none" className="p-4"><p className="text-sm text-evo-textSec">Valor de mercado estimado</p><p className="mt-2 text-2xl font-bold text-evo-textMain">{formatMoney(String(marketValue))}</p><p className="mt-1 text-xs text-evo-textSec">{quotedPositions.length} de {portfolio.positions.length} posições cotadas</p></Card>
-        <Card glow="none" className="flex items-center justify-between p-4"><div><p className="text-sm text-evo-textSec">Operações recentes</p><p className="mt-2 text-2xl font-bold text-evo-textMain">{portfolio.transactions.length}</p></div><button type="button" onClick={() => void loadPortfolio()} aria-label="Atualizar carteira" className="rounded-lg p-2 text-evo-textSec hover:bg-white/5 hover:text-evo-textMain"><RefreshCw size={18} /></button></Card>
+        <Card glow="none" className="flex items-center justify-between p-4"><div><p className="text-sm text-evo-textSec">Operações registradas</p><p className="mt-2 text-2xl font-bold text-evo-textMain">{portfolio.transactionCount}</p></div><button type="button" onClick={() => void loadPortfolio()} aria-label="Atualizar carteira" className="rounded-lg p-2 text-evo-textSec hover:bg-white/5 hover:text-evo-textMain"><RefreshCw size={18} /></button></Card>
       </div>
 
       <Card glow="none" className="space-y-4">
@@ -136,11 +156,28 @@ export const Carteira = () => {
       </Card>
 
       <Card glow="none" className="overflow-hidden p-0">
-        <div className="border-b border-evo-border p-5"><h2 className="font-semibold text-evo-textMain">Histórico de operações</h2></div>
-        <div className="overflow-x-auto"><table className="w-full text-left"><caption className="sr-only">Últimas cem operações cadastradas</caption><thead><tr className="border-b border-white/5 bg-white/[0.02] text-xs uppercase tracking-wider text-evo-textSec"><th scope="col" className="p-4">Tipo</th><th scope="col" className="p-4">Ativo</th><th scope="col" className="p-4 text-right">Quantidade</th><th scope="col" className="p-4 text-right">Preço</th><th scope="col" className="p-4 text-right">Data</th></tr></thead><tbody className="divide-y divide-white/5">
-          {portfolio.transactions.length === 0 ? <tr><td colSpan={5} className="p-8 text-center text-sm text-evo-textSec">Nenhuma operação registrada.</td></tr> : portfolio.transactions.map(transaction => <tr key={transaction.id}><td className={`p-4 font-medium ${transaction.side === 'BUY' ? 'text-evo-green' : 'text-evo-red'}`}><span className="inline-flex items-center gap-1">{transaction.side === 'BUY' ? <ArrowDownRight size={15} /> : <ArrowUpRight size={15} />}{transaction.side === 'BUY' ? 'Compra' : 'Venda'}</span></td><th scope="row" className="p-4 font-medium text-evo-textMain">{transaction.ticker}<span className="block text-xs font-normal text-evo-textSec">{transaction.assetName}</span></th><td className="p-4 text-right text-evo-textSec">{formatQuantity(transaction.quantity)}</td><td className="p-4 text-right text-evo-textSec">{formatMoney(transaction.unitPrice)}</td><td className="p-4 text-right text-evo-textSec">{formatDate(transaction.tradedAt)}</td></tr>)}
+        <div className="border-b border-evo-border p-5"><h2 className="font-semibold text-evo-textMain">Histórico de operações</h2><p className="mt-1 text-xs text-evo-textSec">Você pode excluir um registro incorreto; a carteira será recalculada.</p></div>
+        <div className="overflow-x-auto"><table className="w-full text-left"><caption className="sr-only">Histórico de operações, 100 registros por página</caption><thead><tr className="border-b border-white/5 bg-white/[0.02] text-xs uppercase tracking-wider text-evo-textSec"><th scope="col" className="p-4">Tipo</th><th scope="col" className="p-4">Ativo</th><th scope="col" className="p-4 text-right">Quantidade</th><th scope="col" className="p-4 text-right">Preço</th><th scope="col" className="p-4 text-right">Data</th><th scope="col" className="p-4 text-right">Ações</th></tr></thead><tbody className="divide-y divide-white/5">
+          {portfolio.transactions.length === 0 ? <tr><td colSpan={6} className="p-8 text-center text-sm text-evo-textSec">Nenhuma operação registrada.</td></tr> : portfolio.transactions.map(transaction => {
+            const isPendingDelete = pendingDeleteId === transaction.id;
+            return <tr key={transaction.id}>
+              <td className={`p-4 font-medium ${transaction.side === 'BUY' ? 'text-evo-green' : 'text-evo-red'}`}><span className="inline-flex items-center gap-1">{transaction.side === 'BUY' ? <ArrowDownRight size={15} aria-hidden="true" /> : <ArrowUpRight size={15} aria-hidden="true" />}{transaction.side === 'BUY' ? 'Compra' : 'Venda'}</span></td>
+              <th scope="row" className="p-4 font-medium text-evo-textMain">{transaction.ticker}<span className="block text-xs font-normal text-evo-textSec">{transaction.assetName}</span></th>
+              <td className="p-4 text-right text-evo-textSec">{formatQuantity(transaction.quantity)}</td>
+              <td className="p-4 text-right text-evo-textSec">{formatMoney(transaction.unitPrice)}</td>
+              <td className="p-4 text-right text-evo-textSec">{formatDate(transaction.tradedAt)}</td>
+              <td className="p-4 text-right">
+                <button type="button" onClick={() => setPendingDeleteId(isPendingDelete ? '' : transaction.id)} aria-expanded={isPendingDelete} aria-controls={`delete-${transaction.id}`} aria-label={`Excluir operação ${transaction.side === 'BUY' ? 'de compra' : 'de venda'} de ${transaction.ticker}, ${formatQuantity(transaction.quantity)} unidades`} className="inline-flex min-h-9 items-center gap-1.5 rounded-lg px-2 text-xs text-evo-red transition hover:bg-evo-red/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-evo-red"><Trash2 size={15} aria-hidden="true" /> {isPendingDelete ? 'Cancelar exclusão' : 'Excluir'}</button>
+                {isPendingDelete && <div id={`delete-${transaction.id}`} className="min-w-40 rounded-lg border border-evo-red/20 bg-evo-red/5 p-2 text-left" aria-label={`Confirmar exclusão da operação de ${transaction.ticker}`}>
+                  <p className="text-xs leading-relaxed text-evo-textMain">Excluir esta operação e recalcular a carteira?</p>
+                  <div className="mt-2 flex justify-end gap-2"><button type="button" onClick={() => setPendingDeleteId('')} className="min-h-8 rounded px-2 text-xs text-evo-textSec hover:bg-white/5">Cancelar</button><button type="button" disabled={deletingId === transaction.id} onClick={() => void deleteTransaction(transaction)} className="min-h-8 rounded bg-evo-red px-2 text-xs font-semibold text-white disabled:opacity-60">{deletingId === transaction.id ? 'Excluindo…' : 'Confirmar'}</button></div>
+                </div>}
+              </td>
+            </tr>;
+          })}
         </tbody></table></div>
-        {portfolio.transactionHistoryTruncated && <p className="border-t border-evo-border p-4 text-xs text-evo-textSec">Exibindo as 100 operações mais recentes; todas são consideradas no cálculo das posições.</p>}
+        {portfolio.historyPages > 1 && <div className="flex flex-wrap items-center justify-between gap-3 border-t border-evo-border p-4 text-xs text-evo-textSec"><span>Exibindo {portfolio.transactions.length} de {portfolio.transactionCount} operações.</span><div className="flex items-center gap-2"><button type="button" disabled={historyPage <= 1 || loading} onClick={() => setHistoryPage(current => Math.max(1, current - 1))} className="inline-flex min-h-9 items-center gap-1 rounded-lg border border-evo-border px-2 text-evo-textMain disabled:opacity-40"><ChevronLeft size={15} /> Anterior</button><span>Página {historyPage} de {portfolio.historyPages}</span><button type="button" disabled={historyPage >= portfolio.historyPages || loading} onClick={() => setHistoryPage(current => current + 1)} className="inline-flex min-h-9 items-center gap-1 rounded-lg border border-evo-border px-2 text-evo-textMain disabled:opacity-40">Próxima <ChevronRight size={15} /></button></div></div>}
+        {portfolio.transactionHistoryTruncated && <p className="border-t border-evo-border p-4 text-xs text-evo-textSec">As operações mais antigas podem ser acessadas pelas páginas do histórico; todas são consideradas no cálculo das posições.</p>}
       </Card>
     </div>
   );

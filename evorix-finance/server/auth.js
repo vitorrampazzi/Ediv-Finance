@@ -51,6 +51,13 @@ const verificationLimiter = rateLimit({
   legacyHeaders: false,
   message: { error: 'Muitas tentativas. Aguarde alguns minutos antes de tentar novamente.' },
 });
+const accountDeletionLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  limit: 3,
+  standardHeaders: 'draft-8',
+  legacyHeaders: false,
+  message: { error: 'Muitas tentativas de exclusão. Aguarde alguns minutos e tente novamente.' },
+});
 
 const digest = value => createHash('sha256').update(value).digest('hex');
 const makeOpaqueToken = () => randomBytes(32).toString('base64url');
@@ -269,6 +276,38 @@ router.get('/me', async (req, res) => {
   const user = await currentUser(req);
   if (!user) return res.status(401).json({ error: 'Entre na sua conta para continuar.' });
   return res.status(200).json({ user });
+});
+
+router.delete('/me', accountDeletionLimiter, requireAuthenticatedUser, async (req, res) => {
+  const parsed = z.object({
+    password: z.string().min(1).max(128),
+    confirmation: z.literal('EXCLUIR'),
+  }).safeParse(req.body);
+  if (!parsed.success) return res.status(400).json({ error: 'Confirme a exclusão digitando EXCLUIR e informe sua senha atual.' });
+
+  const [users] = await pool.execute('SELECT password_hash FROM users WHERE id = ? LIMIT 1', [req.authenticatedUser.id]);
+  if (!users[0] || !(await argon2.verify(users[0].password_hash, parsed.data.password))) {
+    return res.status(401).json({ error: 'Senha incorreta. Confira a senha atual da sua conta.' });
+  }
+
+  const connection = await pool.getConnection();
+  try {
+    await connection.beginTransaction();
+    await connection.execute('SELECT id FROM users WHERE id = ? FOR UPDATE', [req.authenticatedUser.id]);
+    const [result] = await connection.execute('DELETE FROM users WHERE id = ?', [req.authenticatedUser.id]);
+    if (result.affectedRows !== 1) {
+      await connection.rollback();
+      return res.status(401).json({ error: 'Não foi possível confirmar sua conta. Entre novamente e tente de novo.' });
+    }
+    await connection.commit();
+    clearSessionCookie(res);
+    return res.status(204).end();
+  } catch (error) {
+    await connection.rollback();
+    throw error;
+  } finally {
+    connection.release();
+  }
 });
 
 router.post('/logout', async (req, res) => {
