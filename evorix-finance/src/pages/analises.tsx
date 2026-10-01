@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { ArrowDown, ArrowLeft, ArrowRight, ArrowUp, BriefcaseBusiness, Headset, Search, Star } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Card } from '../components/Card';
+import { OrbitCoins } from '../components/OrbitCoins';
 import { useAuth } from '../context/authContext';
 import { useFavoritos } from '../hooks/useFavoritos';
 import { useMarketAssets } from '../hooks/useMarketAssets';
@@ -33,10 +34,14 @@ export function Analises({ publicView = false }: { publicView?: boolean }) {
   return (
     <main className={`mx-auto max-w-7xl space-y-6 ${publicView ? 'min-h-screen px-5 py-6 md:px-8 md:py-10' : ''}`}>
       {publicView && <header className="flex flex-wrap items-center justify-between gap-3"><Link to="/" className="font-semibold text-evo-textMain">← Evorix Finance</Link><div className="flex items-center gap-2"><Link to="/assessoria" className="inline-flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm text-evo-textSec hover:text-evo-textMain"><Headset size={16} aria-hidden="true" /> Assessoria</Link><Link to="/entrar" className="rounded-lg px-4 py-2 text-sm text-evo-textSec hover:text-evo-textMain">Entrar</Link><Link to="/cadastro" className="rounded-lg bg-evo-blueMain px-4 py-2 text-sm font-semibold text-white">Criar conta</Link></div></header>}
-      <div className="rounded-xl border border-evo-border bg-evo-card p-6">
-        <p className="text-xs font-semibold uppercase tracking-[.18em] text-evo-blueMain">Mercado brasileiro</p>
-        <h1 className="mt-2 text-2xl font-bold tracking-tight text-evo-textMain">Ativos negociados na B3</h1>
-        <p className="mt-2 max-w-3xl text-sm leading-relaxed text-evo-textSec">Pesquise ações, units, fundos, ETFs e BDRs. Os preços são informativos e não representam execução de ordens nem recomendação de investimento.</p>
+      <div className="relative flex items-center justify-between gap-4 overflow-hidden rounded-xl border border-evo-border bg-evo-card p-5 sm:p-6">
+        <div className="pointer-events-none absolute inset-0 bg-gradient-to-r from-evo-green/5 via-transparent to-evo-blueMain/5" aria-hidden="true" />
+        <div className="relative z-10 min-w-0">
+          <p className="text-xs font-semibold uppercase tracking-[.18em] text-evo-blueMain">Mercado brasileiro</p>
+          <h1 className="mt-2 text-2xl font-bold tracking-tight text-evo-textMain">Ativos negociados na B3</h1>
+          <p className="mt-2 max-w-3xl text-sm leading-relaxed text-evo-textSec">Pesquise ações, units, fundos, ETFs e BDRs. Os preços são informativos e não representam execução de ordens nem recomendação de investimento.</p>
+        </div>
+        <div className="relative z-10 hidden shrink-0 sm:block"><OrbitCoins variant="real" size="sm" /></div>
       </div>
 
       <div className="grid gap-3 md:grid-cols-[minmax(16rem,1fr)_auto_auto]">

@@ -1,7 +1,7 @@
 // src/components/OrbitCoins.tsx
-import { Bitcoin, ScanSearch, Briefcase, Gem, type LucideIcon } from 'lucide-react';
+import { Bitcoin, Briefcase, CircleDollarSign, Gem, ScanSearch, Star, type LucideIcon } from 'lucide-react';
 
-type Variant = 'wealth' | 'scan' | 'portfolio' | 'premium';
+type Variant = 'wealth' | 'scan' | 'portfolio' | 'premium' | 'real' | 'favorites';
 
 interface OrbitCoinsProps {
   variant?: Variant;
@@ -72,6 +72,32 @@ const VARIANTS: Record<Variant, VariantConfig> = {
     glow: 'rgba(192,132,252,0.4)',
     orbit: [
       { symbol: '★', color: 'text-yellow-500', glow: 'rgba(234,179,8,0.6)' },
+      { symbol: '★', color: 'text-evo-blueMain', glow: 'rgba(59,130,246,0.6)' },
+      { symbol: '★', color: 'text-evo-green', glow: 'rgba(0,214,143,0.6)' },
+    ],
+  },
+  // Análises: real brasileiro, bolsa e variação
+  real: {
+    icon: CircleDollarSign,
+    coreColor: 'text-evo-green',
+    coreBorder: 'border-evo-green/50',
+    coreBg: 'from-evo-green/20 to-evo-green/5',
+    glow: 'rgba(0,214,143,0.4)',
+    orbit: [
+      { symbol: 'R$', color: 'text-evo-green', glow: 'rgba(0,214,143,0.7)' },
+      { symbol: 'B3', color: 'text-evo-blueMain', glow: 'rgba(59,130,246,0.6)' },
+      { symbol: '%', color: 'text-yellow-500', glow: 'rgba(234,179,8,0.6)' },
+    ],
+  },
+  // Favoritos: estrelas orbitando os ativos salvos
+  favorites: {
+    icon: Star,
+    coreColor: 'text-yellow-400',
+    coreBorder: 'border-yellow-400/50',
+    coreBg: 'from-yellow-400/20 to-yellow-600/5',
+    glow: 'rgba(250,204,21,0.4)',
+    orbit: [
+      { symbol: '★', color: 'text-yellow-400', glow: 'rgba(250,204,21,0.7)' },
       { symbol: '★', color: 'text-evo-blueMain', glow: 'rgba(59,130,246,0.6)' },
       { symbol: '★', color: 'text-evo-green', glow: 'rgba(0,214,143,0.6)' },
     ],
