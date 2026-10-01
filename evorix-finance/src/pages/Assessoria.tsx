@@ -18,7 +18,7 @@ const readiness = [
 ];
 
 export const Assessoria = () => (
-  <div className="mx-auto max-w-7xl space-y-8">
+  <main id="conteudo" className="mx-auto max-w-7xl space-y-8 px-5 py-6 md:px-8 md:py-10">
     <section className="relative overflow-hidden rounded-2xl border border-evo-border bg-evo-card p-6 md:p-10">
       <div className="absolute -right-12 -top-16 h-64 w-64 rounded-full bg-evo-blueMain/10 blur-3xl" aria-hidden="true" />
       <div className="relative z-10 grid gap-8 md:grid-cols-[1fr_auto] md:items-center">
@@ -59,5 +59,5 @@ export const Assessoria = () => (
       <h3 className="font-semibold text-evo-textMain">Como funcionam recomendações personalizadas?</h3>
         <p className="mt-2 text-sm leading-relaxed text-evo-textSec">Recomendações individualizadas sobre valores mobiliários dependem do enquadramento e das autorizações aplicáveis à atividade. Registro como assessor vinculado a uma instituição não é automaticamente o mesmo que autorização para consultoria independente. A identificação, as credenciais, o vínculo e os limites de atuação serão apresentados antes da contratação. O Evorix não envia ordens nem movimenta investimentos.</p>
     </section>
-  </div>
+  </main>
 );

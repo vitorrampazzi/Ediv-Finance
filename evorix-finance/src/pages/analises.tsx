@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { ArrowDown, ArrowLeft, ArrowRight, ArrowUp, BriefcaseBusiness, Headset, Search, Star } from 'lucide-react';
+import { ArrowDown, ArrowLeft, ArrowRight, ArrowUp, Search, Star } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Card } from '../components/Card';
 import { OrbitCoins } from '../components/OrbitCoins';
@@ -32,8 +32,7 @@ export function Analises({ publicView = false }: { publicView?: boolean }) {
   }, [search]);
 
   return (
-    <main className={`mx-auto max-w-7xl space-y-6 ${publicView ? 'min-h-screen px-5 py-6 md:px-8 md:py-10' : ''}`}>
-      {publicView && <header className="flex flex-wrap items-center justify-between gap-3"><Link to="/" className="font-semibold text-evo-textMain">← Evorix Finance</Link><div className="flex items-center gap-2"><Link to="/assessoria" className="inline-flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm text-evo-textSec hover:text-evo-textMain"><Headset size={16} aria-hidden="true" /> Assessoria</Link><Link to="/entrar" className="rounded-lg px-4 py-2 text-sm text-evo-textSec hover:text-evo-textMain">Entrar</Link><Link to="/cadastro" className="rounded-lg bg-evo-blueMain px-4 py-2 text-sm font-semibold text-white">Criar conta</Link></div></header>}
+    <main id={publicView ? 'conteudo' : undefined} className={`mx-auto max-w-7xl space-y-6 ${publicView ? 'px-5 py-6 md:px-8 md:py-10' : ''}`}>
       <div className="relative flex items-center justify-between gap-4 overflow-hidden rounded-xl border border-evo-border bg-evo-card p-5 sm:p-6">
         <div className="pointer-events-none absolute inset-0 bg-gradient-to-r from-evo-green/5 via-transparent to-evo-blueMain/5" aria-hidden="true" />
         <div className="relative z-10 min-w-0">
@@ -70,7 +69,6 @@ export function Analises({ publicView = false }: { publicView?: boolean }) {
 
       <div className="flex flex-wrap items-center justify-between gap-3 border-t border-evo-border pt-4"><p className="max-w-3xl text-xs leading-relaxed text-evo-textSec">Fonte: brapi.dev. Os preços podem ter atraso ou indisponibilidade. “Consulta ao provedor” indica quando a lista foi consultada; não garante o horário exato da negociação.</p><nav aria-label="Paginação dos ativos" className="flex items-center gap-2"><button type="button" disabled={page <= 1 || loading} onClick={() => setPage(current => Math.max(1, current - 1))} className="inline-flex min-h-10 items-center gap-1 rounded-lg border border-evo-border px-3 text-sm text-evo-textMain disabled:opacity-40"><ArrowLeft size={15} /> Anterior</button><span className="text-xs text-evo-textSec">Página {page} de {pages}</span><button type="button" disabled={page >= pages || loading} onClick={() => setPage(current => Math.min(pages, current + 1))} className="inline-flex min-h-10 items-center gap-1 rounded-lg border border-evo-border px-3 text-sm text-evo-textMain disabled:opacity-40">Próxima <ArrowRight size={15} /></button></nav></div>
 
-      {publicView && <footer className="flex items-center gap-2 border-t border-evo-border pt-5 text-xs text-evo-textSec"><BriefcaseBusiness size={15} />Crie uma conta para salvar favoritos e acompanhar sua carteira. <Link to="/cadastro" className="font-semibold text-evo-blueMain">Criar conta</Link></footer>}
     </main>
   );
 }

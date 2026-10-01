@@ -13,6 +13,7 @@ import { AuthProvider } from './context/AuthProvider';
 import { RequireAuth } from './components/RequireAuth';
 import { LoginPage, RegisterPage, VerifyEmailPage } from './pages/Autenticacao';
 import { Home } from './pages/Home';
+import { PublicLayout } from './components/SiteChrome';
 
 function App() {
   return (
@@ -21,8 +22,8 @@ function App() {
         <FavoritesProvider>
           <Routes>
             <Route path="/" element={<Home />} />
-            <Route path="/mercado" element={<Analises publicView />} />
-            <Route path="/assessoria" element={<Assessoria />} />
+            <Route path="/mercado" element={<PublicLayout><Analises publicView /></PublicLayout>} />
+            <Route path="/assessoria" element={<PublicLayout><Assessoria /></PublicLayout>} />
             <Route path="/entrar" element={<LoginPage />} />
             <Route path="/cadastro" element={<RegisterPage />} />
             <Route path="/verificar" element={<VerifyEmailPage />} />

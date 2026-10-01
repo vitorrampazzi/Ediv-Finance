@@ -1,6 +1,7 @@
-import { ArrowDown, ArrowRight, ArrowUp, BarChart3, BriefcaseBusiness, CircleAlert, Headset, ShieldCheck, Sparkles } from 'lucide-react';
+import { ArrowDown, ArrowRight, ArrowUp, BarChart3, BriefcaseBusiness, CircleAlert, ShieldCheck, Sparkles } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useMarketAssets } from '../hooks/useMarketAssets';
+import { SiteFooter, SiteHeader } from '../components/SiteChrome';
 
 const currency = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' });
 
@@ -8,20 +9,10 @@ export function Home() {
   const { assets, loading, error, requestedAt } = useMarketAssets({ search: '', type: 'stock', sortBy: 'volume', page: 1, limit: 8 });
 
   return (
-    <main className="min-h-screen bg-evo-bgMain text-evo-textMain">
-      <header className="mx-auto flex max-w-7xl items-center justify-between px-5 py-5 md:px-8">
-        <Link to="/" className="flex items-center gap-3" aria-label="Evorix Finance, página inicial">
-          <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-evo-blueMain to-evo-green font-bold text-white">E</span>
-          <span className="hidden font-semibold tracking-tight sm:inline">Evorix Finance</span>
-        </Link>
-        <nav aria-label="Acesso à conta" className="flex items-center gap-3">
-          <Link to="/assessoria" aria-label="Conheça a assessoria" className="inline-flex h-10 w-10 items-center justify-center rounded-lg text-evo-textSec hover:bg-evo-card hover:text-evo-textMain sm:h-auto sm:w-auto sm:px-3 sm:py-2.5"><Headset size={18} aria-hidden="true" /><span className="sr-only sm:not-sr-only sm:ml-2 sm:text-sm sm:font-medium">Assessoria</span></Link>
-          <Link to="/mercado" className="hidden rounded-lg px-4 py-2.5 text-sm font-medium text-evo-textSec hover:text-evo-textMain sm:block">Mercado</Link>
-          <Link to="/entrar" className="rounded-lg px-4 py-2.5 text-sm font-medium text-evo-textSec hover:text-evo-textMain">Entrar</Link>
-          <Link to="/cadastro" className="inline-flex min-h-11 items-center gap-2 rounded-lg bg-evo-blueMain px-4 text-sm font-semibold text-white hover:bg-evo-blueSec">Criar conta <ArrowRight size={16} aria-hidden="true" /></Link>
-        </nav>
-      </header>
+    <div className="min-h-screen bg-evo-bgMain text-evo-textMain">
+      <SiteHeader />
 
+      <main id="conteudo">
       <section className="mx-auto grid max-w-7xl items-center gap-10 px-5 pb-14 pt-10 md:grid-cols-[1.1fr_.9fr] md:px-8 md:pb-20 md:pt-16">
         <div>
           <span className="inline-flex items-center gap-2 rounded-full border border-evo-blueMain/20 bg-evo-blueMain/10 px-3 py-1.5 text-xs font-medium text-evo-blueMain"><Sparkles size={14} aria-hidden="true" /> Organize sua vida financeira</span>
@@ -52,8 +43,9 @@ export function Home() {
           <p className="mt-2 text-xs leading-relaxed text-evo-textSec">Fonte: brapi.dev. Preços podem ter atraso ou indisponibilidade. Conteúdo informativo, sem recomendação de compra ou venda.</p>
         </div>
       </section>
+      </main>
 
-      <footer className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-4 px-5 py-8 text-xs text-evo-textSec md:px-8"><span>© {new Date().getFullYear()} Evorix Finance</span><span>Organização financeira pessoal; não é corretora ou consultoria de investimentos.</span></footer>
-    </main>
+      <SiteFooter />
+    </div>
   );
 }
