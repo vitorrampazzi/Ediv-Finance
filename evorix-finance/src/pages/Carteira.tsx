@@ -114,23 +114,23 @@ export const Carteira = () => {
 
   return (
     <div className="mx-auto max-w-7xl space-y-6">
-      <div className="relative flex items-center justify-between overflow-hidden rounded-xl border border-evo-border bg-evo-card p-6 shadow-lg">
+      <div className="relative flex items-center justify-between gap-4 overflow-hidden rounded-xl border border-evo-border bg-evo-card p-4 shadow-lg sm:p-6">
         <div className="absolute inset-0 bg-gradient-to-r from-evo-green/5 to-transparent pointer-events-none" />
         <div className="relative z-10">
           <h1 className="text-2xl font-bold tracking-tight text-evo-textMain">Minha Carteira</h1>
           <p className="mt-1 text-evo-textSec">Registre manualmente compras e vendas e acompanhe uma estimativa pelas cotações disponíveis.</p>
         </div>
-        <OrbitCoins variant="portfolio" size="sm" />
+        <div className="hidden shrink-0 sm:block"><OrbitCoins variant="portfolio" size="sm" /></div>
       </div>
 
       {error && <p role="alert" className="flex items-start gap-2 rounded-lg border border-evo-red/20 bg-evo-red/5 p-3 text-sm text-evo-red"><CircleAlert size={17} className="mt-0.5 shrink-0" />{error}</p>}
       {message && <p role="status" className="rounded-lg border border-evo-green/20 bg-evo-green/5 p-3 text-sm text-evo-green">{message}</p>}
 
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 2xl:grid-cols-4">
         <Card glow="none" className="p-4"><p className="text-sm text-evo-textSec">Ativos na carteira</p><p className="mt-2 text-2xl font-bold text-evo-textMain">{portfolio.positions.length}</p></Card>
-        <Card glow="none" className="p-4"><p className="text-sm text-evo-textSec">Custo registrado</p><p className="mt-2 text-2xl font-bold text-evo-textMain">{formatMoney(String(investedTotal))}</p></Card>
-        <Card glow="none" className="p-4"><p className="text-sm text-evo-textSec">Valor de mercado estimado</p><p className="mt-2 text-2xl font-bold text-evo-textMain">{formatMoney(String(marketValue))}</p><p className="mt-1 text-xs text-evo-textSec">{quotedPositions.length} de {portfolio.positions.length} posições cotadas</p></Card>
-        <Card glow="none" className="flex items-center justify-between p-4"><div><p className="text-sm text-evo-textSec">Operações registradas</p><p className="mt-2 text-2xl font-bold text-evo-textMain">{portfolio.transactionCount}</p></div><button type="button" onClick={() => void loadPortfolio()} aria-label="Atualizar carteira" className="rounded-lg p-2 text-evo-textSec hover:bg-white/5 hover:text-evo-textMain"><RefreshCw size={18} /></button></Card>
+        <Card glow="none" className="min-w-0 p-4"><p className="text-sm text-evo-textSec">Custo registrado</p><p className="mt-2 font-numbers text-base font-bold text-evo-textMain sm:text-lg 2xl:text-xl">{formatMoney(String(investedTotal))}</p></Card>
+        <Card glow="none" className="min-w-0 p-4"><p className="text-sm text-evo-textSec">Valor de mercado estimado</p><p className="mt-2 font-numbers text-base font-bold text-evo-textMain sm:text-lg 2xl:text-xl">{formatMoney(String(marketValue))}</p><p className="mt-1 text-xs text-evo-textSec">{quotedPositions.length} de {portfolio.positions.length} posições cotadas</p></Card>
+        <Card glow="none" className="flex min-w-0 items-center justify-between p-4"><div><p className="text-sm text-evo-textSec">Operações registradas</p><p className="mt-2 text-2xl font-bold text-evo-textMain">{portfolio.transactionCount}</p></div><button type="button" onClick={() => void loadPortfolio()} aria-label="Atualizar carteira" className="rounded-lg p-2 text-evo-textSec hover:bg-white/5 hover:text-evo-textMain"><RefreshCw size={18} /></button></Card>
       </div>
 
       <Card glow="none" className="space-y-4">
@@ -150,14 +150,14 @@ export const Carteira = () => {
 
       <Card glow="none" className="overflow-hidden p-0">
         <div className="border-b border-evo-border p-5"><h2 className="font-semibold text-evo-textMain">Posições e preços estimados</h2><p className="mt-1 text-sm text-evo-textSec">A estimativa usa a cotação mais recente recebida e pode ter atraso. Custos e quantidades vêm das operações que você informou.</p></div>
-        <div className="overflow-x-auto"><table className="w-full text-left"><caption className="sr-only">Posições calculadas a partir de operações registradas e cotações disponíveis</caption><thead><tr className="border-b border-white/5 bg-white/[0.02] text-xs uppercase tracking-wider text-evo-textSec"><th scope="col" className="p-4">Ativo</th><th scope="col" className="p-4 text-right">Quantidade</th><th scope="col" className="p-4 text-right">Preço médio</th><th scope="col" className="p-4 text-right">Último preço</th><th scope="col" className="p-4 text-right">Valor de mercado</th><th scope="col" className="p-4 text-right">Variação estimada</th></tr></thead><tbody className="divide-y divide-white/5">
+        <div className="overflow-x-auto"><table className="w-full min-w-[680px] text-left"><caption className="sr-only">Posições calculadas a partir de operações registradas e cotações disponíveis</caption><thead><tr className="border-b border-white/5 bg-white/[0.02] text-xs uppercase tracking-wider text-evo-textSec"><th scope="col" className="p-4">Ativo</th><th scope="col" className="p-4 text-right">Quantidade</th><th scope="col" className="p-4 text-right">Preço médio</th><th scope="col" className="p-4 text-right">Último preço</th><th scope="col" className="p-4 text-right">Valor de mercado</th><th scope="col" className="p-4 text-right">Variação estimada</th></tr></thead><tbody className="divide-y divide-white/5">
           {loading ? <tr><td colSpan={6} className="p-8 text-center text-sm text-evo-textSec">Carregando carteira…</td></tr> : portfolio.positions.length === 0 ? <tr><td colSpan={6} className="p-8 text-center text-sm text-evo-textSec">Sua carteira ainda não tem operações registradas.</td></tr> : portfolio.positions.map(position => <tr key={position.ticker}><th scope="row" className="p-4 font-medium text-evo-textMain"><span>{position.ticker}</span><span className="block text-xs font-normal text-evo-textSec">{position.assetName} · {typeLabels[position.assetType]}</span></th><td className="p-4 text-right text-evo-textMain">{formatQuantity(position.quantity)}</td><td className="p-4 text-right text-evo-textSec">{formatMoney(position.averageCost)}</td><td className="p-4 text-right text-evo-textSec">{position.currentPrice ? formatMoney(position.currentPrice) : 'Indisponível'}</td><td className="p-4 text-right font-medium text-evo-textMain">{position.marketValue ? formatMoney(position.marketValue) : '—'}</td><td className={`p-4 text-right ${Number(position.unrealizedPnl) >= 0 ? 'text-evo-green' : 'text-evo-red'}`}>{position.unrealizedPnl ? formatMoney(position.unrealizedPnl) : '—'}{position.quote?.stale ? <span className="block text-[10px] text-yellow-300">último preço disponível</span> : null}</td></tr>)}
         </tbody></table></div>
       </Card>
 
       <Card glow="none" className="overflow-hidden p-0">
         <div className="border-b border-evo-border p-5"><h2 className="font-semibold text-evo-textMain">Histórico de operações</h2><p className="mt-1 text-xs text-evo-textSec">Você pode excluir um registro incorreto; a carteira será recalculada.</p></div>
-        <div className="overflow-x-auto"><table className="w-full text-left"><caption className="sr-only">Histórico de operações, 100 registros por página</caption><thead><tr className="border-b border-white/5 bg-white/[0.02] text-xs uppercase tracking-wider text-evo-textSec"><th scope="col" className="p-4">Tipo</th><th scope="col" className="p-4">Ativo</th><th scope="col" className="p-4 text-right">Quantidade</th><th scope="col" className="p-4 text-right">Preço</th><th scope="col" className="p-4 text-right">Data</th><th scope="col" className="p-4 text-right">Ações</th></tr></thead><tbody className="divide-y divide-white/5">
+        <div className="overflow-x-auto"><table className="w-full min-w-[720px] text-left"><caption className="sr-only">Histórico de operações, 100 registros por página</caption><thead><tr className="border-b border-white/5 bg-white/[0.02] text-xs uppercase tracking-wider text-evo-textSec"><th scope="col" className="p-4">Tipo</th><th scope="col" className="p-4">Ativo</th><th scope="col" className="p-4 text-right">Quantidade</th><th scope="col" className="p-4 text-right">Preço</th><th scope="col" className="p-4 text-right">Data</th><th scope="col" className="p-4 text-right">Ações</th></tr></thead><tbody className="divide-y divide-white/5">
           {portfolio.transactions.length === 0 ? <tr><td colSpan={6} className="p-8 text-center text-sm text-evo-textSec">Nenhuma operação registrada.</td></tr> : portfolio.transactions.map(transaction => {
             const isPendingDelete = pendingDeleteId === transaction.id;
             return <tr key={transaction.id}>

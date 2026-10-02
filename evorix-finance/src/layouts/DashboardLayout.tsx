@@ -163,7 +163,7 @@ export const DashboardLayout = () => {
   return (
     <div className="flex min-h-screen bg-evo-bgMain font-sans text-evo-textMain">
       <a href="#conteudo" className="sr-only z-50 rounded bg-evo-blueMain px-4 py-2 text-white focus:not-sr-only focus:fixed focus:left-4 focus:top-4">Pular para o conteúdo</a>
-      <aside className={`hidden shrink-0 border-r border-evo-border bg-evo-bgSec transition-[width] duration-200 md:sticky md:top-0 md:flex md:h-screen md:min-h-0 md:flex-col ${collapsed ? 'w-20' : 'w-64'}`}>
+      <aside className={`hidden shrink-0 border-r border-evo-border bg-evo-bgSec transition-[width] duration-200 lg:sticky lg:top-0 lg:flex lg:h-screen lg:min-h-0 lg:flex-col ${collapsed ? 'w-20' : 'w-64'}`}>
         <Link to="/app" aria-label="Evorix Finance, visão geral" className={`flex min-h-20 items-center px-5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-inset focus-visible:outline-evo-blueMain ${collapsed ? 'justify-center' : ''}`}>
           <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-evo-blueMain to-evo-green text-sm font-bold text-white">E</span>
           {!collapsed && <span className="ml-3 text-base font-bold tracking-tight">Evorix Finance</span>}
@@ -184,7 +184,7 @@ export const DashboardLayout = () => {
       <div className="flex min-h-screen min-w-0 flex-1 flex-col">
         <header className="sticky top-0 z-20 flex min-h-16 items-center justify-between border-b border-evo-border bg-evo-bgSec/95 px-4 backdrop-blur md:min-h-20 md:px-8">
           <div className="flex min-w-0 items-center gap-3">
-            <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-evo-blueMain to-evo-green text-xs font-bold text-white md:hidden" aria-hidden="true">E</span>
+            <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-evo-blueMain to-evo-green text-xs font-bold text-white lg:hidden" aria-hidden="true">E</span>
             <h1 className="truncate text-base font-semibold text-evo-textMain md:text-xl">{title}</h1>
           </div>
           <div className="flex shrink-0 items-center gap-2 md:gap-4">
@@ -202,7 +202,7 @@ export const DashboardLayout = () => {
         </main>
       </div>
 
-      <nav aria-label="Navegação móvel" className="fixed inset-x-0 bottom-0 z-30 grid grid-cols-5 border-t border-evo-border bg-evo-bgSec/95 px-1 pb-[env(safe-area-inset-bottom)] pt-1 backdrop-blur md:hidden">
+      <nav aria-label="Navegação móvel" className="fixed inset-x-0 bottom-0 z-30 grid grid-cols-5 border-t border-evo-border bg-evo-bgSec/95 px-1 pb-[env(safe-area-inset-bottom)] pt-1 backdrop-blur lg:hidden">
         {[...navigation, { to: '/app/assessoria', shortLabel: 'Assessoria', icon: Headset, end: false }].map(({ to, shortLabel, icon: Icon, end }) => (
           <NavLink key={to} to={to} end={end} className={({ isActive }) => `flex min-h-14 flex-col items-center justify-center gap-1 rounded-lg text-[10px] focus-visible:outline focus-visible:outline-2 focus-visible:outline-evo-blueMain ${isActive ? 'text-evo-blueMain' : 'text-evo-textSec'}`}>
             <Icon size={19} aria-hidden="true" /><span>{shortLabel}</span>
