@@ -115,6 +115,9 @@ export function RegisterPage() {
 
   return (
     <AuthShell title="Criar conta" description="Cadastre um e-mail para acessar a demonstração do painel.">
+      <Link to="/" className="mt-5 inline-flex min-h-10 items-center gap-2 text-sm font-medium text-evo-textSec transition hover:text-evo-textMain focus-visible:outline focus-visible:outline-2 focus-visible:outline-evo-blueMain">
+        <ArrowLeft size={16} aria-hidden="true" /> Voltar ao site
+      </Link>
       <form onSubmit={submit} className="mt-6 space-y-4">
         <div>
           <label htmlFor="register-name" className="mb-1.5 block text-sm font-medium">Nome</label>
