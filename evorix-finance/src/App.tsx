@@ -14,6 +14,7 @@ import { RequireAuth } from './components/RequireAuth';
 import { LoginPage, RegisterPage, VerifyEmailPage } from './pages/Autenticacao';
 import { Home } from './pages/Home';
 import { PublicLayout } from './components/SiteChrome';
+import { IncomeRanking } from './pages/IncomeRanking';
 
 function App() {
   return (
@@ -23,6 +24,7 @@ function App() {
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/mercado" element={<PublicLayout><Analises publicView /></PublicLayout>} />
+            <Route path="/ranking" element={<PublicLayout><IncomeRanking /></PublicLayout>} />
             <Route path="/assessoria" element={<PublicLayout><Assessoria /></PublicLayout>} />
             <Route path="/entrar" element={<LoginPage />} />
             <Route path="/cadastro" element={<RegisterPage />} />
@@ -31,6 +33,7 @@ function App() {
               <Route path="/app" element={<DashboardLayout />}>
                 <Route index element={<Dashboard />} />
                 <Route path="analises" element={<Analises />} />
+                <Route path="ranking" element={<IncomeRanking />} />
                 <Route path="carteira" element={<Carteira />} />
                 <Route path="favoritos" element={<Favoritos />} />
                 <Route path="assessoria" element={<Assessoria />} />

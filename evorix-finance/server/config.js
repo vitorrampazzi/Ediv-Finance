@@ -57,6 +57,7 @@ export const config = Object.freeze({
   mailFrom: process.env.MAIL_FROM?.trim() || null,
   trustProxy: process.env.TRUST_PROXY === 'true' || process.env.VERCEL === '1',
   brapiApiKey: process.env.BRAPI_API_KEY?.trim() || null,
+  rankingAdminEmails: (process.env.RANKING_ADMIN_EMAILS || '').split(',').map(value => value.trim().toLowerCase()).filter(Boolean),
   sessionCookieName: isProduction ? '__Host-evorix_session' : 'evorix_session',
   sessionHours: 8,
 });

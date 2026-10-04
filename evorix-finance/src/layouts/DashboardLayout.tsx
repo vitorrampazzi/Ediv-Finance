@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import {
-  Activity, BarChart3, Bell, Briefcase, ChevronLeft, ChevronRight, LogOut,
+  Activity, BarChart3, Bell, Briefcase, ChevronLeft, ChevronRight, LogOut, TrendingUp,
   CircleUserRound, Headset, LayoutDashboard, Settings, ShieldAlert, Star,
 } from 'lucide-react';
 import { Link, NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
@@ -9,12 +9,13 @@ import { useAuth } from '../context/authContext';
 const navigation = [
   { to: '/app', label: 'Visão geral', shortLabel: 'Início', icon: LayoutDashboard, end: true },
   { to: '/app/analises', label: 'Análises', shortLabel: 'Análises', icon: BarChart3, end: false },
+  { to: '/app/ranking', label: 'Renda', shortLabel: 'Renda', icon: TrendingUp, end: false },
   { to: '/app/carteira', label: 'Minha carteira', shortLabel: 'Carteira', icon: Briefcase, end: false },
   { to: '/app/favoritos', label: 'Favoritos', shortLabel: 'Favoritos', icon: Star, end: false },
 ];
 
 const pageTitles: Record<string, string> = {
-  '/app': 'Visão geral', '/app/analises': 'Análises', '/app/carteira': 'Minha carteira',
+  '/app': 'Visão geral', '/app/analises': 'Análises', '/app/ranking': 'Renda', '/app/carteira': 'Minha carteira',
   '/app/favoritos': 'Favoritos', '/app/assessoria': 'Assessoria', '/app/perfil': 'Meu perfil',
   '/app/config': 'Configurações',
 };
@@ -158,15 +159,15 @@ export const DashboardLayout = () => {
   const location = useLocation();
   const { user, logout } = useAuth();
   const [collapsed, setCollapsed] = useState(false);
-  const title = pageTitles[location.pathname] ?? 'Evorix Finance';
+  const title = pageTitles[location.pathname] ?? 'Ediv Finance';
 
   return (
     <div className="flex min-h-screen bg-evo-bgMain font-sans text-evo-textMain">
       <a href="#conteudo" className="sr-only z-50 rounded bg-evo-blueMain px-4 py-2 text-white focus:not-sr-only focus:fixed focus:left-4 focus:top-4">Pular para o conteúdo</a>
       <aside className={`hidden shrink-0 border-r border-evo-border bg-evo-bgSec transition-[width] duration-200 lg:sticky lg:top-0 lg:flex lg:h-screen lg:min-h-0 lg:flex-col ${collapsed ? 'w-20' : 'w-64'}`}>
-        <Link to="/app" aria-label="Evorix Finance, visão geral" className={`flex min-h-20 items-center px-5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-inset focus-visible:outline-evo-blueMain ${collapsed ? 'justify-center' : ''}`}>
-          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-evo-blueMain to-evo-green text-sm font-bold text-white">E</span>
-          {!collapsed && <span className="ml-3 text-base font-bold tracking-tight">Evorix Finance</span>}
+        <Link to="/app" aria-label="Ediv Finance, visão geral" className={`flex min-h-20 items-center px-5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-inset focus-visible:outline-evo-blueMain ${collapsed ? 'justify-center' : ''}`}>
+          <img src="/ediv-logo.png" alt="" aria-hidden="true" className="h-10 w-10 shrink-0 object-contain mix-blend-screen" />
+          {!collapsed && <span className="ml-3 text-base font-bold tracking-tight">Ediv Finance</span>}
         </Link>
         <button type="button" onClick={() => setCollapsed(value => !value)} aria-label={collapsed ? 'Expandir navegação' : 'Recolher navegação'} className="mx-3 mb-3 flex min-h-10 items-center justify-center gap-2 rounded-lg text-xs text-evo-textSec transition hover:bg-white/[0.04] hover:text-evo-textMain focus-visible:outline focus-visible:outline-2 focus-visible:outline-evo-blueMain">
           {collapsed ? <ChevronRight size={16} aria-hidden="true" /> : <><ChevronLeft size={16} aria-hidden="true" /> Recolher</>}
@@ -184,7 +185,7 @@ export const DashboardLayout = () => {
       <div className="flex min-h-screen min-w-0 flex-1 flex-col">
         <header className="sticky top-0 z-20 flex min-h-16 items-center justify-between border-b border-evo-border bg-evo-bgSec/95 px-4 backdrop-blur md:min-h-20 md:px-8">
           <div className="flex min-w-0 items-center gap-3">
-            <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-evo-blueMain to-evo-green text-xs font-bold text-white lg:hidden" aria-hidden="true">E</span>
+            <img src="/ediv-logo.png" alt="" aria-hidden="true" className="h-8 w-8 shrink-0 object-contain mix-blend-screen lg:hidden" />
             <h1 className="truncate text-base font-semibold text-evo-textMain md:text-xl">{title}</h1>
           </div>
           <div className="flex shrink-0 items-center gap-2 md:gap-4">
@@ -202,7 +203,7 @@ export const DashboardLayout = () => {
         </main>
       </div>
 
-      <nav aria-label="Navegação móvel" className="fixed inset-x-0 bottom-0 z-30 grid grid-cols-5 border-t border-evo-border bg-evo-bgSec/95 px-1 pb-[env(safe-area-inset-bottom)] pt-1 backdrop-blur lg:hidden">
+      <nav aria-label="Navegação móvel" className="fixed inset-x-0 bottom-0 z-30 grid grid-cols-6 border-t border-evo-border bg-evo-bgSec/95 px-1 pb-[env(safe-area-inset-bottom)] pt-1 backdrop-blur lg:hidden">
         {[...navigation, { to: '/app/assessoria', shortLabel: 'Assessoria', icon: Headset, end: false }].map(({ to, shortLabel, icon: Icon, end }) => (
           <NavLink key={to} to={to} end={end} className={({ isActive }) => `flex min-h-14 flex-col items-center justify-center gap-1 rounded-lg text-[10px] focus-visible:outline focus-visible:outline-2 focus-visible:outline-evo-blueMain ${isActive ? 'text-evo-blueMain' : 'text-evo-textSec'}`}>
             <Icon size={19} aria-hidden="true" /><span>{shortLabel}</span>

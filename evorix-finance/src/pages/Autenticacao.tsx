@@ -9,8 +9,8 @@ function AuthShell({ title, description, children }: { title: string; descriptio
     <main className="flex min-h-screen items-center justify-center px-4 py-10">
       <section className="w-full max-w-md rounded-2xl border border-evo-border bg-evo-card p-6 shadow-2xl sm:p-8">
         <Link to="/entrar" className="mb-8 inline-flex items-center gap-2 text-sm text-evo-textSec hover:text-evo-textMain">
-          <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-evo-blueMain to-evo-green font-bold text-white" aria-hidden="true">E</span>
-          Evorix Finance
+          <img src="/ediv-logo.png" alt="" aria-hidden="true" className="h-8 w-8 object-contain mix-blend-screen" />
+          Ediv Finance
         </Link>
         <h1 className="text-2xl font-bold tracking-tight">{title}</h1>
         <p className="mt-2 text-sm leading-relaxed text-evo-textSec">{description}</p>

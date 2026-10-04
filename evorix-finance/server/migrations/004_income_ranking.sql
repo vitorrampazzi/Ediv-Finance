@@ -1,0 +1,20 @@
+CREATE TABLE IF NOT EXISTS income_ranking_entries (
+  id CHAR(36) NOT NULL PRIMARY KEY,
+  batch_id CHAR(36) NOT NULL,
+  rank_position SMALLINT UNSIGNED NOT NULL,
+  ticker VARCHAR(16) CHARACTER SET ascii COLLATE ascii_general_ci NOT NULL,
+  company_name VARCHAR(160) NOT NULL,
+  expected_return_percent DECIMAL(8,4) NOT NULL,
+  target_price DECIMAL(18,6) NULL,
+  horizon_months SMALLINT UNSIGNED NULL,
+  thesis TEXT NULL,
+  source_file_name VARCHAR(255) NOT NULL,
+  imported_by CHAR(36) NULL,
+  created_at DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+  UNIQUE KEY income_ranking_ticker_unique (ticker),
+  KEY income_ranking_batch_rank_idx (batch_id, rank_position),
+  CONSTRAINT income_ranking_importer_fk FOREIGN KEY (imported_by) REFERENCES users (id) ON DELETE SET NULL,
+  CONSTRAINT income_ranking_return_nonnegative CHECK (expected_return_percent >= 0),
+  CONSTRAINT income_ranking_target_positive CHECK (target_price IS NULL OR target_price > 0),
+  CONSTRAINT income_ranking_horizon_positive CHECK (horizon_months IS NULL OR horizon_months > 0)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

@@ -95,7 +95,7 @@ async function sendVerification(email, name, token) {
   await smtp.sendMail({
     from: config.mailFrom,
     to: email,
-    subject: 'Confirme seu e-mail — Evorix Finance',
+    subject: 'Confirme seu e-mail — Ediv Finance',
     text: `Olá, ${name}.\n\nPara confirmar seu endereço de e-mail, abra este link em até 30 minutos:\n${link}\n\nSe você não solicitou este cadastro, ignore esta mensagem.`,
   });
   return {};
@@ -133,7 +133,7 @@ const publicUser = row => ({
   createdAt: row.created_at,
 });
 
-async function currentUser(req) {
+export async function currentUser(req) {
   const token = getCookie(req, config.sessionCookieName);
   if (!token || !SESSION_TOKEN_PATTERN.test(token)) return null;
 

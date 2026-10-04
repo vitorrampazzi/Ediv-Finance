@@ -1,6 +1,8 @@
-# Evorix Finance
+# Ediv Finance
 
 Aplicação React/Vite com API Node.js/Express e persistência em MySQL. A página inicial é pública, com cotações demonstrativas da brapi.dev. A área `/app` exige conta e permite salvar operações manuais, favoritos e preferências.
+
+O nome Ediv é uma abreviação de Escola do Dividendo. A rota pública `/ranking` mostra a lista publicada pelo assessor; a conta autorizada importa arquivos CSV UTF-8 exportados do Excel.
 
 ## Requisitos
 
@@ -44,6 +46,16 @@ Aplicação React/Vite com API Node.js/Express e persistência em MySQL. A pági
 
    A interface usa o proxy local do Vite para encaminhar `/api` à API em `127.0.0.1:3001`. Em desenvolvimento, sem SMTP configurado, a API devolve um link temporário de confirmação para facilitar o primeiro cadastro. Esse link só é exposto fora de produção.
 
+5. Autorize a conta que pode publicar rankings com `RANKING_ADMIN_EMAILS=seu-email@exemplo.com` no `.env` local (ou `.env.aiven.runtime` ao usar `npm run dev:api:aiven`) e reinicie a API. Em produção, configure a mesma variável na Vercel. O acesso exige conta com e-mail confirmado; não coloque uma senha administrativa no frontend.
+
+### Importação da lista de renda
+
+O assessor pode preparar a lista no Excel e salvá-la como **CSV UTF-8** (delimitado por vírgulas ou ponto e vírgula). Use o modelo disponível na página `/ranking`. As colunas obrigatórias são `ticker`, `empresa` e `potencial_percentual`; `preco_alvo`, `horizonte_meses` e `tese` são opcionais. A ordem das linhas define a posição. Percentuais e valores com vírgula são aceitos em CSV separado por ponto e vírgula.
+
+O upload aceita até 300 ativos e substitui a publicação anterior de forma transacional, somente depois de validar o arquivo inteiro. Configure `RANKING_ADMIN_EMAILS` com o e-mail confirmado do responsável antes de liberar essa função. O site identifica a lista como fornecida pelo assessor e exibe um aviso de que projeções podem estar erradas e não garantem retorno.
+
+Para aplicar migrations na base gerenciada Aiven já configurada, use `npm run db:migrate:aiven`. O comando usa a conta administrativa local de `.env.aiven` só para aplicar DDL; ele não copia nem altera os dados atuais.
+
 ## API de contas
 
 - `POST /api/auth/register` — cria conta pendente e envia confirmação de e-mail.
@@ -54,6 +66,8 @@ Aplicação React/Vite com API Node.js/Express e persistência em MySQL. A pági
 - `POST /api/auth/logout` — revoga a sessão no banco e limpa o cookie.
 - `GET /api/market/assets?type=stock&search=PETR&page=1` — lista ações, fundos, ETFs e BDRs com busca, filtros e paginação.
 - `GET /api/market/quotes?symbols=PETR4,ITUB4` — devolve cotações da brapi.dev, com limite de oito ativos por chamada.
+- `GET /api/rankings` — lista as projeções importadas mais recentemente e informa se a sessão pode publicar.
+- `POST /api/rankings` — substitui a lista com um CSV UTF-8; requer sessão confirmada cujo e-mail esteja em `RANKING_ADMIN_EMAILS`.
 - `GET /api/portfolio` — calcula posições e valores estimados usando cotações disponíveis, além do histórico recente.
 - `POST /api/portfolio/transactions` — registra compra/venda manual e rejeita vendas que deixem a posição negativa.
 - `GET/PUT /api/portfolio/preferences` — lê e salva preferência de risco, opções de notificação e o total investido informado pelo usuário.

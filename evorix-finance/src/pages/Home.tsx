@@ -21,6 +21,7 @@ export function Home() {
           <div className="mt-8 flex flex-wrap gap-3">
             <Link to="/cadastro" className="inline-flex min-h-12 items-center gap-2 rounded-lg bg-evo-blueMain px-5 font-semibold text-white hover:bg-evo-blueSec">Criar minha conta <ArrowRight size={17} aria-hidden="true" /></Link>
             <Link to="/mercado" className="inline-flex min-h-12 items-center gap-2 rounded-lg border border-evo-border px-5 font-semibold text-evo-textMain hover:bg-evo-card"><BarChart3 size={17} aria-hidden="true" /> Ver mercado</Link>
+            <Link to="/ranking" className="inline-flex min-h-12 items-center gap-2 rounded-lg border border-evo-border px-5 font-semibold text-evo-textMain hover:bg-evo-card"><ArrowUp size={17} aria-hidden="true" /> Renda</Link>
           </div>
           <p className="mt-4 text-xs text-evo-textSec">Cadastro gratuito para experimentar. Não conectamos corretoras nem movimentamos dinheiro.</p>
         </div>

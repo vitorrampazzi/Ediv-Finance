@@ -44,7 +44,7 @@ export const Assessoria = () => (
 
     <section className="grid gap-5 lg:grid-cols-[1fr_.9fr]">
       <Card glow="blue" className="space-y-4">
-        <div><p className="text-xs font-semibold uppercase tracking-[.18em] text-evo-blueMain">Assinatura Evorix</p><h3 className="mt-2 text-xl font-bold">Acompanhamento por R$ 29,90 ao mês</h3><p className="mt-2 text-sm leading-relaxed text-evo-textSec">A proposta reúne canal de dúvidas, acompanhamento educativo da carteira e encontros temáticos. Os limites de cada benefício serão informados junto às condições finais.</p></div>
+        <div><p className="text-xs font-semibold uppercase tracking-[.18em] text-evo-blueMain">Assinatura Ediv</p><h3 className="mt-2 text-xl font-bold">Acompanhamento por R$ 29,90 ao mês</h3><p className="mt-2 text-sm leading-relaxed text-evo-textSec">A proposta reúne canal de dúvidas, acompanhamento educativo da carteira e encontros temáticos. Os limites de cada benefício serão informados junto às condições finais.</p></div>
         <div className="rounded-xl border border-evo-border bg-evo-bgMain p-4"><p className="text-sm font-medium text-evo-textMain">Mensalidade proposta</p><p className="mt-1 font-numbers text-3xl font-bold text-evo-textMain">R$ 29,90<span className="ml-1 text-sm font-normal text-evo-textSec">/mês</span></p><p className="mt-2 text-xs leading-relaxed text-evo-textSec">Valor informado para o plano. Nenhuma cobrança será feita nesta página; a assinatura ainda não está à venda.</p></div>
         <p className="text-xs leading-relaxed text-evo-textSec">Antes de contratar, você verá o preço final, renovação, cancelamento, horários, tempo de resposta, limites de uso e os benefícios incluídos.</p>
       </Card>
@@ -57,7 +57,7 @@ export const Assessoria = () => (
 
     <section className="rounded-xl border border-evo-border bg-evo-bgSec p-5 md:p-6">
       <h3 className="font-semibold text-evo-textMain">Como funcionam recomendações personalizadas?</h3>
-        <p className="mt-2 text-sm leading-relaxed text-evo-textSec">Recomendações individualizadas sobre valores mobiliários dependem do enquadramento e das autorizações aplicáveis à atividade. Registro como assessor vinculado a uma instituição não é automaticamente o mesmo que autorização para consultoria independente. A identificação, as credenciais, o vínculo e os limites de atuação serão apresentados antes da contratação. O Evorix não envia ordens nem movimenta investimentos.</p>
+        <p className="mt-2 text-sm leading-relaxed text-evo-textSec">Recomendações individualizadas sobre valores mobiliários dependem do enquadramento e das autorizações aplicáveis à atividade. Registro como assessor vinculado a uma instituição não é automaticamente o mesmo que autorização para consultoria independente. A identificação, as credenciais, o vínculo e os limites de atuação serão apresentados antes da contratação. A Ediv Finance não envia ordens nem movimenta investimentos.</p>
     </section>
   </main>
 );

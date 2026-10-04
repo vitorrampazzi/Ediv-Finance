@@ -14,7 +14,7 @@ try {
   else await pool.execute('SELECT id FROM users LIMIT 0');
 
   const server = app.listen(config.port, config.host, () => {
-    console.info(`Evorix API ready on ${config.host}:${config.port}`);
+    console.info(`Ediv Finance API ready on ${config.host}:${config.port}`);
   });
 
   const cleanupTimer = setInterval(() => {

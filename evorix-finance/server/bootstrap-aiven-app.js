@@ -72,6 +72,7 @@ try {
     'APP_ORIGIN=http://localhost:5173',
     'APP_BASE_URL=http://localhost:5173',
     'TRUST_PROXY=false',
+    'RANKING_ADMIN_EMAILS=',
     'SMTP_URL=',
     'MAIL_FROM=',
     '',
