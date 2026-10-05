@@ -5,7 +5,7 @@ interface ScoreProps {
 export const ScoreIndicator = ({ score }: ScoreProps) => {
   const getColor = () => {
     if (score >= 80) return 'text-evo-green border-evo-green';
-    if (score >= 60) return 'text-evo-blueMain border-evo-blueMain';
+    if (score >= 60) return 'text-evo-accent border-evo-accent';
     if (score >= 40) return 'text-yellow-500 border-yellow-500';
     return 'text-evo-red border-evo-red';
   };

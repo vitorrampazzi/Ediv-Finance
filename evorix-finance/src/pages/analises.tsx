@@ -34,9 +34,9 @@ export function Analises({ publicView = false }: { publicView?: boolean }) {
   return (
     <main id={publicView ? 'conteudo' : undefined} className={`mx-auto max-w-7xl space-y-6 ${publicView ? 'px-5 py-6 md:px-8 md:py-10' : ''}`}>
       <div className="relative flex items-center justify-between gap-4 overflow-hidden rounded-xl border border-evo-border bg-evo-card p-5 sm:p-6">
-        <div className="pointer-events-none absolute inset-0 bg-gradient-to-r from-evo-green/5 via-transparent to-evo-blueMain/5" aria-hidden="true" />
+        <div className="pointer-events-none absolute inset-0 bg-gradient-to-r from-evo-green/5 via-transparent to-evo-accent/5" aria-hidden="true" />
         <div className="relative z-10 min-w-0">
-          <p className="text-xs font-semibold uppercase tracking-[.18em] text-evo-blueMain">Mercado brasileiro</p>
+          <p className="text-xs font-semibold uppercase tracking-[.18em] text-evo-accent">Mercado brasileiro</p>
           <h1 className="mt-2 text-2xl font-bold tracking-tight text-evo-textMain">Ativos negociados na B3</h1>
           <p className="mt-2 max-w-3xl text-sm leading-relaxed text-evo-textSec">Pesquise ações, units, fundos, ETFs e BDRs. Os preços são informativos e não representam execução de ordens nem recomendação de investimento.</p>
         </div>

@@ -144,7 +144,7 @@ export const Carteira = () => {
           <label className="text-sm text-evo-textSec">Preço unitário (R$)<input required inputMode="decimal" pattern="[0-9]+([.,][0-9]{1,8})?" value={form.unitPrice} onChange={event => setForm({ ...form, unitPrice: event.target.value.replace(',', '.') })} placeholder="Ex.: 25,50" className="mt-1 block min-h-11 w-full rounded-lg border border-evo-border bg-evo-bgMain px-3 text-evo-textMain" /></label>
           <label className="text-sm text-evo-textSec">Taxas (R$)<input inputMode="decimal" pattern="[0-9]+([.,][0-9]{1,8})?" value={form.fees} onChange={event => setForm({ ...form, fees: event.target.value.replace(',', '.') })} className="mt-1 block min-h-11 w-full rounded-lg border border-evo-border bg-evo-bgMain px-3 text-evo-textMain" /></label>
           <label className="text-sm text-evo-textSec">Data<input type="date" required value={form.tradedAt} onChange={event => setForm({ ...form, tradedAt: event.target.value })} className="mt-1 block min-h-11 w-full rounded-lg border border-evo-border bg-evo-bgMain px-3 text-evo-textMain" /></label>
-          <div className="sm:col-span-2 lg:col-span-4"><button type="submit" disabled={saving} className="inline-flex min-h-11 items-center gap-2 rounded-lg bg-evo-blueMain px-5 font-semibold text-white hover:bg-evo-blueSec disabled:opacity-60"><Plus size={17} />{saving ? 'Salvando…' : 'Adicionar operação'}</button></div>
+          <div className="sm:col-span-2 lg:col-span-4"><button type="submit" disabled={saving} className="inline-flex min-h-11 items-center gap-2 rounded-lg bg-evo-primary px-5 font-semibold text-white hover:bg-evo-primaryHover disabled:opacity-60"><Plus size={17} />{saving ? 'Salvando…' : 'Adicionar operação'}</button></div>
         </form>
       </Card>
 

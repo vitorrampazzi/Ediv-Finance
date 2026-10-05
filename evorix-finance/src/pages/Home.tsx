@@ -15,11 +15,11 @@ export function Home() {
       <main id="conteudo">
       <section className="mx-auto grid max-w-7xl items-center gap-10 px-5 pb-14 pt-10 md:grid-cols-[1.1fr_.9fr] md:px-8 md:pb-20 md:pt-16">
         <div>
-          <span className="inline-flex items-center gap-2 rounded-full border border-evo-blueMain/20 bg-evo-blueMain/10 px-3 py-1.5 text-xs font-medium text-evo-blueMain"><Sparkles size={14} aria-hidden="true" /> Organize sua vida financeira</span>
+          <span className="inline-flex items-center gap-2 rounded-full border border-evo-accent/20 bg-evo-accent/10 px-3 py-1.5 text-xs font-medium text-evo-accent"><Sparkles size={14} aria-hidden="true" /> Organize sua vida financeira</span>
           <h1 className="mt-6 max-w-2xl text-4xl font-bold leading-tight tracking-tight sm:text-5xl">Entenda seus investimentos com mais clareza.</h1>
           <p className="mt-5 max-w-xl text-base leading-relaxed text-evo-textSec">Explore cotações da bolsa sem criar conta. Quando quiser, crie seu acesso para registrar operações e acompanhar sua carteira.</p>
           <div className="mt-8 flex flex-wrap gap-3">
-            <Link to="/cadastro" className="inline-flex min-h-12 items-center gap-2 rounded-lg bg-evo-blueMain px-5 font-semibold text-white hover:bg-evo-blueSec">Criar minha conta <ArrowRight size={17} aria-hidden="true" /></Link>
+            <Link to="/cadastro" className="inline-flex min-h-12 items-center gap-2 rounded-lg bg-evo-primary px-5 font-semibold text-white hover:bg-evo-primaryHover">Criar minha conta <ArrowRight size={17} aria-hidden="true" /></Link>
             <Link to="/mercado" className="inline-flex min-h-12 items-center gap-2 rounded-lg border border-evo-border px-5 font-semibold text-evo-textMain hover:bg-evo-card"><BarChart3 size={17} aria-hidden="true" /> Ver mercado</Link>
             <Link to="/ranking" className="inline-flex min-h-12 items-center gap-2 rounded-lg border border-evo-border px-5 font-semibold text-evo-textMain hover:bg-evo-card"><ArrowUp size={17} aria-hidden="true" /> Renda</Link>
           </div>
@@ -28,13 +28,13 @@ export function Home() {
         <div className="rounded-2xl border border-evo-border bg-evo-card p-6 shadow-xl md:p-8">
           <div className="flex items-start gap-4"><span className="rounded-xl bg-evo-green/10 p-3 text-evo-green"><BriefcaseBusiness size={22} aria-hidden="true" /></span><div><h2 className="font-semibold">Sua carteira, do seu jeito</h2><p className="mt-2 text-sm leading-relaxed text-evo-textSec">Informe operações e custos para acompanhar posições estimadas. Você controla e pode corrigir os registros.</p></div></div>
           <div className="my-6 border-t border-evo-border" />
-          <div className="flex items-start gap-4"><span className="rounded-xl bg-evo-blueMain/10 p-3 text-evo-blueMain"><ShieldCheck size={22} aria-hidden="true" /></span><div><h2 className="font-semibold">Transparência sobre os números</h2><p className="mt-2 text-sm leading-relaxed text-evo-textSec">Cotação, horário e fonte aparecem junto dos valores. Um total que você informar fica identificado como declaração pessoal.</p></div></div>
+          <div className="flex items-start gap-4"><span className="rounded-xl bg-evo-accent/10 p-3 text-evo-accent"><ShieldCheck size={22} aria-hidden="true" /></span><div><h2 className="font-semibold">Transparência sobre os números</h2><p className="mt-2 text-sm leading-relaxed text-evo-textSec">Cotação, horário e fonte aparecem junto dos valores. Um total que você informar fica identificado como declaração pessoal.</p></div></div>
         </div>
       </section>
 
       <section id="mercado" className="scroll-mt-6 border-y border-evo-border bg-evo-bgSec/70">
         <div className="mx-auto max-w-7xl px-5 py-12 md:px-8 md:py-16">
-          <div className="flex flex-wrap items-end justify-between gap-4"><div><p className="text-xs font-semibold uppercase tracking-[.18em] text-evo-blueMain">Mercado brasileiro</p><h2 className="mt-2 text-2xl font-bold">Ações mais negociadas</h2><p className="mt-2 max-w-2xl text-sm leading-relaxed text-evo-textSec">Uma amostra dos ativos com maior volume disponível no provedor.</p></div><Link to="/mercado" className="inline-flex min-h-10 items-center gap-2 rounded-lg border border-evo-border px-3 text-sm text-evo-textMain hover:bg-evo-card">Explorar ativos <ArrowRight size={15} /></Link></div>
+          <div className="flex flex-wrap items-end justify-between gap-4"><div><p className="text-xs font-semibold uppercase tracking-[.18em] text-evo-accent">Mercado brasileiro</p><h2 className="mt-2 text-2xl font-bold">Ações mais negociadas</h2><p className="mt-2 max-w-2xl text-sm leading-relaxed text-evo-textSec">Uma amostra dos ativos com maior volume disponível no provedor.</p></div><Link to="/mercado" className="inline-flex min-h-10 items-center gap-2 rounded-lg border border-evo-border px-3 text-sm text-evo-textMain hover:bg-evo-card">Explorar ativos <ArrowRight size={15} /></Link></div>
           {error && <p role="alert" className="mt-5 flex items-center gap-2 rounded-lg border border-evo-red/20 bg-evo-red/5 p-3 text-sm text-evo-red"><CircleAlert size={17} />{error}</p>}
           {loading && <p role="status" className="mt-5 text-sm text-evo-textSec">Carregando ativos do mercado…</p>}
           <div className="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">

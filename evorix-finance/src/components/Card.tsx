@@ -9,8 +9,8 @@ interface CardProps {
 
 export const Card = ({ children, className = '', glow = 'none', style }: CardProps) => {
   const glowMap = {
-    blue: "shadow-[0_0_40px_-15px_rgba(22,127,130,0.2)] border-evo-blueMain/20",
-    green: "shadow-[0_0_40px_-15px_rgba(99,215,168,0.16)] border-evo-green/20",
+    blue: "shadow-[0_0_40px_-15px_rgba(22,127,130,0.2)] border-evo-accent/20",
+    green: "shadow-[0_0_40px_-15px_rgba(121,168,142,0.1)] border-evo-green/20",
     yellow: "shadow-[0_0_40px_-15px_rgba(234,179,8,0.15)] border-yellow-500/20",
     none: "border-white/5",
   };

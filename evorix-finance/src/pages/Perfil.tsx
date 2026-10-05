@@ -65,7 +65,7 @@ export const Perfil = () => {
             id="perfil-risco"
             value={perfilRisco}
             onChange={(event) => { setPerfilRisco(event.target.value); setSalvo(false); }}
-            className="min-h-11 w-full rounded-lg border border-white/10 bg-evo-bgMain px-4 text-evo-textMain focus:border-evo-blueMain"
+            className="min-h-11 w-full rounded-lg border border-white/10 bg-evo-bgMain px-4 text-evo-textMain focus:border-evo-accent"
           >
             <option value="CONSERVADOR">Conservador</option>
             <option value="MODERADO">Moderado</option>
@@ -81,7 +81,7 @@ export const Perfil = () => {
         <p className="text-xs text-evo-textSec">Não informe senhas, dados bancários ou credenciais da corretora.</p>
       </Card>
       <div className="flex max-w-3xl flex-wrap items-center gap-4">
-        <button type="button" disabled={salvando} onClick={salvarPreferencias} className="inline-flex min-h-11 items-center gap-2 rounded-lg bg-evo-blueMain px-5 font-semibold text-white transition-colors hover:bg-evo-blueSec focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-evo-blueMain disabled:opacity-60">
+        <button type="button" disabled={salvando} onClick={salvarPreferencias} className="inline-flex min-h-11 items-center gap-2 rounded-lg bg-evo-primary px-5 font-semibold text-white transition-colors hover:bg-evo-primaryHover focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-evo-accent disabled:opacity-60">
           <Save size={18} aria-hidden="true" /> {salvando ? 'Salvando…' : 'Salvar preferências'}
         </button>
         {salvo && <span role="status" className="text-sm text-evo-green">Preferências salvas na sua conta.</span>}

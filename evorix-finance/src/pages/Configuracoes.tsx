@@ -88,7 +88,7 @@ export const Configuracoes = () => {
           <div className="bg-evo-bgMain p-4 rounded-xl border border-white/5 space-y-2">
             <div className="flex justify-between items-center">
               <span className="font-medium text-evo-textMain">Agressividade do Algoritmo (Peso de Risco)</span>
-              <label htmlFor="risk-weight" className="font-numbers font-bold text-evo-blueMain">{config.motorAggressiveness}%</label>
+              <label htmlFor="risk-weight" className="font-numbers font-bold text-evo-accent">{config.motorAggressiveness}%</label>
             </div>
             <input
               type="range"
@@ -98,7 +98,7 @@ export const Configuracoes = () => {
               max="100"
               value={config.motorAggressiveness}
               onChange={(e) => setConfig({ ...config, motorAggressiveness: Number(e.target.value) })}
-              className="w-full accent-evo-blueMain cursor-pointer"
+              className="w-full accent-evo-accent cursor-pointer"
             />
             <p className="text-xs leading-relaxed text-evo-textSec">Este controle é apenas visual e não representa uma estratégia de investimento.</p>
           </div>
@@ -135,7 +135,7 @@ export const Configuracoes = () => {
               aria-labelledby="email-notifications-label"
               checked={config.notifEmail}
               onChange={(e) => { const enabled = e.target.checked; setConfig(current => ({ ...current, notifEmail: enabled })); void saveNotificationPreferences(enabled, config.notifWhatsapp); }}
-              className="w-5 h-5 accent-evo-blueMain cursor-pointer"
+              className="w-5 h-5 accent-evo-accent cursor-pointer"
             />
           </div>
 
@@ -149,7 +149,7 @@ export const Configuracoes = () => {
               aria-labelledby="whatsapp-notifications-label"
               checked={config.notifWhatsapp}
               onChange={(e) => { const enabled = e.target.checked; setConfig(current => ({ ...current, notifWhatsapp: enabled })); void saveNotificationPreferences(config.notifEmail, enabled); }}
-              className="w-5 h-5 accent-evo-blueMain cursor-pointer"
+              className="w-5 h-5 accent-evo-accent cursor-pointer"
             />
           </div>
         </Card>
@@ -190,7 +190,7 @@ const TabBtn = ({ ativo, onClick, icon, text }: TabBtnProps) => (
     onClick={onClick}
     className={`flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition-all ${
       ativo
-      ? 'bg-evo-blueMain/20 text-evo-blueMain border border-evo-blueMain/50 shadow-[0_0_10px_rgba(22,127,130,0.24)]'
+      ? 'bg-evo-accent/20 text-evo-accent border border-evo-accent/50 shadow-[0_0_10px_rgba(109,151,128,0.16)]'
       : 'text-evo-textSec hover:bg-white/[0.02] hover:text-evo-textMain border border-transparent'
     }`}
   >

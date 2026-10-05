@@ -16,13 +16,13 @@ export const Favoritos = () => {
   return (
     <div className="mx-auto max-w-7xl space-y-6">
       <div className="relative flex items-center justify-between gap-4 overflow-hidden rounded-xl border border-evo-border bg-evo-card p-5 sm:p-6">
-        <div className="pointer-events-none absolute inset-0 bg-gradient-to-r from-yellow-500/5 via-transparent to-evo-blueMain/5" aria-hidden="true" />
+        <div className="pointer-events-none absolute inset-0 bg-gradient-to-r from-yellow-500/5 via-transparent to-evo-accent/5" aria-hidden="true" />
         <div className="relative z-10"><p className="text-xs font-semibold uppercase tracking-[.18em] text-yellow-400">Sua lista pessoal</p><h1 className="mt-2 text-2xl font-bold tracking-tight text-evo-textMain">Favoritos</h1><p className="mt-1 text-sm text-evo-textSec">Acompanhe os preços mais recentes disponíveis para seus ativos marcados.</p></div>
         <div className="relative z-10 hidden shrink-0 sm:block"><OrbitCoins variant="favorites" size="sm" /></div>
       </div>
       {(favoriteError || quoteError) && <p role="alert" className="rounded-lg border border-evo-red/20 bg-evo-red/5 p-3 text-sm text-evo-red">{favoriteError || quoteError}</p>}
 
-      {favoritos.length === 0 ? <Card glow="none" className="flex flex-col items-center gap-3 py-16 text-center"><Star size={40} className="text-evo-textSec" strokeWidth={1.5} /><h2 className="text-lg font-semibold">Nenhum favorito ainda</h2><p className="max-w-sm text-sm text-evo-textSec">Abra a lista de cotações e use a estrela para adicionar ativos à sua lista.</p><Link to="/app/analises" className="mt-2 inline-flex min-h-10 items-center gap-1.5 font-medium text-evo-blueMain">Ver cotações <ArrowRight size={16} /></Link></Card> : <>
+      {favoritos.length === 0 ? <Card glow="none" className="flex flex-col items-center gap-3 py-16 text-center"><Star size={40} className="text-evo-textSec" strokeWidth={1.5} /><h2 className="text-lg font-semibold">Nenhum favorito ainda</h2><p className="max-w-sm text-sm text-evo-textSec">Abra a lista de cotações e use a estrela para adicionar ativos à sua lista.</p><Link to="/app/analises" className="mt-2 inline-flex min-h-10 items-center gap-1.5 font-medium text-evo-accent">Ver cotações <ArrowRight size={16} /></Link></Card> : <>
         {favoritos.length > 8 && <p className="rounded-lg border border-evo-border bg-evo-card p-3 text-sm leading-relaxed text-evo-textSec">A fonte atual permite consultar até oito ativos por atualização. Os primeiros oito favoritos recebem cotações; todos continuam salvos na sua lista.</p>}
         {loading && <p role="status" className="text-sm text-evo-textSec">Buscando cotações…</p>}
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">

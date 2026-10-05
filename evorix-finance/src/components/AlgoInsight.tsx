@@ -13,9 +13,9 @@ export const AlgoInsight = ({ text, ctaLabel, to, type = 'info' }: AlgoInsightPr
   
   return (
     <div className={`rounded-xl border p-4 text-sm flex gap-4 items-start transition-all hover:bg-white/[0.02] ${
-      isWarning ? 'border-yellow-500/20 bg-yellow-500/[0.02]' : 'border-evo-blueMain/20 bg-evo-blueMain/[0.02]'
+      isWarning ? 'border-yellow-500/20 bg-yellow-500/[0.02]' : 'border-evo-accent/20 bg-evo-accent/[0.02]'
     }`}>
-      <div className={`mt-0.5 shrink-0 ${isWarning ? 'text-yellow-500' : 'text-evo-blueMain'}`}>
+      <div className={`mt-0.5 shrink-0 ${isWarning ? 'text-yellow-500' : 'text-evo-accent'}`}>
         {isWarning ? <AlertTriangle size={20} /> : <Lightbulb size={20} />}
       </div>
       
@@ -26,7 +26,7 @@ export const AlgoInsight = ({ text, ctaLabel, to, type = 'info' }: AlgoInsightPr
           <Link
             to={to}
             className={`mt-3 font-medium inline-flex items-center gap-1.5 transition-colors group ${
-              isWarning ? 'text-yellow-500 hover:text-yellow-400' : 'text-evo-blueMain hover:text-evo-blueSec'
+              isWarning ? 'text-yellow-500 hover:text-yellow-400' : 'text-evo-accent hover:text-evo-accent'
             }`}
           >
             {ctaLabel}

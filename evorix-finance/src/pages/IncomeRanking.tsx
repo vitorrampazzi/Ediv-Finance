@@ -105,10 +105,10 @@ export function IncomeRanking() {
   return (
     <main className="mx-auto max-w-7xl space-y-6 px-4 py-6 sm:px-5 md:px-8 md:py-10">
       <section className="relative overflow-hidden rounded-2xl border border-evo-border bg-evo-card p-5 sm:p-7">
-        <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-evo-green/10 via-transparent to-evo-blueMain/10" aria-hidden="true" />
+        <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-evo-green/10 via-transparent to-evo-accent/10" aria-hidden="true" />
         <div className="relative flex flex-wrap items-start justify-between gap-5">
           <div className="max-w-3xl">
-            <p className="text-xs font-semibold uppercase tracking-[.18em] text-evo-green">Escola do Dividendo</p>
+            <p className="text-xs font-semibold uppercase tracking-[.18em] text-evo-accent">Ediv Finance</p>
             <h1 className="mt-2 text-2xl font-bold tracking-tight sm:text-3xl">Renda e projeções</h1>
             <p className="mt-3 text-sm leading-relaxed text-evo-textSec">Acompanhe a lista de ativos e os cenários compartilhados pelo assessor. A posição indica a ordem do arquivo mais recente; não é uma promessa de valorização.</p>
           </div>
@@ -119,19 +119,19 @@ export function IncomeRanking() {
       {error && <p role="alert" className="flex items-start gap-2 rounded-lg border border-evo-red/20 bg-evo-red/5 p-3 text-sm text-evo-red"><CircleAlert size={17} className="mt-0.5 shrink-0" aria-hidden="true" />{error}</p>}
       {message && <p role="status" className="rounded-lg border border-evo-green/20 bg-evo-green/5 p-3 text-sm text-evo-green">{message}</p>}
 
-      {ranking.canManage && <Card glow="none" className="border-evo-blueMain/20">
+      {ranking.canManage && <Card glow="none" className="border-evo-accent/20">
         <div className="flex items-start gap-3">
-          <span className="rounded-lg bg-evo-blueMain/10 p-2 text-evo-blueMain"><FileSpreadsheet size={19} aria-hidden="true" /></span>
+          <span className="rounded-lg bg-evo-accent/10 p-2 text-evo-accent"><FileSpreadsheet size={19} aria-hidden="true" /></span>
           <div className="min-w-0 flex-1">
             <h2 className="font-semibold">Publicar planilha do assessor</h2>
             <p className="mt-1 text-sm leading-relaxed text-evo-textSec">No Excel, use “Salvar como” e escolha CSV UTF-8. A publicação substitui a lista atual depois que o arquivo inteiro for validado.</p>
-            <a href="/ediv-ranking-modelo.csv" download className="mt-2 inline-flex min-h-9 items-center gap-2 text-sm font-medium text-evo-blueMain hover:text-evo-blueSec"><ArrowDownToLine size={15} aria-hidden="true" /> Baixar modelo CSV</a>
+            <a href="/ediv-ranking-modelo.csv" download className="mt-2 inline-flex min-h-9 items-center gap-2 text-sm font-medium text-evo-accent hover:text-evo-accent"><ArrowDownToLine size={15} aria-hidden="true" /> Baixar modelo CSV</a>
             <form onSubmit={event => void uploadFile(event)} className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-end">
               <div className="min-w-0 flex-1">
                 <label htmlFor="ranking-csv" className="mb-1.5 block text-sm font-medium">Arquivo CSV (até 300 ativos)</label>
                 <input id="ranking-csv" type="file" accept=".csv,text/csv" onChange={chooseFile} className="block min-h-11 w-full rounded-lg border border-evo-border bg-evo-bgMain px-3 py-2 text-sm text-evo-textSec file:mr-3 file:rounded-md file:border-0 file:bg-evo-card file:px-3 file:py-1.5 file:text-sm file:font-medium file:text-evo-textMain" />
               </div>
-              <button type="submit" disabled={!selectedFile || uploading} className="inline-flex min-h-11 items-center justify-center gap-2 rounded-lg bg-evo-blueMain px-4 font-semibold text-white transition hover:bg-evo-blueSec disabled:cursor-not-allowed disabled:opacity-50"><Upload size={16} aria-hidden="true" />{uploading ? 'Publicando…' : 'Publicar ranking'}</button>
+              <button type="submit" disabled={!selectedFile || uploading} className="inline-flex min-h-11 items-center justify-center gap-2 rounded-lg bg-evo-primary px-4 font-semibold text-white transition hover:bg-evo-primaryHover disabled:cursor-not-allowed disabled:opacity-50"><Upload size={16} aria-hidden="true" />{uploading ? 'Publicando…' : 'Publicar ranking'}</button>
             </form>
           </div>
         </div>

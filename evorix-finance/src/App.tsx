@@ -54,10 +54,10 @@ function App() {
 function NotFound() {
   return (
     <section className="mx-auto flex min-h-[50vh] max-w-xl flex-col items-center justify-center gap-4 text-center">
-      <p className="font-numbers text-sm text-evo-blueMain">404</p>
+      <p className="font-numbers text-sm text-evo-accent">404</p>
       <h2 className="text-2xl font-bold">Página não encontrada</h2>
       <p className="text-sm leading-relaxed text-evo-textSec">O endereço pode estar incorreto ou a página pode ter sido removida.</p>
-      <Link to="/" className="inline-flex min-h-11 items-center rounded-lg bg-evo-blueMain px-4 font-semibold text-white hover:bg-evo-blueSec focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-evo-blueMain">Voltar ao início</Link>
+      <Link to="/" className="inline-flex min-h-11 items-center rounded-lg bg-evo-primary px-4 font-semibold text-white hover:bg-evo-primaryHover focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-evo-accent">Voltar ao início</Link>
     </section>
   );
 }
