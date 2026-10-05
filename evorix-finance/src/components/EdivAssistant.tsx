@@ -92,17 +92,32 @@ export function EdivAssistant() {
   const isApp = location.pathname.startsWith('/app');
   const [open, setOpen] = useState(false);
   const [draft, setDraft] = useState('');
+  const [aiEnabled, setAiEnabled] = useState(false);
+  const [statusLoading, setStatusLoading] = useState(true);
+  const [privacyAccepted, setPrivacyAccepted] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [chatError, setChatError] = useState('');
   const [messages, setMessages] = useState<AssistantMessage[]>([
     {
       id: 1,
       role: 'assistant',
-      text: 'Olá! Sou o assistente demonstrativo da Ediv. Posso explicar como usar o site e responder dúvidas frequentes. Como posso ajudar?',
+      text: 'Olá! Posso explicar funções do site e conceitos financeiros gerais. Não tenho cotações ao vivo nem acesso à sua carteira. Como posso ajudar?',
     },
   ]);
   const nextId = useRef(2);
   const inputRef = useRef<HTMLInputElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const controller = new AbortController();
+    fetch('/api/assistant/status', { headers: { Accept: 'application/json' }, signal: controller.signal })
+      .then(response => response.ok ? response.json() : null)
+      .then(status => { if (!controller.signal.aborted) setAiEnabled(status?.enabled === true); })
+      .catch(() => { if (!controller.signal.aborted) setAiEnabled(false); });
+    // The local FAQ remains usable if the status endpoint is unavailable.
+    const fallback = window.setTimeout(() => setStatusLoading(false), 1500);
+    return () => { controller.abort(); window.clearTimeout(fallback); };
+  }, []);
 
   useEffect(() => {
     if (!open) return;
@@ -121,14 +136,44 @@ export function EdivAssistant() {
     return () => document.removeEventListener('keydown', closeOnEscape);
   }, [open]);
 
-  const ask = (value: string) => {
+  const ask = async (value: string) => {
     const question = value.trim();
-    if (!question) return;
+    if (!question || busy) return;
+    if (aiEnabled && !privacyAccepted) {
+      setChatError('Leia e confirme o aviso sobre o envio ao Google antes de conversar com a IA.');
+      return;
+    }
+    setChatError('');
     const userMessage: AssistantMessage = { id: nextId.current++, role: 'user', text: question };
-    const response = getLocalAnswer(question);
-    const assistantMessage: AssistantMessage = { ...response, id: nextId.current++, role: 'assistant' };
-    setMessages(current => [...current, userMessage, assistantMessage]);
+    if (!aiEnabled) {
+      const response = getLocalAnswer(question);
+      const assistantMessage: AssistantMessage = { ...response, id: nextId.current++, role: 'assistant' };
+      setMessages(current => [...current, userMessage, assistantMessage]);
+      setDraft('');
+      return;
+    }
+
+    const conversation = [...messages.filter(message => message.id !== 1), userMessage].slice(-10);
+    setMessages(current => [...current, userMessage]);
     setDraft('');
+    setBusy(true);
+    try {
+      const response = await fetch('/api/assistant/chat', {
+        method: 'POST',
+        credentials: 'same-origin',
+        headers: { Accept: 'application/json', 'Content-Type': 'application/json' },
+        body: JSON.stringify({ messages: conversation.map(message => ({ role: message.role === 'assistant' ? 'model' : 'user', text: message.text })) }),
+      });
+      const result = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(result.error || 'Não foi possível obter uma resposta agora.');
+      setMessages(current => [...current, { id: nextId.current++, role: 'assistant', text: result.answer }]);
+    } catch (reason) {
+      setMessages(current => current.filter(message => message.id !== userMessage.id));
+      setDraft(question);
+      setChatError(reason instanceof Error ? reason.message : 'Não foi possível obter uma resposta agora.');
+    } finally {
+      setBusy(false);
+    }
   };
 
   const panelPosition = isApp
@@ -153,7 +198,7 @@ export function EdivAssistant() {
               <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-evo-green/20 bg-evo-green/10 text-evo-green"><Bot size={20} aria-hidden="true" /></span>
               <div className="min-w-0">
                 <h2 id="ediv-assistant-title" className="truncate text-sm font-semibold text-evo-textMain">Ajuda Ediv</h2>
-                <p className="mt-0.5 text-xs text-evo-textSec">Respostas locais · Demonstração</p>
+                <p className="mt-0.5 text-xs text-evo-textSec">{aiEnabled ? 'Gemini · uso experimental' : 'Perguntas frequentes · local'}</p>
               </div>
             </div>
             <button type="button" onClick={() => { setOpen(false); buttonRef.current?.focus(); }} aria-label="Fechar assistente" className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg text-evo-textSec hover:bg-white/5 hover:text-evo-textMain focus-visible:outline focus-visible:outline-2 focus-visible:outline-evo-green"><X size={18} aria-hidden="true" /></button>
@@ -168,6 +213,8 @@ export function EdivAssistant() {
                 </div>
               </article>
             ))}
+            {busy && <p role="status" className="text-xs text-evo-textSec">Preparando resposta…</p>}
+            {chatError && <p role="alert" className="rounded-lg border border-evo-red/25 bg-evo-red/10 p-3 text-xs leading-relaxed text-evo-red">{chatError}</p>}
             {messages.length === 1 && (
               <div className="space-y-2 pt-1">
                 <p className="flex items-center gap-1.5 text-[11px] font-medium text-evo-textSec"><CircleHelp size={13} aria-hidden="true" /> Perguntas frequentes</p>
@@ -179,7 +226,11 @@ export function EdivAssistant() {
             <div ref={bottomRef} />
           </div>
 
-          <form onSubmit={event => { event.preventDefault(); ask(draft); }} className="border-t border-evo-border bg-evo-card p-3">
+          <form onSubmit={event => { event.preventDefault(); void ask(draft); }} className="border-t border-evo-border bg-evo-card p-3">
+            {aiEnabled && <label className="mb-3 flex cursor-pointer items-start gap-2 text-[10px] leading-relaxed text-evo-textSec">
+              <input type="checkbox" checked={privacyAccepted} onChange={event => { setPrivacyAccepted(event.target.checked); setChatError(''); }} className="mt-0.5 h-4 w-4 shrink-0 accent-evo-accent" />
+              <span>Entendi que a pergunta e o histórico serão enviados ao Google Gemini no plano gratuito, que pode usar esse conteúdo para melhorar serviços e permitir revisão humana. Não enviarei dados pessoais, saldo, carteira ou credenciais.</span>
+            </label>}
             <label htmlFor="ediv-assistant-input" className="sr-only">Sua pergunta</label>
             <div className="flex items-center gap-2 rounded-xl border border-evo-border bg-evo-bgMain p-1.5 pl-3 focus-within:border-evo-green/60">
               <input
@@ -187,14 +238,15 @@ export function EdivAssistant() {
                 id="ediv-assistant-input"
                 value={draft}
                 onChange={event => setDraft(event.target.value)}
-                maxLength={400}
+                maxLength={1200}
                 placeholder="Escreva sua dúvida…"
                 autoComplete="off"
+                disabled={busy}
                 className="min-h-10 min-w-0 flex-1 bg-transparent text-sm text-evo-textMain outline-none placeholder:text-evo-textSec/70"
               />
-              <button type="submit" disabled={!draft.trim()} aria-label="Enviar pergunta" className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-evo-primary text-evo-textMain transition hover:bg-evo-primaryHover disabled:cursor-not-allowed disabled:opacity-40"><Send size={17} aria-hidden="true" /></button>
+              <button type="submit" disabled={!draft.trim() || busy || (aiEnabled && !privacyAccepted)} aria-label="Enviar pergunta" className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-evo-primary text-evo-textMain transition hover:bg-evo-primaryHover disabled:cursor-not-allowed disabled:opacity-40"><Send size={17} aria-hidden="true" /></button>
             </div>
-            <p className="mt-2 px-1 text-[10px] leading-relaxed text-evo-textSec">Não envie senhas, CPF, dados bancários ou informações da corretora. As mensagens não são salvas.</p>
+            <p className="mt-2 px-1 text-[10px] leading-relaxed text-evo-textSec">Não envie senhas, CPF, dados bancários ou informações da corretora. {aiEnabled ? 'A Ediv não guarda este histórico.' : 'As mensagens ficam apenas nesta página.'}</p>
           </form>
         </section>
       )}
