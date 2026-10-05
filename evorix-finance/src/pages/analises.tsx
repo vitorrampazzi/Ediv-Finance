@@ -51,7 +51,7 @@ export function Analises({ publicView = false }: { publicView?: boolean }) {
     <section
       className={`mx-auto max-w-7xl space-y-6 ${publicView ? "px-5 py-6 md:px-8 md:py-10" : ""}`}
     >
-      <div className="relative flex items-center justify-between gap-4 overflow-hidden rounded-xl border border-evo-border bg-evo-card p-5 sm:p-6">
+      <div className="relative flex flex-col items-start justify-between gap-4 overflow-hidden rounded-xl border border-evo-border bg-evo-card p-5 sm:flex-row sm:items-center sm:p-6">
         <div
           className="pointer-events-none absolute inset-0 bg-gradient-to-r from-evo-green/5 via-transparent to-evo-accent/5"
           aria-hidden="true"
@@ -69,7 +69,7 @@ export function Analises({ publicView = false }: { publicView?: boolean }) {
             de investimento.
           </p>
         </div>
-        <div className="relative z-10 hidden shrink-0 sm:block">
+        <div className="relative z-10 shrink-0 self-end sm:self-center">
           <OrbitCoins variant="real" size="sm" />
         </div>
       </div>

@@ -9,6 +9,7 @@ import { useAuth } from "../context/authContext";
 import { useFavoritos } from "../hooks/useFavoritos";
 import { rankingDemoEntries } from "../lib/rankingDemo";
 import { RankingAccessLanding } from "../components/RankingAccessLanding";
+import { OrbitCoins } from "../components/OrbitCoins";
 
 type Entry = RankingFundamentalData & {
   rank: number;
@@ -257,37 +258,44 @@ function MemberIncomeRanking() {
       className="mx-auto max-w-7xl space-y-6 px-4 py-6 sm:px-6 md:py-10"
     >
       <section className="rounded-2xl border border-evo-border bg-evo-card p-6 sm:p-8">
-        <p className="text-xs font-semibold uppercase tracking-widest text-evo-accent">
-          Estudar cenários · entender riscos
-        </p>
-        <h1 className="mt-3 text-3xl font-bold">Ranking de previsões</h1>
-        <p className="mt-3 max-w-3xl leading-relaxed text-evo-textSec">
-          {showingDemo ? (
-            "Conheça o formato da pesquisa: cenários, números e módulos de análise reunidos em uma demonstração com dados fictícios."
-          ) : (
-            <>
-              Explore as teses publicadas pela equipe, entenda os fatores que
-              podem favorecer ou contrariar cada cenário e acompanhe as revisões
-              ao longo do tempo.
-            </>
-          )}
-        </p>
-        <div className="mt-5 flex flex-wrap gap-3">
-          <Link to="/aprender#ranking" className={button}>
-            <BookOpen size={17} /> Como interpretar o ranking
-          </Link>
-          <button
-            type="button"
-            className="min-h-11 rounded-lg border border-evo-border px-4 text-sm font-semibold hover:border-evo-accent/50"
-            onClick={() => changeView(showingDemo ? "real" : "demo")}
-          >
-            {showingDemo
-              ? "Ver publicações da equipe"
-              : "Explorar demonstração"}
-          </button>
-          <span className="self-center text-xs text-evo-textSec">
-            A ordem da lista não representa uma probabilidade de lucro.
-          </span>
+        <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
+          <div className="min-w-0 flex-1">
+            <p className="text-xs font-semibold uppercase tracking-widest text-evo-accent">
+              Estudar cenários · entender riscos
+            </p>
+            <h1 className="mt-3 text-3xl font-bold">Ranking de previsões</h1>
+            <p className="mt-3 max-w-3xl leading-relaxed text-evo-textSec">
+              {showingDemo ? (
+                "Conheça o formato da pesquisa: cenários, números e módulos de análise reunidos em uma demonstração com dados fictícios."
+              ) : (
+                <>
+                  Explore as teses publicadas pela equipe, entenda os fatores
+                  que podem favorecer ou contrariar cada cenário e acompanhe as
+                  revisões ao longo do tempo.
+                </>
+              )}
+            </p>
+            <div className="mt-5 flex flex-wrap gap-3">
+              <Link to="/aprender#ranking" className={button}>
+                <BookOpen size={17} /> Como interpretar o ranking
+              </Link>
+              <button
+                type="button"
+                className="min-h-11 rounded-lg border border-evo-border px-4 text-sm font-semibold hover:border-evo-accent/50"
+                onClick={() => changeView(showingDemo ? "real" : "demo")}
+              >
+                {showingDemo
+                  ? "Ver publicações da equipe"
+                  : "Explorar demonstração"}
+              </button>
+              <span className="self-center text-xs text-evo-textSec">
+                A ordem da lista não representa uma probabilidade de lucro.
+              </span>
+            </div>
+          </div>
+          <div className="shrink-0 self-end sm:self-center">
+            <OrbitCoins variant="ranking" size="hero" />
+          </div>
         </div>
       </section>
       {showingDemo && (

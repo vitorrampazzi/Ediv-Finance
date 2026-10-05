@@ -21,7 +21,7 @@ export const Favoritos = () => {
 
   return (
     <div className="mx-auto max-w-7xl space-y-6">
-      <div className="relative flex items-center justify-between gap-4 overflow-hidden rounded-xl border border-evo-border bg-evo-card p-5 sm:p-6">
+      <div className="relative flex flex-col items-start justify-between gap-4 overflow-hidden rounded-xl border border-evo-border bg-evo-card p-5 sm:flex-row sm:items-center sm:p-6">
         <div
           className="pointer-events-none absolute inset-0 bg-gradient-to-r from-yellow-500/5 via-transparent to-evo-accent/5"
           aria-hidden="true"
@@ -38,7 +38,7 @@ export const Favoritos = () => {
             marcados.
           </p>
         </div>
-        <div className="relative z-10 hidden shrink-0 sm:block">
+        <div className="relative z-10 shrink-0 self-end sm:self-center">
           <OrbitCoins variant="favorites" size="sm" />
         </div>
       </div>

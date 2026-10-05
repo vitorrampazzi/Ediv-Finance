@@ -9,6 +9,7 @@ import {
 import { apiRequest } from "../lib/api";
 import { useAuth } from "../context/authContext";
 import { AccountGate } from "../components/AccountGate";
+import { OrbitCoins } from "../components/OrbitCoins";
 
 type Lesson = {
   id: string;
@@ -98,13 +99,20 @@ export function Aprender() {
       className="mx-auto max-w-6xl space-y-6 px-4 py-8 sm:px-6"
     >
       <section className="rounded-2xl border border-evo-border bg-evo-card p-6 sm:p-8">
-        <BookOpen className="text-evo-accent" />
-        <h1 className="mt-4 text-3xl font-bold">Aprender para entender</h1>
-        <p className="mt-3 max-w-3xl leading-relaxed text-evo-textSec">
-          Uma trilha curta para ler as análises com mais clareza, questionar
-          premissas e entender sua carteira. Exemplos educativos não são
-          recomendações de investimento.
-        </p>
+        <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
+          <div className="min-w-0 flex-1">
+            <BookOpen className="text-evo-accent" />
+            <h1 className="mt-4 text-3xl font-bold">Aprender para entender</h1>
+            <p className="mt-3 max-w-3xl leading-relaxed text-evo-textSec">
+              Uma trilha curta para ler as análises com mais clareza, questionar
+              premissas e entender sua carteira. Exemplos educativos não são
+              recomendações de investimento.
+            </p>
+          </div>
+          <div className="shrink-0 self-end sm:self-center">
+            <OrbitCoins variant="learning" size="hero" />
+          </div>
+        </div>
         <p className="mt-4 text-sm text-evo-accent">
           {completed.length} de {lessonIds.length} etapas concluídas · progresso
           salvo neste navegador

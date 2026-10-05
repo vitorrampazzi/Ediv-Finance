@@ -241,7 +241,7 @@ export const Carteira = () => {
 
   return (
     <div className="mx-auto max-w-7xl space-y-6">
-      <div className="relative flex items-center justify-between gap-4 overflow-hidden rounded-xl border border-evo-border bg-evo-card p-4 shadow-lg sm:p-6">
+      <div className="relative flex flex-col items-start justify-between gap-4 overflow-hidden rounded-xl border border-evo-border bg-evo-card p-4 shadow-lg sm:flex-row sm:items-center sm:p-6">
         <div className="absolute inset-0 bg-gradient-to-r from-evo-green/5 to-transparent pointer-events-none" />
         <div className="relative z-10">
           <h1 className="text-2xl font-bold tracking-tight text-evo-textMain">
@@ -252,7 +252,7 @@ export const Carteira = () => {
             pelas cotações disponíveis.
           </p>
         </div>
-        <div className="hidden shrink-0 sm:block">
+        <div className="shrink-0 self-end sm:self-center">
           <OrbitCoins variant="portfolio" size="sm" />
         </div>
       </div>

@@ -104,10 +104,68 @@ button:disabled {
 
 @keyframes orbit {
   from {
-    transform: rotate(0deg);
+    transform: rotate(var(--orbit-phase, 0deg));
   }
   to {
-    transform: rotate(360deg);
+    transform: rotate(calc(var(--orbit-phase, 0deg) + 360deg));
+  }
+}
+
+.orbit-coins {
+  --coin-core: 36px;
+  --coin-radius: 31px;
+  --coin-orbit-size: 16px;
+  width: calc(var(--coin-core) * 2.3);
+  height: calc(var(--coin-core) * 2.3);
+}
+
+.orbit-coins--hero {
+  --coin-core: 48px;
+  --coin-radius: 42px;
+  --coin-orbit-size: 20px;
+}
+
+.coin-orbit {
+  transform: rotate(var(--orbit-phase));
+  animation: orbit var(--orbit-duration) linear infinite;
+  animation-delay: var(--orbit-delay);
+}
+
+.coin-orbit-value {
+  display: inline-block;
+  transform: rotate(calc(var(--orbit-phase) * -1));
+  animation: coinCounterOrbit var(--orbit-duration) linear infinite;
+  animation-delay: var(--orbit-delay);
+}
+
+@keyframes coinCounterOrbit {
+  from {
+    transform: rotate(calc(var(--orbit-phase) * -1));
+  }
+  to {
+    transform: rotate(calc(var(--orbit-phase) * -1 - 360deg));
+  }
+}
+
+@media (min-width: 640px) {
+  .orbit-coins {
+    --coin-core: 48px;
+    --coin-radius: 42px;
+    --coin-orbit-size: 20px;
+  }
+  .orbit-coins--hero {
+    --coin-core: 84px;
+    --coin-radius: 70px;
+    --coin-orbit-size: 26px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .orbit-coins .coin-orbit,
+  .orbit-coins .coin-orbit-value,
+  .orbit-coins .animate-spin-y,
+  .orbit-coins .animate-pulse {
+    animation: none !important;
   }
 }
 

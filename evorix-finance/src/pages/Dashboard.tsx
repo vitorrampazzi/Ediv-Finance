@@ -142,7 +142,7 @@ export const Dashboard = () => {
 
   return (
     <div className="mx-auto max-w-7xl space-y-6">
-      <div className="relative flex items-center justify-between overflow-hidden rounded-xl border border-evo-border bg-evo-card p-6 shadow-lg">
+      <div className="relative flex flex-col items-start justify-between gap-4 overflow-hidden rounded-xl border border-evo-border bg-evo-card p-6 shadow-lg sm:flex-row sm:items-center">
         <div className="absolute inset-0 bg-gradient-to-r from-evo-accent/5 to-transparent pointer-events-none" />
         <div className="relative z-10">
           <p className="text-sm text-evo-textSec">Seu espaço financeiro</p>
@@ -154,7 +154,7 @@ export const Dashboard = () => {
             baseadas nas cotações disponíveis.
           </p>
         </div>
-        <div className="hidden shrink-0 md:block" aria-hidden="true">
+        <div className="shrink-0 self-end sm:self-center" aria-hidden="true">
           <OrbitCoins variant="wealth" size="hero" />
         </div>
       </div>
