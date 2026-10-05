@@ -190,7 +190,7 @@ const TabBtn = ({ ativo, onClick, icon, text }: TabBtnProps) => (
     onClick={onClick}
     className={`flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition-all ${
       ativo
-      ? 'bg-evo-blueMain/20 text-evo-blueMain border border-evo-blueMain/50 shadow-[0_0_10px_rgba(59,130,246,0.2)]'
+      ? 'bg-evo-blueMain/20 text-evo-blueMain border border-evo-blueMain/50 shadow-[0_0_10px_rgba(22,127,130,0.24)]'
       : 'text-evo-textSec hover:bg-white/[0.02] hover:text-evo-textMain border border-transparent'
     }`}
   >

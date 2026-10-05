@@ -8,16 +8,16 @@ export default {
     extend: {
       colors: {
         evo: {
-          bgMain: '#080B12',
-          bgSec: '#0F141D',
-          card: '#151B26',
-          border: '#242C3A',
-          green: '#00D68F',
-          red: '#FF4D67',
-          blueMain: '#3B82F6',
-          blueSec: '#2563EB',
-          textMain: '#F8FAFC',
-          textSec: '#94A3B8'
+          bgMain: '#070F0E',
+          bgSec: '#0B1715',
+          card: '#10201E',
+          border: '#1F3834',
+          green: '#63D7A8',
+          red: '#F26B7A',
+          blueMain: '#167F82',
+          blueSec: '#12696D',
+          textMain: '#F4F8F6',
+          textSec: '#A1B6B1'
         }
       },
       fontFamily: {

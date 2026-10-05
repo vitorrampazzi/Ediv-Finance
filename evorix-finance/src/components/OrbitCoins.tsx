@@ -32,9 +32,9 @@ const VARIANTS: Record<Variant, VariantConfig> = {
     coreBg: 'from-yellow-400/20 to-yellow-600/5',
     glow: 'rgba(234,179,8,0.4)',
     orbit: [
-      { symbol: 'Ξ', color: 'text-indigo-400', glow: 'rgba(129,140,248,0.6)' },
-      { symbol: '$', color: 'text-evo-green', glow: 'rgba(0,214,143,0.6)' },
-      { symbol: '◎', color: 'text-purple-400', glow: 'rgba(192,132,252,0.6)' },
+      { symbol: 'Ξ', color: 'text-evo-blueMain', glow: 'rgba(22,127,130,0.6)' },
+      { symbol: '$', color: 'text-evo-green', glow: 'rgba(99,215,168,0.6)' },
+      { symbol: '◎', color: 'text-teal-200', glow: 'rgba(94,234,212,0.5)' },
     ],
   },
   // Análises: motor escaneando o mercado
@@ -43,9 +43,9 @@ const VARIANTS: Record<Variant, VariantConfig> = {
     coreColor: 'text-evo-blueMain',
     coreBorder: 'border-evo-blueMain/50',
     coreBg: 'from-evo-blueMain/20 to-evo-blueMain/5',
-    glow: 'rgba(59,130,246,0.4)',
+    glow: 'rgba(22,127,130,0.42)',
     orbit: [
-      { symbol: '%', color: 'text-evo-green', glow: 'rgba(0,214,143,0.6)' },
+      { symbol: '%', color: 'text-evo-green', glow: 'rgba(99,215,168,0.6)' },
       { symbol: '#', color: 'text-yellow-500', glow: 'rgba(234,179,8,0.6)' },
       { symbol: 'σ', color: 'text-evo-red', glow: 'rgba(255,77,103,0.6)' },
     ],
@@ -56,24 +56,24 @@ const VARIANTS: Record<Variant, VariantConfig> = {
     coreColor: 'text-evo-green',
     coreBorder: 'border-evo-green/50',
     coreBg: 'from-evo-green/20 to-evo-green/5',
-    glow: 'rgba(0,214,143,0.4)',
+    glow: 'rgba(99,215,168,0.38)',
     orbit: [
       { symbol: '₿', color: 'text-yellow-500', glow: 'rgba(234,179,8,0.6)' },
-      { symbol: 'A', color: 'text-evo-blueMain', glow: 'rgba(59,130,246,0.6)' },
-      { symbol: 'F', color: 'text-purple-400', glow: 'rgba(192,132,252,0.6)' },
+      { symbol: 'A', color: 'text-evo-blueMain', glow: 'rgba(22,127,130,0.6)' },
+      { symbol: 'F', color: 'text-teal-200', glow: 'rgba(94,234,212,0.5)' },
     ],
   },
   // Assessoria: exclusividade, não é sobre dinheiro
   premium: {
     icon: Gem,
-    coreColor: 'text-purple-400',
-    coreBorder: 'border-purple-400/50',
-    coreBg: 'from-purple-400/20 to-purple-600/5',
-    glow: 'rgba(192,132,252,0.4)',
+    coreColor: 'text-evo-blueMain',
+    coreBorder: 'border-evo-blueMain/50',
+    coreBg: 'from-evo-blueMain/20 to-evo-blueMain/5',
+    glow: 'rgba(22,127,130,0.4)',
     orbit: [
       { symbol: '★', color: 'text-yellow-500', glow: 'rgba(234,179,8,0.6)' },
-      { symbol: '★', color: 'text-evo-blueMain', glow: 'rgba(59,130,246,0.6)' },
-      { symbol: '★', color: 'text-evo-green', glow: 'rgba(0,214,143,0.6)' },
+      { symbol: '★', color: 'text-evo-blueMain', glow: 'rgba(22,127,130,0.6)' },
+      { symbol: '★', color: 'text-evo-green', glow: 'rgba(99,215,168,0.6)' },
     ],
   },
   // Análises: real brasileiro, bolsa e variação
@@ -82,10 +82,10 @@ const VARIANTS: Record<Variant, VariantConfig> = {
     coreColor: 'text-evo-green',
     coreBorder: 'border-evo-green/50',
     coreBg: 'from-evo-green/20 to-evo-green/5',
-    glow: 'rgba(0,214,143,0.4)',
+    glow: 'rgba(99,215,168,0.38)',
     orbit: [
-      { symbol: 'R$', color: 'text-evo-green', glow: 'rgba(0,214,143,0.7)' },
-      { symbol: 'B3', color: 'text-evo-blueMain', glow: 'rgba(59,130,246,0.6)' },
+      { symbol: 'R$', color: 'text-evo-green', glow: 'rgba(99,215,168,0.7)' },
+      { symbol: 'B3', color: 'text-evo-blueMain', glow: 'rgba(22,127,130,0.6)' },
       { symbol: '%', color: 'text-yellow-500', glow: 'rgba(234,179,8,0.6)' },
     ],
   },
@@ -98,8 +98,8 @@ const VARIANTS: Record<Variant, VariantConfig> = {
     glow: 'rgba(250,204,21,0.4)',
     orbit: [
       { symbol: '★', color: 'text-yellow-400', glow: 'rgba(250,204,21,0.7)' },
-      { symbol: '★', color: 'text-evo-blueMain', glow: 'rgba(59,130,246,0.6)' },
-      { symbol: '★', color: 'text-evo-green', glow: 'rgba(0,214,143,0.6)' },
+      { symbol: '★', color: 'text-evo-blueMain', glow: 'rgba(22,127,130,0.6)' },
+      { symbol: '★', color: 'text-evo-green', glow: 'rgba(99,215,168,0.6)' },
     ],
   },
 };
