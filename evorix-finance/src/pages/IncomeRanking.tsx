@@ -2,11 +2,13 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { BookOpen, FileSpreadsheet, Search, Star, Upload } from "lucide-react";
 import { Card } from "../components/Card";
+import { RankingFundamentals } from "../components/RankingFundamentals";
+import type { RankingFundamentalData } from "../components/RankingFundamentals";
 import { apiRequest } from "../lib/api";
 import { useAuth } from "../context/authContext";
 import { useFavoritos } from "../hooks/useFavoritos";
 
-type Entry = {
+type Entry = RankingFundamentalData & {
   rank: number;
   ticker: string;
   companyName: string;
@@ -245,6 +247,14 @@ export function IncomeRanking() {
           >
             Baixar modelo de planilha
           </a>
+          <p className="mt-3 text-sm leading-relaxed text-evo-textSec">
+            O modelo inclui balanço patrimonial, DRE, fluxo de caixa,
+            informações da empresa, dívida líquida e estatísticas. Preencha cada
+            módulo como texto, com os valores, unidades e datas que deseja
+            exibir. Período e fonte também são opcionais. Campos vazios aparecem
+            como não informados. A lista de ações para pesquisa, sozinha, não é
+            uma previsão.
+          </p>
           <div className="mt-4 grid gap-3 sm:grid-cols-2">
             {(
               [
@@ -332,6 +342,7 @@ export function IncomeRanking() {
                             <p className="max-w-lg whitespace-pre-wrap p-2">
                               {e.risks || "Sem riscos"}
                             </p>
+                            <RankingFundamentals data={e} />
                           </details>
                         </td>
                       </tr>
@@ -568,6 +579,7 @@ export function IncomeRanking() {
                   </p>
                 </div>
               </div>
+              <RankingFundamentals data={entry} />
               <Link
                 to="/aprender#ranking"
                 className="mt-4 inline-block text-xs text-evo-accent underline"

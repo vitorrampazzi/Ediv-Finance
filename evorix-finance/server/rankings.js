@@ -37,11 +37,61 @@ const aliases = {
   thesis: ["tese", "justificativa", "observacao"],
   risks: ["riscos", "risco"],
   sector: ["setor", "sector"],
+  balanceSheet: ["balanco_patrimonial", "balanco", "balance_sheet"],
+  incomeStatement: [
+    "dre",
+    "demonstracao_do_resultado_do_exercicio",
+    "dre_demonstracao_do_resultado_do_exercicio",
+    "income_statement",
+  ],
+  cashFlow: ["fluxo_de_caixa", "fluxo_caixa", "cash_flow"],
+  companyInformation: [
+    "informacoes_da_empresa",
+    "informacoes_cadastrais_da_empresa",
+    "informacoes_cadastraveis_da_empresa",
+    "dados_cadastrais",
+    "company_information",
+  ],
+  netDebt: ["divida_liquida", "informacoes_de_divida_liquida", "net_debt"],
+  statistics: [
+    "estatisticas",
+    "estatistica",
+    "informacoes_de_estatistica",
+    "statistics",
+  ],
+  referencePeriod: [
+    "periodo_referencia",
+    "periodo_de_referencia",
+    "reference_period",
+  ],
+  dataSource: ["fonte_dados", "fonte_dos_dados", "fonte", "data_source"],
 };
+const fundamentalKeys = [
+  "balanceSheet",
+  "incomeStatement",
+  "cashFlow",
+  "companyInformation",
+  "netDebt",
+  "statistics",
+];
 function parseRows(rows) {
+  const labels = rows.flat().map(normalizeHeader);
+  if (
+    labels.includes("acoes_para_pesquisa") &&
+    labels.includes("modulos_indispensaveis")
+  )
+    throw new ImportError(
+      "Este arquivo lista ações e módulos para pesquisa, mas não contém os dados de uma publicação. Use o modelo de ranking e preencha uma ação por linha.",
+    );
   if (rows.length < 2 || rows.length > 301)
     throw new ImportError("Inclua o cabeçalho e de 1 a 300 ativos.");
   const headers = rows[0].map(normalizeHeader);
+  for (const names of Object.values(aliases)) {
+    if (headers.filter((header) => names.includes(header)).length > 1)
+      throw new ImportError(
+        "Há colunas repetidas para o mesmo campo: " + names[0],
+      );
+  }
   const indexes = Object.fromEntries(
     Object.entries(aliases).map(([key, names]) => [
       key,
@@ -102,6 +152,23 @@ function parseRows(rows) {
       const sector = get("sector");
       if (thesis.length > 2000 || risks.length > 2000 || sector.length > 120)
         throw new ImportError("Texto muito longo na linha " + (i + 2));
+      const fundamentals = Object.fromEntries(
+        fundamentalKeys.map((key) => {
+          const value = get(key);
+          if (value.length > 5000)
+            throw new ImportError(
+              "Cada módulo aceita até 5.000 caracteres. Confira a linha " +
+                (i + 2),
+            );
+          return [key, value || null];
+        }),
+      );
+      const referencePeriod = get("referencePeriod");
+      const dataSource = get("dataSource");
+      if (referencePeriod.length > 120 || dataSource.length > 500)
+        throw new ImportError(
+          "Período ou fonte muito longos na linha " + (i + 2),
+        );
       return {
         rank: i + 1,
         ticker,
@@ -112,6 +179,9 @@ function parseRows(rows) {
         thesis: thesis || null,
         risks: risks || null,
         sector: sector || null,
+        ...fundamentals,
+        referencePeriod: referencePeriod || null,
+        dataSource: dataSource || null,
       };
     });
 }
