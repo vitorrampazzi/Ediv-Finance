@@ -15,6 +15,7 @@ import { LoginPage, RegisterPage, VerifyEmailPage } from './pages/Autenticacao';
 import { Home } from './pages/Home';
 import { PublicLayout } from './components/SiteChrome';
 import { IncomeRanking } from './pages/IncomeRanking';
+import { EdivAssistant } from './components/EdivAssistant';
 
 function App() {
   return (
@@ -43,6 +44,7 @@ function App() {
             </Route>
             <Route path="*" element={<NotFound />} />
           </Routes>
+          <EdivAssistant />
         </FavoritesProvider>
       </AuthProvider>
     </BrowserRouter>
