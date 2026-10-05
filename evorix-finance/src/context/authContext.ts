@@ -1,18 +1,30 @@
-import { createContext, useContext } from 'react';
-import type { AuthUser } from './AuthProvider';
+import { createContext, useContext } from "react";
+import type { AuthUser } from "./AuthProvider";
 
-export const AuthContext = createContext<{
-  user: AuthUser | null;
-  loading: boolean;
-  login: (email: string, password: string) => Promise<void>;
-  logout: () => Promise<void>;
-  deleteAccount: (password: string) => Promise<void>;
-  register: (name: string, email: string, password: string) => Promise<{ message?: string; verificationUrl?: string }>;
-  resendVerification: (email: string) => Promise<{ message?: string; verificationUrl?: string }>;
-} | undefined>(undefined);
+export const AuthContext = createContext<
+  | {
+      user: AuthUser | null;
+      loading: boolean;
+      refreshSession: () => Promise<void>;
+      login: (email: string, password: string) => Promise<void>;
+      logout: () => Promise<void>;
+      deleteAccount: (password: string) => Promise<void>;
+      register: (
+        name: string,
+        email: string,
+        password: string,
+        next?: string,
+      ) => Promise<{ message?: string; verificationUrl?: string }>;
+      resendVerification: (
+        email: string,
+        next?: string,
+      ) => Promise<{ message?: string; verificationUrl?: string }>;
+    }
+  | undefined
+>(undefined);
 
 export function useAuth() {
   const value = useContext(AuthContext);
-  if (!value) throw new Error('useAuth precisa estar dentro de AuthProvider.');
+  if (!value) throw new Error("useAuth precisa estar dentro de AuthProvider.");
   return value;
 }

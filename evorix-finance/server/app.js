@@ -10,6 +10,7 @@ import { marketRouter } from "./market.js";
 import { rankingRouter } from "./rankings.js";
 import { assistantRouter } from "./assistant.js";
 import { supportRouter } from "./support.js";
+import { learningRouter } from "./learning.js";
 
 const app = express();
 const safeMethods = new Set(["GET", "HEAD", "OPTIONS"]);
@@ -75,6 +76,7 @@ app.use("/api/favorites", favoritesRouter);
 app.use("/api/rankings", rankingRouter);
 app.use("/api/assistant", assistantRouter);
 app.use("/api/support", supportRouter);
+app.use("/api/learning", learningRouter);
 
 app.use("/api", (_req, res) =>
   res.status(404).json({ error: "Rota de API não encontrada." }),
@@ -95,11 +97,9 @@ app.use((error, _req, res, _next) => {
     return res
       .status(400)
       .json({ error: "O conteúdo enviado não é um JSON válido." });
-  return res
-    .status(500)
-    .json({
-      error: "Não foi possível concluir a solicitação. Tente novamente.",
-    });
+  return res.status(500).json({
+    error: "Não foi possível concluir a solicitação. Tente novamente.",
+  });
 });
 
 export { app };

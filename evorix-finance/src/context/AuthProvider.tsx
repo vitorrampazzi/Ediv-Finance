@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { ReactNode } from "react";
 import { AuthContext } from "./authContext";
 
@@ -50,15 +50,23 @@ async function apiRequest(
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [loading, setLoading] = useState(true);
+  const sessionRevision = useRef(0);
+  const refreshSession = useCallback(async () => {
+    const revision = sessionRevision.current;
+    const result = await apiRequest("/api/auth/me");
+    if (revision === sessionRevision.current) setUser(result.user ?? null);
+  }, []);
 
   useEffect(() => {
     let active = true;
+    const revision = sessionRevision.current;
     apiRequest("/api/auth/me")
       .then((result) => {
-        if (active) setUser(result.user ?? null);
+        if (active && revision === sessionRevision.current)
+          setUser(result.user ?? null);
       })
       .catch(() => {
-        if (active) setUser(null);
+        if (active && revision === sessionRevision.current) setUser(null);
       })
       .finally(() => {
         if (active) setLoading(false);
@@ -74,11 +82,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       body: JSON.stringify({ email, password }),
     });
     if (!result.user) throw new Error("Não foi possível iniciar a sessão.");
+    sessionRevision.current += 1;
     setUser(result.user);
   }, []);
 
   const logout = useCallback(async () => {
     await apiRequest("/api/auth/logout", { method: "POST" });
+    sessionRevision.current += 1;
     setUser(null);
   }, []);
 
@@ -87,23 +97,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       method: "DELETE",
       body: JSON.stringify({ password, confirmation: "EXCLUIR" }),
     });
+    sessionRevision.current += 1;
     setUser(null);
   }, []);
 
   const register = useCallback(
-    (name: string, email: string, password: string) =>
+    (name: string, email: string, password: string, next?: string) =>
       apiRequest("/api/auth/register", {
         method: "POST",
-        body: JSON.stringify({ name, email, password }),
+        body: JSON.stringify({ name, email, password, next }),
       }),
     [],
   );
 
   const resendVerification = useCallback(
-    (email: string) =>
+    (email: string, next?: string) =>
       apiRequest("/api/auth/verification/resend", {
         method: "POST",
-        body: JSON.stringify({ email }),
+        body: JSON.stringify({ email, next }),
       }),
     [],
   );
@@ -112,13 +123,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     () => ({
       user,
       loading,
+      refreshSession,
       login,
       logout,
       deleteAccount,
       register,
       resendVerification,
     }),
-    [user, loading, login, logout, deleteAccount, register, resendVerification],
+    [
+      user,
+      loading,
+      refreshSession,
+      login,
+      logout,
+      deleteAccount,
+      register,
+      resendVerification,
+    ],
   );
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }

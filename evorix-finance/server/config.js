@@ -83,6 +83,13 @@ export const config = Object.freeze({
     Math.max(1, Number(process.env.AI_DAILY_LIMIT || 100) || 100),
   ),
   aiAssistantEnabled: process.env.AI_ASSISTANT_ENABLED === "true",
+  aiUserDailyLimit: Math.min(
+    100,
+    Math.max(
+      1,
+      Math.floor(Number(process.env.AI_USER_DAILY_LIMIT || 20) || 20),
+    ),
+  ),
   supportEmail: process.env.SUPPORT_EMAIL?.trim() || null,
   supportHours: process.env.SUPPORT_HOURS?.trim() || null,
   professionalName: process.env.PROFESSIONAL_NAME?.trim() || null,

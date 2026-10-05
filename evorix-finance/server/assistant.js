@@ -3,6 +3,7 @@ import { rateLimit } from "express-rate-limit";
 import { z } from "zod";
 import { config } from "./config.js";
 import { MysqlLimitStore } from "./limit-store.js";
+import { requireAuthenticatedUser } from "./auth.js";
 
 const router = Router();
 const chatLimiter = rateLimit({
@@ -27,6 +28,8 @@ const chatSchema = z.object({
 
 const projectLimiter = new MysqlLimitStore("assistant-project");
 projectLimiter.init({ windowMs: 24 * 60 * 60 * 1000 });
+const accountLimiter = new MysqlLimitStore("assistant-account-daily");
+accountLimiter.init({ windowMs: 24 * 60 * 60 * 1000 });
 
 const systemInstruction = [
   "Você é o assistente educativo da Ediv Finance, um site brasileiro de organização financeira pessoal.",
@@ -47,155 +50,163 @@ router.get("/status", (_req, res) => {
   return res.json({
     enabled: isAiEnabled(),
     provider: isAiEnabled() ? "Gemini" : null,
+    requiresAccount: true,
+    accountLimit: config.aiUserDailyLimit,
+    windowHours: 24,
   });
 });
 
-router.post("/chat", chatLimiter, async (req, res) => {
-  if (!isAiEnabled()) {
-    return res
-      .status(503)
-      .json({ error: "O assistente com IA ainda não está configurado." });
-  }
+router.post(
+  "/chat",
+  requireAuthenticatedUser,
+  chatLimiter,
+  async (req, res) => {
+    if (!isAiEnabled()) {
+      return res
+        .status(503)
+        .json({ error: "O assistente com IA ainda não está configurado." });
+    }
 
-  const parsed = chatSchema.safeParse(req.body);
-  if (!parsed.success) {
-    return res
-      .status(400)
-      .json({
+    const parsed = chatSchema.safeParse(req.body);
+    if (!parsed.success) {
+      return res.status(400).json({
         error: "A conversa está inválida ou excede o limite permitido.",
       });
-  }
+    }
 
-  const { messages } = parsed.data;
-  if (
-    messages.at(-1)?.role !== "user" ||
-    messages.some(
-      (message, index) =>
-        index > 0 && message.role === messages[index - 1].role,
-    )
-  ) {
-    return res
-      .status(400)
-      .json({ error: "Envie uma pergunta para continuar a conversa." });
-  }
+    const { messages } = parsed.data;
+    if (
+      messages.at(-1)?.role !== "user" ||
+      messages.some(
+        (message, index) =>
+          index > 0 && message.role === messages[index - 1].role,
+      )
+    ) {
+      return res
+        .status(400)
+        .json({ error: "Envie uma pergunta para continuar a conversa." });
+    }
 
-  if (
-    messages.some((message) =>
-      /[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}|\b\d{3}\.?\d{3}\.?\d{3}-?\d{2}\b|(?:senha|password|token|api.key)\s*[:=]/i.test(
-        message.text,
-      ),
+    if (
+      messages.some((message) =>
+        /[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}|\b\d{3}\.?\d{3}\.?\d{3}-?\d{2}\b|(?:senha|password|token|api.key)\s*[:=]/i.test(
+          message.text,
+        ),
+      )
     )
-  )
-    return res
-      .status(400)
-      .json({
+      return res.status(400).json({
         error:
           "Remova dados pessoais e credenciais da pergunta. Use apenas conceitos gerais.",
       });
-  const projectUsage = await projectLimiter.increment("all");
-  if (projectUsage.totalHits > config.aiDailyLimit)
-    return res
-      .status(429)
-      .json({
+    const accountUsage = await accountLimiter.increment(
+      req.authenticatedUser.id,
+    );
+    if (accountUsage.totalHits > config.aiUserDailyLimit) {
+      res.setHeader(
+        "Retry-After",
+        Math.max(
+          1,
+          Math.ceil((accountUsage.resetTime.getTime() - Date.now()) / 1000),
+        ),
+      );
+      return res
+        .status(429)
+        .json({
+          error:
+            "Você atingiu seu limite de " +
+            config.aiUserDailyLimit +
+            " perguntas à IA em 24 horas. O guia local continua disponível.",
+        });
+    }
+    const projectUsage = await projectLimiter.increment("all");
+    if (projectUsage.totalHits > config.aiDailyLimit)
+      return res.status(429).json({
         error:
           "O limite diário da IA foi atingido. O guia local e as aulas continuam disponíveis.",
       });
 
-  const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(config.geminiModel)}:generateContent`;
+    const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(config.geminiModel)}:generateContent`;
 
-  try {
-    const requestOptions = {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "x-goog-api-key": config.geminiApiKey,
-      },
-      body: JSON.stringify({
-        systemInstruction: { parts: [{ text: systemInstruction }] },
-        contents: messages.map(({ role, text }) => ({
-          role,
-          parts: [{ text }],
-        })),
-        generationConfig: { maxOutputTokens: 1200 },
-      }),
-      signal: AbortSignal.timeout(15_000),
-    };
-    let upstream = await fetch(endpoint, requestOptions);
-    if ([500, 502, 503, 504].includes(upstream.status)) {
-      await upstream.body?.cancel();
-      await new Promise((resolve) =>
-        setTimeout(resolve, 800 + Math.random() * 400),
-      );
-      upstream = await fetch(endpoint, {
-        ...requestOptions,
-        signal: AbortSignal.timeout(10_000),
-      });
-    }
+    try {
+      const requestOptions = {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-goog-api-key": config.geminiApiKey,
+        },
+        body: JSON.stringify({
+          systemInstruction: { parts: [{ text: systemInstruction }] },
+          contents: messages.map(({ role, text }) => ({
+            role,
+            parts: [{ text }],
+          })),
+          generationConfig: { maxOutputTokens: 1200 },
+        }),
+        signal: AbortSignal.timeout(15_000),
+      };
+      let upstream = await fetch(endpoint, requestOptions);
+      if ([500, 502, 503, 504].includes(upstream.status)) {
+        await upstream.body?.cancel();
+        await new Promise((resolve) =>
+          setTimeout(resolve, 800 + Math.random() * 400),
+        );
+        upstream = await fetch(endpoint, {
+          ...requestOptions,
+          signal: AbortSignal.timeout(10_000),
+        });
+      }
 
-    if (!upstream.ok) {
-      if (upstream.status === 429) {
-        return res
-          .status(429)
-          .json({
+      if (!upstream.ok) {
+        if (upstream.status === 429) {
+          return res.status(429).json({
             error:
               "A cota gratuita do assistente está temporariamente esgotada. Tente mais tarde.",
           });
-      }
-      console.error("Gemini request failed with status:", upstream.status);
-      if ([500, 502, 503, 504].includes(upstream.status))
-        return res
-          .status(503)
-          .json({
+        }
+        console.error("Gemini request failed with status:", upstream.status);
+        if ([500, 502, 503, 504].includes(upstream.status))
+          return res.status(503).json({
             error:
               "O Google Gemini está temporariamente indisponível. Você pode continuar aprendendo na página Aprender e tentar o chat mais tarde.",
           });
-      if ([400, 401, 403].includes(upstream.status))
-        return res
-          .status(502)
-          .json({
+        if ([400, 401, 403].includes(upstream.status))
+          return res.status(502).json({
             error:
               "A integração do assistente precisa ser revisada pela equipe. Enquanto isso, consulte a página Aprender.",
           });
-      if (upstream.status === 404)
-        return res
-          .status(502)
-          .json({
+        if (upstream.status === 404)
+          return res.status(502).json({
             error:
               "O modelo do assistente está indisponível. A equipe precisa revisar a configuração.",
           });
-      return res
-        .status(502)
-        .json({
+        return res.status(502).json({
           error:
             "O assistente não conseguiu responder agora. Tente novamente mais tarde.",
         });
-    }
+      }
 
-    const payload = await upstream.json();
-    const answer = payload.candidates?.[0]?.content?.parts
-      ?.map((part) => (typeof part.text === "string" ? part.text : ""))
-      .join("")
-      .trim();
-    if (!answer)
-      return res
-        .status(502)
-        .json({
+      const payload = await upstream.json();
+      const answer = payload.candidates?.[0]?.content?.parts
+        ?.map((part) => (typeof part.text === "string" ? part.text : ""))
+        .join("")
+        .trim();
+      if (!answer)
+        return res.status(502).json({
           error:
             "O assistente não retornou uma resposta. Reformule a pergunta.",
         });
 
-    return res.json({ answer: answer.slice(0, 5000) });
-  } catch (error) {
-    console.error(
-      "Gemini request failed:",
-      error?.name === "TimeoutError" ? "timeout" : "network error",
-    );
-    return res
-      .status(502)
-      .json({
+      return res.json({ answer: answer.slice(0, 5000) });
+    } catch (error) {
+      console.error(
+        "Gemini request failed:",
+        error?.name === "TimeoutError" ? "timeout" : "network error",
+      );
+      return res.status(502).json({
         error: "Não foi possível conectar ao assistente. Tente novamente.",
       });
-  }
-});
+    }
+  },
+);
 
 export { router as assistantRouter };

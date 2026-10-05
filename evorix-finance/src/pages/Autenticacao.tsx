@@ -9,6 +9,7 @@ import {
 } from "lucide-react";
 import { apiRequest } from "../lib/api";
 import { useAuth } from "../context/authContext";
+import { authLink, safeAuthDestination } from "../lib/authDestination";
 
 function AuthShell({
   title,
@@ -78,8 +79,10 @@ export function LoginPage() {
   const [resendUrl, setResendUrl] = useState("");
   const [busy, setBusy] = useState(false);
   const [resending, setResending] = useState(false);
-  const destination =
-    (location.state as { from?: string } | null)?.from || "/app";
+  const destination = safeAuthDestination(
+    new URLSearchParams(location.search).get("next") ||
+      (location.state as { from?: string } | null)?.from,
+  );
 
   useEffect(() => {
     if (user) navigate(destination, { replace: true });
@@ -110,7 +113,7 @@ export function LoginPage() {
     setResendUrl("");
     setResending(true);
     try {
-      const result = await resendVerification(email);
+      const result = await resendVerification(email, destination);
       setMessage(result.message || "Confira sua caixa de entrada.");
       setResendUrl(result.verificationUrl || "");
     } catch (reason) {
@@ -209,7 +212,7 @@ export function LoginPage() {
       <p className="mt-5 text-center text-sm text-evo-textSec">
         Ainda não tem conta?{" "}
         <Link
-          to="/cadastro"
+          to={authLink("cadastro", destination)}
           className="font-semibold text-evo-accent hover:text-evo-accent"
         >
           Criar conta
@@ -222,6 +225,10 @@ export function LoginPage() {
 export function RegisterPage() {
   const { user, register } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
+  const destination = safeAuthDestination(
+    new URLSearchParams(location.search).get("next"),
+  );
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -231,8 +238,8 @@ export function RegisterPage() {
   const [busy, setBusy] = useState(false);
 
   useEffect(() => {
-    if (user) navigate("/app", { replace: true });
-  }, [user, navigate]);
+    if (user) navigate(destination, { replace: true });
+  }, [user, navigate, destination]);
 
   const submit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -241,7 +248,7 @@ export function RegisterPage() {
     setVerificationUrl("");
     setBusy(true);
     try {
-      const result = await register(name, email, password);
+      const result = await register(name, email, password, destination);
       setMessage(result.message || "Cadastro recebido.");
       setVerificationUrl(result.verificationUrl || "");
     } catch (reason) {
@@ -257,8 +264,8 @@ export function RegisterPage() {
 
   return (
     <AuthShell
-      title="Criar conta"
-      description="Crie seu acesso gratuito para organizar a carteira e salvar favoritos."
+      title="Criar conta grátis"
+      description="Libere o ranking completo, os módulos da pesquisa e todas as aulas. Organize sua carteira e salve favoritos."
     >
       <form onSubmit={submit} className="mt-6 space-y-4">
         <div>
@@ -328,6 +335,12 @@ export function RegisterPage() {
             className="rounded-lg border border-evo-green/20 bg-evo-green/5 p-3 text-sm text-evo-green"
           >
             <p>{message}</p>
+            <Link
+              className="mt-3 inline-flex min-h-11 items-center underline"
+              to={authLink("entrar", destination)}
+            >
+              Depois de confirmar o e-mail, entrar e continuar
+            </Link>
             {verificationUrl && (
               <a
                 href={verificationUrl}
@@ -343,7 +356,7 @@ export function RegisterPage() {
           disabled={busy}
           className="inline-flex min-h-11 w-full items-center justify-center rounded-lg bg-evo-primary px-4 font-semibold text-white transition hover:bg-evo-primaryHover disabled:opacity-60"
         >
-          {busy ? "Criando conta…" : "Criar conta"}
+          {busy ? "Criando conta…" : "Criar conta grátis"}
         </button>
       </form>
       <p className="mt-4 text-xs leading-relaxed text-evo-textSec">
@@ -360,7 +373,7 @@ export function RegisterPage() {
       <p className="mt-5 text-center text-sm text-evo-textSec">
         Já tem conta?{" "}
         <Link
-          to="/entrar"
+          to={authLink("entrar", destination)}
           className="font-semibold text-evo-accent hover:text-evo-accent"
         >
           Entrar
@@ -371,6 +384,10 @@ export function RegisterPage() {
 }
 
 export function VerifyEmailPage() {
+  const location = useLocation();
+  const destination = safeAuthDestination(
+    new URLSearchParams(location.search).get("next"),
+  );
   const [token] = useState(() => window.location.hash.slice(1));
   const [state, setState] = useState<{
     loading: boolean;
@@ -452,7 +469,7 @@ export function VerifyEmailPage() {
         )}
       </div>
       <Link
-        to="/entrar"
+        to={authLink("entrar", destination)}
         className="mt-5 inline-flex min-h-10 items-center gap-2 text-sm font-medium text-evo-accent hover:text-evo-accent"
       >
         <ArrowLeft size={16} aria-hidden="true" /> Ir para entrar

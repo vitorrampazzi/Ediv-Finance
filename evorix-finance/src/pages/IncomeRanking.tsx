@@ -8,6 +8,7 @@ import { apiRequest } from "../lib/api";
 import { useAuth } from "../context/authContext";
 import { useFavoritos } from "../hooks/useFavoritos";
 import { rankingDemoEntries } from "../lib/rankingDemo";
+import { AccountGate } from "../components/AccountGate";
 
 type Entry = RankingFundamentalData & {
   rank: number;
@@ -17,6 +18,7 @@ type Entry = RankingFundamentalData & {
   targetPrice: string | null;
   horizonMonths: number | null;
   thesis: string | null;
+  thesisPreview?: string | null;
   risks: string | null;
   sector: string | null;
   referencePrice?: string;
@@ -33,6 +35,8 @@ type Ranking = {
   sourceFileName: string | null;
   canManage: boolean;
   history: { id: string; title: string; createdAt: string }[];
+  access?: "preview" | "full";
+  totalEntries?: number;
 };
 const empty: Ranking = {
   id: null,
@@ -60,11 +64,16 @@ const button =
   "inline-flex min-h-11 items-center justify-center gap-2 rounded-lg bg-evo-primary px-4 text-sm font-semibold text-white hover:bg-evo-primaryHover disabled:opacity-50";
 export function IncomeRanking() {
   const [searchParams, setSearchParams] = useSearchParams();
-  const { user } = useAuth();
+  const { user, loading: authLoading, refreshSession } = useAuth();
+  const userId = user?.id;
   const { toggleFavorito, isFavorito, error: favoriteError } = useFavoritos();
   const [ranking, setRanking] = useState<Ranking>(empty);
   const [publication, setPublication] = useState("");
-  const [loading, setLoading] = useState(true);
+  const [requestLoading, setLoading] = useState(true);
+  const [loadedFor, setLoadedFor] = useState<string | null>(null);
+  const requestKey =
+    (userId || "visitor") + ":" + (userId ? publication : "latest");
+  const loading = requestLoading || authLoading || loadedFor !== requestKey;
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
   const [search, setSearch] = useState("");
@@ -81,42 +90,30 @@ export function IncomeRanking() {
     professionalRegistration: "",
   });
   const load = useCallback(
-    async (signal?: AbortSignal) => {
-      try {
-        const data = await apiRequest<Ranking>(
-          "/api/rankings" +
-            (publication
-              ? "?publication=" + encodeURIComponent(publication)
-              : ""),
-          { signal },
-        );
-        if (!signal?.aborted) {
-          setRanking(data);
-          setError("");
-        }
-      } catch (reason) {
-        if (!signal?.aborted)
-          setError(
-            reason instanceof Error
-              ? reason.message
-              : "Não foi possível carregar.",
-          );
-      } finally {
-        if (!signal?.aborted) setLoading(false);
-      }
+    (signal?: AbortSignal) =>
+      apiRequest<Ranking>(
+        "/api/rankings" +
+          (publication && userId
+            ? "?publication=" + encodeURIComponent(publication)
+            : ""),
+        { signal },
+      ),
+    [publication, userId],
+  );
+  const applyRanking = useCallback(
+    async (data: Ranking) => {
+      setRanking(data);
+      setError("");
+      if (userId && data.access === "preview") await refreshSession();
     },
-    [publication],
+    [userId, refreshSession],
   );
   useEffect(() => {
+    if (authLoading) return;
     const controller = new AbortController();
-    apiRequest<Ranking>(
-      "/api/rankings" +
-        (publication ? "?publication=" + encodeURIComponent(publication) : ""),
-      { signal: controller.signal },
-    )
-      .then((data) => {
-        setRanking(data);
-        setError("");
+    load(controller.signal)
+      .then(async (data) => {
+        if (!controller.signal.aborted) await applyRanking(data);
       })
       .catch((reason) => {
         if (!controller.signal.aborted)
@@ -127,10 +124,13 @@ export function IncomeRanking() {
           );
       })
       .finally(() => {
-        if (!controller.signal.aborted) setLoading(false);
+        if (!controller.signal.aborted) {
+          setLoading(false);
+          setLoadedFor(requestKey);
+        }
       });
     return () => controller.abort();
-  }, [publication]);
+  }, [load, applyRanking, authLoading, requestKey]);
   const displayMode = searchParams.get("visual");
   const showingDemo =
     displayMode === "demo" ||
@@ -141,7 +141,14 @@ export function IncomeRanking() {
       ranking.entries.length === 0);
   const sourceEntries: Entry[] = showingDemo
     ? rankingDemoEntries
-    : ranking.entries;
+    : user
+      ? ranking.entries
+      : ranking.entries.slice(0, 3);
+  const fullAccess = Boolean(user) && ranking.access === "full";
+  const previewAccess = !showingDemo && !fullAccess;
+  const totalEntries = showingDemo
+    ? rankingDemoEntries.length
+    : (ranking.totalEntries ?? ranking.entries.length);
   const changeView = (mode: "demo" | "real") => {
     setSearch("");
     setSector("");
@@ -212,7 +219,11 @@ export function IncomeRanking() {
         setFile(null);
         setPublication("");
         changeView("real");
-        if (!publication) await load();
+        if (!publication) {
+          await applyRanking(await load());
+          setLoading(false);
+          setLoadedFor(requestKey);
+        }
       } else setPreview(result.entries);
     } catch (reason) {
       setError(
@@ -306,7 +317,7 @@ export function IncomeRanking() {
           {message}
         </p>
       )}
-      {ranking.canManage && (
+      {user && ranking.canManage && (
         <details className="rounded-xl border border-evo-border bg-evo-card p-5">
           <summary className="cursor-pointer font-semibold">
             Área da equipe · preparar nova publicação
@@ -455,7 +466,7 @@ export function IncomeRanking() {
                   : "Aguardando a primeira publicação"}
             </p>
           </div>
-          {!showingDemo && (
+          {!showingDemo && fullAccess && (
             <label className="text-xs text-evo-textSec">
               Histórico de publicações
               <select
@@ -548,10 +559,12 @@ export function IncomeRanking() {
           </select>
         </div>
         <p className="text-xs text-evo-textSec">
-          {entries.length} de {sourceEntries.length}{" "}
+          {entries.length} de {totalEntries}{" "}
           {showingDemo
             ? "empresas fictícias · valores simulados para apresentação."
-            : "ativos · valores informados pelo autor, sem garantia de retorno."}
+            : previewAccess
+              ? "ativos · prévia de até 3 ações para visitantes."
+              : "ativos · valores informados pelo autor, sem garantia de retorno."}
         </p>
         {loading && !showingDemo ? (
           <Card>
@@ -679,7 +692,7 @@ export function IncomeRanking() {
                 <div>
                   <h4 className="text-sm font-semibold">Tese do cenário</h4>
                   <p className="mt-2 whitespace-pre-wrap break-words text-sm leading-relaxed text-evo-textSec">
-                    {entry.thesis ||
+                    {(previewAccess ? entry.thesisPreview : entry.thesis) ||
                       "A justificativa ainda não foi informada pelo autor."}
                   </p>
                 </div>
@@ -696,6 +709,7 @@ export function IncomeRanking() {
               <RankingFundamentals
                 data={entry}
                 demo={showingDemo}
+                locked={previewAccess}
                 revenueHistory={showingDemo ? entry.revenueHistory : undefined}
               />
               <Link
@@ -707,6 +721,12 @@ export function IncomeRanking() {
             </article>
           ))
         )}
+        {previewAccess &&
+          !loading &&
+          !authLoading &&
+          ranking.entries.length > 0 && (
+            <AccountGate next="/ranking?visual=real" />
+          )}
       </section>
       <aside className="rounded-xl border border-evo-border bg-evo-card p-4 text-xs leading-relaxed text-evo-textSec">
         {showingDemo ? (

@@ -8,6 +8,8 @@ import {
   X,
 } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
+import { useAuth } from "../context/authContext";
+import { AccountGate } from "./AccountGate";
 
 type AssistantMessage = {
   id: number;
@@ -147,6 +149,12 @@ function getLocalAnswer(question: string): LocalAnswer {
 }
 
 export function EdivAssistant() {
+  const { user } = useAuth();
+  return <EdivAssistantSession key={user?.id || "visitor"} />;
+}
+
+function EdivAssistantSession() {
+  const { user, refreshSession } = useAuth();
   const location = useLocation();
   const isApp = location.pathname.startsWith("/app");
   const [open, setOpen] = useState(false);
@@ -154,7 +162,8 @@ export function EdivAssistant() {
   const [aiEnabled, setAiEnabled] = useState(false);
   const [statusLoading, setStatusLoading] = useState(true);
   const [useAi, setUseAi] = useState(false);
-  const generative = aiEnabled && useAi;
+  const [accountLimit, setAccountLimit] = useState(20);
+  const generative = Boolean(user) && aiEnabled && useAi;
   const [privacyAccepted, setPrivacyAccepted] = useState(false);
   const [busy, setBusy] = useState(false);
   const [chatError, setChatError] = useState("");
@@ -169,6 +178,10 @@ export function EdivAssistant() {
   const inputRef = useRef<HTMLInputElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
+  const chatController = useRef<AbortController | null>(null);
+  useEffect(() => {
+    return () => chatController.current?.abort();
+  }, []);
   useEffect(() => {
     const controller = new AbortController();
     fetch("/api/assistant/status", {
@@ -177,7 +190,11 @@ export function EdivAssistant() {
     })
       .then((response) => (response.ok ? response.json() : null))
       .then((status) => {
-        if (!controller.signal.aborted) setAiEnabled(status?.enabled === true);
+        if (!controller.signal.aborted) {
+          setAiEnabled(status?.enabled === true);
+          if (Number.isInteger(status?.accountLimit) && status.accountLimit > 0)
+            setAccountLimit(status.accountLimit);
+        }
       })
       .catch(() => {
         if (!controller.signal.aborted) setAiEnabled(false);
@@ -222,7 +239,7 @@ export function EdivAssistant() {
 
   const ask = async (value: string) => {
     const question = value.trim();
-    if (!question || busy || statusLoading) return;
+    if (!question || busy || (generative && statusLoading)) return;
     if (generative && !privacyAccepted) {
       setChatError(
         "Leia e confirme o aviso sobre o envio ao Google antes de conversar com a IA.",
@@ -261,10 +278,15 @@ export function EdivAssistant() {
     setMessages((current) => [...current, userMessage]);
     setDraft("");
     setBusy(true);
+    const controller = new AbortController();
+    chatController.current = controller;
     try {
       const response = await fetch("/api/assistant/chat", {
         method: "POST",
-        signal: AbortSignal.timeout(35000),
+        signal: AbortSignal.any([
+          controller.signal,
+          AbortSignal.timeout(35000),
+        ]),
         credentials: "same-origin",
         headers: {
           Accept: "application/json",
@@ -278,6 +300,12 @@ export function EdivAssistant() {
         }),
       });
       const result = await response.json().catch(() => ({}));
+      if (controller.signal.aborted) return;
+      if (response.status === 401) {
+        setUseAi(false);
+        setPrivacyAccepted(false);
+        await refreshSession();
+      }
       if (!response.ok)
         throw new Error(
           result.error || "Não foi possível obter uma resposta agora.",
@@ -287,6 +315,7 @@ export function EdivAssistant() {
         { id: nextId.current++, role: "assistant", text: result.answer },
       ]);
     } catch (reason) {
+      if (controller.signal.aborted) return;
       const fallback = getLocalAnswer(question);
       setMessages((current) => [
         ...current,
@@ -305,7 +334,10 @@ export function EdivAssistant() {
           : "Não foi possível obter uma resposta agora.",
       );
     } finally {
-      setBusy(false);
+      if (chatController.current === controller) {
+        setBusy(false);
+        chatController.current = null;
+      }
     }
   };
 
@@ -415,11 +447,7 @@ export function EdivAssistant() {
                     <button
                       key={suggestion}
                       type="button"
-                      disabled={
-                        statusLoading ||
-                        busy ||
-                        (generative && !privacyAccepted)
-                      }
+                      disabled={busy || (generative && !privacyAccepted)}
                       onClick={() => void ask(suggestion)}
                       className="min-h-9 rounded-full border border-evo-border bg-evo-bgMain px-3 text-left text-xs text-evo-textSec transition hover:border-evo-green/40 hover:text-evo-textMain disabled:cursor-not-allowed disabled:opacity-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-evo-green"
                     >
@@ -439,7 +467,17 @@ export function EdivAssistant() {
             }}
             className="border-t border-evo-border bg-evo-card p-3"
           >
-            {aiEnabled && (
+            {!user && (
+              <div className="mb-3">
+                <AccountGate
+                  compact
+                  title="Libere o assistente com IA"
+                  description="Use sua conta gratuita para conversar com a IA educativa, conforme os limites e a disponibilidade do provedor. O guia básico continua aberto."
+                  next={location.pathname + location.search + location.hash}
+                />
+              </div>
+            )}
+            {user && aiEnabled && (
               <div className="mb-3 flex gap-2">
                 <button
                   type="button"
@@ -460,6 +498,17 @@ export function EdivAssistant() {
                   Usar IA
                 </button>
               </div>
+            )}
+            {user && aiEnabled && (
+              <p className="mb-3 text-xs text-evo-textSec">
+                IA: até {accountLimit} perguntas por conta em 24 horas, sujeitas
+                à cota compartilhada do provedor.
+              </p>
+            )}
+            {user && !aiEnabled && !statusLoading && (
+              <p className="mb-3 text-xs text-evo-textSec">
+                A IA ainda não está disponível. Você pode usar o guia local.
+              </p>
             )}
             <button
               type="button"
@@ -512,7 +561,7 @@ export function EdivAssistant() {
                 maxLength={1200}
                 placeholder="Escreva sua dúvida…"
                 autoComplete="off"
-                disabled={busy || statusLoading}
+                disabled={busy || (generative && statusLoading)}
                 className="min-h-10 min-w-0 flex-1 bg-transparent text-base sm:text-sm text-evo-textMain outline-none placeholder:text-evo-textSec/70"
               />
               <button
@@ -520,7 +569,7 @@ export function EdivAssistant() {
                 disabled={
                   !draft.trim() ||
                   busy ||
-                  statusLoading ||
+                  (generative && statusLoading) ||
                   (generative && !privacyAccepted)
                 }
                 aria-label="Enviar pergunta"

@@ -1,110 +1,86 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { BookOpen, CheckCircle2, MessageCircle } from "lucide-react";
-const lessons = [
-  {
-    id: "ranking",
-    title: "Como interpretar uma previsão",
-    text: "Uma previsão descreve um cenário dependente de premissas. Preço-alvo é o preço que o autor estima em um prazo; potencial é uma variação estimada, não a probabilidade de acontecer. Leia tese, riscos, data e horizonte em conjunto. Um ranking organiza opiniões e não determina o que você deve comprar.",
-    question: "O que diferencia potencial estimado de probabilidade de lucro?",
-    choices: [
-      "São a mesma medida",
-      "Potencial é uma variação de preço; probabilidade é a chance de um evento",
-      "Potencial é lucro já recebido",
-    ],
-    answer: 1,
-    explanation:
-      "Uma projeção de 20% não diz que há 20% de chance de lucro. É indispensável entender as premissas e as incertezas.",
-  },
-  {
-    id: "risco",
-    title: "Risco, diversificação e prazo",
-    text: "O preço de um ativo pode cair e permanecer abaixo do custo de compra. Distribuir investimentos entre exposições diferentes pode reduzir a concentração, mas não elimina perdas. Prazo, liquidez, custos e capacidade de suportar oscilações influenciam uma decisão. Setores diferentes também podem responder ao mesmo risco econômico.",
-    question: "Diversificar elimina o risco de perda?",
-    choices: [
-      "Sim, sempre",
-      "Só quando há mais de cinco ativos",
-      "Não; pode reduzir concentração, mas não elimina riscos",
-    ],
-    answer: 2,
-    explanation:
-      "O número de ativos sozinho não mede diversificação. É necessário entender suas exposições e os riscos compartilhados.",
-  },
-  {
-    id: "dividendos",
-    title: "Dividendos e renda",
-    text: "Dividendos e juros sobre capital próprio são formas de distribuição de recursos aos acionistas. O valor anunciado e o recebido são informações diferentes. Pagamentos podem variar e não garantem renda constante. Um dividend yield elevado precisa ser entendido no contexto do negócio e do preço; não avalia sozinho a qualidade da empresa.",
-    question: "Um pagamento anunciado equivale a dinheiro já recebido?",
-    choices: [
-      "Não; deve ser acompanhado até o pagamento",
-      "Sim, entra imediatamente no saldo",
-      "Sim, se o ativo estiver no ranking",
-    ],
-    answer: 0,
-    explanation:
-      "No Ediv, eventos anunciados ficam separados dos recebidos. Registre o valor efetivamente recebido, com a data e sua origem.",
-  },
-  {
-    id: "carteira",
-    title: "Entendendo os números da carteira",
-    text: "Valor de mercado estimado é quantidade registrada multiplicada pela cotação disponível. Custo registrado é a base das operações e custos informados. Resultado não realizado é a diferença entre valor estimado e custo das posições abertas. Resultado realizado considera as vendas. Proventos recebidos são apresentados separadamente. Informações incompletas e eventos corporativos ausentes podem distorcer o acompanhamento.",
-    question: "Uma valorização estimada já é lucro recebido?",
-    choices: [
-      "Sim",
-      "Não; o ganho da posição aberta ainda não foi realizado",
-      "Somente se a alta passar de 10%",
-    ],
-    answer: 1,
-    explanation:
-      "O preço pode mudar antes de uma venda. O valor estimado não é saldo disponível para saque.",
-  },
-];
-const glossary = [
-  [
-    "Preço-alvo",
-    "Estimativa de preço para um horizonte, baseada nas premissas de uma análise.",
-  ],
-  [
-    "Potencial",
-    "Variação estimada entre uma referência de preço e um cenário. Não é probabilidade de lucro.",
-  ],
-  ["Horizonte", "Prazo considerado pela análise."],
-  ["Tese", "Argumentos e premissas que sustentam um cenário."],
-  [
-    "Liquidez",
-    "Facilidade de negociar um ativo sem grandes impactos no preço.",
-  ],
-  [
-    "Dividend yield",
-    "Relação entre proventos e um preço de referência em determinado período.",
-  ],
-  [
-    "Desdobramento",
-    "Alteração da quantidade de ações e do preço unitário, sem criar riqueza por si só.",
-  ],
-  [
-    "JCP",
-    "Juros sobre capital próprio, uma modalidade de remuneração ao acionista.",
-  ],
-];
+import {
+  BookOpen,
+  CheckCircle2,
+  MessageCircle,
+  LockKeyhole,
+} from "lucide-react";
+import { apiRequest } from "../lib/api";
+import { useAuth } from "../context/authContext";
+import { AccountGate } from "../components/AccountGate";
+
+type Lesson = {
+  id: string;
+  title: string;
+  locked?: boolean;
+  text?: string;
+  question?: string;
+  choices?: string[];
+  answer?: number;
+  explanation?: string;
+};
+type LearningData = {
+  lessons: Lesson[];
+  glossary: string[][];
+  access: "preview" | "full";
+};
+const lessonIds = ["ranking", "risco", "dividendos", "carteira"];
 function readProgress(): string[] {
   try {
     const value = JSON.parse(localStorage.getItem("ediv-learning-v1") || "[]");
     return Array.isArray(value)
-      ? value.filter(
-          (x) => typeof x === "string" && lessons.some((l) => l.id === x),
-        )
+      ? value.filter((x) => typeof x === "string" && lessonIds.includes(x))
       : [];
   } catch {
     return [];
   }
 }
 export function Aprender() {
+  const { user, loading: authLoading, refreshSession } = useAuth();
+  const userId = user?.id;
+  const [content, setContent] = useState<LearningData | null>(null);
+  const [loadedFor, setLoadedFor] = useState<string | null>(null);
+  const requestKey = userId || "visitor";
+  const loading = loadedFor !== requestKey || authLoading;
+  const [error, setError] = useState("");
   const [completed, setCompleted] = useState<string[]>(readProgress);
   const [answers, setAnswers] = useState<Record<string, number>>({});
   const [search, setSearch] = useState("");
   const [current, setCurrent] = useState("100");
   const [target, setTarget] = useState("120");
+  useEffect(() => {
+    if (authLoading) return;
+    const controller = new AbortController();
+    apiRequest<LearningData>("/api/learning", { signal: controller.signal })
+      .then(async (data) => {
+        if (!controller.signal.aborted) {
+          setContent(data);
+          setError("");
+          if (userId && data.access === "preview") await refreshSession();
+        }
+      })
+      .catch((reason) => {
+        if (!controller.signal.aborted) {
+          setContent(null);
+          setError(
+            reason instanceof Error
+              ? reason.message
+              : "Não foi possível carregar as aulas.",
+          );
+        }
+      })
+      .finally(() => {
+        if (!controller.signal.aborted) setLoadedFor(requestKey);
+      });
+    return () => controller.abort();
+  }, [userId, authLoading, refreshSession, requestKey]);
+  const lessons: Lesson[] = (content?.lessons || []).map((lesson, index) =>
+    !user && index > 0
+      ? { id: lesson.id, title: lesson.title, locked: true }
+      : lesson,
+  );
+  const glossary = content?.glossary || [];
   useEffect(() => {
     try {
       localStorage.setItem("ediv-learning-v1", JSON.stringify(completed));
@@ -130,7 +106,7 @@ export function Aprender() {
           recomendações de investimento.
         </p>
         <p className="mt-4 text-sm text-evo-accent">
-          {completed.length} de {lessons.length} etapas concluídas · progresso
+          {completed.length} de {lessonIds.length} etapas concluídas · progresso
           salvo neste navegador
         </p>
         <div
@@ -139,14 +115,30 @@ export function Aprender() {
           aria-label="Progresso da trilha"
           aria-valuenow={completed.length}
           aria-valuemin={0}
-          aria-valuemax={lessons.length}
+          aria-valuemax={lessonIds.length}
         >
           <div
             className="h-full rounded bg-evo-accent"
-            style={{ width: (completed.length / lessons.length) * 100 + "%" }}
+            style={{ width: (completed.length / lessonIds.length) * 100 + "%" }}
           />
         </div>
       </section>
+      {(loading || authLoading) && (
+        <p role="status" className="text-sm text-evo-textSec">
+          Carregando aulas…
+        </p>
+      )}
+      {error && (
+        <p role="alert" className="notice-error">
+          {error}
+        </p>
+      )}
+      {!user && !loading && content && (
+        <p className="text-sm text-evo-textSec">
+          A primeira aula e o glossário são abertos. Crie sua conta gratuita
+          para acessar a trilha completa.
+        </p>
+      )}
       <nav aria-label="Etapas educativas" className="flex flex-wrap gap-2">
         {lessons.map((l) => (
           <a
@@ -158,75 +150,102 @@ export function Aprender() {
           </a>
         ))}
       </nav>
-      {lessons.map((lesson) => (
-        <section
-          id={lesson.id}
-          key={lesson.id}
-          className="scroll-mt-24 rounded-xl border border-evo-border bg-evo-card p-5 sm:p-7"
-        >
-          <div className="flex items-start justify-between gap-3">
-            <h2 className="text-xl font-semibold">{lesson.title}</h2>
-            {completed.includes(lesson.id) && (
-              <CheckCircle2
-                aria-label="Etapa concluída"
-                className="shrink-0 text-evo-accent"
-              />
-            )}
-          </div>
-          <p className="mt-4 max-w-4xl text-sm leading-7 text-evo-textSec">
-            {lesson.text}
-          </p>
-          <fieldset className="mt-5 rounded-lg border border-evo-border p-4">
-            <legend className="px-2 text-sm font-semibold">
-              {lesson.question}
-            </legend>
-            <div className="grid gap-2">
-              {lesson.choices.map((choice, i) => (
-                <button
-                  key={choice}
-                  type="button"
-                  aria-pressed={answers[lesson.id] === i}
-                  className={
-                    "min-h-11 rounded-lg border p-3 text-left text-sm " +
-                    (answers[lesson.id] === i
-                      ? "border-evo-accent bg-evo-accent/10"
-                      : "border-evo-border hover:bg-white/5")
-                  }
-                  onClick={() => {
-                    setAnswers((a) => ({ ...a, [lesson.id]: i }));
-                    if (i === lesson.answer)
-                      setCompleted((c) =>
-                        c.includes(lesson.id) ? c : [...c, lesson.id],
-                      );
-                  }}
-                >
-                  {choice}
-                </button>
-              ))}
-            </div>
-            {answers[lesson.id] !== undefined && (
-              <p role="status" className="mt-3 text-sm leading-relaxed">
-                {answers[lesson.id] === lesson.answer
-                  ? "Correto! "
-                  : "Vamos revisar: "}
-                {lesson.explanation}
-              </p>
-            )}
-          </fieldset>
-          <button
-            className="mt-4 inline-flex min-h-11 items-center gap-2 text-sm text-evo-accent"
-            onClick={() =>
-              window.dispatchEvent(
-                new CustomEvent("ediv-assistant-question", {
-                  detail: "Explique de forma educativa: " + lesson.title,
-                }),
-              )
-            }
+      {lessons.map((lesson) =>
+        lesson.locked ? (
+          <section
+            id={lesson.id}
+            key={lesson.id}
+            className="scroll-mt-24 rounded-xl border border-evo-border bg-evo-card p-5 sm:p-7"
           >
-            <MessageCircle size={16} /> Pedir uma explicação ao assistente
-          </button>
-        </section>
-      ))}
+            <div className="flex items-center gap-3">
+              <LockKeyhole
+                size={18}
+                className="text-evo-accent"
+                aria-hidden="true"
+              />
+              <h2 className="text-xl font-semibold">{lesson.title}</h2>
+            </div>
+            <p className="mt-3 text-sm text-evo-textSec">
+              Esta etapa faz parte da trilha completa para contas gratuitas.
+            </p>
+          </section>
+        ) : (
+          <section
+            id={lesson.id}
+            key={lesson.id}
+            className="scroll-mt-24 rounded-xl border border-evo-border bg-evo-card p-5 sm:p-7"
+          >
+            <div className="flex items-start justify-between gap-3">
+              <h2 className="text-xl font-semibold">{lesson.title}</h2>
+              {completed.includes(lesson.id) && (
+                <CheckCircle2
+                  aria-label="Etapa concluída"
+                  className="shrink-0 text-evo-accent"
+                />
+              )}
+            </div>
+            <p className="mt-4 max-w-4xl text-sm leading-7 text-evo-textSec">
+              {lesson.text}
+            </p>
+            <fieldset className="mt-5 rounded-lg border border-evo-border p-4">
+              <legend className="px-2 text-sm font-semibold">
+                {lesson.question}
+              </legend>
+              <div className="grid gap-2">
+                {(lesson.choices || []).map((choice, i) => (
+                  <button
+                    key={choice}
+                    type="button"
+                    aria-pressed={answers[lesson.id] === i}
+                    className={
+                      "min-h-11 rounded-lg border p-3 text-left text-sm " +
+                      (answers[lesson.id] === i
+                        ? "border-evo-accent bg-evo-accent/10"
+                        : "border-evo-border hover:bg-white/5")
+                    }
+                    onClick={() => {
+                      setAnswers((a) => ({ ...a, [lesson.id]: i }));
+                      if (i === lesson.answer)
+                        setCompleted((c) =>
+                          c.includes(lesson.id) ? c : [...c, lesson.id],
+                        );
+                    }}
+                  >
+                    {choice}
+                  </button>
+                ))}
+              </div>
+              {answers[lesson.id] !== undefined && (
+                <p role="status" className="mt-3 text-sm leading-relaxed">
+                  {answers[lesson.id] === lesson.answer
+                    ? "Correto! "
+                    : "Vamos revisar: "}
+                  {lesson.explanation}
+                </p>
+              )}
+            </fieldset>
+            <button
+              className="mt-4 inline-flex min-h-11 items-center gap-2 text-sm text-evo-accent"
+              onClick={() =>
+                window.dispatchEvent(
+                  new CustomEvent("ediv-assistant-question", {
+                    detail: "Explique de forma educativa: " + lesson.title,
+                  }),
+                )
+              }
+            >
+              <MessageCircle size={16} /> Pedir uma explicação ao assistente
+            </button>
+          </section>
+        ),
+      )}
+      {!user && !loading && content && (
+        <AccountGate
+          title="Continue aprendendo"
+          description="Crie sua conta gratuita para liberar todas as aulas, exercícios e os recursos de pesquisa da Ediv."
+          next="/aprender"
+        />
+      )}
       <section className="rounded-xl border border-evo-border bg-evo-card p-6">
         <h2 className="text-xl font-semibold">Explore um cenário hipotético</h2>
         <p className="mt-2 text-sm text-evo-textSec">

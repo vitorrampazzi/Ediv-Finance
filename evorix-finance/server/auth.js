@@ -20,6 +20,7 @@ const smtp = config.smtpUrl ? nodemailer.createTransport(config.smtpUrl) : null;
 const router = Router();
 
 const registerSchema = z.object({
+  next: z.string().max(1500).optional(),
   name: z.string().trim().min(2).max(100),
   email: z
     .string()
@@ -46,6 +47,7 @@ const verificationSchema = z.object({
   token: z.string().regex(/^[A-Za-z0-9_-]{40,50}$/),
 });
 const emailOnlySchema = z.object({
+  next: z.string().max(1500).optional(),
   email: z
     .string()
     .trim()
@@ -109,8 +111,42 @@ function parseBody(schema, body) {
   return { data: result.data };
 }
 
-function verificationUrl(token) {
+function safeNext(value) {
+  if (
+    typeof value !== "string" ||
+    value.length > 1500 ||
+    !/^\/(?!\/)/.test(value) ||
+    /[\\\u0000-\u001f]/.test(value)
+  )
+    return null;
+  try {
+    const url = new URL(value, config.appBaseUrl);
+    if (url.origin !== new URL(config.appBaseUrl).origin) return null;
+    if (
+      ![
+        "/ranking",
+        "/aprender",
+        "/mercado",
+        "/assessoria",
+        "/suporte",
+        "/app",
+        "/",
+      ].some(
+        (path) =>
+          url.pathname === path ||
+          (path === "/app" && url.pathname.startsWith("/app/")),
+      )
+    )
+      return null;
+    return url.pathname + url.search + url.hash;
+  } catch {
+    return null;
+  }
+}
+function verificationUrl(token, next) {
   const url = new URL("/verificar", config.appBaseUrl);
+  const destination = safeNext(next);
+  if (destination) url.searchParams.set("next", destination);
   url.hash = token;
   return url.toString();
 }
@@ -129,8 +165,8 @@ async function makeVerificationToken(userId) {
   return token;
 }
 
-async function sendVerification(email, name, token) {
-  const link = verificationUrl(token);
+async function sendVerification(email, name, token, next) {
+  const link = verificationUrl(token, next);
   if (!smtp) return { developmentUrl: link };
 
   await smtp.sendMail({
@@ -217,12 +253,10 @@ router.post("/register", registrationLimiter, async (req, res) => {
     );
   } catch (error) {
     if (error.code === "ER_DUP_ENTRY") {
-      return res
-        .status(202)
-        .json({
-          message:
-            "Se o endereço puder ser cadastrado, enviaremos as próximas instruções por e-mail.",
-        });
+      return res.status(202).json({
+        message:
+          "Se o endereço puder ser cadastrado, enviaremos as próximas instruções por e-mail.",
+      });
     }
     throw error;
   }
@@ -230,18 +264,16 @@ router.post("/register", registrationLimiter, async (req, res) => {
   const token = await makeVerificationToken(userId);
   let delivery;
   try {
-    delivery = await sendVerification(email, name, token);
+    delivery = await sendVerification(email, name, token, parsed.data.next);
   } catch (error) {
     console.error(
       "Verification email delivery failed:",
       error.code || "mail transport error",
     );
-    return res
-      .status(503)
-      .json({
-        error:
-          "Não foi possível enviar o e-mail de confirmação. Tente novamente mais tarde.",
-      });
+    return res.status(503).json({
+      error:
+        "Não foi possível enviar o e-mail de confirmação. Tente novamente mais tarde.",
+    });
   }
 
   return res.status(202).json({
@@ -268,18 +300,17 @@ router.post("/verification/resend", verificationLimiter, async (req, res) => {
         rows[0].email,
         rows[0].name,
         token,
+        parsed.data.next,
       ));
     } catch (error) {
       console.error(
         "Verification email delivery failed:",
         error.code || "mail transport error",
       );
-      return res
-        .status(503)
-        .json({
-          error:
-            "Não foi possível enviar o e-mail de confirmação. Tente novamente mais tarde.",
-        });
+      return res.status(503).json({
+        error:
+          "Não foi possível enviar o e-mail de confirmação. Tente novamente mais tarde.",
+      });
     }
   }
 
@@ -305,12 +336,10 @@ router.post("/verify-email", verificationLimiter, async (req, res) => {
     );
     if (!rows[0]) {
       await connection.rollback();
-      return res
-        .status(400)
-        .json({
-          error:
-            "O link expirou ou já foi usado. Solicite um novo link de confirmação.",
-        });
+      return res.status(400).json({
+        error:
+          "O link expirou ou já foi usado. Solicite um novo link de confirmação.",
+      });
     }
 
     await connection.execute(
@@ -322,11 +351,9 @@ router.post("/verify-email", verificationLimiter, async (req, res) => {
       [rows[0].id],
     );
     await connection.commit();
-    return res
-      .status(200)
-      .json({
-        message: "E-mail confirmado. Agora você pode entrar na sua conta.",
-      });
+    return res.status(200).json({
+      message: "E-mail confirmado. Agora você pode entrar na sua conta.",
+    });
   } catch (error) {
     await connection.rollback();
     throw error;
@@ -349,11 +376,9 @@ router.post("/login", loginLimiter, async (req, res) => {
   const isValidPassword = await argon2.verify(storedHash, password);
 
   if (!user || !isValidPassword || !user.email_verified_at) {
-    return res
-      .status(401)
-      .json({
-        error: "E-mail ou senha incorretos, ou e-mail ainda não confirmado.",
-      });
+    return res.status(401).json({
+      error: "E-mail ou senha incorretos, ou e-mail ainda não confirmado.",
+    });
   }
 
   const rawSession = makeOpaqueToken();
@@ -367,11 +392,9 @@ router.post("/login", loginLimiter, async (req, res) => {
     );
     if (!locked[0] || locked[0].password_hash !== storedHash) {
       await connection.rollback();
-      return res
-        .status(401)
-        .json({
-          error: "O acesso mudou. Entre novamente com sua senha atual.",
-        });
+      return res.status(401).json({
+        error: "O acesso mudou. Entre novamente com sua senha atual.",
+      });
     }
     await connection.execute(
       "INSERT INTO user_sessions (id, user_id, token_hash, expires_at) VALUES (?, ?, ?, ?)",
@@ -409,12 +432,10 @@ router.delete(
       })
       .safeParse(req.body);
     if (!parsed.success)
-      return res
-        .status(400)
-        .json({
-          error:
-            "Confirme a exclusão digitando EXCLUIR e informe sua senha atual.",
-        });
+      return res.status(400).json({
+        error:
+          "Confirme a exclusão digitando EXCLUIR e informe sua senha atual.",
+      });
 
     const [users] = await pool.execute(
       "SELECT password_hash FROM users WHERE id = ? LIMIT 1",
@@ -424,11 +445,9 @@ router.delete(
       !users[0] ||
       !(await argon2.verify(users[0].password_hash, parsed.data.password))
     ) {
-      return res
-        .status(401)
-        .json({
-          error: "Senha incorreta. Confira a senha atual da sua conta.",
-        });
+      return res.status(401).json({
+        error: "Senha incorreta. Confira a senha atual da sua conta.",
+      });
     }
 
     const connection = await pool.getConnection();
@@ -450,12 +469,10 @@ router.delete(
       );
       if (result.affectedRows !== 1) {
         await connection.rollback();
-        return res
-          .status(401)
-          .json({
-            error:
-              "Não foi possível confirmar sua conta. Entre novamente e tente de novo.",
-          });
+        return res.status(401).json({
+          error:
+            "Não foi possível confirmar sua conta. Entre novamente e tente de novo.",
+        });
       }
       await connection.commit();
       clearSessionCookie(res);
@@ -528,13 +545,11 @@ router.post("/password/forgot", recoveryLimiter, async (req, res) => {
       }
     } else if (!config.isProduction) developmentUrl = String(url);
   }
-  return res
-    .status(202)
-    .json({
-      message:
-        "Se houver uma conta confirmada para esse e-mail, enviaremos um link de recuperação.",
-      ...(developmentUrl ? { developmentUrl } : {}),
-    });
+  return res.status(202).json({
+    message:
+      "Se houver uma conta confirmada para esse e-mail, enviaremos um link de recuperação.",
+    ...(developmentUrl ? { developmentUrl } : {}),
+  });
 });
 
 router.post("/password/reset", recoveryLimiter, async (req, res) => {
@@ -545,11 +560,9 @@ router.post("/password/reset", recoveryLimiter, async (req, res) => {
     })
     .safeParse(req.body);
   if (!parsed.success)
-    return res
-      .status(400)
-      .json({
-        error: "Confira o link e use uma senha de 12 a 128 caracteres.",
-      });
+    return res.status(400).json({
+      error: "Confira o link e use uma senha de 12 a 128 caracteres.",
+    });
   const hash = await argon2.hash(parsed.data.password, ARGON_OPTIONS);
   const [tokenRows] = await pool.execute(
     "SELECT user_id FROM password_reset_tokens WHERE token_hash = ?",
@@ -612,11 +625,9 @@ router.post(
       })
       .safeParse(req.body);
     if (!parsed.success)
-      return res
-        .status(400)
-        .json({
-          error: "Confira a senha atual e use ao menos 12 caracteres na nova.",
-        });
+      return res.status(400).json({
+        error: "Confira a senha atual e use ao menos 12 caracteres na nova.",
+      });
     const hash = await argon2.hash(parsed.data.password, ARGON_OPTIONS);
     const connection = await pool.getConnection();
     try {

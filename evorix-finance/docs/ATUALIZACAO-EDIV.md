@@ -19,6 +19,10 @@ Node: 22.x. Tailwind 4 remove dependências vulneráveis da ferramenta anterior 
 Os seis módulos de dados da empresa definidos pelo corretor aparecem nos detalhes
 do ranking e na prévia de importação. Consulte [campos e formato](RANKING-CORRETOR.md).
 
+O acesso de visitantes tem prévias do ranking e da trilha educativa. Conta gratuita
+confirmada libera pesquisa e aulas completas e permite usar a IA com limite individual.
+Veja [regras de acesso](ACESSO-GRATUITO.md). `AI_USER_DAILY_LIMIT` é opcional, com padrão 20.
+
 - Ranking público: histórico, busca, filtros por setor e prazo, potencial, tese e riscos. CSV/XLSX da primeira aba, até 1 MB e 300 ativos, com prévia antes de publicar. Autoria e registro podem ficar vazios; nenhum dado profissional é inventado.
 - Aprender: quatro aulas, perguntas de compreensão, progresso local, glossário e comparação de preços hipotéticos. O assistente ajuda a explicar conceitos.
 - Carteira: compras/vendas, correção e exclusão com recálculo cronológico, importação com prévia e identificação de repetições, exportação CSV, proventos recebidos/anunciados, desdobramentos e bonificações.

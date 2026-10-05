@@ -5,6 +5,7 @@ import {
   Wallet,
   ReceiptText,
   Scale,
+  LockKeyhole,
 } from "lucide-react";
 
 export type RankingFundamentalData = {
@@ -35,16 +36,64 @@ export function RankingFundamentals({
   data,
   demo = false,
   revenueHistory,
+  locked = false,
 }: {
   data: RankingFundamentalData;
   demo?: boolean;
   revenueHistory?: { period: string; value: number }[];
+  locked?: boolean;
 }) {
   const filled = modules.filter(([key]) => Boolean(data[key]?.trim())).length;
   const maxRevenue = Math.max(
     1,
     ...(revenueHistory?.map((point) => point.value) || []),
   );
+  if (locked)
+    return (
+      <section className="mt-4 rounded-lg border border-evo-border p-4">
+        <div className="flex items-center gap-2 text-sm font-semibold">
+          <LockKeyhole
+            size={16}
+            className="text-evo-accent"
+            aria-hidden="true"
+          />{" "}
+          Pesquisa detalhada com conta gratuita
+        </div>
+        <dl className="mt-3 grid gap-3 text-xs sm:grid-cols-2">
+          <div>
+            <dt className="text-evo-textSec">Período de referência</dt>
+            <dd className="mt-1 break-words">
+              {data.referencePeriod || "Não informado"}
+            </dd>
+          </div>
+          <div>
+            <dt className="text-evo-textSec">Fonte dos dados</dt>
+            <dd className="mt-1 whitespace-pre-wrap break-words">
+              {data.dataSource || "Não informada"}
+            </dd>
+          </div>
+        </dl>
+        <div className="mt-3 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+          {modules.map(([key, label, Icon]) => (
+            <div
+              key={key}
+              className="flex items-start gap-2 rounded-md bg-evo-bgMain p-3 text-xs text-evo-textSec"
+            >
+              <Icon
+                size={15}
+                className="shrink-0 text-evo-accent"
+                aria-hidden="true"
+              />
+              {label}
+            </div>
+          ))}
+        </div>
+        <p className="mt-3 text-xs text-evo-textSec">
+          Crie sua conta grátis para consultar estes módulos, a tese completa e
+          o histórico de publicações.
+        </p>
+      </section>
+    );
   return (
     <details
       className="mt-4 rounded-lg border border-evo-border"
