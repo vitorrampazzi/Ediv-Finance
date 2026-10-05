@@ -1,184 +1,256 @@
-import { randomUUID } from 'node:crypto';
-import express, { Router } from 'express';
-import { rateLimit } from 'express-rate-limit';
-import { config } from './config.js';
-import { pool } from './database.js';
-import { currentUser, requireAuthenticatedUser } from './auth.js';
+import { Router } from "express";
+import { rateLimit } from "express-rate-limit";
+import { config } from "./config.js";
+import { pool } from "./database.js";
+import { currentUser, requireAuthenticatedUser } from "./auth.js";
+import { MysqlLimitStore } from "./limit-store.js";
+import {
+  fileBody,
+  readUpload,
+  normalizeHeader,
+  localizedDecimal,
+  ImportError,
+} from "./spreadsheet.js";
 
 const router = Router();
-const MAX_ROWS = 300;
-const MAX_CSV_BYTES = 256 * 1024;
-const rankingUploadLimiter = rateLimit({
+const limiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  limit: 5,
-  standardHeaders: 'draft-8',
+  limit: 20,
+  store: new MysqlLimitStore("ranking-upload"),
+  standardHeaders: "draft-8",
   legacyHeaders: false,
-  message: { error: 'Muitos uploads em pouco tempo. Aguarde alguns minutos e tente de novo.' },
+  message: { error: "Muitas importações. Aguarde alguns minutos." },
 });
-class CsvImportError extends Error {}
-const allowedHeaderAliases = {
-  ticker: ['ticker', 'symbol', 'ativo', 'codigo'],
-  companyName: ['empresa', 'company', 'company_name', 'nome', 'companhia'],
-  expectedReturnPercent: ['potencial_percentual', 'potencial', 'upside_percent', 'expected_return_percent', 'retorno_estimado_percentual'],
-  targetPrice: ['preco_alvo', 'target_price', 'preco_objetivo'],
-  horizonMonths: ['horizonte_meses', 'prazo_meses', 'horizon_months'],
-  thesis: ['tese', 'justificativa', 'observacao', 'rationale', 'thesis'],
+export const canManageRankings = (email) =>
+  Boolean(email && config.rankingAdminEmails.includes(email.toLowerCase()));
+const aliases = {
+  ticker: ["ticker", "symbol", "ativo", "codigo"],
+  companyName: ["empresa", "company", "company_name", "nome"],
+  expectedReturnPercent: [
+    "potencial_percentual",
+    "potencial",
+    "upside_percent",
+    "expected_return_percent",
+  ],
+  targetPrice: ["preco_alvo", "target_price"],
+  horizonMonths: ["horizonte_meses", "prazo_meses", "horizonte"],
+  thesis: ["tese", "justificativa", "observacao"],
+  risks: ["riscos", "risco"],
+  sector: ["setor", "sector"],
 };
-
-function normalizeHeader(value) {
-  return value.trim().normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_|_$/g, '');
-}
-
-function parseDelimitedText(text) {
-  const firstLine = text.split(/\r?\n/, 1)[0] || '';
-  const delimiter = (firstLine.match(/;/g) || []).length > (firstLine.match(/,/g) || []).length ? ';' : ',';
-  const rows = [];
-  let row = [];
-  let field = '';
-  let quoted = false;
-
-  for (let index = 0; index < text.length; index += 1) {
-    const character = text[index];
-    if (quoted) {
-      if (character === '"' && text[index + 1] === '"') { field += '"'; index += 1; }
-      else if (character === '"') quoted = false;
-      else field += character;
-    } else if (character === '"' && field.length === 0) quoted = true;
-    else if (character === delimiter) { row.push(field); field = ''; }
-    else if (character === '\n') {
-      row.push(field.replace(/\r$/, ''));
-      if (row.some(cell => cell.trim())) rows.push(row);
-      row = [];
-      field = '';
-    } else field += character;
-  }
-  if (quoted) throw new CsvImportError('O CSV tem aspas sem fechamento. Salve a planilha novamente como CSV UTF-8.');
-  row.push(field.replace(/\r$/, ''));
-  if (row.some(cell => cell.trim())) rows.push(row);
-  return rows;
-}
-
-function parseLocalizedNumber(value, label, { optional = false, integer = false } = {}) {
-  const source = value.trim().replace(/^(R\$|US\$|\$)\s*/i, '').replace(/%$/, '').replace(/\s/g, '');
-  if (!source && optional) return null;
-  if (!source) throw new CsvImportError(`Preencha o campo ${label} em todas as linhas.`);
-  let normalized = source;
-  const comma = normalized.lastIndexOf(',');
-  const dot = normalized.lastIndexOf('.');
-  if (comma >= 0 && dot >= 0) {
-    const decimalSeparator = comma > dot ? ',' : '.';
-    const thousandsSeparator = decimalSeparator === ',' ? '.' : ',';
-    normalized = normalized.split(thousandsSeparator).join('');
-    if (decimalSeparator === ',') normalized = normalized.replace(',', '.');
-  } else if (comma >= 0) normalized = normalized.replace(',', '.');
-  if (!/^-?\d+(\.\d+)?$/.test(normalized)) throw new CsvImportError(`O campo ${label} contém um número inválido.`);
-  const number = Number(normalized);
-  if (!Number.isFinite(number) || (integer && !Number.isInteger(number))) throw new CsvImportError(`O campo ${label} deve ser ${integer ? 'um número inteiro' : 'um número válido'}.`);
-  return number;
-}
-
-function validateCsv(text) {
-  if (typeof text !== 'string' || !text.trim()) throw new CsvImportError('O arquivo está vazio.');
-  if (Buffer.byteLength(text, 'utf8') > MAX_CSV_BYTES) throw new CsvImportError('O arquivo ultrapassa o limite de 256 KB. Divida a lista e tente novamente.');
-  const rows = parseDelimitedText(text.replace(/^\uFEFF/, ''));
-  if (rows.length < 2) throw new CsvImportError('Inclua os títulos das colunas e pelo menos uma ação.');
-  if (rows.length - 1 > MAX_ROWS) throw new CsvImportError(`O arquivo pode ter no máximo ${MAX_ROWS} ações.`);
-
+function parseRows(rows) {
+  if (rows.length < 2 || rows.length > 301)
+    throw new ImportError("Inclua o cabeçalho e de 1 a 300 ativos.");
   const headers = rows[0].map(normalizeHeader);
-  const indexes = {};
-  for (const [field, aliases] of Object.entries(allowedHeaderAliases)) {
-    indexes[field] = headers.findIndex(header => aliases.includes(header));
-  }
-  for (const required of ['ticker', 'companyName', 'expectedReturnPercent']) {
-    if (indexes[required] === -1) throw new CsvImportError('Colunas obrigatórias: ticker, empresa e potencial_percentual. Confira o modelo CSV.');
-  }
-
-  const seenTickers = new Set();
-  return rows.slice(1).map((cells, index) => {
-    const value = field => indexes[field] >= 0 ? (cells[indexes[field]] || '').trim() : '';
-    const ticker = value('ticker').toUpperCase();
-    const companyName = value('companyName');
-    if (!/^[A-Z0-9][A-Z0-9._-]{0,15}$/.test(ticker)) throw new CsvImportError(`Ticker inválido na linha ${index + 2}.`);
-    if (seenTickers.has(ticker)) throw new CsvImportError(`O ticker ${ticker} aparece mais de uma vez no arquivo.`);
-    seenTickers.add(ticker);
-    if (!companyName || companyName.length > 160) throw new CsvImportError(`Informe o nome da empresa (até 160 caracteres) na linha ${index + 2}.`);
-
-    const expectedReturnPercent = parseLocalizedNumber(value('expectedReturnPercent'), 'potencial percentual');
-    if (expectedReturnPercent < 0 || expectedReturnPercent > 1000) throw new CsvImportError(`O potencial da linha ${index + 2} deve ficar entre 0% e 1000%.`);
-    const targetPrice = parseLocalizedNumber(value('targetPrice'), 'preço-alvo', { optional: true });
-    if (targetPrice !== null && (targetPrice <= 0 || targetPrice > 1_000_000_000)) throw new CsvImportError(`Preço-alvo inválido na linha ${index + 2}.`);
-    const horizonMonths = parseLocalizedNumber(value('horizonMonths'), 'horizonte em meses', { optional: true, integer: true });
-    if (horizonMonths !== null && (horizonMonths < 1 || horizonMonths > 120)) throw new CsvImportError(`O horizonte da linha ${index + 2} deve ser de 1 a 120 meses.`);
-    const thesis = value('thesis');
-    if (thesis.length > 2000) throw new CsvImportError(`A tese da linha ${index + 2} excede 2.000 caracteres.`);
-
-    return { ticker, companyName, expectedReturnPercent, targetPrice, horizonMonths, thesis: thesis || null };
-  });
-}
-
-function canManageRankings(email) {
-  return Boolean(email && config.rankingAdminEmails.includes(email.toLowerCase()));
-}
-
-router.get('/', async (req, res) => {
-  const [rows] = await pool.execute(
-    `SELECT rank_position, ticker, company_name, expected_return_percent, target_price,
-            horizon_months, thesis, source_file_name, created_at
-     FROM income_ranking_entries ORDER BY rank_position ASC`,
+  const indexes = Object.fromEntries(
+    Object.entries(aliases).map(([key, names]) => [
+      key,
+      headers.findIndex((h) => names.includes(h)),
+    ]),
   );
-  const latest = rows[0];
+  if (
+    ["ticker", "companyName", "expectedReturnPercent"].some(
+      (key) => indexes[key] < 0,
+    )
+  )
+    throw new ImportError(
+      "Colunas obrigatórias: ticker, empresa, potencial_percentual.",
+    );
+  const seen = new Set();
+  return rows
+    .slice(1)
+    .filter((row) => row.some((cell) => String(cell).trim()))
+    .map((row, i) => {
+      const get = (key) => String(row[indexes[key]] ?? "").trim();
+      const ticker = get("ticker").toUpperCase();
+      const companyName = get("companyName");
+      if (!/^[A-Z0-9][A-Z0-9._-]{0,15}$/.test(ticker) || seen.has(ticker))
+        throw new ImportError(
+          "Ticker inválido ou repetido na linha " + (i + 2),
+        );
+      seen.add(ticker);
+      if (!companyName || companyName.length > 160)
+        throw new ImportError("Confira a empresa na linha " + (i + 2));
+      const expectedReturnPercent = localizedDecimal(
+        get("expectedReturnPercent"),
+      );
+      if (
+        Number(expectedReturnPercent) < -100 ||
+        Number(expectedReturnPercent) > 1000
+      )
+        throw new ImportError("Potencial deve ficar entre -100% e 1000%.");
+      const targetPrice = get("targetPrice")
+        ? localizedDecimal(get("targetPrice"))
+        : null;
+      if (
+        targetPrice !== null &&
+        (Number(targetPrice) <= 0 || Number(targetPrice) > 1e9)
+      )
+        throw new ImportError("Preço-alvo inválido.");
+      const horizonMonths = get("horizonMonths")
+        ? Number(localizedDecimal(get("horizonMonths")))
+        : null;
+      if (
+        horizonMonths !== null &&
+        (!Number.isInteger(horizonMonths) ||
+          horizonMonths < 1 ||
+          horizonMonths > 120)
+      )
+        throw new ImportError("Horizonte deve ser de 1 a 120 meses.");
+      const thesis = get("thesis");
+      const risks = get("risks");
+      const sector = get("sector");
+      if (thesis.length > 2000 || risks.length > 2000 || sector.length > 120)
+        throw new ImportError("Texto muito longo na linha " + (i + 2));
+      return {
+        rank: i + 1,
+        ticker,
+        companyName,
+        expectedReturnPercent,
+        targetPrice,
+        horizonMonths,
+        thesis: thesis || null,
+        risks: risks || null,
+        sector: sector || null,
+      };
+    });
+}
+function publication(row) {
+  return {
+    id: String(row.id),
+    title: row.title,
+    authorName: row.author_name,
+    professionalCategory: row.professional_category,
+    professionalRegistration: row.professional_registration,
+    sourceFileName: row.source_file_name,
+    updatedAt: row.created_at,
+    entries: (typeof row.entries_json === "string"
+      ? JSON.parse(row.entries_json)
+      : row.entries_json
+    ).sort((a, b) => a.rank - b.rank),
+  };
+}
+router.get("/", async (req, res) => {
   const user = await currentUser(req);
-
-  return res.status(200).json({
-    entries: rows.map(row => ({
-      rank: Number(row.rank_position), ticker: row.ticker, companyName: row.company_name,
-      expectedReturnPercent: String(row.expected_return_percent), targetPrice: row.target_price === null ? null : String(row.target_price),
-      horizonMonths: row.horizon_months === null ? null : Number(row.horizon_months), thesis: row.thesis,
-    })),
-    updatedAt: latest?.created_at || null,
-    sourceFileName: latest?.source_file_name || null,
+  const id = req.query.publication;
+  if (id && !/^\d{1,20}$/.test(String(id)))
+    return res.status(400).json({ error: "Publicação inválida." });
+  const [rows] = await pool.execute(
+    id
+      ? "SELECT * FROM ranking_publications WHERE id = ?"
+      : "SELECT * FROM ranking_publications ORDER BY id DESC LIMIT 1",
+    id ? [id] : [],
+  );
+  const [history] = await pool.execute(
+    "SELECT id, title, author_name, created_at FROM ranking_publications ORDER BY id DESC LIMIT 50",
+  );
+  let data = rows[0]
+    ? publication(rows[0])
+    : {
+        id: null,
+        title: "Ranking de cenários",
+        authorName: null,
+        professionalCategory: null,
+        professionalRegistration: null,
+        updatedAt: null,
+        sourceFileName: null,
+        entries: [],
+      };
+  if (!rows[0] && id)
+    return res.status(404).json({ error: "Publicação não encontrada." });
+  if (!rows[0] && !id) {
+    const [legacy] = await pool.execute(
+      "SELECT * FROM income_ranking_entries ORDER BY rank_position",
+    );
+    data = {
+      ...data,
+      updatedAt: legacy[0]?.created_at || null,
+      sourceFileName: legacy[0]?.source_file_name || null,
+      entries: legacy.map((row) => ({
+        rank: row.rank_position,
+        ticker: row.ticker,
+        companyName: row.company_name,
+        expectedReturnPercent: String(row.expected_return_percent),
+        targetPrice: row.target_price,
+        horizonMonths: row.horizon_months,
+        thesis: row.thesis,
+        risks: null,
+        sector: null,
+      })),
+    };
+  }
+  return res.json({
+    ...data,
     canManage: canManageRankings(user?.email),
+    history: history.map((row) => ({
+      id: String(row.id),
+      title: row.title,
+      authorName: row.author_name,
+      createdAt: row.created_at,
+    })),
   });
 });
-
-router.post('/', rankingUploadLimiter, express.text({ type: ['text/csv', 'application/csv'], limit: MAX_CSV_BYTES }), requireAuthenticatedUser, async (req, res, next) => {
-  try {
-    if (!canManageRankings(req.authenticatedUser.email)) return res.status(403).json({ error: 'Sua conta não tem permissão para publicar o ranking.' });
-    const csv = typeof req.body === 'string' ? req.body : '';
-    const rows = validateCsv(csv);
-    const originalFileName = String(req.get('x-file-name') || 'ranking-corretor.csv');
-    const fileName = originalFileName.replace(/[\u0000-\u001f<>:"/\\|?*]/g, '_').trim().slice(-255) || 'ranking-corretor.csv';
-    const batchId = randomUUID();
-    const connection = await pool.getConnection();
+async function manage(req, res, next) {
+  if (!canManageRankings(req.authenticatedUser.email))
+    return res
+      .status(403)
+      .json({ error: "Sua conta não pode publicar análises." });
+  return next();
+}
+router.post(
+  ["/preview", "/"],
+  requireAuthenticatedUser,
+  manage,
+  limiter,
+  fileBody,
+  async (req, res, next) => {
     try {
-      await connection.beginTransaction();
-      await connection.execute('DELETE FROM income_ranking_entries');
-      const placeholders = rows.map(() => '(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)').join(', ');
-      const values = rows.flatMap((item, index) => [
-        randomUUID(), batchId, index + 1, item.ticker, item.companyName, item.expectedReturnPercent,
-        item.targetPrice, item.horizonMonths, item.thesis, fileName, req.authenticatedUser.id,
-      ]);
-      await connection.execute(
-        `INSERT INTO income_ranking_entries
-           (id, batch_id, rank_position, ticker, company_name, expected_return_percent, target_price,
-            horizon_months, thesis, source_file_name, imported_by)
-         VALUES ${placeholders}`,
-        values,
+      const entries = parseRows(await readUpload(req));
+      if (!entries.length) throw new ImportError("A planilha não tem ativos.");
+      if (req.path === "/preview")
+        return res.json({ entries, count: entries.length });
+      let metadata;
+      try {
+        metadata = JSON.parse(
+          decodeURIComponent(req.get("x-publication-meta") || "%7B%7D"),
+        );
+      } catch {
+        throw new ImportError("Os dados da publicação estão inválidos.");
+      }
+      if (!metadata || typeof metadata !== "object" || Array.isArray(metadata))
+        throw new ImportError("Dados da publicação inválidos.");
+      const text = (value, max) => {
+        const output = typeof value === "string" ? value.trim() : "";
+        if (output.length > max)
+          throw new ImportError("Os dados da publicação excedem o limite.");
+        return output || null;
+      };
+      const fileName = decodeURIComponent(
+        req.get("x-file-name") || "ranking.csv",
+      )
+        .replace(/[\x00-\x1f<>:"/\\|?*]/g, "_")
+        .slice(-255);
+      const [result] = await pool.execute(
+        "INSERT INTO ranking_publications (title, author_name, professional_category, professional_registration, source_file_name, entries_json, imported_by) VALUES (?, ?, ?, ?, ?, ?, ?)",
+        [
+          text(metadata.title, 160) || "Ranking de cenários",
+          text(metadata.authorName, 120),
+          text(metadata.professionalCategory, 120),
+          text(metadata.professionalRegistration, 120),
+          fileName,
+          JSON.stringify(entries),
+          req.authenticatedUser.id,
+        ],
       );
-      await connection.commit();
+      return res.status(201).json({
+        message: "Publicação salva. O histórico anterior foi preservado.",
+        publicationId: String(result.insertId),
+      });
     } catch (error) {
-      await connection.rollback();
-      throw error;
-    } finally {
-      connection.release();
+      if (error instanceof ImportError || error instanceof URIError)
+        return res.status(400).json({ error: error.message });
+      return next(error);
     }
-    return res.status(200).json({ message: `Ranking atualizado com ${rows.length} ativos.` });
-  } catch (error) {
-    if (error instanceof CsvImportError) {
-      return res.status(400).json({ error: error.message });
-    }
-    return next(error);
-  }
-});
-
-export const rankingRouter = router;
+  },
+);
+export { router as rankingRouter };

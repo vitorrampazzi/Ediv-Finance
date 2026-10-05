@@ -1,6 +1,5 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
+@config "../tailwind.config.js";
 
 :root {
   color-scheme: dark;
@@ -26,12 +25,28 @@ body {
 
 button,
 input,
-select {
+select,
+textarea {
   font: inherit;
 }
 
+@layer components {
+  .field {
+    @apply min-h-11 w-full rounded-lg border border-evo-border bg-evo-bgMain px-3 text-base sm:text-sm text-evo-textMain;
+  }
+  .action {
+    @apply inline-flex min-h-11 items-center justify-center gap-2 rounded-lg bg-evo-primary px-4 text-sm font-semibold text-white transition hover:bg-evo-primaryHover disabled:cursor-not-allowed disabled:opacity-50;
+  }
+  .notice-error {
+    @apply rounded-lg border border-evo-red/30 bg-evo-red/10 p-3 text-sm text-evo-textMain;
+  }
+  .notice-success {
+    @apply rounded-lg border border-evo-accent/30 bg-evo-accent/10 p-3 text-sm text-evo-textMain;
+  }
+}
+
 button:not(:disabled),
-[role='button'] {
+[role="button"] {
   cursor: pointer;
 }
 
@@ -51,7 +66,8 @@ button:disabled {
 
 .font-numbers {
   font-variant-numeric: tabular-nums;
-  font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Consolas, monospace;
+  font-family:
+    "JetBrains Mono", ui-monospace, SFMono-Regular, Consolas, monospace;
 }
 
 ::-webkit-scrollbar {
@@ -73,8 +89,12 @@ button:disabled {
 }
 
 @keyframes spinY {
-  from { transform: rotateY(0deg); }
-  to { transform: rotateY(360deg); }
+  from {
+    transform: rotateY(0deg);
+  }
+  to {
+    transform: rotateY(360deg);
+  }
 }
 
 .animate-spin-y {
@@ -83,13 +103,23 @@ button:disabled {
 }
 
 @keyframes orbit {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 @keyframes favoriteCardEnter {
-  from { opacity: 0; transform: translateY(12px) scale(0.985); }
-  to { opacity: 1; transform: translateY(0) scale(1); }
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(0.985);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
 }
 
 .favorite-card-enter {

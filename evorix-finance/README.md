@@ -1,12 +1,18 @@
 # Ediv Finance
 
-Aplicação React/Vite com API Node.js/Express e persistência em MySQL. A página inicial é pública, com cotações demonstrativas da brapi.dev. A área `/app` exige conta e permite salvar operações manuais, favoritos e preferências.
+Aplicação React/Vite com API Node.js/Express e persistência em MySQL. A página inicial é pública, com cotações consultadas da brapi.dev. A área `/app` exige conta e permite salvar operações manuais, favoritos e preferências.
 
-O nome Ediv é uma abreviação de Escola do Dividendo. A rota pública `/ranking` mostra a lista publicada pelo assessor; a conta autorizada importa arquivos CSV UTF-8 exportados do Excel.
+O nome Ediv é uma abreviação de Escola do Dividendo. A rota pública `/ranking` mostra a lista publicada pelo assessor; a conta autorizada importa CSV ou Excel (.xlsx), revisa a prévia e publica versões com histórico.
+
+## Educação, ranking e atualização
+
+A experiência principal agora é o ranking de cenários, apoiado por uma trilha de aprendizado e um assistente educativo. Autoria, categoria, registro, contato e horários continuam sem preenchimento até serem informados. Não há cobrança habilitada.
+
+Veja [as mudanças e a ordem de publicação](docs/ATUALIZACAO-EDIV.md) e [a rotina de backup criptografado](docs/BACKUP.md). A migração 005 deve estar aplicada antes do deploy.
 
 ## Requisitos
 
-- Node.js 22.14 ou superior
+- Node.js 22.x (22.14 ou superior dentro desta versão)
 - MySQL 8.0 ou compatível, acessível a partir desta máquina
 - Um serviço SMTP para enviar confirmações de e-mail em produção
 
@@ -50,9 +56,9 @@ O nome Ediv é uma abreviação de Escola do Dividendo. A rota pública `/rankin
 
 ### Importação da lista de renda
 
-O assessor pode preparar a lista no Excel e salvá-la como **CSV UTF-8** (delimitado por vírgulas ou ponto e vírgula). Use o modelo disponível na página `/ranking`. As colunas obrigatórias são `ticker`, `empresa` e `potencial_percentual`; `preco_alvo`, `horizonte_meses` e `tese` são opcionais. A ordem das linhas define a posição. Percentuais e valores com vírgula são aceitos em CSV separado por ponto e vírgula.
+O assessor pode preparar a lista no Excel e salvá-la como **CSV UTF-8 ou XLSX** (delimitado por vírgulas ou ponto e vírgula). Use o modelo disponível na página `/ranking`. As colunas obrigatórias são `ticker`, `empresa` e `potencial_percentual`; `preco_alvo`, `horizonte_meses`, `tese`, `riscos` e `setor` são opcionais. A ordem das linhas define a posição. Percentuais e valores com vírgula são aceitos em CSV separado por ponto e vírgula.
 
-O upload aceita até 300 ativos e substitui a publicação anterior de forma transacional, somente depois de validar o arquivo inteiro. Configure `RANKING_ADMIN_EMAILS` com o e-mail confirmado do responsável antes de liberar essa função. O site identifica a lista como fornecida pelo assessor e exibe um aviso de que projeções podem estar erradas e não garantem retorno.
+O upload aceita até 300 ativos e cria uma publicação independente com histórico, após validar o arquivo inteiro e confirmar a prévia. Configure `RANKING_ADMIN_EMAILS` com o e-mail confirmado do responsável antes de liberar essa função. O site identifica a lista como fornecida pelo assessor e exibe um aviso de que projeções podem estar erradas e não garantem retorno.
 
 Para aplicar migrations na base gerenciada Aiven já configurada, use `npm run db:migrate:aiven`. O comando usa a conta administrativa local de `.env.aiven` só para aplicar DDL; ele não copia nem altera os dados atuais.
 
@@ -67,7 +73,7 @@ Para aplicar migrations na base gerenciada Aiven já configurada, use `npm run d
 - `GET /api/market/assets?type=stock&search=PETR&page=1` — lista ações, fundos, ETFs e BDRs com busca, filtros e paginação.
 - `GET /api/market/quotes?symbols=PETR4,ITUB4` — devolve cotações da brapi.dev, com limite de oito ativos por chamada.
 - `GET /api/rankings` — lista as projeções importadas mais recentemente e informa se a sessão pode publicar.
-- `POST /api/rankings` — substitui a lista com um CSV UTF-8; requer sessão confirmada cujo e-mail esteja em `RANKING_ADMIN_EMAILS`.
+- `POST /api/rankings` — publica uma nova versão com CSV UTF-8 ou XLSX; requer sessão confirmada cujo e-mail esteja em `RANKING_ADMIN_EMAILS`.
 - `GET /api/portfolio` — calcula posições e valores estimados usando cotações disponíveis, além do histórico recente.
 - `POST /api/portfolio/transactions` — registra compra/venda manual e rejeita vendas que deixem a posição negativa.
 - `GET/PUT /api/portfolio/preferences` — lê e salva preferência de risco, opções de notificação e o total investido informado pelo usuário.
@@ -84,7 +90,7 @@ O chat continua funcionando com respostas locais quando a integração estiver d
 
 Antes do primeiro envio, o chat pede confirmação e avisa que a pergunta e o histórico vão ao Google. Nos termos da faixa gratuita, o Google pode usar prompts e respostas para melhorar os serviços e permitir revisão humana. Não use essa faixa para dados pessoais, confidenciais ou financeiros; não envie carteira, saldo, extrato, CPF, contato ou credenciais. A integração não carrega dados da conta e o prompt limita o assistente a conteúdo educativo, sem recomendação individualizada nem cotação em tempo real. A cota e disponibilidade gratuita podem mudar. Para evitar cobrança inesperada, não vincule faturamento ao projeto usado na avaliação e confira os limites e as condições atuais no AI Studio.
 
-Para habilitar no site publicado, configure `AI_ASSISTANT_ENABLED=true`, `GEMINI_API_KEY` e, se necessário, `GEMINI_MODEL` em **Vercel → Settings → Environment Variables** no ambiente desejado e faça um novo deploy. Até haver chave e flag ativada, a interface usa as respostas locais. O limite por IP é em memória e não substitui limites compartilhados ou os controles de uso do provedor.
+Para habilitar no site publicado, configure `AI_ASSISTANT_ENABLED=true`, `GEMINI_API_KEY` e, se necessário, `GEMINI_MODEL` em **Vercel → Settings → Environment Variables** no ambiente desejado e faça um novo deploy. Até haver chave e flag ativada, a interface usa as respostas locais. Os limites por IP e global ficam no MySQL; AI_DAILY_LIMIT tem padrão 100 em uma janela de 24 horas. A integração não substitui os controles do provedor.
 
 ## Produção
 
@@ -105,7 +111,7 @@ O repositório está configurado para build do Vite, servir a SPA também em rot
 3. Execute `npm run db:migrate` uma vez contra o MySQL gerenciado com `MYSQL_MIGRATION_USER` e `MYSQL_MIGRATION_PASSWORD` configurados apenas no ambiente seguro de migração. Não conceda DDL ao usuário usado pela API.
 4. Faça deploy e confira `https://SEU-DOMINIO/api/health`, cadastro, confirmação de e-mail, login, carteira e favoritos. Para previews, a função reconhece automaticamente o domínio da implantação Vercel para validação de origem; o link de confirmação continua usando `APP_BASE_URL`, então teste o fluxo completo no domínio oficial.
 
-O limiter atual guarda contadores em memória e caches de cotações/listagem também são por instância. Em escala com múltiplas instâncias, limites de autenticação não são compartilhados e o cache pode repetir chamadas ao provedor. Configure storage compartilhado para os limitadores e cache distribuído antes de depender desses limites para proteção contra abuso. O MySQL gerenciado precisa aceitar conexões de saída da Vercel (ou usar um proxy/serviço de banco compatível), e o plano de hospedagem deve permitir esse padrão de conexão.
+Limitadores e cache de cotações/listagem usam tabelas compartilhadas no MySQL. Há cache em memória para reduzir leituras locais, mas os contadores são persistidos entre instâncias. O MySQL gerenciado precisa aceitar conexões de saída da Vercel (ou usar um proxy/serviço de banco compatível), e o plano de hospedagem deve permitir esse padrão de conexão.
 
 ### Cópia inicial para Aiven (teste)
 
@@ -115,4 +121,4 @@ Após a transferência, `npm run db:bootstrap:aiven-app` cria o usuário de runt
 
 ## Escopo e próximos passos
 
-Este backend registra operações manuais de carteira, mas não envia ordens nem movimenta dinheiro. O valor total que o usuário informa é exibido como declaração pessoal; a estimativa de mercado usa apenas posições com quantidade cadastrada e cotação disponível. Preços podem atrasar ou falhar e não são saldo de corretora. Também não há recuperação de senha, MFA, exclusão/exportação de conta, pagamentos, conexão com corretoras, KYC ou trilha de auditoria financeira certificada. Antes de publicar, defina requisitos de privacidade, licença de dados, política de retenção, monitoramento e resposta a incidentes, e faça revisão de segurança independente.
+Este backend registra operações manuais de carteira, mas não envia ordens nem movimenta dinheiro. O valor total que o usuário informa é exibido como declaração pessoal; a estimativa de mercado usa apenas posições com quantidade cadastrada e cotação disponível. Preços podem atrasar ou falhar e não são saldo de corretora. Recuperação de senha, exclusão/exportação de conta e encerramento de sessões estão disponíveis. Não há MFA, pagamentos, conexão automática com corretoras, KYC ou trilha de auditoria financeira certificada. Antes de publicar, defina requisitos de privacidade, licença de dados, política de retenção, monitoramento e resposta a incidentes, e faça revisão de segurança independente.

@@ -1,7 +1,7 @@
-import { readFileSync } from 'node:fs';
-import { resolve } from 'node:path';
+import { readFileSync } from "node:fs";
+import { resolve } from "node:path";
 
-const isProduction = process.env.NODE_ENV === 'production';
+const isProduction = process.env.NODE_ENV === "production";
 
 function required(name) {
   const value = process.env[name]?.trim();
@@ -10,57 +10,89 @@ function required(name) {
 }
 
 const projectProductionUrl = process.env.VERCEL_PROJECT_PRODUCTION_URL?.trim();
-const appBaseUrl = process.env.APP_BASE_URL?.trim().replace(/\/$/, '')
-  || (projectProductionUrl ? `https://${projectProductionUrl}` : 'http://localhost:5173');
-const appOriginValues = (process.env.APP_ORIGIN?.trim() || new URL(appBaseUrl).origin)
-  .split(',').map(value => value.trim()).filter(Boolean);
+const appBaseUrl =
+  process.env.APP_BASE_URL?.trim().replace(/\/$/, "") ||
+  (projectProductionUrl
+    ? `https://${projectProductionUrl}`
+    : "http://localhost:5173");
+const appOriginValues = (
+  process.env.APP_ORIGIN?.trim() || new URL(appBaseUrl).origin
+)
+  .split(",")
+  .map((value) => value.trim())
+  .filter(Boolean);
 const parsedAppUrl = new URL(appBaseUrl);
-const appOrigins = [...new Set(appOriginValues.map(value => new URL(value).origin))];
+const appOrigins = [
+  ...new Set(appOriginValues.map((value) => new URL(value).origin)),
+];
 const vercelDeploymentOrigin = process.env.VERCEL_URL?.trim()
   ? `https://${process.env.VERCEL_URL.trim()}`
   : null;
-const mysqlSslCa = process.env.MYSQL_SSL_CA?.replace(/\\n/g, '\n')
-  || (process.env.MYSQL_SSL_CA_FILE?.trim()
-    ? readFileSync(resolve(process.env.MYSQL_SSL_CA_FILE.trim()), 'utf8')
+const mysqlSslCa =
+  process.env.MYSQL_SSL_CA?.replace(/\\n/g, "\n") ||
+  (process.env.MYSQL_SSL_CA_FILE?.trim()
+    ? readFileSync(resolve(process.env.MYSQL_SSL_CA_FILE.trim()), "utf8")
     : null);
 
 if (!appOrigins.includes(parsedAppUrl.origin)) {
-  throw new Error('APP_ORIGIN must include the origin of APP_BASE_URL.');
+  throw new Error("APP_ORIGIN must include the origin of APP_BASE_URL.");
 }
 
 if (isProduction) {
-  if (parsedAppUrl.protocol !== 'https:') throw new Error('APP_BASE_URL must use HTTPS in production.');
-  if (process.env.MYSQL_SSL !== 'true') throw new Error('Set MYSQL_SSL=true in production.');
-  required('SMTP_URL');
-  required('MAIL_FROM');
+  if (parsedAppUrl.protocol !== "https:")
+    throw new Error("APP_BASE_URL must use HTTPS in production.");
+  if (process.env.MYSQL_SSL !== "true")
+    throw new Error("Set MYSQL_SSL=true in production.");
+  required("SMTP_URL");
+  required("MAIL_FROM");
 }
 
 export const config = Object.freeze({
   isProduction,
   port: Number(process.env.PORT || 3001),
-  host: process.env.HOST?.trim() || (isProduction ? '0.0.0.0' : '127.0.0.1'),
+  host: process.env.HOST?.trim() || (isProduction ? "0.0.0.0" : "127.0.0.1"),
   appBaseUrl,
-  appOrigins: [...new Set([...appOrigins, ...(vercelDeploymentOrigin ? [new URL(vercelDeploymentOrigin).origin] : [])])],
+  appOrigins: [
+    ...new Set([
+      ...appOrigins,
+      ...(vercelDeploymentOrigin
+        ? [new URL(vercelDeploymentOrigin).origin]
+        : []),
+    ]),
+  ],
   mysql: {
-    host: required('MYSQL_HOST'),
+    host: required("MYSQL_HOST"),
     port: Number(process.env.MYSQL_PORT || 3306),
-    database: required('MYSQL_DATABASE'),
-    user: required('MYSQL_USER'),
-    password: required('MYSQL_PASSWORD'),
-    ssl: process.env.MYSQL_SSL === 'true',
+    database: required("MYSQL_DATABASE"),
+    user: required("MYSQL_USER"),
+    password: required("MYSQL_PASSWORD"),
+    ssl: process.env.MYSQL_SSL === "true",
     sslCa: mysqlSslCa,
   },
   mysqlMigrationUser: process.env.MYSQL_MIGRATION_USER?.trim() || null,
   mysqlMigrationPassword: process.env.MYSQL_MIGRATION_PASSWORD || null,
-  skipStartupMigrations: process.env.SKIP_STARTUP_MIGRATIONS === 'true',
+  skipStartupMigrations: process.env.SKIP_STARTUP_MIGRATIONS === "true",
   smtpUrl: process.env.SMTP_URL?.trim() || null,
   mailFrom: process.env.MAIL_FROM?.trim() || null,
-  trustProxy: process.env.TRUST_PROXY === 'true' || process.env.VERCEL === '1',
+  trustProxy: process.env.TRUST_PROXY === "true" || process.env.VERCEL === "1",
   brapiApiKey: process.env.BRAPI_API_KEY?.trim() || null,
   geminiApiKey: process.env.GEMINI_API_KEY?.trim() || null,
-  geminiModel: process.env.GEMINI_MODEL?.trim() || 'gemini-3.8-flash',
-  aiAssistantEnabled: process.env.AI_ASSISTANT_ENABLED === 'true',
-  rankingAdminEmails: (process.env.RANKING_ADMIN_EMAILS || '').split(',').map(value => value.trim().toLowerCase()).filter(Boolean),
-  sessionCookieName: isProduction ? '__Host-evorix_session' : 'evorix_session',
+  geminiModel: process.env.GEMINI_MODEL?.trim() || "gemini-3.8-flash",
+  aiDailyLimit: Math.min(
+    1000,
+    Math.max(1, Number(process.env.AI_DAILY_LIMIT || 100) || 100),
+  ),
+  aiAssistantEnabled: process.env.AI_ASSISTANT_ENABLED === "true",
+  supportEmail: process.env.SUPPORT_EMAIL?.trim() || null,
+  supportHours: process.env.SUPPORT_HOURS?.trim() || null,
+  professionalName: process.env.PROFESSIONAL_NAME?.trim() || null,
+  professionalCategory: process.env.PROFESSIONAL_CATEGORY?.trim() || null,
+  professionalRegistration:
+    process.env.PROFESSIONAL_REGISTRATION?.trim() || null,
+  rankingAdminEmails: (process.env.RANKING_ADMIN_EMAILS || "")
+    .split(",")
+    .map((value) => value.trim().toLowerCase())
+    .filter(Boolean),
+  sessionCookieName: isProduction ? "__Host-evorix_session" : "evorix_session",
   sessionHours: 8,
 });
