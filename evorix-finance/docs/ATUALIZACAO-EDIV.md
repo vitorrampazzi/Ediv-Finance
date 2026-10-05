@@ -19,7 +19,7 @@ Node: 22.x. Tailwind 4 remove dependências vulneráveis da ferramenta anterior 
 Os seis módulos de dados da empresa definidos pelo corretor aparecem nos detalhes
 do ranking e na prévia de importação. Consulte [campos e formato](RANKING-CORRETOR.md).
 
-O acesso de visitantes tem prévias do ranking e da trilha educativa. Conta gratuita
+O acesso de visitantes inclui a apresentação do ranking e a primeira aula. Conta gratuita
 confirmada libera pesquisa e aulas completas e permite usar a IA com limite individual.
 Veja [regras de acesso](ACESSO-GRATUITO.md). `AI_USER_DAILY_LIMIT` é opcional, com padrão 20.
 

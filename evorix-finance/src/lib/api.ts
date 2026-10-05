@@ -1,3 +1,12 @@
+export class ApiError extends Error {
+  readonly status: number;
+  constructor(message: string, status: number) {
+    super(message);
+    this.name = "ApiError";
+    this.status = status;
+  }
+}
+
 export async function apiRequest<T>(
   path: string,
   init: RequestInit = {},
@@ -24,8 +33,9 @@ export async function apiRequest<T>(
   const body =
     response.status === 204 ? {} : await response.json().catch(() => ({}));
   if (!response.ok)
-    throw new Error(
+    throw new ApiError(
       body.error || "Não foi possível concluir a solicitação. Tente novamente.",
+      response.status,
     );
   return body as T;
 }

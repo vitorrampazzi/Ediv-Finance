@@ -12,6 +12,8 @@ import { Link } from "react-router-dom";
 import { useMarketAssets } from "../hooks/useMarketAssets";
 import { RankingHighlights } from "../components/RankingHighlights";
 import { SiteFooter, SiteHeader } from "../components/SiteChrome";
+import { useAuth } from "../context/authContext";
+import { authLink } from "../lib/authDestination";
 
 const currency = new Intl.NumberFormat("pt-BR", {
   style: "currency",
@@ -19,6 +21,7 @@ const currency = new Intl.NumberFormat("pt-BR", {
 });
 
 export function Home() {
+  const { user } = useAuth();
   const { assets, loading, error, requestedAt } = useMarketAssets({
     search: "",
     type: "stock",
@@ -41,16 +44,17 @@ export function Home() {
               Entenda os cenários. Invista em conhecimento.
             </h1>
             <p className="mt-5 max-w-xl text-base leading-relaxed text-evo-textSec">
-              Conheça as previsões publicadas no ranking, entenda os riscos e
-              aprenda a interpretar cada cenário. Explore o conteúdo sem
-              precisar criar uma conta.
+              Aprenda a interpretar cenários e entender os riscos. Crie sua
+              conta gratuita para acessar o ranking de previsões e os módulos de
+              pesquisa das empresas.
             </p>
             <div className="mt-8 flex flex-wrap gap-3">
               <Link
-                to="/ranking"
+                to={user ? "/ranking" : authLink("cadastro", "/ranking")}
                 className="inline-flex min-h-12 items-center gap-2 rounded-lg bg-evo-primary px-5 font-semibold text-white hover:bg-evo-primaryHover"
               >
-                Ver previsões <ArrowRight size={17} aria-hidden="true" />
+                {user ? "Abrir ranking" : "Criar conta e acessar o ranking"}{" "}
+                <ArrowRight size={17} aria-hidden="true" />
               </Link>
               <Link
                 to="/mercado"
@@ -66,8 +70,8 @@ export function Home() {
               </Link>
             </div>
             <p className="mt-4 text-xs text-evo-textSec">
-              Ranking e aulas abertas. Conta gratuita para organizar sua
-              carteira. Não conectamos corretoras nem movimentamos dinheiro.
+              Mercado, primeira aula e glossário abertos. Conta gratuita para
+              acessar o ranking, a trilha completa e organizar sua carteira.
             </p>
           </div>
           <div className="rounded-2xl border border-evo-border bg-evo-card p-6 shadow-xl md:p-8">

@@ -2,7 +2,7 @@ import { Router } from "express";
 import { rateLimit } from "express-rate-limit";
 import { config } from "./config.js";
 import { pool } from "./database.js";
-import { currentUser, requireAuthenticatedUser } from "./auth.js";
+import { requireAuthenticatedUser } from "./auth.js";
 import { MysqlLimitStore } from "./limit-store.js";
 import {
   fileBody,
@@ -200,16 +200,9 @@ function publication(row) {
     ).sort((a, b) => a.rank - b.rank),
   };
 }
-router.get("/", async (req, res) => {
-  const user = await currentUser(req);
+router.get("/", requireAuthenticatedUser, async (req, res) => {
+  const user = req.authenticatedUser;
   const id = req.query.publication;
-  if (id && !user)
-    return res
-      .status(401)
-      .json({
-        error:
-          "Crie sua conta gratuita ou entre para consultar o histórico completo.",
-      });
   if (id && !/^\d{1,20}$/.test(String(id)))
     return res.status(400).json({ error: "Publicação inválida." });
   const [rows] = await pool.execute(
@@ -258,37 +251,15 @@ router.get("/", async (req, res) => {
   }
   return res.json({
     ...data,
-    entries: user
-      ? data.entries
-      : data.entries.slice(0, 3).map((entry) => ({
-          rank: entry.rank,
-          ticker: entry.ticker,
-          companyName: entry.companyName,
-          expectedReturnPercent: entry.expectedReturnPercent,
-          targetPrice: entry.targetPrice,
-          horizonMonths: entry.horizonMonths,
-          sector: entry.sector || null,
-          thesis: null,
-          thesisPreview: entry.thesis
-            ? entry.thesis.slice(0, 240) +
-              (entry.thesis.length > 240 ? "…" : "")
-            : null,
-          risks: entry.risks || null,
-          referencePeriod: entry.referencePeriod || null,
-          dataSource: entry.dataSource || null,
-        })),
-    access: user ? "full" : "preview",
+    access: "full",
     totalEntries: data.entries.length,
-    previewLimit: 3,
-    canManage: canManageRankings(user?.email),
-    history: user
-      ? history.map((row) => ({
-          id: String(row.id),
-          title: row.title,
-          authorName: row.author_name,
-          createdAt: row.created_at,
-        }))
-      : [],
+    canManage: canManageRankings(user.email),
+    history: history.map((row) => ({
+      id: String(row.id),
+      title: row.title,
+      authorName: row.author_name,
+      createdAt: row.created_at,
+    })),
   });
 });
 async function manage(req, res, next) {

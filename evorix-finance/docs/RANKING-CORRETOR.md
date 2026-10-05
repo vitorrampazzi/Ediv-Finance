@@ -35,7 +35,7 @@ esta alteração não exige nova migração do MySQL.
 
 ## Demonstração visual
 
-Enquanto não existe publicação real, a interface apresenta seis empresas inventadas
+Para contas autenticadas, enquanto não existe publicação real, a interface apresenta seis empresas inventadas
 (DEMO1 a DEMO6) com números fictícios, os seis módulos e um gráfico de receita
 ilustrativo. Os dados são fixtures locais em `src/lib/rankingDemo.ts`, sem gravação
 no banco, importação, negociação ou inclusão nos favoritos. Não são pesquisa do
@@ -43,8 +43,8 @@ corretor, preços atuais nem recomendações.
 
 O botão “Explorar demonstração” permite ver os exemplos a qualquer momento;
 “Ver publicações da equipe” retorna aos dados da API. A URL `/ranking?visual=demo`
-abre explicitamente os exemplos. Publicações reais não são preenchidas com valores
-simulados, e uma falha de API continua sendo identificada. Na home, os destaques
+abre os exemplos depois de entrar na conta. Visitantes veem a apresentação e o convite para cadastro. Publicações reais não são preenchidas com valores
+simulados, e uma falha de API continua sendo identificada. Na home, os destaques de contas autenticadas
 mostram exemplos identificados quando a API confirma que ainda não há publicação.
 
 ## Ações recebidas para pesquisa

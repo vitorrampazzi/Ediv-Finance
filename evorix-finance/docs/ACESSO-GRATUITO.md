@@ -1,26 +1,27 @@
 # Visitantes e contas gratuitas
 
-| Recurso                                          | Visitante                                          | Conta confirmada e autenticada       |
-| ------------------------------------------------ | -------------------------------------------------- | ------------------------------------ |
-| Home, mercado público, apresentação e assessoria | Acesso aberto                                      | Acesso aberto                        |
-| Ranking real                                     | As três primeiras ações da publicação mais recente | Todas as ações, filtros e histórico  |
-| Pesquisa da empresa                              | Títulos dos seis módulos e trecho da tese          | Conteúdo completo dos módulos e tese |
-| Riscos, autoria, período e fonte                 | Visíveis na prévia disponível                      | Visíveis                             |
-| Demonstração fictícia                            | Acesso completo e identificado                     | Acesso completo e identificado       |
-| Educação                                         | Primeira aula, glossário e calculadora hipotética  | Todas as aulas e exercícios          |
-| Assistente                                       | Guia local                                         | Guia local e IA, quando configurada  |
-| Carteira, favoritos e conversas                  | Apresentação e convite para cadastro               | Recursos da conta                    |
+| Recurso                                          | Visitante                                         | Conta confirmada e autenticada       |
+| ------------------------------------------------ | ------------------------------------------------- | ------------------------------------ |
+| Home, mercado público, apresentação e assessoria | Acesso aberto                                     | Acesso aberto                        |
+| Ranking real                                     | Apresentação e convite para cadastro              | Todas as ações, filtros e histórico  |
+| Pesquisa da empresa                              | Apresentação dos módulos, sem dados               | Conteúdo completo dos módulos e tese |
+| Riscos, autoria, período e fonte                 | Avisos gerais sobre previsões e riscos            | Visíveis                             |
+| Demonstração fictícia                            | Apresentação e convite para cadastro              | Acesso completo e identificado       |
+| Educação                                         | Primeira aula, glossário e calculadora hipotética | Todas as aulas e exercícios          |
+| Assistente                                       | Guia local                                        | Guia local e IA, quando configurada  |
+| Carteira, favoritos e conversas                  | Apresentação e convite para cadastro              | Recursos da conta                    |
 
 O cadastro é gratuito. A assessoria permanece em pré-lançamento, sem cobrança.
 O e-mail precisa ser confirmado e o usuário deve entrar na conta para liberar os recursos.
 
 ## Proteção na API
 
-- `/api/rankings` recorta a resposta pública a três entradas, remove a tese completa
-  e os seis módulos, e envia `access: preview`, `totalEntries` e `previewLimit`.
-  Mantém riscos, fontes e metadados públicos das três entradas. Não envia as demais
-  entradas ocultas. Visitantes não podem consultar versões anteriores pelo parâmetro
-  `publication`. Rankings reais nunca são completados com dados fictícios.
+- `/api/rankings` exige sessão válida e responde 401 a visitantes, antes de consultar
+  as publicações. Nenhuma ação, preço, indicador, contagem ou versão histórica do ranking
+  é entregue sem autenticação. A home e `/ranking` mostram apenas a apresentação do
+  recurso e os convites de cadastro/login. Nem a demonstração aparece sem login,
+  inclusive quando o visitante usa `?visual=demo`. A demonstração é fictícia e
+  não é conteúdo sigiloso: suas fixtures continuam no código estático do frontend.
 - `/api/learning` entrega o conteúdo da primeira aula e o glossário para visitantes.
   As outras aulas têm apenas identificador, título e indicação de bloqueio. Os textos
   completos foram movidos para o servidor e não ficam no bundle público do frontend.
@@ -37,6 +38,6 @@ As chamadas de cadastro e login preservam o destino por `next`. O destino é val
 no cliente e no servidor, aceitando apenas rotas internas permitidas. O link de
 confirmação de e-mail encaminha para o login com esse destino.
 
-As prévias de visitantes permitem explorar o produto sem cadastro obrigatório na home.
+Visitantes podem conhecer o produto pela home, pelo mercado público, pela primeira aula e pelo glossário.
 Os convites explicam os benefícios da conta e sempre oferecem a opção de entrar.
 Os limites são aplicados no servidor e não dependem de esconder HTML ou de CSS.

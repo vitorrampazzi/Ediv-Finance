@@ -1,7 +1,9 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { apiRequest } from "../lib/api";
+import { apiRequest, ApiError } from "../lib/api";
 import { rankingDemoEntries } from "../lib/rankingDemo";
+import { useAuth } from "../context/authContext";
+import { RankingAccessLanding } from "./RankingAccessLanding";
 
 type Publication = {
   title: string;
@@ -15,6 +17,26 @@ type Publication = {
 };
 
 export function RankingHighlights() {
+  const { user, loading } = useAuth();
+  if (loading)
+    return (
+      <section className="mx-auto max-w-7xl px-5 pb-14 md:px-8">
+        <p role="status" className="text-sm text-evo-textSec">
+          Verificando acesso ao ranking…
+        </p>
+      </section>
+    );
+  if (!user)
+    return (
+      <section className="mx-auto max-w-7xl px-5 pb-14 md:px-8">
+        <RankingAccessLanding compact />
+      </section>
+    );
+  return <MemberRankingHighlights key={user.id} />;
+}
+
+function MemberRankingHighlights() {
+  const { refreshSession } = useAuth();
   const [publication, setPublication] = useState<Publication | null>(null);
   const [error, setError] = useState("");
   const showingDemo = Boolean(publication && !publication.entries.length);
@@ -22,13 +44,30 @@ export function RankingHighlights() {
   useEffect(() => {
     const controller = new AbortController();
     apiRequest<Publication>("/api/rankings", { signal: controller.signal })
-      .then(setPublication)
-      .catch(() => {
+      .then((data) => {
+        if (!controller.signal.aborted) setPublication(data);
+      })
+      .catch(async (reason) => {
+        if (
+          !controller.signal.aborted &&
+          reason instanceof ApiError &&
+          reason.status === 401
+        ) {
+          try {
+            await refreshSession();
+          } catch {
+            if (!controller.signal.aborted)
+              setError(
+                "Não foi possível verificar sua sessão. Atualize a página e entre novamente.",
+              );
+          }
+          return;
+        }
         if (!controller.signal.aborted)
           setError("A publicação não pôde ser carregada agora.");
       });
     return () => controller.abort();
-  }, []);
+  }, [refreshSession]);
 
   return (
     <section className="mx-auto max-w-7xl px-5 pb-14 md:px-8">

@@ -4,11 +4,11 @@ import { BookOpen, FileSpreadsheet, Search, Star, Upload } from "lucide-react";
 import { Card } from "../components/Card";
 import { RankingFundamentals } from "../components/RankingFundamentals";
 import type { RankingFundamentalData } from "../components/RankingFundamentals";
-import { apiRequest } from "../lib/api";
+import { apiRequest, ApiError } from "../lib/api";
 import { useAuth } from "../context/authContext";
 import { useFavoritos } from "../hooks/useFavoritos";
 import { rankingDemoEntries } from "../lib/rankingDemo";
-import { AccountGate } from "../components/AccountGate";
+import { RankingAccessLanding } from "../components/RankingAccessLanding";
 
 type Entry = RankingFundamentalData & {
   rank: number;
@@ -18,7 +18,6 @@ type Entry = RankingFundamentalData & {
   targetPrice: string | null;
   horizonMonths: number | null;
   thesis: string | null;
-  thesisPreview?: string | null;
   risks: string | null;
   sector: string | null;
   referencePrice?: string;
@@ -35,7 +34,7 @@ type Ranking = {
   sourceFileName: string | null;
   canManage: boolean;
   history: { id: string; title: string; createdAt: string }[];
-  access?: "preview" | "full";
+  access?: "full";
   totalEntries?: number;
 };
 const empty: Ranking = {
@@ -63,6 +62,18 @@ const input =
 const button =
   "inline-flex min-h-11 items-center justify-center gap-2 rounded-lg bg-evo-primary px-4 text-sm font-semibold text-white hover:bg-evo-primaryHover disabled:opacity-50";
 export function IncomeRanking() {
+  const { user, loading } = useAuth();
+  if (loading)
+    return (
+      <p role="status" className="p-8 text-center text-sm text-evo-textSec">
+        Verificando seu acesso ao ranking…
+      </p>
+    );
+  if (!user) return <RankingAccessLanding />;
+  return <MemberIncomeRanking key={user.id} />;
+}
+
+function MemberIncomeRanking() {
   const [searchParams, setSearchParams] = useSearchParams();
   const { user, loading: authLoading, refreshSession } = useAuth();
   const userId = user?.id;
@@ -100,14 +111,10 @@ export function IncomeRanking() {
       ),
     [publication, userId],
   );
-  const applyRanking = useCallback(
-    async (data: Ranking) => {
-      setRanking(data);
-      setError("");
-      if (userId && data.access === "preview") await refreshSession();
-    },
-    [userId, refreshSession],
-  );
+  const applyRanking = useCallback((data: Ranking) => {
+    setRanking(data);
+    setError("");
+  }, []);
   useEffect(() => {
     if (authLoading) return;
     const controller = new AbortController();
@@ -115,7 +122,22 @@ export function IncomeRanking() {
       .then(async (data) => {
         if (!controller.signal.aborted) await applyRanking(data);
       })
-      .catch((reason) => {
+      .catch(async (reason) => {
+        if (
+          !controller.signal.aborted &&
+          reason instanceof ApiError &&
+          reason.status === 401
+        ) {
+          try {
+            await refreshSession();
+          } catch {
+            if (!controller.signal.aborted)
+              setError(
+                "Não foi possível verificar sua sessão. Atualize a página e entre novamente.",
+              );
+          }
+          return;
+        }
         if (!controller.signal.aborted)
           setError(
             reason instanceof Error
@@ -130,7 +152,7 @@ export function IncomeRanking() {
         }
       });
     return () => controller.abort();
-  }, [load, applyRanking, authLoading, requestKey]);
+  }, [load, applyRanking, authLoading, requestKey, refreshSession]);
   const displayMode = searchParams.get("visual");
   const showingDemo =
     displayMode === "demo" ||
@@ -141,11 +163,7 @@ export function IncomeRanking() {
       ranking.entries.length === 0);
   const sourceEntries: Entry[] = showingDemo
     ? rankingDemoEntries
-    : user
-      ? ranking.entries
-      : ranking.entries.slice(0, 3);
-  const fullAccess = Boolean(user) && ranking.access === "full";
-  const previewAccess = !showingDemo && !fullAccess;
+    : ranking.entries;
   const totalEntries = showingDemo
     ? rankingDemoEntries.length
     : (ranking.totalEntries ?? ranking.entries.length);
@@ -466,7 +484,7 @@ export function IncomeRanking() {
                   : "Aguardando a primeira publicação"}
             </p>
           </div>
-          {!showingDemo && fullAccess && (
+          {!showingDemo && (
             <label className="text-xs text-evo-textSec">
               Histórico de publicações
               <select
@@ -562,9 +580,7 @@ export function IncomeRanking() {
           {entries.length} de {totalEntries}{" "}
           {showingDemo
             ? "empresas fictícias · valores simulados para apresentação."
-            : previewAccess
-              ? "ativos · prévia de até 3 ações para visitantes."
-              : "ativos · valores informados pelo autor, sem garantia de retorno."}
+            : "ativos · valores informados pelo autor, sem garantia de retorno."}
         </p>
         {loading && !showingDemo ? (
           <Card>
@@ -692,7 +708,7 @@ export function IncomeRanking() {
                 <div>
                   <h4 className="text-sm font-semibold">Tese do cenário</h4>
                   <p className="mt-2 whitespace-pre-wrap break-words text-sm leading-relaxed text-evo-textSec">
-                    {(previewAccess ? entry.thesisPreview : entry.thesis) ||
+                    {entry.thesis ||
                       "A justificativa ainda não foi informada pelo autor."}
                   </p>
                 </div>
@@ -709,7 +725,6 @@ export function IncomeRanking() {
               <RankingFundamentals
                 data={entry}
                 demo={showingDemo}
-                locked={previewAccess}
                 revenueHistory={showingDemo ? entry.revenueHistory : undefined}
               />
               <Link
@@ -721,12 +736,6 @@ export function IncomeRanking() {
             </article>
           ))
         )}
-        {previewAccess &&
-          !loading &&
-          !authLoading &&
-          ranking.entries.length > 0 && (
-            <AccountGate next="/ranking?visual=real" />
-          )}
       </section>
       <aside className="rounded-xl border border-evo-border bg-evo-card p-4 text-xs leading-relaxed text-evo-textSec">
         {showingDemo ? (
