@@ -8,17 +8,17 @@ export default {
     extend: {
       colors: {
         evo: {
-          bgMain: '#0C0E0F',
-          bgSec: '#131617',
-          card: '#1A1E20',
-          border: '#2A3032',
-          green: '#79A88E',
-          red: '#E47780',
-          accent: '#91A99C',
-          primary: '#343A38',
-          primaryHover: '#454C49',
-          textMain: '#F1F2F0',
-          textSec: '#A7AEAA'
+          bgMain: '#363C47',
+          bgSec: '#404651',
+          card: '#424852',
+          border: '#545B66',
+          green: '#82B7A0',
+          red: '#E47E87',
+          accent: '#9CC7C5',
+          primary: '#28665F',
+          primaryHover: '#34776F',
+          textMain: '#F2F4F7',
+          textSec: '#C1C7D0'
         }
       },
       fontFamily: {
