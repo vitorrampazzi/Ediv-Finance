@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { apiRequest } from "../lib/api";
+import { rankingDemoEntries } from "../lib/rankingDemo";
 
 type Publication = {
   title: string;
@@ -16,6 +17,8 @@ type Publication = {
 export function RankingHighlights() {
   const [publication, setPublication] = useState<Publication | null>(null);
   const [error, setError] = useState("");
+  const showingDemo = Boolean(publication && !publication.entries.length);
+  const entries = showingDemo ? rankingDemoEntries : publication?.entries || [];
   useEffect(() => {
     const controller = new AbortController();
     apiRequest<Publication>("/api/rankings", { signal: controller.signal })
@@ -38,44 +41,46 @@ export function RankingHighlights() {
             Previsões para você compreender
           </h2>
           <p className="mt-2 max-w-2xl text-sm text-evo-textSec">
-            O ranking reúne os cenários publicados pela equipe. Leia os
-            argumentos e os riscos de cada análise antes de interpretar os
-            números.
+            {showingDemo ? (
+              "Conheça o formato da pesquisa com empresas e números fictícios. A primeira análise real da equipe ainda está em preparação."
+            ) : (
+              <>
+                O ranking reúne os cenários publicados pela equipe. Leia os
+                argumentos e os riscos de cada análise antes de interpretar os
+                números.
+              </>
+            )}
           </p>
         </div>
-        <Link className="action" to="/ranking">
-          Abrir ranking completo
+        <Link
+          className="action"
+          to={showingDemo ? "/ranking?visual=demo" : "/ranking"}
+        >
+          {showingDemo ? "Explorar demonstração" : "Abrir ranking completo"}
         </Link>
       </div>
       {error ? (
-        <p role="status" className="mt-5 text-sm text-evo-textSec">
+        <div role="status" className="mt-5 text-sm text-evo-textSec">
           {error}
-        </p>
+          <Link
+            className="ml-2 inline-flex min-h-11 items-center text-evo-accent underline"
+            to="/ranking?visual=demo"
+          >
+            Ver exemplo com dados fictícios
+          </Link>
+        </div>
       ) : !publication ? (
         <p role="status" className="mt-5 text-sm text-evo-textSec">
           Carregando publicação…
         </p>
-      ) : !publication.entries.length ? (
-        <div className="mt-6 rounded-xl border border-evo-border bg-evo-card p-6">
-          <h3 className="font-semibold">
-            A primeira publicação está em preparação
-          </h3>
-          <p className="mt-2 text-sm text-evo-textSec">
-            Comece pela trilha de aprendizado para entender potencial,
-            preço-alvo e horizonte.
-          </p>
-          <Link
-            className="mt-4 inline-flex min-h-11 items-center text-sm text-evo-accent underline"
-            to="/aprender"
-          >
-            Começar a aprender
-          </Link>
-        </div>
       ) : (
         <>
           <p className="mt-5 text-xs text-evo-textSec">
-            {publication.title}{" "}
-            {publication.updatedAt &&
+            {showingDemo
+              ? "Demonstração · empresas, preços e cenários fictícios"
+              : publication.title}{" "}
+            {!showingDemo &&
+              publication.updatedAt &&
               "· " +
                 new Date(
                   publication.updatedAt.replace(" ", "T") +
@@ -83,18 +88,25 @@ export function RankingHighlights() {
                 ).toLocaleDateString("pt-BR")}
           </p>
           <div className="mt-3 grid gap-4 sm:grid-cols-3">
-            {publication.entries.slice(0, 3).map((entry) => (
+            {entries.slice(0, 3).map((entry) => (
               <Link
                 key={entry.ticker}
-                to="/ranking"
+                to={showingDemo ? "/ranking?visual=demo" : "/ranking"}
                 className="rounded-xl border border-evo-border bg-evo-card p-5 hover:border-evo-accent/40"
               >
                 <h3 className="font-bold">{entry.ticker}</h3>
+                {showingDemo && (
+                  <span className="mt-2 inline-block rounded-md bg-evo-accent/10 px-2 py-1 text-[11px] font-semibold text-evo-accent">
+                    Empresa fictícia
+                  </span>
+                )}
                 <p className="mt-1 text-xs text-evo-textSec">
                   {entry.companyName}
                 </p>
                 <p className="mt-5 text-xs text-evo-textSec">
-                  Potencial informado pelo autor
+                  {showingDemo
+                    ? "Potencial simulado para demonstração"
+                    : "Potencial informado pelo autor"}
                 </p>
                 <p className="mt-1 font-numbers text-xl">
                   {Number(entry.expectedReturnPercent).toLocaleString("pt-BR")}%
@@ -103,10 +115,12 @@ export function RankingHighlights() {
                   {entry.horizonMonths
                     ? entry.horizonMonths + " meses"
                     : "Prazo não informado"}{" "}
-                  · cenário sem garantia
+                  · {showingDemo ? "exemplo visual" : "cenário sem garantia"}
                 </p>
                 <span className="mt-4 block text-xs text-evo-accent">
-                  Ler tese e riscos →
+                  {showingDemo
+                    ? "Conhecer os módulos da pesquisa →"
+                    : "Ler tese e riscos →"}
                 </span>
               </Link>
             ))}

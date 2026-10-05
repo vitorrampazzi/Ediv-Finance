@@ -1,3 +1,12 @@
+import {
+  Building2,
+  Landmark,
+  BarChart3,
+  Wallet,
+  ReceiptText,
+  Scale,
+} from "lucide-react";
+
 export type RankingFundamentalData = {
   balanceSheet?: string | null;
   incomeStatement?: string | null;
@@ -10,24 +19,40 @@ export type RankingFundamentalData = {
 };
 
 const modules = [
-  ["balanceSheet", "Balanço patrimonial"],
-  ["incomeStatement", "DRE — Demonstração do Resultado do Exercício"],
-  ["cashFlow", "Fluxo de caixa"],
-  ["companyInformation", "Informações da empresa"],
-  ["netDebt", "Dívida líquida"],
-  ["statistics", "Estatísticas"],
+  ["balanceSheet", "Balanço patrimonial", Landmark],
+  [
+    "incomeStatement",
+    "DRE — Demonstração do Resultado do Exercício",
+    ReceiptText,
+  ],
+  ["cashFlow", "Fluxo de caixa", Wallet],
+  ["companyInformation", "Informações da empresa", Building2],
+  ["netDebt", "Dívida líquida", Scale],
+  ["statistics", "Estatísticas", BarChart3],
 ] as const;
 
 export function RankingFundamentals({
   data,
+  demo = false,
+  revenueHistory,
 }: {
   data: RankingFundamentalData;
+  demo?: boolean;
+  revenueHistory?: { period: string; value: number }[];
 }) {
   const filled = modules.filter(([key]) => Boolean(data[key]?.trim())).length;
+  const maxRevenue = Math.max(
+    1,
+    ...(revenueHistory?.map((point) => point.value) || []),
+  );
   return (
-    <details className="mt-4 rounded-lg border border-evo-border">
+    <details
+      className="mt-4 rounded-lg border border-evo-border"
+      open={demo && Boolean(data.companyInformation?.includes("DEMO1"))}
+    >
       <summary className="min-h-11 cursor-pointer p-3 text-sm font-semibold">
-        Dados da empresa · {filled} de {modules.length} módulos preenchidos
+        {demo ? "Explorar a pesquisa de exemplo" : "Dados da empresa"} ·{" "}
+        {filled} de {modules.length} módulos preenchidos
       </summary>
       <div className="space-y-4 border-t border-evo-border p-4">
         <dl className="grid gap-3 text-xs sm:grid-cols-2">
@@ -44,22 +69,113 @@ export function RankingFundamentals({
             </dd>
           </div>
         </dl>
+        {demo && revenueHistory && revenueHistory.length > 0 && (
+          <section className="rounded-lg border border-evo-border bg-evo-bgMain p-4 sm:p-5">
+            <div className="flex flex-wrap items-start justify-between gap-2">
+              <div>
+                <h4 className="text-sm font-semibold">
+                  Evolução da receita líquida
+                </h4>
+                <p className="mt-1 text-xs text-evo-textSec">
+                  Valores simulados em R$ milhões
+                </p>
+              </div>
+              <span className="text-xs font-semibold text-evo-accent">
+                Gráfico ilustrativo
+              </span>
+            </div>
+            <div
+              className="mt-5 flex h-40 items-end gap-4 border-b border-evo-border px-3 sm:gap-8"
+              aria-hidden="true"
+            >
+              {revenueHistory.map((point) => (
+                <div
+                  key={point.period}
+                  className="flex min-w-0 flex-1 flex-col items-center justify-end"
+                >
+                  <span className="mb-2 font-numbers text-xs text-evo-textSec">
+                    {point.value.toLocaleString("pt-BR")}
+                  </span>
+                  <div
+                    className="w-full max-w-28 rounded-t-md bg-evo-accent/60"
+                    style={{
+                      height: (point.value / maxRevenue) * 100 + "px",
+                    }}
+                  />
+                  <span className="py-2 text-xs text-evo-textSec">
+                    {point.period}
+                  </span>
+                </div>
+              ))}
+            </div>
+            <table className="sr-only">
+              <caption>Receita líquida fictícia em milhões de reais</caption>
+              <thead>
+                <tr>
+                  <th>Período</th>
+                  <th>Receita</th>
+                </tr>
+              </thead>
+              <tbody>
+                {revenueHistory.map((point) => (
+                  <tr key={point.period}>
+                    <td>{point.period}</td>
+                    <td>{point.value}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </section>
+        )}
         <div className="grid gap-3 md:grid-cols-2">
-          {modules.map(([key, label]) => (
+          {modules.map(([key, label, Icon]) => (
             <section
               key={key}
               className="min-w-0 rounded-lg border border-evo-border bg-evo-bgMain p-4"
             >
-              <h4 className="text-sm font-semibold">{label}</h4>
-              <p className="mt-2 whitespace-pre-wrap break-words text-sm leading-relaxed text-evo-textSec">
-                {data[key]?.trim() || "Não informado nesta publicação."}
-              </p>
+              <div className="flex items-start gap-2">
+                <Icon
+                  size={17}
+                  className="mt-0.5 shrink-0 text-evo-accent"
+                  aria-hidden="true"
+                />
+                <h4 className="text-sm font-semibold">{label}</h4>
+              </div>
+              {demo && data[key] ? (
+                <dl className="mt-4 space-y-3">
+                  {data[key].split("\n").map((line, index) => {
+                    const separator = line.indexOf(":");
+                    return (
+                      <div
+                        key={index}
+                        className="flex flex-wrap items-start justify-between gap-x-3 gap-y-1 border-b border-evo-border/50 pb-2 text-xs last:border-0 last:pb-0"
+                      >
+                        <dt className="text-evo-textSec">
+                          {separator >= 0
+                            ? line.slice(0, separator)
+                            : "Informação"}
+                        </dt>
+                        <dd className="max-w-full break-words font-medium">
+                          {separator >= 0
+                            ? line.slice(separator + 1).trim()
+                            : line}
+                        </dd>
+                      </div>
+                    );
+                  })}
+                </dl>
+              ) : (
+                <p className="mt-2 whitespace-pre-wrap break-words text-sm leading-relaxed text-evo-textSec">
+                  {data[key]?.trim() || "Não informado nesta publicação."}
+                </p>
+              )}
             </section>
           ))}
         </div>
         <p className="text-xs leading-relaxed text-evo-textSec">
-          Conteúdo informado pela equipe na planilha. Os módulos não são
-          atualizados automaticamente pelas cotações.
+          {demo
+            ? "Dados fictícios para visualizar o formato da pesquisa. Os valores não pertencem a empresas reais."
+            : "Conteúdo informado pela equipe na planilha. Os módulos não são atualizados automaticamente pelas cotações."}
         </p>
       </div>
     </details>

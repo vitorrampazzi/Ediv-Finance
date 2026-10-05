@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import { BookOpen, FileSpreadsheet, Search, Star, Upload } from "lucide-react";
 import { Card } from "../components/Card";
 import { RankingFundamentals } from "../components/RankingFundamentals";
@@ -7,6 +7,7 @@ import type { RankingFundamentalData } from "../components/RankingFundamentals";
 import { apiRequest } from "../lib/api";
 import { useAuth } from "../context/authContext";
 import { useFavoritos } from "../hooks/useFavoritos";
+import { rankingDemoEntries } from "../lib/rankingDemo";
 
 type Entry = RankingFundamentalData & {
   rank: number;
@@ -18,6 +19,8 @@ type Entry = RankingFundamentalData & {
   thesis: string | null;
   risks: string | null;
   sector: string | null;
+  referencePrice?: string;
+  revenueHistory?: { period: string; value: number }[];
 };
 type Ranking = {
   id: string | null;
@@ -56,6 +59,7 @@ const input =
 const button =
   "inline-flex min-h-11 items-center justify-center gap-2 rounded-lg bg-evo-primary px-4 text-sm font-semibold text-white hover:bg-evo-primaryHover disabled:opacity-50";
 export function IncomeRanking() {
+  const [searchParams, setSearchParams] = useSearchParams();
   const { user } = useAuth();
   const { toggleFavorito, isFavorito, error: favoriteError } = useFavoritos();
   const [ranking, setRanking] = useState<Ranking>(empty);
@@ -127,16 +131,36 @@ export function IncomeRanking() {
       });
     return () => controller.abort();
   }, [publication]);
+  const displayMode = searchParams.get("visual");
+  const showingDemo =
+    displayMode === "demo" ||
+    (displayMode !== "real" &&
+      !loading &&
+      !error &&
+      !publication &&
+      ranking.entries.length === 0);
+  const sourceEntries: Entry[] = showingDemo
+    ? rankingDemoEntries
+    : ranking.entries;
+  const changeView = (mode: "demo" | "real") => {
+    setSearch("");
+    setSector("");
+    setHorizon("");
+    setSort("rank");
+    setSearchParams((current) => {
+      const next = new URLSearchParams(current);
+      next.set("visual", mode);
+      return next;
+    });
+  };
   const sectors = [
     ...new Set(
-      ranking.entries
-        .map((e) => e.sector)
-        .filter((s): s is string => Boolean(s)),
+      sourceEntries.map((e) => e.sector).filter((s): s is string => Boolean(s)),
     ),
   ].sort();
   const entries = useMemo(
     () =>
-      ranking.entries
+      sourceEntries
         .filter(
           (e) =>
             (!search ||
@@ -154,7 +178,7 @@ export function IncomeRanking() {
               ? a.companyName.localeCompare(b.companyName)
               : a.rank - b.rank,
         ),
-    [ranking.entries, search, sector, horizon, sort],
+    [sourceEntries, search, sector, horizon, sort],
   );
   const sendFile = async (publish: boolean) => {
     if (!file) return;
@@ -187,6 +211,7 @@ export function IncomeRanking() {
         setPreview([]);
         setFile(null);
         setPublication("");
+        changeView("real");
         if (!publication) await load();
       } else setPreview(result.entries);
     } catch (reason) {
@@ -208,19 +233,69 @@ export function IncomeRanking() {
         </p>
         <h1 className="mt-3 text-3xl font-bold">Ranking de previsões</h1>
         <p className="mt-3 max-w-3xl leading-relaxed text-evo-textSec">
-          Explore as teses publicadas pela equipe, entenda os fatores que podem
-          favorecer ou contrariar cada cenário e acompanhe as revisões ao longo
-          do tempo.
+          {showingDemo ? (
+            "Conheça o formato da pesquisa: cenários, números e módulos de análise reunidos em uma demonstração com dados fictícios."
+          ) : (
+            <>
+              Explore as teses publicadas pela equipe, entenda os fatores que
+              podem favorecer ou contrariar cada cenário e acompanhe as revisões
+              ao longo do tempo.
+            </>
+          )}
         </p>
         <div className="mt-5 flex flex-wrap gap-3">
           <Link to="/aprender#ranking" className={button}>
             <BookOpen size={17} /> Como interpretar o ranking
           </Link>
+          <button
+            type="button"
+            className="min-h-11 rounded-lg border border-evo-border px-4 text-sm font-semibold hover:border-evo-accent/50"
+            onClick={() => changeView(showingDemo ? "real" : "demo")}
+          >
+            {showingDemo
+              ? "Ver publicações da equipe"
+              : "Explorar demonstração"}
+          </button>
           <span className="self-center text-xs text-evo-textSec">
             A ordem da lista não representa uma probabilidade de lucro.
           </span>
         </div>
       </section>
+      {showingDemo && (
+        <section
+          className="overflow-hidden rounded-2xl border border-evo-accent/30 bg-evo-card"
+          aria-label="Demonstração com dados fictícios"
+        >
+          <div className="border-b border-evo-border bg-evo-accent/5 p-5 sm:p-6">
+            <span className="inline-flex rounded-full border border-evo-accent/30 px-3 py-1 text-xs font-semibold text-evo-accent">
+              Demonstração · dados fictícios
+            </span>
+            <h2 className="mt-3 text-xl font-semibold">
+              Uma prévia da sua próxima pesquisa
+            </h2>
+            <p className="mt-2 max-w-3xl text-sm leading-relaxed text-evo-textSec">
+              Explore empresas inventadas, cenários e indicadores de exemplo.
+              Todos os preços, percentuais e gráficos desta demonstração são
+              simulados; não representam a pesquisa do corretor nem ativos
+              negociáveis.
+            </p>
+          </div>
+          <dl className="grid divide-y divide-evo-border sm:grid-cols-3 sm:divide-x sm:divide-y-0">
+            {[
+              ["06", "Empresas de exemplo"],
+              ["06", "Módulos por empresa"],
+              ["03", "Trimestres ilustrativos"],
+            ].map(([value, label]) => (
+              <div key={label} className="p-5 sm:px-6">
+                <dt className="text-xs text-evo-textSec">{label}</dt>
+                <dd className="mt-2 font-numbers text-3xl font-semibold">
+                  {value}
+                </dd>
+              </div>
+            ))}
+          </dl>
+        </section>
+      )}
       {(error || favoriteError) && (
         <p role="alert" className="notice-error">
           {error || favoriteError}
@@ -369,51 +444,59 @@ export function IncomeRanking() {
       <section className="space-y-4">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
-            <h2 className="text-xl font-semibold">{ranking.title}</h2>
+            <h2 className="text-xl font-semibold">
+              {showingDemo ? "Explore os cenários de exemplo" : ranking.title}
+            </h2>
             <p className="mt-1 text-xs text-evo-textSec">
-              {ranking.updatedAt
-                ? "Publicado em " + date(ranking.updatedAt)
-                : "Aguardando a primeira publicação"}
+              {showingDemo
+                ? "Ordem ilustrativa para apresentação da interface"
+                : ranking.updatedAt
+                  ? "Publicado em " + date(ranking.updatedAt)
+                  : "Aguardando a primeira publicação"}
             </p>
           </div>
-          <label className="text-xs text-evo-textSec">
-            Histórico de publicações
-            <select
-              className={input + " mt-1"}
-              value={publication}
-              onChange={(e) => {
-                setPublication(e.target.value);
-                setLoading(true);
-              }}
-            >
-              <option value="">Publicação mais recente</option>
-              {ranking.history.map((h) => (
-                <option key={h.id} value={h.id}>
-                  {h.title} · {date(h.createdAt)}
-                </option>
-              ))}
-            </select>
-          </label>
+          {!showingDemo && (
+            <label className="text-xs text-evo-textSec">
+              Histórico de publicações
+              <select
+                className={input + " mt-1"}
+                value={publication}
+                onChange={(e) => {
+                  setPublication(e.target.value);
+                  setLoading(true);
+                }}
+              >
+                <option value="">Publicação mais recente</option>
+                {ranking.history.map((h) => (
+                  <option key={h.id} value={h.id}>
+                    {h.title} · {date(h.createdAt)}
+                  </option>
+                ))}
+              </select>
+            </label>
+          )}
         </div>
-        <div className="grid gap-3 rounded-xl border border-evo-border bg-evo-card p-4 text-sm sm:grid-cols-3">
-          <p>
-            Responsável
-            <br />
-            <strong>{ranking.authorName || "Não informado"}</strong>
-          </p>
-          <p>
-            Categoria profissional
-            <br />
-            <strong>{ranking.professionalCategory || "Não informada"}</strong>
-          </p>
-          <p>
-            Registro profissional
-            <br />
-            <strong>
-              {ranking.professionalRegistration || "Não informado"}
-            </strong>
-          </p>
-        </div>
+        {!showingDemo && (
+          <div className="grid gap-3 rounded-xl border border-evo-border bg-evo-card p-4 text-sm sm:grid-cols-3">
+            <p>
+              Responsável
+              <br />
+              <strong>{ranking.authorName || "Não informado"}</strong>
+            </p>
+            <p>
+              Categoria profissional
+              <br />
+              <strong>{ranking.professionalCategory || "Não informada"}</strong>
+            </p>
+            <p>
+              Registro profissional
+              <br />
+              <strong>
+                {ranking.professionalRegistration || "Não informado"}
+              </strong>
+            </p>
+          </div>
+        )}
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
           <label className="flex items-center gap-2 rounded-lg border border-evo-border bg-evo-bgMain px-3">
             <Search size={17} />
@@ -453,20 +536,28 @@ export function IncomeRanking() {
             value={sort}
             onChange={(e) => setSort(e.target.value)}
           >
-            <option value="rank">Ordem da publicação</option>
-            <option value="potential">Maior potencial informado</option>
+            <option value="rank">
+              {showingDemo ? "Ordem da demonstração" : "Ordem da publicação"}
+            </option>
+            <option value="potential">
+              {showingDemo
+                ? "Maior potencial simulado"
+                : "Maior potencial informado"}
+            </option>
             <option value="name">Nome da empresa</option>
           </select>
         </div>
         <p className="text-xs text-evo-textSec">
-          {entries.length} de {ranking.entries.length} ativos · valores
-          informados pelo autor, sem garantia de retorno.
+          {entries.length} de {sourceEntries.length}{" "}
+          {showingDemo
+            ? "empresas fictícias · valores simulados para apresentação."
+            : "ativos · valores informados pelo autor, sem garantia de retorno."}
         </p>
-        {loading ? (
+        {loading && !showingDemo ? (
           <Card>
             <p role="status">Carregando publicação…</p>
           </Card>
-        ) : !ranking.entries.length ? (
+        ) : !sourceEntries.length ? (
           <Card>
             <h3 className="font-semibold">
               A primeira análise ainda não foi publicada
@@ -501,12 +592,21 @@ export function IncomeRanking() {
                         {entry.companyName}
                       </span>
                     </h3>
+                    {showingDemo && (
+                      <span className="mt-2 inline-block rounded-md bg-evo-accent/10 px-2 py-1 text-[11px] font-semibold text-evo-accent">
+                        Empresa fictícia · exemplo visual
+                      </span>
+                    )}
                     <p className="mt-1 text-xs text-evo-textSec">
                       {entry.sector || "Setor não informado"}
                     </p>
                   </div>
                 </div>
-                {user ? (
+                {showingDemo ? (
+                  <span className="text-xs text-evo-textSec">
+                    Sem operações ou favoritos
+                  </span>
+                ) : user ? (
                   <button
                     aria-label={
                       (isFavorito(entry.ticker)
@@ -530,10 +630,22 @@ export function IncomeRanking() {
                   </Link>
                 )}
               </div>
-              <dl className="mt-4 grid gap-3 border-y border-evo-border py-4 sm:grid-cols-3">
+              <dl
+                className={`mt-4 grid grid-cols-2 gap-4 border-y border-evo-border py-4 ${showingDemo ? "lg:grid-cols-4" : "sm:grid-cols-3"}`}
+              >
+                {showingDemo && (
+                  <div>
+                    <dt className="text-xs text-evo-textSec">
+                      Referência simulada
+                    </dt>
+                    <dd className="mt-1 font-numbers text-lg">
+                      {money.format(Number(entry.referencePrice))}
+                    </dd>
+                  </div>
+                )}
                 <div>
                   <dt className="text-xs text-evo-textSec">
-                    Potencial informado
+                    {showingDemo ? "Potencial simulado" : "Potencial informado"}
                   </dt>
                   <dd className="mt-1 font-numbers text-lg">
                     {Number(entry.expectedReturnPercent).toLocaleString(
@@ -544,7 +656,9 @@ export function IncomeRanking() {
                 </div>
                 <div>
                   <dt className="text-xs text-evo-textSec">
-                    Preço-alvo informado
+                    {showingDemo
+                      ? "Preço-alvo simulado"
+                      : "Preço-alvo informado"}
                   </dt>
                   <dd className="mt-1">
                     {entry.targetPrice
@@ -579,7 +693,11 @@ export function IncomeRanking() {
                   </p>
                 </div>
               </div>
-              <RankingFundamentals data={entry} />
+              <RankingFundamentals
+                data={entry}
+                demo={showingDemo}
+                revenueHistory={showingDemo ? entry.revenueHistory : undefined}
+              />
               <Link
                 to="/aprender#ranking"
                 className="mt-4 inline-block text-xs text-evo-accent underline"
@@ -591,11 +709,17 @@ export function IncomeRanking() {
         )}
       </section>
       <aside className="rounded-xl border border-evo-border bg-evo-card p-4 text-xs leading-relaxed text-evo-textSec">
-        Previsões são cenários, não garantias. A lista reproduz a análise
-        enviada pelo responsável. Dados, premissas e preços podem estar
-        desatualizados; nenhuma classificação determina se um investimento é
-        adequado para você.
-        {ranking.sourceFileName && (
+        {showingDemo ? (
+          "Demonstração da interface: empresas, ordem, preços, percentuais, indicadores e argumentos são fictícios. Não são recomendações nem dados de mercado. As publicações reais ficam disponíveis em uma visualização separada."
+        ) : (
+          <>
+            Previsões são cenários, não garantias. A lista reproduz a análise
+            enviada pelo responsável. Dados, premissas e preços podem estar
+            desatualizados; nenhuma classificação determina se um investimento é
+            adequado para você.
+          </>
+        )}
+        {!showingDemo && ranking.sourceFileName && (
           <span className="mt-2 block">Origem: {ranking.sourceFileName}</span>
         )}
       </aside>
