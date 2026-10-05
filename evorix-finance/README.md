@@ -72,9 +72,19 @@ Para aplicar migrations na base gerenciada Aiven já configurada, use `npm run d
 - `POST /api/portfolio/transactions` — registra compra/venda manual e rejeita vendas que deixem a posição negativa.
 - `GET/PUT /api/portfolio/preferences` — lê e salva preferência de risco, opções de notificação e o total investido informado pelo usuário.
 - `GET /api/favorites` e `PUT/DELETE /api/favorites/:ticker` — favoritos persistidos por conta.
+- `GET /api/assistant/status` — informa se o assistente com IA está ligado, sem revelar a chave.
+- `POST /api/assistant/chat` — envia até dez mensagens recentes ao Gemini; limitado a oito chamadas por IP a cada 15 minutos.
 - `GET /api/health` — verifica a disponibilidade da API e do MySQL.
 
 As senhas são armazenadas com Argon2id. Os tokens de confirmação e de sessão são aleatórios; somente seus hashes são persistidos. A sessão usa cookie `HttpOnly`, `SameSite=Strict` e, em produção, `Secure`. Requisições que alteram dados verificam a origem. Não há tokens de autenticação no `localStorage`.
+
+## Assistente com IA (experimental)
+
+O chat continua funcionando com respostas locais quando a integração estiver desligada. Para experimentar Gemini no plano gratuito, crie uma chave no Google AI Studio e configure `AI_ASSISTANT_ENABLED=true` e `GEMINI_API_KEY` no `.env` local; `GEMINI_MODEL` é opcional e usa `gemini-3.8-flash` por padrão. A chave fica somente no servidor e não deve ser enviada pelo chat nem colocada em variáveis `VITE_*`.
+
+Antes do primeiro envio, o chat pede confirmação e avisa que a pergunta e o histórico vão ao Google. Nos termos da faixa gratuita, o Google pode usar prompts e respostas para melhorar os serviços e permitir revisão humana. Não use essa faixa para dados pessoais, confidenciais ou financeiros; não envie carteira, saldo, extrato, CPF, contato ou credenciais. A integração não carrega dados da conta e o prompt limita o assistente a conteúdo educativo, sem recomendação individualizada nem cotação em tempo real. A cota e disponibilidade gratuita podem mudar. Para evitar cobrança inesperada, não vincule faturamento ao projeto usado na avaliação e confira os limites e as condições atuais no AI Studio.
+
+Para habilitar no site publicado, configure `AI_ASSISTANT_ENABLED=true`, `GEMINI_API_KEY` e, se necessário, `GEMINI_MODEL` em **Vercel → Settings → Environment Variables** no ambiente desejado e faça um novo deploy. Até haver chave e flag ativada, a interface usa as respostas locais. O limite por IP é em memória e não substitui limites compartilhados ou os controles de uso do provedor.
 
 ## Produção
 
