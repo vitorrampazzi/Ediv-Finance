@@ -12,6 +12,7 @@ import { useAuth } from "../context/authContext";
 import { authLink, safeAuthDestination } from "../lib/authDestination";
 import { PasswordInput } from "../components/PasswordInput";
 import { ResearchAvailability } from "../components/ResearchAvailability";
+import { useRegistrationAvailability } from "../hooks/useRegistrationAvailability";
 
 function AuthShell({
   title,
@@ -319,6 +320,7 @@ export function LoginPage() {
 }
 
 export function RegisterPage() {
+  const availability = useRegistrationAvailability();
   const { user, register } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
@@ -366,7 +368,7 @@ export function RegisterPage() {
       title="Criar conta grátis"
       description="Estude os conceitos, conheça o formato da pesquisa, organize sua carteira e salve favoritos. Sem cobrança nesta versão."
     >
-      {!message && <ResearchAvailability />}
+      {!message && availability.current?.available && <ResearchAvailability />}
       {message ? (
         <>
           <p role="status" className="mt-5 notice-success">
@@ -389,6 +391,34 @@ export function RegisterPage() {
             Corrigir o endereço informado
           </button>
         </>
+      ) : !availability.current ? (
+        <p role="status" className="mt-5 text-sm text-evo-textSec">
+          Conferindo disponibilidade do cadastro…
+        </p>
+      ) : availability.current.error ? (
+        <div className="mt-5 space-y-3">
+          <ErrorMessage>{availability.current.error}</ErrorMessage>
+          <button
+            type="button"
+            className="action-secondary"
+            onClick={availability.retry}
+          >
+            Tentar novamente
+          </button>
+        </div>
+      ) : !availability.current.available ? (
+        <div className="mt-5 space-y-4 rounded-xl border border-evo-border bg-evo-bgMain p-4">
+          <h2 className="font-semibold">Novos cadastros em preparação</h2>
+          <p role="status" className="text-sm leading-relaxed text-evo-textSec">
+            {availability.current.message}
+          </p>
+          <Link className="action w-full" to="/aprender">
+            Explorar primeira aula
+          </Link>
+          <Link className="action-secondary w-full" to="/mercado">
+            Ver o mercado
+          </Link>
+        </div>
       ) : (
         <form onSubmit={submit} className="mt-6 space-y-4">
           <div>
@@ -464,7 +494,7 @@ export function RegisterPage() {
           </button>
         </form>
       )}
-      {!message && error && email && (
+      {!message && availability.current?.available && error && email && (
         <ConfirmationHelp
           key={email}
           email={email.trim()}

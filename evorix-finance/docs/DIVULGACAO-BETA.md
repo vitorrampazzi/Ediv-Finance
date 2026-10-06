@@ -7,6 +7,10 @@
 
 O domínio próprio ficará para depois. O site publicado funciona sem o computador do desenvolvedor ligado.
 
+**Pendência identificada em 06/10/2026:** a conexão e autenticação SMTP passaram no diagnóstico em produção, mas o domínio do remetente ainda é `resend.dev`. Esse domínio só permite testes para o e-mail do dono da conta Resend. Novos cadastros públicos ficam em preparação até usar um domínio verificado no remetente; o login de contas confirmadas continua disponível. A home direciona visitantes à primeira aula. QA mantém os cadastros de avaliação com links locais de confirmação.
+
+Após verificar o domínio no Resend, atualize `MAIL_FROM` em Production e faça um deploy. A restrição conhecida sai automaticamente; ainda é necessário conferir a entrega real, o cadastro e a recuperação. A conexão SMTP não comprova entrega. Fonte: [Resend — limitações do domínio de teste](https://resend.com/docs/knowledge-base/403-error-resend-dev-domain).
+
 ## O que foi preparado
 
 - Home com chamada para conta gratuita, primeiros passos e perguntas frequentes.
@@ -71,7 +75,7 @@ Finalize a identificação do responsável pela plataforma e a política de rete
 
 ## Texto para um convite inicial
 
-> Estamos abrindo a versão beta da Ediv Finance, uma plataforma da Escola do Dividendo para aprender conceitos, acompanhar o mercado e organizar sua carteira. A conta é gratuita. O ranking está em demonstração enquanto preparamos a primeira pesquisa. Explore e conte para nós o que podemos melhorar: https://evorix-finance.vercel.app/
+> Conheça a versão beta da Ediv Finance, uma plataforma da Escola do Dividendo para aprender conceitos e acompanhar o mercado. A primeira aula e o glossário estão abertos; o cadastro e a primeira pesquisa do ranking estão em preparação. Explore: https://evorix-finance.vercel.app/
 
 Após publicar a pesquisa real, revise o trecho do ranking e as condições de acesso. Nenhum convite foi enviado ou publicado automaticamente.
 

@@ -17,6 +17,7 @@ import { authLink } from "../lib/authDestination";
 import { assistantEnabled } from "../lib/features";
 import { ResearchAvailability } from "../components/ResearchAvailability";
 import { GettingStarted } from "../components/GettingStarted";
+import { useRegistrationAvailability } from "../hooks/useRegistrationAvailability";
 
 const currency = new Intl.NumberFormat("pt-BR", {
   style: "currency",
@@ -25,6 +26,8 @@ const currency = new Intl.NumberFormat("pt-BR", {
 
 export function Home() {
   const { user } = useAuth();
+  const registration = useRegistrationAvailability();
+  const awaitingRegistration = registration.current?.available === false;
   const { assets, loading, error, requestedAt } = useMarketAssets({
     search: "",
     type: "stock",
@@ -48,16 +51,27 @@ export function Home() {
               Entenda os cenários. Invista em conhecimento.
             </h1>
             <p className="mt-5 max-w-xl text-base leading-relaxed text-evo-textSec">
-              Aprenda a interpretar cenários e entender os riscos. Crie sua
-              conta gratuita para conhecer o ranking, estudar os módulos de
-              pesquisa e organizar sua carteira.
+              Aprenda a interpretar cenários e entender os riscos.{" "}
+              {awaitingRegistration && !user
+                ? "Explore o mercado, a primeira aula e o glossário enquanto preparamos a abertura dos cadastros."
+                : "Crie sua conta gratuita para conhecer o ranking, estudar os módulos de pesquisa e organizar sua carteira."}
             </p>
             <div className="mt-8 flex flex-wrap gap-3">
               <Link
-                to={user ? "/ranking" : authLink("cadastro", "/ranking")}
+                to={
+                  user
+                    ? "/ranking"
+                    : awaitingRegistration
+                      ? "/aprender"
+                      : authLink("cadastro", "/ranking")
+                }
                 className="inline-flex min-h-12 items-center gap-2 rounded-lg bg-evo-primary px-5 font-semibold text-white hover:bg-evo-primaryHover"
               >
-                {user ? "Abrir ranking" : "Criar conta grátis"}{" "}
+                {user
+                  ? "Abrir ranking"
+                  : awaitingRegistration
+                    ? "Começar pela primeira aula"
+                    : "Criar conta grátis"}{" "}
                 <ArrowRight size={17} aria-hidden="true" />
               </Link>
               <Link
@@ -77,6 +91,14 @@ export function Home() {
               Mercado, primeira aula e glossário abertos. Conta gratuita para
               acessar o ranking, a trilha completa e organizar sua carteira.
             </p>
+            {awaitingRegistration && !user && (
+              <p className="mt-3 text-xs text-evo-textSec">
+                Novos cadastros em preparação. Já tem conta confirmada?{" "}
+                <Link className="text-evo-accent underline" to="/entrar">
+                  Entrar
+                </Link>
+              </p>
+            )}
             <ResearchAvailability />
           </div>
           <div className="rounded-2xl border border-evo-border bg-evo-card p-6 shadow-xl md:p-8">

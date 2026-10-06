@@ -6,7 +6,7 @@ import { z } from "zod";
 import { config } from "./config.js";
 import { pool } from "./database.js";
 import { MysqlLimitStore } from "./limit-store.js";
-import { smtp, accountEmail } from "./mail.js";
+import { smtp, accountEmail, registrationAvailability } from "./mail.js";
 import {
   permissionsForRole,
   lockAccessControl,
@@ -253,7 +253,14 @@ export async function requireAuthenticatedUser(req, res, next) {
   return next();
 }
 
+router.get("/availability", (_req, res) =>
+  res.json(registrationAvailability()),
+);
+
 router.post("/register", registrationLimiter, async (req, res) => {
+  const availability = registrationAvailability();
+  if (!availability.available)
+    return res.status(503).json({ error: availability.message });
   const parsed = parseBody(registerSchema, req.body);
   if (parsed.error) return res.status(400).json(parsed);
 
