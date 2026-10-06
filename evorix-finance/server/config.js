@@ -59,12 +59,15 @@ if (isProduction) {
     throw new Error("APP_BASE_URL must use HTTPS in production.");
   if (process.env.MYSQL_SSL !== "true")
     throw new Error("Set MYSQL_SSL=true in production.");
-  required("SMTP_URL");
-  required("MAIL_FROM");
+  if (!isQaDeployment) {
+    required("SMTP_URL");
+    required("MAIL_FROM");
+  }
 }
 
 export const config = Object.freeze({
   isProduction,
+  isQaDeployment,
   port: Number(process.env.PORT || 3001),
   host: process.env.HOST?.trim() || (isProduction ? "0.0.0.0" : "127.0.0.1"),
   appBaseUrl,

@@ -574,7 +574,8 @@ router.post("/password/forgot", recoveryLimiter, async (req, res) => {
           error.code || "transport error",
         );
       }
-    } else if (!config.isProduction) developmentUrl = String(url);
+    } else if (!config.isProduction || config.isQaDeployment)
+      developmentUrl = String(url);
   }
   return res.status(202).json({
     message:

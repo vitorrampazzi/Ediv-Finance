@@ -39,11 +39,17 @@ em **Preview**, com filtro de branch **QA**. Não copie o acesso ao banco real.
   `MYSQL_SSL=true`, `MYSQL_SSL_CA`, `MYSQL_CONNECTION_LIMIT=3`.
 - `SKIP_STARTUP_MIGRATIONS=true`: aplicar as migrações com o acesso administrativo
   antes do deploy. Não disponibilizar credenciais de DDL na função.
-- `SMTP_URL` e `MAIL_FROM`: remetente validado para confirmar contas fictícias
-  com endereços de e-mail controlados pela equipe.
+- `SMTP_URL` e `MAIL_FROM`: opcionais na QA. Sem SMTP, confirmação e recuperação
+  mostram um link de teste na própria tela, somente nesse ambiente isolado.
+  Production continua exigindo SMTP e remetente. Para avaliar entrega real,
+  cadastrar um remetente validado com endereços controlados pela equipe.
 - `AI_ASSISTANT_ENABLED=true`, `GEMINI_API_KEY`, `GEMINI_MODEL`,
   `AI_DAILY_LIMIT=100` e `AI_USER_DAILY_LIMIT=20`: somente na QA para o provedor.
 - `BRAPI_API_KEY`: opcional, de acordo com o plano do provedor.
+
+Variáveis Secret da Vercel não podem ser reveladas após salvar. A chave Gemini
+foi restringida ao Preview QA; SMTP e MAIL_FROM permaneceram em Production.
+Não ampliar os segredos de banco para todos os Previews para contornar isso.
 
 `NODE_ENV=production` também é usado nas funções Preview da Vercel. A distinção
 entre os ambientes é `VERCEL_ENV`, não `NODE_ENV`. As variáveis de sistema devem
