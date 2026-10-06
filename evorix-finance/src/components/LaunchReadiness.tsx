@@ -7,7 +7,11 @@ type Launch = {
   appUrl: string;
   environment: string;
   researchPublished: boolean;
-  email: { configured: boolean; senderDomain: string | null };
+  email: {
+    configured: boolean;
+    senderDomain: string | null;
+    testOnly: boolean;
+  };
   customDomain: boolean;
   professionalIdentified: boolean;
   supportConfigured: boolean;
@@ -150,10 +154,12 @@ export function LaunchReadiness() {
                 "Aguardando a pesquisa do corretor. O exemplo permanece identificado como fictício.",
               ],
               [
-                data.email.configured,
+                data.email.configured && !data.email.testOnly,
                 "Configuração de e-mail",
                 "Variáveis presentes. Confira a conexão e depois a entrega na caixa de entrada.",
-                "Configure SMTP_URL e MAIL_FROM na Vercel.",
+                data.email.testOnly
+                  ? "O remetente resend.dev permite somente testes para o dono da conta Resend. Novos cadastros públicos aguardam um domínio verificado e a atualização de MAIL_FROM."
+                  : "Configure SMTP_URL e MAIL_FROM na Vercel.",
               ],
               [
                 data.professionalIdentified,

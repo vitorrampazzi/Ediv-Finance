@@ -31,9 +31,25 @@ export function accountEmail({ heading, introduction, link, action }) {
 export function emailConfiguration() {
   // Credentials, SMTP URL and verification tokens never enter this response.
   const match = config.mailFrom?.match(/@([a-z0-9.-]+\.[a-z]{2,})(?:>|\s|$)/i);
+  const senderDomain = match?.[1].toLowerCase() || null;
   return {
     configured: Boolean(smtp && match),
-    senderDomain: match?.[1].toLowerCase() || null,
+    senderDomain,
+    testOnly: senderDomain === "resend.dev",
+  };
+}
+
+export function registrationAvailability() {
+  const email = emailConfiguration();
+  const available =
+    !config.isProduction ||
+    config.isQaDeployment ||
+    (email.configured && !email.testOnly);
+  return {
+    available,
+    message: available
+      ? ""
+      : "Novos cadastros estão em preparação enquanto configuramos a confirmação por e-mail. Você já pode explorar o mercado, a primeira aula e o glossário. Quem tem conta confirmada pode continuar entrando normalmente.",
   };
 }
 
