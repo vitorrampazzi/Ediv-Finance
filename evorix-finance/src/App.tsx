@@ -34,6 +34,10 @@ import { PageErrorBoundary } from "./components/PageErrorBoundary";
 import { FavoritesProvider } from "./context/FavoritesProvider";
 import { AuthProvider } from "./context/AuthProvider";
 import { RequireAuth } from "./components/RequireAuth";
+import { RequirePermission } from "./components/RequirePermission";
+const AdminPage = lazy(() =>
+  import("./pages/Admin").then((module) => ({ default: module.AdminPage })),
+);
 const LoginPage = lazy(() =>
   import("./pages/Autenticacao").then((module) => ({
     default: module.LoginPage,
@@ -175,6 +179,11 @@ function App() {
                     <Route path="assessoria" element={<Assessoria />} />
                     <Route path="perfil" element={<Perfil />} />
                     <Route path="config" element={<Configuracoes />} />
+                    <Route
+                      element={<RequirePermission permission="users:read" />}
+                    >
+                      <Route path="admin" element={<AdminPage />} />
+                    </Route>
                   </Route>
                 </Route>
                 <Route path="*" element={<NotFound />} />

@@ -5,7 +5,7 @@ import { rateLimit } from "express-rate-limit";
 import { pool } from "./database.js";
 import { config } from "./config.js";
 import { requireAuthenticatedUser } from "./auth.js";
-import { canManageRankings } from "./rankings.js";
+import { hasPermission, lockActiveUser } from "./permissions.js";
 import { MysqlLimitStore } from "./limit-store.js";
 const router = Router();
 router.get("/information", (_req, res) =>
@@ -27,7 +27,7 @@ const limiter = rateLimit({
   legacyHeaders: false,
 });
 const bodySchema = z.string().trim().min(2).max(3000);
-const isStaff = (req) => canManageRankings(req.authenticatedUser.email);
+const isStaff = (req) => hasPermission(req.authenticatedUser, "support:manage");
 router.get("/", async (req, res) => {
   const staff = isStaff(req);
   const [threads] = await pool.execute(
@@ -113,14 +113,25 @@ router.post("/:id/messages", limiter, access, async (req, res) => {
     .safeParse(req.body);
   if (!parsed.success)
     return res.status(400).json({ error: "Mensagem inválida." });
-  const staff = isStaff(req);
   const connection = await pool.getConnection();
   try {
     await connection.beginTransaction();
-    await connection.execute(
-      "SELECT id FROM support_threads WHERE id=? FOR UPDATE",
+    const actor = await lockActiveUser(connection, req.authenticatedUser.id);
+    const staff = hasPermission(actor, "support:manage");
+    const [threads] = await connection.execute(
+      "SELECT id,user_id FROM support_threads WHERE id=? FOR UPDATE",
       [req.thread.id],
     );
+    if (
+      !actor ||
+      !threads[0] ||
+      (!staff && threads[0].user_id !== req.authenticatedUser.id)
+    ) {
+      await connection.rollback();
+      return res
+        .status(403)
+        .json({ error: "Seu acesso à conversa mudou. Entre novamente." });
+    }
     await connection.execute(
       "INSERT INTO support_messages(id,thread_id,author_id,is_staff,body) VALUES(?,?,?,?,?)",
       [

@@ -5,6 +5,7 @@ import { pool } from "./database.js";
 
 const tables = [
   "users",
+  "user_access",
   "portfolio_transactions",
   "user_preferences",
   "user_favorites",
@@ -15,6 +16,7 @@ const tables = [
   "portfolio_imports",
   "support_threads",
   "support_messages",
+  "admin_audit_events",
 ];
 const keyText = process.env.BACKUP_KEY || "";
 if (!/^[a-f0-9]{64}$/i.test(keyText))

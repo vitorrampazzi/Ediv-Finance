@@ -2,6 +2,8 @@
 
 O comando lê uma cópia consistente e cifra em memória com AES-256-GCM. Não grava dump aberto. Sessões, tokens e cache são excluídos.
 
+Os backups também incluem os perfis/bloqueios em `user_access` e o histórico em `admin_audit_events`. A tabela de coordenação `admin_control` é recriada pelas migrações e não faz parte dos dados restaurados.
+
 A chave local foi criada em .env.backup sem exibição no terminal; este arquivo e a pasta .backups são ignorados pelo Git. Guarde a chave separadamente, em local protegido. Sem ela não há recuperação. Restrinja as permissões Windows da pasta à sua conta; mode 0600 não substitui uma ACL Windows.
 
 Para criar uma chave em outro ambiente, execute uma vez:

@@ -11,6 +11,7 @@ import { rankingRouter } from "./rankings.js";
 import { assistantRouter } from "./assistant.js";
 import { supportRouter } from "./support.js";
 import { learningRouter } from "./learning.js";
+import { adminRouter } from "./admin.js";
 
 const app = express();
 const safeMethods = new Set(["GET", "HEAD", "OPTIONS"]);
@@ -77,6 +78,7 @@ app.use("/api/rankings", rankingRouter);
 app.use("/api/assistant", assistantRouter);
 app.use("/api/support", supportRouter);
 app.use("/api/learning", learningRouter);
+app.use("/api/admin", adminRouter);
 
 app.use("/api", (_req, res) =>
   res.status(404).json({ error: "Rota de API não encontrada." }),

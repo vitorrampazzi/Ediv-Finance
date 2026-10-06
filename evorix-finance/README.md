@@ -2,13 +2,13 @@
 
 Aplicação React/Vite com API Node.js/Express e persistência em MySQL. A página inicial é pública, com cotações consultadas da brapi.dev. A área `/app` exige conta e permite salvar operações manuais, favoritos e preferências.
 
-O nome Ediv é uma abreviação de Escola do Dividendo. A rota pública `/ranking` mostra a lista publicada pelo assessor; a conta autorizada importa CSV ou Excel (.xlsx), revisa a prévia e publica versões com histórico.
+O nome Ediv é uma abreviação de Escola do Dividendo. A rota `/ranking` apresenta o acesso ao ranking; a lista exige conta confirmada. Analistas e Administradores criam pesquisas pelo editor ou importam CSV/Excel (.xlsx), revisam a prévia e publicam versões com histórico.
 
 ## Educação, ranking e atualização
 
 A experiência principal agora é o ranking de cenários, apoiado por uma trilha de aprendizado e um assistente educativo. Autoria, categoria, registro, contato e horários continuam sem preenchimento até serem informados. Não há cobrança habilitada.
 
-Veja [as mudanças e a ordem de publicação](docs/ATUALIZACAO-EDIV.md) e [a rotina de backup criptografado](docs/BACKUP.md). A migração 005 deve estar aplicada antes do deploy.
+Veja [as mudanças e a ordem de publicação](docs/ATUALIZACAO-EDIV.md), [os perfis e o painel de administração](docs/PERMISSOES.md) e [a rotina de backup criptografado](docs/BACKUP.md). As migrações até 006 devem estar aplicadas antes do deploy.
 
 ## Requisitos
 
@@ -52,13 +52,13 @@ Veja [as mudanças e a ordem de publicação](docs/ATUALIZACAO-EDIV.md) e [a rot
 
    A interface usa o proxy local do Vite para encaminhar `/api` à API em `127.0.0.1:3001`. Em desenvolvimento, sem SMTP configurado, a API devolve um link temporário de confirmação para facilitar o primeiro cadastro. Esse link só é exposto fora de produção.
 
-5. Autorize a conta que pode publicar rankings com `RANKING_ADMIN_EMAILS=seu-email@exemplo.com` no `.env` local (ou `.env.aiven.runtime` ao usar `npm run dev:api:aiven`) e reinicie a API. Em produção, configure a mesma variável na Vercel. O acesso exige conta com e-mail confirmado; não coloque uma senha administrativa no frontend.
+5. Configure o primeiro Administrador pelo comando descrito em [PERMISSOES.md](docs/PERMISSOES.md). Depois, conceda o perfil Analista às contas confirmadas da equipe em `/app/admin`. Novos usuários recebem apenas Usuário. As permissões ficam no banco e são verificadas pela API.
 
 ### Importação da lista de renda
 
 O assessor pode preparar a lista no Excel e salvá-la como **CSV UTF-8 ou XLSX** (delimitado por vírgulas ou ponto e vírgula). Use o modelo disponível na página `/ranking`. As colunas obrigatórias são `ticker`, `empresa` e `potencial_percentual`; `preco_alvo`, `horizonte_meses`, `tese`, `riscos` e `setor` são opcionais. A ordem das linhas define a posição. Percentuais e valores com vírgula são aceitos em CSV separado por ponto e vírgula.
 
-O upload aceita até 300 ativos e cria uma publicação independente com histórico, após validar o arquivo inteiro e confirmar a prévia. Configure `RANKING_ADMIN_EMAILS` com o e-mail confirmado do responsável antes de liberar essa função. O site identifica a lista como fornecida pelo assessor e exibe um aviso de que projeções podem estar erradas e não garantem retorno.
+O upload aceita até 300 ativos e cria uma publicação independente com histórico, após validar o arquivo inteiro e confirmar a prévia. A função exige perfil Analista ou Administrador. Também é possível criar o rascunho no editor da página, usando os mesmos campos e a mesma validação. O site identifica a lista como fornecida pelo assessor e exibe um aviso de que projeções podem estar erradas e não garantem retorno.
 
 Para aplicar migrations na base gerenciada Aiven já configurada, use `npm run db:migrate:aiven`. O comando usa a conta administrativa local de `.env.aiven` só para aplicar DDL; ele não copia nem altera os dados atuais.
 
@@ -73,7 +73,9 @@ Para aplicar migrations na base gerenciada Aiven já configurada, use `npm run d
 - `GET /api/market/assets?type=stock&search=PETR&page=1` — lista ações, fundos, ETFs e BDRs com busca, filtros e paginação.
 - `GET /api/market/quotes?symbols=PETR4,ITUB4` — devolve cotações da brapi.dev, com limite de oito ativos por chamada.
 - `GET /api/rankings` — lista as projeções importadas mais recentemente e informa se a sessão pode publicar.
-- `POST /api/rankings` — publica uma nova versão com CSV UTF-8 ou XLSX; requer sessão confirmada cujo e-mail esteja em `RANKING_ADMIN_EMAILS`.
+- `POST /api/rankings` — publica uma versão com CSV UTF-8 ou XLSX; requer sessão confirmada de Analista ou Administrador.
+- `GET /api/admin/summary`, `/api/admin/users`, `/api/admin/audit` — contagens, contas paginadas e histórico, somente Administrador.
+- `PATCH /api/admin/users/:id/access` — altera perfil/bloqueio e encerra sessões da conta, somente Administrador.
 - `GET /api/portfolio` — calcula posições e valores estimados usando cotações disponíveis, além do histórico recente.
 - `POST /api/portfolio/transactions` — registra compra/venda manual e rejeita vendas que deixem a posição negativa.
 - `GET/PUT /api/portfolio/preferences` — lê e salva preferência de risco, opções de notificação e o total investido informado pelo usuário.

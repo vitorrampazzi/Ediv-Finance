@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import type { FormEvent } from "react";
 import { Card } from "../components/Card";
-import { apiRequest } from "../lib/api";
+import { apiRequest, ApiError } from "../lib/api";
 import { formatMoney } from "../lib/finance";
 import { useAuth } from "../context/authContext";
 type Thread = {
@@ -32,6 +32,10 @@ const statuses: Record<string, string> = {
 };
 export function Conversas() {
   const { user } = useAuth();
+  return <MemberConversations key={user?.id + ":" + user?.role} />;
+}
+function MemberConversations() {
+  const { user, refreshSession } = useAuth();
   const [threads, setThreads] = useState<Thread[]>([]);
   const [staff, setStaff] = useState(false);
   const [selected, setSelected] = useState("");
@@ -57,35 +61,55 @@ export function Conversas() {
       signal: controller.signal,
     })
       .then((data) => {
+        if (controller.signal.aborted) return;
         setThreads(data.threads);
         setStaff(data.canManage);
       })
       .catch((reason) => {
         if (!controller.signal.aborted) setError(reason.message);
+        if (
+          !controller.signal.aborted &&
+          reason instanceof ApiError &&
+          (reason.status === 401 || reason.status === 403)
+        )
+          void refreshSession().catch(() => {});
       })
       .finally(() => {
         if (!controller.signal.aborted) setLoading(false);
       });
     return () => controller.abort();
-  }, []);
+  }, [refreshSession]);
   useEffect(() => {
     if (!selected) return;
     const controller = new AbortController();
     apiRequest<Conversation>("/api/support/" + selected, {
       signal: controller.signal,
     })
-      .then(setConversation)
+      .then((data) => {
+        if (!controller.signal.aborted) setConversation(data);
+      })
       .catch((reason) => {
         if (!controller.signal.aborted) setError(reason.message);
+        if (
+          !controller.signal.aborted &&
+          reason instanceof ApiError &&
+          (reason.status === 401 || reason.status === 403)
+        )
+          void refreshSession().catch(() => {});
       });
     return () => controller.abort();
-  }, [selected]);
+  }, [selected, refreshSession]);
   const act = async (work: () => Promise<void>) => {
     setBusy(true);
     setError("");
     try {
       await work();
     } catch (reason) {
+      if (
+        reason instanceof ApiError &&
+        (reason.status === 401 || reason.status === 403)
+      )
+        void refreshSession().catch(() => {});
       setError(
         reason instanceof Error ? reason.message : "Não foi possível concluir.",
       );
@@ -112,12 +136,16 @@ export function Conversas() {
   return (
     <div className="mx-auto max-w-6xl space-y-6">
       <header>
-        <h1 className="text-2xl font-bold">Conversas com a equipe</h1>
+        <h1 className="text-2xl font-bold">
+          {staff ? "Atendimentos da equipe" : "Conversas com a equipe"}
+        </h1>
         <p className="mt-2 max-w-3xl text-sm leading-relaxed text-evo-textSec">
-          Você pode deixar perguntas a qualquer hora. A equipe responde conforme
-          a disponibilidade; o horário de atendimento ainda será informado. Este
-          canal não representa assinatura ativa nem aconselhamento automático
-          por IA.
+          {staff
+            ? "Você pode responder às conversas e consultar operações quando o titular autorizar o compartilhamento. "
+            : "Você pode deixar perguntas a qualquer hora. "}
+          A equipe responde conforme a disponibilidade; o horário de atendimento
+          ainda será informado. Este canal não representa assinatura ativa nem
+          aconselhamento automático por IA.
         </p>
       </header>
       {error && (

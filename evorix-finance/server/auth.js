@@ -7,6 +7,11 @@ import { z } from "zod";
 import { config } from "./config.js";
 import { pool } from "./database.js";
 import { MysqlLimitStore } from "./limit-store.js";
+import {
+  permissionsForRole,
+  lockAccessControl,
+  activeAdministratorCount,
+} from "./permissions.js";
 
 const ARGON_OPTIONS = {
   type: argon2.argon2id,
@@ -19,21 +24,23 @@ const dummyPasswordHash = argon2.hash(randomBytes(32), ARGON_OPTIONS);
 const smtp = config.smtpUrl ? nodemailer.createTransport(config.smtpUrl) : null;
 const router = Router();
 
-const registerSchema = z.object({
-  next: z.string().max(1500).optional(),
-  name: z.string().trim().min(2).max(100),
-  email: z
-    .string()
-    .trim()
-    .email()
-    .max(254)
-    .transform((value) => value.toLowerCase()),
-  password: z
-    .string()
-    .min(12)
-    .max(128)
-    .refine((value) => Buffer.byteLength(value, "utf8") <= 1024),
-});
+const registerSchema = z
+  .object({
+    next: z.string().max(1500).optional(),
+    name: z.string().trim().min(2).max(100),
+    email: z
+      .string()
+      .trim()
+      .email()
+      .max(254)
+      .transform((value) => value.toLowerCase()),
+    password: z
+      .string()
+      .min(12)
+      .max(128)
+      .refine((value) => Buffer.byteLength(value, "utf8") <= 1024),
+  })
+  .strict();
 const loginSchema = z.object({
   email: z
     .string()
@@ -211,6 +218,8 @@ const publicUser = (row) => ({
   email: row.email,
   emailVerified: Boolean(row.email_verified_at),
   createdAt: row.created_at,
+  role: row.role || "USER",
+  permissions: permissionsForRole(row.role || "USER"),
 });
 
 export async function currentUser(req) {
@@ -218,10 +227,11 @@ export async function currentUser(req) {
   if (!token || !SESSION_TOKEN_PATTERN.test(token)) return null;
 
   const [rows] = await pool.execute(
-    `SELECT u.id, u.name, u.email, u.email_verified_at, u.created_at
+    `SELECT u.id, u.name, u.email, u.email_verified_at, u.created_at, COALESCE(a.role,'USER') AS role
      FROM user_sessions s
      INNER JOIN users u ON u.id = s.user_id
-     WHERE s.token_hash = ? AND s.expires_at > UTC_TIMESTAMP(3) AND u.email_verified_at IS NOT NULL
+     LEFT JOIN user_access a ON a.user_id=u.id
+     WHERE s.token_hash = ? AND s.expires_at > UTC_TIMESTAMP(3) AND u.email_verified_at IS NOT NULL AND a.blocked_at IS NULL
      LIMIT 1`,
     [digest(token)],
   );
@@ -368,14 +378,14 @@ router.post("/login", loginLimiter, async (req, res) => {
 
   const { email, password } = parsed.data;
   const [rows] = await pool.execute(
-    "SELECT id, name, email, password_hash, email_verified_at, created_at FROM users WHERE email = ? LIMIT 1",
+    "SELECT u.id, u.name, u.email, u.password_hash, u.email_verified_at, u.created_at, COALESCE(a.role,'USER') AS role, a.blocked_at FROM users u LEFT JOIN user_access a ON a.user_id=u.id WHERE u.email = ? LIMIT 1",
     [email],
   );
   const user = rows[0];
   const storedHash = user ? user.password_hash : await dummyPasswordHash;
   const isValidPassword = await argon2.verify(storedHash, password);
 
-  if (!user || !isValidPassword || !user.email_verified_at) {
+  if (!user || !isValidPassword || !user.email_verified_at || user.blocked_at) {
     return res.status(401).json({
       error: "E-mail ou senha incorretos, ou e-mail ainda não confirmado.",
     });
@@ -387,15 +397,20 @@ router.post("/login", loginLimiter, async (req, res) => {
   try {
     await connection.beginTransaction();
     const [locked] = await connection.execute(
-      "SELECT password_hash FROM users WHERE id = ? FOR UPDATE",
+      "SELECT u.password_hash, COALESCE(a.role,'USER') AS role, a.blocked_at FROM users u LEFT JOIN user_access a ON a.user_id=u.id WHERE u.id = ? FOR UPDATE",
       [user.id],
     );
-    if (!locked[0] || locked[0].password_hash !== storedHash) {
+    if (
+      !locked[0] ||
+      locked[0].password_hash !== storedHash ||
+      locked[0].blocked_at
+    ) {
       await connection.rollback();
       return res.status(401).json({
         error: "O acesso mudou. Entre novamente com sua senha atual.",
       });
     }
+    user.role = locked[0].role;
     await connection.execute(
       "INSERT INTO user_sessions (id, user_id, token_hash, expires_at) VALUES (?, ?, ?, ?)",
       [randomUUID(), user.id, digest(rawSession), expiresAt],
@@ -453,6 +468,7 @@ router.delete(
     const connection = await pool.getConnection();
     try {
       await connection.beginTransaction();
+      await lockAccessControl(connection);
       const [locked] = await connection.execute(
         "SELECT password_hash FROM users WHERE id = ? FOR UPDATE",
         [req.authenticatedUser.id],
@@ -462,6 +478,21 @@ router.delete(
         return res
           .status(401)
           .json({ error: "Sua senha mudou. Confirme a senha atual." });
+      }
+      const [accessRows] = await connection.execute(
+        "SELECT role,blocked_at FROM user_access WHERE user_id=?",
+        [req.authenticatedUser.id],
+      );
+      if (
+        accessRows[0]?.role === "ADMIN" &&
+        !accessRows[0].blocked_at &&
+        (await activeAdministratorCount(connection)) <= 1
+      ) {
+        await connection.rollback();
+        return res.status(409).json({
+          error:
+            "Antes de excluir a conta, conceda o perfil Administrador a outra conta confirmada. O site precisa manter um administrador ativo.",
+        });
       }
       const [result] = await connection.execute(
         "DELETE FROM users WHERE id = ?",

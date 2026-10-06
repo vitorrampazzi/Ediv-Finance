@@ -16,7 +16,9 @@
     "lint": "eslint .",
     "preview": "vite preview",
     "db:backup:aiven": "node --env-file=.env.aiven.runtime --env-file=.env.backup server/backup.js backup",
-    "db:restore": "node --env-file=.env.restore --env-file=.env.backup server/backup.js restore"
+    "db:restore": "node --env-file=.env.restore --env-file=.env.backup server/backup.js restore",
+    "access:preserve-team:aiven": "node --env-file=.env.aiven.runtime server/setup-access.js legacy",
+    "access:grant-admin:aiven": "node --env-file=.env.aiven.runtime server/setup-access.js admin"
   },
   "engines": {
     "node": "22.x"

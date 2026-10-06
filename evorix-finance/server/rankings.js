@@ -1,9 +1,9 @@
 import { Router } from "express";
 import { rateLimit } from "express-rate-limit";
-import { config } from "./config.js";
 import { pool } from "./database.js";
 import { requireAuthenticatedUser } from "./auth.js";
 import { MysqlLimitStore } from "./limit-store.js";
+import { hasPermission, lockActiveUser } from "./permissions.js";
 import {
   fileBody,
   readUpload,
@@ -21,8 +21,8 @@ const limiter = rateLimit({
   legacyHeaders: false,
   message: { error: "Muitas importações. Aguarde alguns minutos." },
 });
-export const canManageRankings = (email) =>
-  Boolean(email && config.rankingAdminEmails.includes(email.toLowerCase()));
+export const canManageRankings = (user) =>
+  hasPermission(user, "rankings:write");
 const aliases = {
   ticker: ["ticker", "symbol", "ativo", "codigo"],
   companyName: ["empresa", "company", "company_name", "nome"],
@@ -253,7 +253,7 @@ router.get("/", requireAuthenticatedUser, async (req, res) => {
     ...data,
     access: "full",
     totalEntries: data.entries.length,
-    canManage: canManageRankings(user.email),
+    canManage: canManageRankings(user),
     history: history.map((row) => ({
       id: String(row.id),
       title: row.title,
@@ -263,7 +263,7 @@ router.get("/", requireAuthenticatedUser, async (req, res) => {
   });
 });
 async function manage(req, res, next) {
-  if (!canManageRankings(req.authenticatedUser.email))
+  if (!canManageRankings(req.authenticatedUser))
     return res
       .status(403)
       .json({ error: "Sua conta não pode publicar análises." });
@@ -302,18 +302,41 @@ router.post(
       )
         .replace(/[\x00-\x1f<>:"/\\|?*]/g, "_")
         .slice(-255);
-      const [result] = await pool.execute(
-        "INSERT INTO ranking_publications (title, author_name, professional_category, professional_registration, source_file_name, entries_json, imported_by) VALUES (?, ?, ?, ?, ?, ?, ?)",
-        [
-          text(metadata.title, 160) || "Ranking de cenários",
-          text(metadata.authorName, 120),
-          text(metadata.professionalCategory, 120),
-          text(metadata.professionalRegistration, 120),
-          fileName,
-          JSON.stringify(entries),
-          req.authenticatedUser.id,
-        ],
-      );
+      const connection = await pool.getConnection();
+      let result;
+      try {
+        await connection.beginTransaction();
+        if (
+          !canManageRankings(
+            await lockActiveUser(connection, req.authenticatedUser.id),
+          )
+        ) {
+          await connection.rollback();
+          return res
+            .status(403)
+            .json({
+              error: "Seu acesso à publicação foi alterado. Entre novamente.",
+            });
+        }
+        [result] = await connection.execute(
+          "INSERT INTO ranking_publications (title, author_name, professional_category, professional_registration, source_file_name, entries_json, imported_by) VALUES (?, ?, ?, ?, ?, ?, ?)",
+          [
+            text(metadata.title, 160) || "Ranking de cenários",
+            text(metadata.authorName, 120),
+            text(metadata.professionalCategory, 120),
+            text(metadata.professionalRegistration, 120),
+            fileName,
+            JSON.stringify(entries),
+            req.authenticatedUser.id,
+          ],
+        );
+        await connection.commit();
+      } catch (error) {
+        await connection.rollback();
+        throw error;
+      } finally {
+        connection.release();
+      }
       return res.status(201).json({
         message: "Publicação salva. O histórico anterior foi preservado.",
         publicationId: String(result.insertId),

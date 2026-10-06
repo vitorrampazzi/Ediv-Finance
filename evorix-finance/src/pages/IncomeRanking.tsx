@@ -10,6 +10,8 @@ import { useFavoritos } from "../hooks/useFavoritos";
 import { rankingDemoEntries } from "../lib/rankingDemo";
 import { RankingAccessLanding } from "../components/RankingAccessLanding";
 import { OrbitCoins } from "../components/OrbitCoins";
+import { ResearchEditor } from "../components/ResearchEditor";
+import { userCan } from "../lib/permissions";
 
 type Entry = RankingFundamentalData & {
   rank: number;
@@ -71,7 +73,7 @@ export function IncomeRanking() {
       </p>
     );
   if (!user) return <RankingAccessLanding />;
-  return <MemberIncomeRanking key={user.id} />;
+  return <MemberIncomeRanking key={user.id + ":" + user.role} />;
 }
 
 function MemberIncomeRanking() {
@@ -231,7 +233,10 @@ function MemberIncomeRanking() {
       );
       const result = await response.json();
       if (!response.ok)
-        throw new Error(result.error || "Não foi possível ler o arquivo.");
+        throw new ApiError(
+          result.error || "Não foi possível ler o arquivo.",
+          response.status,
+        );
       if (publish) {
         setMessage(result.message);
         setPreview([]);
@@ -245,6 +250,11 @@ function MemberIncomeRanking() {
         }
       } else setPreview(result.entries);
     } catch (reason) {
+      if (
+        reason instanceof ApiError &&
+        (reason.status === 401 || reason.status === 403)
+      )
+        void refreshSession().catch(() => {});
       setError(
         reason instanceof Error ? reason.message : "Falha na importação.",
       );
@@ -343,7 +353,7 @@ function MemberIncomeRanking() {
           {message}
         </p>
       )}
-      {user && ranking.canManage && (
+      {userCan(user, "rankings:write") && ranking.canManage && (
         <details className="rounded-xl border border-evo-border bg-evo-card p-5">
           <summary className="cursor-pointer font-semibold">
             Área da equipe · preparar nova publicação
@@ -399,6 +409,15 @@ function MemberIncomeRanking() {
               </label>
             ))}
           </div>
+          <ResearchEditor
+            disabled={busy}
+            onPrepare={(draftFile) => {
+              setFile(draftFile);
+              setPreview([]);
+              setMessage("");
+              setError("");
+            }}
+          />
           <label className="mt-4 block text-sm">
             Planilha CSV ou Excel
             <input
@@ -413,6 +432,11 @@ function MemberIncomeRanking() {
               className="mt-2 block max-w-full text-sm"
             />
           </label>
+          {file && (
+            <p className="mt-2 text-xs text-evo-textSec">
+              Arquivo para a próxima prévia: {file.name}
+            </p>
+          )}
           <button
             className={button + " mt-4"}
             disabled={!file || busy}

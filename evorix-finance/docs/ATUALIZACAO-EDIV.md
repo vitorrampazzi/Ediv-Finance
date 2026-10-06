@@ -3,10 +3,10 @@
 ## Publicação
 
 1. Instale o lockfile com npm ci.
-2. Faça o backup e aplique a migração antes de publicar: npm run db:backup:aiven e npm run db:migrate:aiven. A migração 005 cria tabelas e copia o ranking antigo para uma publicação histórica, sem apagar os registros existentes.
+2. Faça backup e aplique as migrações antes de publicar: npm run db:backup:aiven e npm run db:migrate:aiven. A migração 005 preserva o ranking antigo; a 006 cria perfis, bloqueios e auditoria, sem remover registros existentes.
 3. A conta da aplicação precisa de SELECT, INSERT, UPDATE e DELETE no schema, sem DDL. Use a conta administrativa local para migrações.
 4. No Vercel, os campos opcionais SUPPORT_EMAIL, SUPPORT_HOURS, PROFESSIONAL_NAME, PROFESSIONAL_CATEGORY e PROFESSIONAL_REGISTRATION podem ficar vazios.
-5. RANKING_ADMIN_EMAILS define as contas confirmadas autorizadas a publicar rankings e atender conversas. Restrinja a lista à equipe responsável.
+5. Configure o primeiro Administrador e preserve acessos antigos conforme [PERMISSOES.md](PERMISSOES.md). RANKING_ADMIN_EMAILS é usado apenas nessa migração; novos acessos são concedidos pelo painel. Analista publica pesquisas e atende conversas; Administrador também gerencia contas.
 6. AI_DAILY_LIMIT limita a IA em uma janela global de 24 horas; padrão 100. AI_ASSISTANT_ENABLED, GEMINI_API_KEY e GEMINI_MODEL ficam no servidor. O guia local e as aulas funcionam sem chave.
 7. Suba o código e o lockfile ao GitHub. O projeto conectado recebe um novo deploy no Vercel. Arquivos .env, certificados e backups nunca vão ao Git.
 

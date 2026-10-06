@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { ReactNode } from "react";
 import { AuthContext } from "./authContext";
+import { ApiError } from "../lib/api";
 
 export interface AuthUser {
   id: string;
@@ -8,6 +9,8 @@ export interface AuthUser {
   email: string;
   emailVerified: boolean;
   createdAt: string;
+  role: "USER" | "ANALYST" | "ADMIN";
+  permissions: string[];
 }
 
 interface ApiMessage {
@@ -41,8 +44,9 @@ async function apiRequest(
   const body =
     response.status === 204 ? {} : await response.json().catch(() => ({}));
   if (!response.ok)
-    throw new Error(
+    throw new ApiError(
       body.error || "Não foi possível concluir a solicitação. Tente novamente.",
+      response.status,
     );
   return body;
 }
@@ -53,8 +57,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const sessionRevision = useRef(0);
   const refreshSession = useCallback(async () => {
     const revision = sessionRevision.current;
-    const result = await apiRequest("/api/auth/me");
-    if (revision === sessionRevision.current) setUser(result.user ?? null);
+    try {
+      const result = await apiRequest("/api/auth/me");
+      if (revision === sessionRevision.current) setUser(result.user ?? null);
+    } catch (error) {
+      if (error instanceof ApiError && error.status === 401) {
+        if (revision === sessionRevision.current) {
+          sessionRevision.current += 1;
+          setUser(null);
+        }
+      } else throw error;
+    }
   }, []);
 
   useEffect(() => {

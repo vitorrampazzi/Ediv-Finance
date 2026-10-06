@@ -13,6 +13,7 @@ import {
   LayoutDashboard,
   Settings,
   Star,
+  ShieldCheck,
 } from "lucide-react";
 import {
   Link,
@@ -22,6 +23,7 @@ import {
   useNavigate,
 } from "react-router-dom";
 import { useAuth } from "../context/authContext";
+import { roleLabels, userCan } from "../lib/permissions";
 
 const navigation = [
   {
@@ -79,6 +81,7 @@ const pageTitles: Record<string, string> = {
   "/app/assessoria": "Assessoria",
   "/app/perfil": "Meu perfil",
   "/app/config": "Configurações",
+  "/app/admin": "Administração",
 };
 
 function NavigationLink({
@@ -178,6 +181,7 @@ function ProfileMenu({
 }) {
   const [open, setOpen] = useState(false);
   const [logoutError, setLogoutError] = useState("");
+  const { user } = useAuth();
   const ref = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
   const initials = name
@@ -226,8 +230,29 @@ function ProfileMenu({
           <div className="border-b border-evo-border p-4">
             <p className="text-sm font-semibold text-evo-textMain">{name}</p>
             <p className="mt-1 break-all text-xs text-evo-textSec">{email}</p>
+            <p className="mt-2 text-xs text-evo-accent">
+              {user && roleLabels[user.role]}
+            </p>
           </div>
           <div className="p-2">
+            {userCan(user, "users:read") && (
+              <Link
+                to="/app/admin"
+                onClick={() => setOpen(false)}
+                className="flex min-h-11 items-center gap-3 rounded-lg px-3 text-sm text-evo-accent"
+              >
+                <ShieldCheck size={16} /> Administração
+              </Link>
+            )}
+            {userCan(user, "rankings:write") && (
+              <Link
+                to="/app/ranking"
+                onClick={() => setOpen(false)}
+                className="flex min-h-11 items-center gap-3 rounded-lg px-3 text-sm text-evo-accent"
+              >
+                <TrendingUp size={16} /> Publicar pesquisa
+              </Link>
+            )}
             <Link
               to="/app/perfil"
               onClick={() => setOpen(false)}
@@ -240,7 +265,8 @@ function ProfileMenu({
               onClick={() => setOpen(false)}
               className="flex min-h-11 items-center gap-3 rounded-lg px-3 text-sm text-evo-textSec"
             >
-              <Headset size={16} /> Conversas
+              <Headset size={16} />{" "}
+              {userCan(user, "support:manage") ? "Atendimentos" : "Conversas"}
             </Link>
             <Link
               to="/app/assessoria"
@@ -340,6 +366,22 @@ export const DashboardLayout = () => {
           {navigation.map((item) => (
             <NavigationLink key={item.to} {...item} collapsed={collapsed} />
           ))}
+          {userCan(user, "users:read") && (
+            <NavigationLink
+              to="/app/admin"
+              label="Administração"
+              icon={ShieldCheck}
+              collapsed={collapsed}
+            />
+          )}
+          {userCan(user, "support:manage") && (
+            <NavigationLink
+              to="/app/conversas"
+              label="Atendimentos"
+              icon={Headset}
+              collapsed={collapsed}
+            />
+          )}
         </nav>
         <div className="shrink-0 border-t border-evo-border p-3">
           <NavLink
