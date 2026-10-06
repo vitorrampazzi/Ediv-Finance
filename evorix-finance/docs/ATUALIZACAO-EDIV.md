@@ -3,7 +3,7 @@
 ## Publicação
 
 1. Instale o lockfile com npm ci.
-2. Faça backup e aplique as migrações antes de publicar: npm run db:backup:aiven e npm run db:migrate:aiven. A migração 005 preserva o ranking antigo; a 006 cria perfis, bloqueios e auditoria, sem remover registros existentes.
+2. Faça backup e aplique as migrações antes de publicar: npm run db:backup:aiven e npm run db:migrate:aiven. A migração 005 preserva o ranking antigo; a 006 cria perfis, bloqueios e auditoria; a 007 cria rascunhos, progresso e notificações, sem remover registros existentes.
 3. A conta da aplicação precisa de SELECT, INSERT, UPDATE e DELETE no schema, sem DDL. Use a conta administrativa local para migrações.
 4. No Vercel, os campos opcionais SUPPORT_EMAIL, SUPPORT_HOURS, PROFESSIONAL_NAME, PROFESSIONAL_CATEGORY e PROFESSIONAL_REGISTRATION podem ficar vazios.
 5. Configure o primeiro Administrador e preserve acessos antigos conforme [PERMISSOES.md](PERMISSOES.md). RANKING_ADMIN_EMAILS é usado apenas nessa migração; novos acessos são concedidos pelo painel. Analista publica pesquisas e atende conversas; Administrador também gerencia contas.
@@ -16,6 +16,8 @@ Node: 22.x. Tailwind 4 remove dependências vulneráveis da ferramenta anterior 
 
 ## Funcionalidades
 
+Rascunhos privados, comparação de versões/empresas, explicações de indicadores, notificações e progresso por conta: veja [TESTES-E-MELHORIAS.md](TESTES-E-MELHORIAS.md). Esses recursos exigem a migração 007.
+
 Os seis módulos de dados da empresa definidos pelo corretor aparecem nos detalhes
 do ranking e na prévia de importação. Consulte [campos e formato](RANKING-CORRETOR.md).
 
@@ -23,8 +25,8 @@ O acesso de visitantes inclui a apresentação do ranking e a primeira aula. Con
 confirmada libera pesquisa e aulas completas e permite usar a IA com limite individual.
 Veja [regras de acesso](ACESSO-GRATUITO.md). `AI_USER_DAILY_LIMIT` é opcional, com padrão 20.
 
-- Ranking público: histórico, busca, filtros por setor e prazo, potencial, tese e riscos. CSV/XLSX da primeira aba, até 1 MB e 300 ativos, com prévia antes de publicar. Autoria e registro podem ficar vazios; nenhum dado profissional é inventado.
-- Aprender: quatro aulas, perguntas de compreensão, progresso local, glossário e comparação de preços hipotéticos. O assistente ajuda a explicar conceitos.
+- Ranking para contas confirmadas: histórico, busca, filtros por setor e prazo, potencial, tese e riscos. CSV/XLSX da primeira aba, até 1 MB e 300 ativos, com prévia antes de publicar. Autoria e registro podem ficar vazios; nenhum dado profissional é inventado.
+- Aprender: quatro aulas, perguntas de compreensão, progresso na conta para usuários confirmados (primeira aula local para visitantes), glossário e comparação de preços hipotéticos. O assistente ajuda a explicar conceitos.
 - Carteira: compras/vendas, correção e exclusão com recálculo cronológico, importação com prévia e identificação de repetições, exportação CSV, proventos recebidos/anunciados, desdobramentos e bonificações.
 - Conta: confirmação e recuperação por e-mail, troca de senha, encerramento de sessões, exportação JSON e exclusão.
 - Atendimento: mensagens persistidas e fila com estados recebida/em atendimento/respondida. Compartilhar operações depende de autorização do titular e pode ser revogado. Atualize a conversa para buscar novas respostas.

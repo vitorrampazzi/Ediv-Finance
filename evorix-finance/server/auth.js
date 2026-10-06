@@ -719,6 +719,18 @@ router.get("/export", requireAuthenticatedUser, async (req, res) => {
   const userId = req.authenticatedUser.id;
   const queries = [
     [
+      "researchDrafts",
+      "SELECT id,title,payload,version,updated_at FROM research_drafts WHERE user_id=?",
+    ],
+    [
+      "learningProgress",
+      "SELECT lesson_id,completed_at FROM learning_progress WHERE user_id=?",
+    ],
+    [
+      "notificationReads",
+      "SELECT publication_id,read_at FROM notification_reads WHERE user_id=?",
+    ],
+    [
       "transactions",
       "SELECT id, side, ticker, asset_name, asset_type, quantity, unit_price, fees, traded_at FROM portfolio_transactions WHERE user_id = ? ORDER BY traded_at, created_at, id",
     ],

@@ -37,7 +37,7 @@ Para MySQL local, aplique `npm run db:migrate` e execute `node --env-file=.env s
 4. Busque o e-mail, escolha **Gerenciar acesso** e selecione **Analista**.
 5. Revise e confirme. Ele entra novamente para usar **Publicar pesquisa** e **Atendimentos**.
 
-O painel `/app/admin` mostra contagens reais, contas com filtros/paginação e histórico. Não mostra senhas, hashes, tokens ou acesso geral às carteiras. A pesquisa pode ser criada no editor temporário do ranking ou importada de planilha; ambas exigem validação e confirmação da prévia.
+O painel `/app/admin` mostra contagens reais, contas com filtros/paginação e histórico. Não mostra senhas, hashes, tokens ou acesso geral às carteiras. A pesquisa pode ser criada no editor do ranking, com rascunhos privados, ou importada de planilha; ambas exigem validação e confirmação da prévia.
 
 **Atendimentos** em `/app/atendimentos` e as rotas `/api/support/team` são exclusivos de Administradores e Analistas. Só esses perfis consultam a fila completa, respondem como equipe e alteram a situação do atendimento. `/app/conversas` e `/api/support` mostram apenas as próprias conversas, inclusive para contas da equipe. Usuários comuns podem abrir perguntas, acompanhar respostas e continuar suas conversas; não acessam conversas de outras pessoas nem enviam respostas identificadas como equipe. O servidor define a autoria e verifica o perfil novamente antes de gravar uma resposta. O compartilhamento de operações continua opcional e só o titular pode alterá-lo.
 

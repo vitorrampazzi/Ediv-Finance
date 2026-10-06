@@ -3,7 +3,12 @@ import { rateLimit } from "express-rate-limit";
 import { pool } from "./database.js";
 import { requireAuthenticatedUser } from "./auth.js";
 import { MysqlLimitStore } from "./limit-store.js";
-import { hasPermission, lockActiveUser } from "./permissions.js";
+import {
+  hasPermission,
+  lockActiveUser,
+  lockAccessControl,
+} from "./permissions.js";
+import { compareResearch, readEntries } from "./research-diff.js";
 import {
   fileBody,
   readUpload,
@@ -200,10 +205,39 @@ function publication(row) {
     ).sort((a, b) => a.rank - b.rank),
   };
 }
+router.get("/compare", requireAuthenticatedUser, async (req, res) => {
+  const { from, to } = req.query;
+  if (
+    typeof from !== "string" ||
+    typeof to !== "string" ||
+    !/^\d{1,20}$/.test(String(from)) ||
+    !/^\d{1,20}$/.test(String(to)) ||
+    BigInt(from) >= BigInt(to)
+  )
+    return res
+      .status(400)
+      .json({ error: "Selecione uma versão anterior e uma mais recente." });
+  const [rows] = await pool.execute(
+    "SELECT * FROM ranking_publications WHERE id IN (?,?)",
+    [from, to],
+  );
+  const before = rows.find((row) => String(row.id) === from);
+  const after = rows.find((row) => String(row.id) === to);
+  if (!before || !after)
+    return res.status(404).json({ error: "Publicação não encontrada." });
+  res.json({
+    from: publication(before),
+    to: publication(after),
+    ...compareResearch(
+      readEntries(before.entries_json),
+      readEntries(after.entries_json),
+    ),
+  });
+});
 router.get("/", requireAuthenticatedUser, async (req, res) => {
   const user = req.authenticatedUser;
   const id = req.query.publication;
-  if (id && !/^\d{1,20}$/.test(String(id)))
+  if (id && (typeof id !== "string" || !/^\d{1,20}$/.test(id)))
     return res.status(400).json({ error: "Publicação inválida." });
   const [rows] = await pool.execute(
     id
@@ -306,18 +340,20 @@ router.post(
       let result;
       try {
         await connection.beginTransaction();
+        await lockAccessControl(connection);
         if (
           !canManageRankings(
             await lockActiveUser(connection, req.authenticatedUser.id),
           )
         ) {
           await connection.rollback();
-          return res
-            .status(403)
-            .json({
-              error: "Seu acesso à publicação foi alterado. Entre novamente.",
-            });
+          return res.status(403).json({
+            error: "Seu acesso à publicação foi alterado. Entre novamente.",
+          });
         }
+        const [previous] = await connection.execute(
+          "SELECT entries_json FROM ranking_publications ORDER BY id DESC LIMIT 1",
+        );
         [result] = await connection.execute(
           "INSERT INTO ranking_publications (title, author_name, professional_category, professional_registration, source_file_name, entries_json, imported_by) VALUES (?, ?, ?, ?, ?, ?, ?)",
           [
@@ -329,6 +365,21 @@ router.post(
             JSON.stringify(entries),
             req.authenticatedUser.id,
           ],
+        );
+        const changes = compareResearch(
+          readEntries(previous[0]?.entries_json),
+          entries,
+        );
+        const tickers = [
+          ...new Set(
+            [...changes.added, ...changes.removed, ...changes.changed].map(
+              (entry) => entry.ticker,
+            ),
+          ),
+        ];
+        await connection.execute(
+          "INSERT INTO ranking_changes(publication_id,changed_tickers) VALUES(?,?)",
+          [String(result.insertId), JSON.stringify(tickers)],
         );
         await connection.commit();
       } catch (error) {

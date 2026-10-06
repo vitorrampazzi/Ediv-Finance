@@ -19,11 +19,14 @@ const permissionsByRole = Object.freeze({
   ]),
 });
 export const permissionsForRole = (role) => [
-  ...(permissionsByRole[role] || []),
+  ...(Object.hasOwn(permissionsByRole, role) ? permissionsByRole[role] : []),
 ];
 export const hasPermission = (user, permission) =>
   Boolean(
-    user && !user.blocked && permissionsByRole[user.role]?.includes(permission),
+    user &&
+    !user.blocked &&
+    Object.hasOwn(permissionsByRole, user.role) &&
+    permissionsByRole[user.role].includes(permission),
   );
 export function requirePermission(permission) {
   return (req, res, next) =>

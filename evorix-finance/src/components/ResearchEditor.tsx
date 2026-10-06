@@ -1,5 +1,7 @@
 import { useState } from "react";
 import { FilePlus2, Pencil, Trash2 } from "lucide-react";
+import { SavedResearchDrafts } from "./SavedResearchDrafts";
+import type { ResearchMetadata } from "./SavedResearchDrafts";
 
 const fields = [
   ["ticker", "Ticker", 16, true],
@@ -33,9 +35,13 @@ function cell(value: string) {
 export function ResearchEditor({
   onPrepare,
   disabled,
+  metadata,
+  onMetadata,
 }: {
   onPrepare: (file: File) => void;
   disabled: boolean;
+  metadata: ResearchMetadata;
+  onMetadata: (value: ResearchMetadata) => void;
 }) {
   const [draft, setDraft] = useState<Draft>(blank);
   const [entries, setEntries] = useState<Draft[]>([]);
@@ -100,10 +106,22 @@ export function ResearchEditor({
         Criar pesquisa pelo site
       </summary>
       <p className="mt-3 text-xs leading-relaxed text-evo-textSec">
-        Adicione os ativos na ordem da pesquisa. Este rascunho fica apenas nesta
-        página e será perdido ao sair ou atualizar. A validação e a publicação
-        usam a mesma prévia da importação.
+        Adicione os ativos na ordem da pesquisa. Salve o rascunho na sua conta
+        para continuar depois. A validação e a publicação usam a mesma prévia da
+        importação.
       </p>
+      <SavedResearchDrafts
+        disabled={disabled}
+        payload={{ metadata, entries, working: draft, editing }}
+        onLoad={(value) => {
+          setEntries(value.entries as Draft[]);
+          setDraft(value.working as Draft);
+          setEditing(value.editing);
+          onMetadata(value.metadata);
+          setError("");
+          setMessage("");
+        }}
+      />
       <form
         className="mt-4 space-y-4"
         onSubmit={(event) => {

@@ -2,7 +2,6 @@ import { useEffect, useRef, useState } from "react";
 import {
   BookOpen,
   BarChart3,
-  Bell,
   Briefcase,
   ChevronLeft,
   ChevronRight,
@@ -24,6 +23,7 @@ import {
 } from "react-router-dom";
 import { useAuth } from "../context/authContext";
 import { roleLabels, userCan } from "../lib/permissions";
+import { NotificationsMenu } from "../components/NotificationsMenu";
 
 const navigation = [
   {
@@ -110,64 +110,6 @@ function NavigationLink({
       <Icon size={20} aria-hidden="true" />
       {!collapsed && <span className="font-medium">{label}</span>}
     </NavLink>
-  );
-}
-
-function NotificationDropdown() {
-  const [open, setOpen] = useState(false);
-  const [publication, setPublication] = useState<{
-    title: string;
-    updatedAt: string | null;
-  } | null>(null);
-  useEffect(() => {
-    if (!open) return;
-    const controller = new AbortController();
-    fetch("/api/rankings", { signal: controller.signal })
-      .then((r) => (r.ok ? r.json() : null))
-      .then(setPublication)
-      .catch(() => {});
-    const close = (event: KeyboardEvent) => {
-      if (event.key === "Escape") setOpen(false);
-    };
-    document.addEventListener("keydown", close);
-    return () => {
-      controller.abort();
-      document.removeEventListener("keydown", close);
-    };
-  }, [open]);
-  return (
-    <div className="relative">
-      <button
-        type="button"
-        aria-label="Publicação mais recente"
-        aria-expanded={open}
-        onClick={() => setOpen(!open)}
-        className="min-h-11 rounded-lg p-3"
-      >
-        <Bell size={20} />
-      </button>
-      {open && (
-        <section className="absolute right-0 z-50 w-[min(20rem,calc(100vw-2rem))] rounded-xl border border-evo-border bg-evo-card p-4 shadow-xl">
-          <h2 className="font-semibold">Última publicação</h2>
-          {publication?.updatedAt ? (
-            <Link
-              to="/app/ranking"
-              onClick={() => setOpen(false)}
-              className="mt-3 block text-sm text-evo-accent"
-            >
-              {publication.title}
-              <span className="block text-xs text-evo-textSec">
-                {new Date(publication.updatedAt).toLocaleString("pt-BR")}
-              </span>
-            </Link>
-          ) : (
-            <p className="mt-3 text-sm text-evo-textSec">
-              Nenhuma publicação disponível no momento.
-            </p>
-          )}
-        </section>
-      )}
-    </div>
   );
 }
 
@@ -426,7 +368,7 @@ export const DashboardLayout = () => {
             >
               <Headset size={20} />
             </Link>
-            <NotificationDropdown />
+            <NotificationsMenu key={user?.id} />
             {user && (
               <ProfileMenu
                 name={user.name}

@@ -30,3 +30,4 @@ dist-ssr
 
 # Backups criptografados e chaves locais
 .backups/
+.test-artifacts/

@@ -25,6 +25,7 @@ type LearningData = {
   lessons: Lesson[];
   glossary: string[][];
   access: "preview" | "full";
+  completed: string[];
 };
 const lessonIds = ["ranking", "risco", "dividendos", "carteira"];
 function readProgress(): string[] {
@@ -38,6 +39,10 @@ function readProgress(): string[] {
   }
 }
 export function Aprender() {
+  const { user } = useAuth();
+  return <LearningSession key={user?.id || "visitor"} />;
+}
+function LearningSession() {
   const { user, loading: authLoading, refreshSession } = useAuth();
   const userId = user?.id;
   const [content, setContent] = useState<LearningData | null>(null);
@@ -45,7 +50,10 @@ export function Aprender() {
   const requestKey = userId || "visitor";
   const loading = loadedFor !== requestKey || authLoading;
   const [error, setError] = useState("");
-  const [completed, setCompleted] = useState<string[]>(readProgress);
+  const [completed, setCompleted] = useState<string[]>(() =>
+    user ? [] : readProgress().filter((id) => id === "ranking"),
+  );
+  const [progressBusy, setProgressBusy] = useState(false);
   const [answers, setAnswers] = useState<Record<string, number>>({});
   const [search, setSearch] = useState("");
   const [current, setCurrent] = useState("100");
@@ -58,6 +66,8 @@ export function Aprender() {
         if (!controller.signal.aborted) {
           setContent(data);
           setError("");
+          if (userId)
+            setCompleted(data.completed.filter((id) => lessonIds.includes(id)));
           if (userId && data.access === "preview") await refreshSession();
         }
       })
@@ -83,12 +93,53 @@ export function Aprender() {
   );
   const glossary = content?.glossary || [];
   useEffect(() => {
+    if (user) return;
     try {
       localStorage.setItem("ediv-learning-v1", JSON.stringify(completed));
     } catch {
       /* Browser storage may be disabled. */
     }
-  }, [completed]);
+  }, [completed, user]);
+  async function chooseAnswer(lesson: Lesson, answer: number) {
+    setAnswers((current) => ({ ...current, [lesson.id]: answer }));
+    if (answer !== lesson.answer) return;
+    setProgressBusy(true);
+    setError("");
+    try {
+      if (user)
+        await apiRequest("/api/learning/progress/" + lesson.id, {
+          method: "PUT",
+          body: JSON.stringify({ answer }),
+        });
+      setCompleted((current) =>
+        current.includes(lesson.id) ? current : [...current, lesson.id],
+      );
+    } catch (err) {
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Não foi possível salvar o progresso.",
+      );
+    } finally {
+      setProgressBusy(false);
+    }
+  }
+  async function resetProgress() {
+    setProgressBusy(true);
+    setError("");
+    try {
+      if (user)
+        await apiRequest("/api/learning/progress", { method: "DELETE" });
+      setCompleted([]);
+      setAnswers({});
+    } catch (err) {
+      setError(
+        err instanceof Error ? err.message : "Não foi possível reiniciar.",
+      );
+    } finally {
+      setProgressBusy(false);
+    }
+  }
   const potential =
     Number(current) > 0 && Number(target) > 0
       ? (Number(target) / Number(current) - 1) * 100
@@ -115,7 +166,7 @@ export function Aprender() {
         </div>
         <p className="mt-4 text-sm text-evo-accent">
           {completed.length} de {lessonIds.length} etapas concluídas · progresso
-          salvo neste navegador
+          {user ? "salvo na sua conta" : "salvo neste navegador"}
         </p>
         <div
           className="mt-3 h-2 rounded bg-evo-bgMain"
@@ -204,6 +255,7 @@ export function Aprender() {
                   <button
                     key={choice}
                     type="button"
+                    disabled={progressBusy || loading}
                     aria-pressed={answers[lesson.id] === i}
                     className={
                       "min-h-11 rounded-lg border p-3 text-left text-sm " +
@@ -211,13 +263,7 @@ export function Aprender() {
                         ? "border-evo-accent bg-evo-accent/10"
                         : "border-evo-border hover:bg-white/5")
                     }
-                    onClick={() => {
-                      setAnswers((a) => ({ ...a, [lesson.id]: i }));
-                      if (i === lesson.answer)
-                        setCompleted((c) =>
-                          c.includes(lesson.id) ? c : [...c, lesson.id],
-                        );
-                    }}
+                    onClick={() => void chooseAnswer(lesson, i)}
                   >
                     {choice}
                   </button>
@@ -331,10 +377,8 @@ export function Aprender() {
         </Link>
         <button
           className="min-h-11 rounded-lg border border-evo-border px-4 text-sm"
-          onClick={() => {
-            setCompleted([]);
-            setAnswers({});
-          }}
+          disabled={progressBusy || loading}
+          onClick={() => void resetProgress()}
         >
           Reiniciar progresso
         </button>

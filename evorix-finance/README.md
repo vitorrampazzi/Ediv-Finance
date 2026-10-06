@@ -8,9 +8,11 @@ O nome Ediv é uma abreviação de Escola do Dividendo. A rota `/ranking` aprese
 
 A experiência principal agora é o ranking de cenários, apoiado por uma trilha de aprendizado e um assistente educativo. Autoria, categoria, registro, contato e horários continuam sem preenchimento até serem informados. Não há cobrança habilitada.
 
-Veja [as mudanças e a ordem de publicação](docs/ATUALIZACAO-EDIV.md), [os perfis e o painel de administração](docs/PERMISSOES.md) e [a rotina de backup criptografado](docs/BACKUP.md). As migrações até 006 devem estar aplicadas antes do deploy.
+Veja [as mudanças e a ordem de publicação](docs/ATUALIZACAO-EDIV.md), [os perfis e o painel de administração](docs/PERMISSOES.md) e [a rotina de backup criptografado](docs/BACKUP.md). As migrações até 007 devem estar aplicadas antes do deploy.
 
 ## Requisitos
+
+Os recursos de pesquisa, notificações, progresso por conta e comandos de testes estão em [TESTES-E-MELHORIAS.md](docs/TESTES-E-MELHORIAS.md). A migração 007 deve ser aplicada antes de publicar esta versão.
 
 - Node.js 22.x (22.14 ou superior dentro desta versão)
 - MySQL 8.0 ou compatível, acessível a partir desta máquina

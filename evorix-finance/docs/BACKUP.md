@@ -30,4 +30,6 @@ npm run db:restore -- .backups/NOME-DO-ARQUIVO.json.enc
 
 A rotina autentica a cifra antes de inserir. Recusa um destino que contenha registros de aplicação, mantém as chaves estrangeiras e insere em transação. Não restaura sessões ou links de acesso.
 
-Defina frequência, retenção e armazenamento das cópias. Automação e monitoramento externo não foram ativados. A restauração ainda precisa ser exercitada em ambiente isolado antes de depender desta rotina em produção.
+Defina frequência, retenção e armazenamento das cópias. Automação e monitoramento externo não foram ativados. `npm run test:backup:aiven` verifica backup e restauração de dados fictícios em schemas isolados; mantenha exercícios periódicos com o volume e as tabelas da instalação.
+
+O padrão de saída é `.backups`. A opção local `BACKUP_DIRECTORY` permite usar outro diretório, como `.test-artifacts/backups` nos testes. Os backups incluem rascunhos, progresso de aulas, mudanças de publicações e leitura de notificações, além dos dados anteriores.

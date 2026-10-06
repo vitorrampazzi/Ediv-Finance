@@ -76,6 +76,7 @@ router.post(
 
     const { messages } = parsed.data;
     if (
+      messages[0]?.role !== "user" ||
       messages.at(-1)?.role !== "user" ||
       messages.some(
         (message, index) =>
@@ -109,14 +110,12 @@ router.post(
           Math.ceil((accountUsage.resetTime.getTime() - Date.now()) / 1000),
         ),
       );
-      return res
-        .status(429)
-        .json({
-          error:
-            "Você atingiu seu limite de " +
-            config.aiUserDailyLimit +
-            " perguntas à IA em 24 horas. O guia local continua disponível.",
-        });
+      return res.status(429).json({
+        error:
+          "Você atingiu seu limite de " +
+          config.aiUserDailyLimit +
+          " perguntas à IA em 24 horas. O guia local continua disponível.",
+      });
     }
     const projectUsage = await projectLimiter.increment("all");
     if (projectUsage.totalHits > config.aiDailyLimit)

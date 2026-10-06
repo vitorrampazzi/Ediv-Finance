@@ -7,6 +7,7 @@ import {
   Scale,
   LockKeyhole,
 } from "lucide-react";
+import { IndicatorHelp } from "./ResearchTools";
 
 export type RankingFundamentalData = {
   balanceSheet?: string | null;
@@ -190,6 +191,7 @@ export function RankingFundamentals({
                 />
                 <h4 className="text-sm font-semibold">{label}</h4>
               </div>
+              <IndicatorHelp field={key} />
               {demo && data[key] ? (
                 <dl className="mt-4 space-y-3">
                   {data[key].split("\n").map((line, index) => {

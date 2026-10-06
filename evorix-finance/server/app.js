@@ -12,6 +12,8 @@ import { assistantRouter } from "./assistant.js";
 import { supportRouter } from "./support.js";
 import { learningRouter } from "./learning.js";
 import { adminRouter } from "./admin.js";
+import { researchDraftRouter } from "./research-drafts.js";
+import { notificationsRouter } from "./notifications.js";
 
 const app = express();
 const safeMethods = new Set(["GET", "HEAD", "OPTIONS"]);
@@ -37,6 +39,10 @@ app.use("/api", (req, res, next) => {
   });
   next();
 });
+app.use(
+  "/api/rankings/drafts",
+  express.json({ limit: "1100kb", type: "application/json" }),
+);
 app.use(express.json({ limit: "16kb", type: "application/json" }));
 app.use("/api", (_req, res, next) => {
   res.setHeader("Cache-Control", "no-store");
@@ -74,11 +80,13 @@ app.use("/api/auth", authRouter);
 app.use("/api/market", marketRouter);
 app.use("/api/portfolio", portfolioRouter);
 app.use("/api/favorites", favoritesRouter);
+app.use("/api/rankings/drafts", researchDraftRouter);
 app.use("/api/rankings", rankingRouter);
 app.use("/api/assistant", assistantRouter);
 app.use("/api/support", supportRouter);
 app.use("/api/learning", learningRouter);
 app.use("/api/admin", adminRouter);
+app.use("/api/notifications", notificationsRouter);
 
 app.use("/api", (_req, res) =>
   res.status(404).json({ error: "Rota de API não encontrada." }),

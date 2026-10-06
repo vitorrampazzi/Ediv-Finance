@@ -12,6 +12,11 @@ import { RankingAccessLanding } from "../components/RankingAccessLanding";
 import { OrbitCoins } from "../components/OrbitCoins";
 import { ResearchEditor } from "../components/ResearchEditor";
 import { userCan } from "../lib/permissions";
+import {
+  CompanyComparison,
+  VersionComparison,
+  IndicatorHelp,
+} from "../components/ResearchTools";
 
 type Entry = RankingFundamentalData & {
   rank: number;
@@ -66,6 +71,7 @@ const button =
   "inline-flex min-h-11 items-center justify-center gap-2 rounded-lg bg-evo-primary px-4 text-sm font-semibold text-white hover:bg-evo-primaryHover disabled:opacity-50";
 export function IncomeRanking() {
   const { user, loading } = useAuth();
+  const [routeParams] = useSearchParams();
   if (loading)
     return (
       <p role="status" className="p-8 text-center text-sm text-evo-textSec">
@@ -73,7 +79,13 @@ export function IncomeRanking() {
       </p>
     );
   if (!user) return <RankingAccessLanding />;
-  return <MemberIncomeRanking key={user.id + ":" + user.role} />;
+  return (
+    <MemberIncomeRanking
+      key={
+        user.id + ":" + user.role + ":" + (routeParams.get("publication") || "")
+      }
+    />
+  );
 }
 
 function MemberIncomeRanking() {
@@ -82,7 +94,11 @@ function MemberIncomeRanking() {
   const userId = user?.id;
   const { toggleFavorito, isFavorito, error: favoriteError } = useFavoritos();
   const [ranking, setRanking] = useState<Ranking>(empty);
-  const [publication, setPublication] = useState("");
+  const [publication, setPublication] = useState(() =>
+    /^\d{1,20}$/.test(searchParams.get("publication") || "")
+      ? searchParams.get("publication") || ""
+      : "",
+  );
   const [requestLoading, setLoading] = useState(true);
   const [loadedFor, setLoadedFor] = useState<string | null>(null);
   const requestKey =
@@ -410,6 +426,12 @@ function MemberIncomeRanking() {
             ))}
           </div>
           <ResearchEditor
+            metadata={metadata}
+            onMetadata={(value) => {
+              setMetadata(value);
+              setFile(null);
+              setPreview([]);
+            }}
             disabled={busy}
             onPrepare={(draftFile) => {
               setFile(draftFile);
@@ -501,6 +523,20 @@ function MemberIncomeRanking() {
             </section>
           )}
         </details>
+      )}
+      {!loading && !error && (
+        <CompanyComparison
+          key={showingDemo ? "demo" : ranking.id || "empty"}
+          entries={sourceEntries}
+          demo={showingDemo}
+        />
+      )}
+      {!loading && !error && !showingDemo && (
+        <VersionComparison
+          key={ranking.id}
+          publicationId={ranking.id}
+          history={ranking.history}
+        />
       )}
       <section className="space-y-4">
         <div className="flex flex-wrap items-start justify-between gap-4">
@@ -714,6 +750,7 @@ function MemberIncomeRanking() {
                     )}
                     %
                   </dd>
+                  <IndicatorHelp field="expectedReturnPercent" />
                 </div>
                 <div>
                   <dt className="text-xs text-evo-textSec">
@@ -726,6 +763,7 @@ function MemberIncomeRanking() {
                       ? money.format(Number(entry.targetPrice))
                       : "Não informado"}
                   </dd>
+                  <IndicatorHelp field="targetPrice" />
                 </div>
                 <div>
                   <dt className="text-xs text-evo-textSec">Horizonte</dt>
@@ -734,6 +772,7 @@ function MemberIncomeRanking() {
                       ? entry.horizonMonths + " meses"
                       : "Não informado"}
                   </dd>
+                  <IndicatorHelp field="horizonMonths" />
                 </div>
               </dl>
               <div className="mt-4 grid gap-4 md:grid-cols-2">

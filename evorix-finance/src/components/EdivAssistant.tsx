@@ -149,7 +149,8 @@ function getLocalAnswer(question: string): LocalAnswer {
 }
 
 export function EdivAssistant() {
-  const { user } = useAuth();
+  const { user, loading } = useAuth();
+  if (loading) return null;
   return <EdivAssistantSession key={user?.id || "visitor"} />;
 }
 

@@ -17,6 +17,10 @@ const tables = [
   "support_threads",
   "support_messages",
   "admin_audit_events",
+  "research_drafts",
+  "learning_progress",
+  "ranking_changes",
+  "notification_reads",
 ];
 const keyText = process.env.BACKUP_KEY || "";
 if (!/^[a-f0-9]{64}$/i.test(keyText))
@@ -52,11 +56,12 @@ try {
       cipher.update(JSON.stringify(data), "utf8"),
       cipher.final(),
     ]);
+    const directory = resolve(process.env.BACKUP_DIRECTORY || ".backups");
     const output = resolve(
-      ".backups",
+      directory,
       "ediv-" + new Date().toISOString().replace(/[:.]/g, "-") + ".json.enc",
     );
-    await mkdir(resolve(".backups"), { recursive: true });
+    await mkdir(directory, { recursive: true });
     await writeFile(
       output,
       JSON.stringify({
@@ -68,7 +73,7 @@ try {
       { flag: "wx", mode: 0o600 },
     );
     console.info(
-      "Backup criptografado salvo em .backups. Guarde a chave separadamente.",
+      "Backup criptografado salvo no diretório configurado. Guarde a chave separadamente.",
     );
   } else if (mode === "restore") {
     if (!process.argv[3])
