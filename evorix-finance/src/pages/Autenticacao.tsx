@@ -10,6 +10,7 @@ import {
 import { apiRequest } from "../lib/api";
 import { useAuth } from "../context/authContext";
 import { authLink, safeAuthDestination } from "../lib/authDestination";
+import { PasswordInput } from "../components/PasswordInput";
 
 function AuthShell({
   title,
@@ -158,9 +159,8 @@ export function LoginPage() {
           >
             Senha
           </label>
-          <input
+          <PasswordInput
             id="login-password"
-            type="password"
             autoComplete="current-password"
             required
             maxLength={128}
@@ -312,9 +312,9 @@ export function RegisterPage() {
           >
             Senha
           </label>
-          <input
+          <PasswordInput
             id="register-password"
-            type="password"
+            aria-describedby="register-password-hint"
             autoComplete="new-password"
             required
             minLength={12}
@@ -323,7 +323,10 @@ export function RegisterPage() {
             onChange={(event) => setPassword(event.target.value)}
             className="min-h-11 w-full rounded-lg border border-evo-border bg-evo-bgMain px-3 text-evo-textMain"
           />
-          <p className="mt-1.5 text-xs text-evo-textSec">
+          <p
+            id="register-password-hint"
+            className="mt-1.5 text-xs text-evo-textSec"
+          >
             Use pelo menos 12 caracteres. Não reutilize a senha de outro
             serviço.
           </p>
@@ -606,11 +609,14 @@ export function ResetPasswordPage() {
         </p>
       ) : (
         <form onSubmit={submit} className="mt-6 space-y-4">
-          <label className="block text-sm">
-            Nova senha
-            <input
-              className="field mt-2"
-              type="password"
+          <div className="text-sm">
+            <label htmlFor="reset-password" className="block">
+              Nova senha
+            </label>
+            <PasswordInput
+              id="reset-password"
+              visibilityLabel="nova senha"
+              containerClassName="mt-2"
               required
               autoComplete="new-password"
               minLength={12}
@@ -618,12 +624,15 @@ export function ResetPasswordPage() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
             />
-          </label>
-          <label className="block text-sm">
-            Repita a senha
-            <input
-              className="field mt-2"
-              type="password"
+          </div>
+          <div className="text-sm">
+            <label htmlFor="reset-password-confirmation" className="block">
+              Repita a senha
+            </label>
+            <PasswordInput
+              id="reset-password-confirmation"
+              visibilityLabel="confirmação da senha"
+              containerClassName="mt-2"
               required
               autoComplete="new-password"
               minLength={12}
@@ -631,7 +640,7 @@ export function ResetPasswordPage() {
               value={confirmation}
               onChange={(e) => setConfirmation(e.target.value)}
             />
-          </label>
+          </div>
           {error && <ErrorMessage>{error}</ErrorMessage>}
           <button className="action" disabled={busy}>
             {busy ? "Salvando…" : "Alterar senha"}

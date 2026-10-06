@@ -5,7 +5,11 @@ import { rateLimit } from "express-rate-limit";
 import { pool } from "./database.js";
 import { config } from "./config.js";
 import { requireAuthenticatedUser } from "./auth.js";
-import { hasPermission, lockActiveUser } from "./permissions.js";
+import {
+  hasPermission,
+  lockActiveUser,
+  requirePermission,
+} from "./permissions.js";
 import { MysqlLimitStore } from "./limit-store.js";
 const router = Router();
 router.get("/information", (_req, res) =>
@@ -18,7 +22,12 @@ router.get("/information", (_req, res) =>
     subscriptionsAvailable: false,
   }),
 );
-router.use(requireAuthenticatedUser);
+router.use(requireAuthenticatedUser, requirePermission("support:own"));
+// The team namespace always requires staff access, even for the thread owner.
+router.use("/team", requirePermission("support:manage"), (req, _res, next) => {
+  req.supportTeamView = true;
+  next();
+});
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   limit: 30,
@@ -27,11 +36,10 @@ const limiter = rateLimit({
   legacyHeaders: false,
 });
 const bodySchema = z.string().trim().min(2).max(3000);
-const isStaff = (req) => hasPermission(req.authenticatedUser, "support:manage");
-router.get("/", async (req, res) => {
-  const staff = isStaff(req);
+router.get(["/", "/team"], async (req, res) => {
+  const staff = Boolean(req.supportTeamView);
   const [threads] = await pool.execute(
-    `SELECT t.id,t.subject,t.status,t.share_portfolio,t.created_at,t.updated_at,u.name FROM support_threads t JOIN users u ON u.id=t.user_id ${staff ? "" : "WHERE t.user_id=?"} ORDER BY t.updated_at DESC LIMIT 100`,
+    `SELECT t.id,t.user_id,t.subject,t.status,t.share_portfolio,t.created_at,t.updated_at,u.name FROM support_threads t JOIN users u ON u.id=t.user_id ${staff ? "" : "WHERE t.user_id=?"} ORDER BY t.updated_at DESC LIMIT 100`,
     staff ? [] : [req.authenticatedUser.id],
   );
   return res.json({ canManage: staff, threads });
@@ -43,6 +51,7 @@ router.post("/", limiter, async (req, res) => {
       body: bodySchema,
       sharePortfolio: z.boolean().default(false),
     })
+    .strict()
     .safeParse(req.body);
   if (!parsed.success)
     return res.status(400).json({
@@ -52,6 +61,17 @@ router.post("/", limiter, async (req, res) => {
   const connection = await pool.getConnection();
   try {
     await connection.beginTransaction();
+    if (
+      !hasPermission(
+        await lockActiveUser(connection, req.authenticatedUser.id),
+        "support:own",
+      )
+    ) {
+      await connection.rollback();
+      return res
+        .status(403)
+        .json({ error: "Seu acesso mudou. Entre novamente." });
+    }
     await connection.execute(
       "INSERT INTO support_threads(id,user_id,subject,share_portfolio) VALUES(?,?,?,?)",
       [
@@ -83,19 +103,19 @@ async function access(req, res, next) {
   );
   if (
     !rows[0] ||
-    (rows[0].user_id !== req.authenticatedUser.id && !isStaff(req))
+    (rows[0].user_id !== req.authenticatedUser.id && !req.supportTeamView)
   )
     return res.status(404).json({ error: "Conversa não encontrada." });
   req.thread = rows[0];
   return next();
 }
-router.get("/:id", access, async (req, res) => {
+router.get(["/:id", "/team/:id"], access, async (req, res) => {
   const [messages] = await pool.execute(
     "SELECT id,is_staff,body,created_at FROM support_messages WHERE thread_id=? ORDER BY created_at,id",
     [req.thread.id],
   );
   let portfolio = null;
-  if (isStaff(req) && req.thread.share_portfolio) {
+  if (req.supportTeamView && req.thread.share_portfolio) {
     const [rows] = await pool.execute(
       "SELECT p.ticker,p.side,p.asset_name,p.quantity,p.unit_price,p.fees,p.traded_at FROM portfolio_transactions p JOIN support_threads t ON t.user_id=p.user_id WHERE t.id=? AND t.share_portfolio=TRUE ORDER BY p.traded_at",
       [req.thread.id],
@@ -104,63 +124,81 @@ router.get("/:id", access, async (req, res) => {
   }
   return res.json({ thread: req.thread, messages, portfolio });
 });
-router.post("/:id/messages", limiter, access, async (req, res) => {
-  const parsed = z
-    .object({
-      body: bodySchema,
-      status: z.enum(["IN_PROGRESS", "ANSWERED"]).optional(),
-    })
-    .safeParse(req.body);
-  if (!parsed.success)
-    return res.status(400).json({ error: "Mensagem inválida." });
-  const connection = await pool.getConnection();
-  try {
-    await connection.beginTransaction();
-    const actor = await lockActiveUser(connection, req.authenticatedUser.id);
-    const staff = hasPermission(actor, "support:manage");
-    const [threads] = await connection.execute(
-      "SELECT id,user_id FROM support_threads WHERE id=? FOR UPDATE",
-      [req.thread.id],
-    );
-    if (
-      !actor ||
-      !threads[0] ||
-      (!staff && threads[0].user_id !== req.authenticatedUser.id)
-    ) {
-      await connection.rollback();
+router.post(
+  ["/:id/messages", "/team/:id/messages"],
+  limiter,
+  access,
+  async (req, res) => {
+    const parsed = z
+      .object({
+        body: bodySchema,
+        status: z.enum(["IN_PROGRESS", "ANSWERED"]).optional(),
+      })
+      .strict()
+      .safeParse(req.body);
+    if (!parsed.success)
+      return res.status(400).json({ error: "Mensagem inválida." });
+    if (!req.supportTeamView && parsed.data.status !== undefined)
       return res
         .status(403)
-        .json({ error: "Seu acesso à conversa mudou. Entre novamente." });
+        .json({
+          error: "Somente a equipe pode alterar a situação de um atendimento.",
+        });
+    const connection = await pool.getConnection();
+    try {
+      await connection.beginTransaction();
+      const actor = await lockActiveUser(connection, req.authenticatedUser.id);
+      const staff =
+        Boolean(req.supportTeamView) && hasPermission(actor, "support:manage");
+      const [threads] = await connection.execute(
+        "SELECT id,user_id FROM support_threads WHERE id=? FOR UPDATE",
+        [req.thread.id],
+      );
+      if (
+        !actor ||
+        !threads[0] ||
+        (req.supportTeamView
+          ? !staff
+          : threads[0].user_id !== req.authenticatedUser.id)
+      ) {
+        await connection.rollback();
+        return res
+          .status(403)
+          .json({ error: "Seu acesso à conversa mudou. Entre novamente." });
+      }
+      await connection.execute(
+        "INSERT INTO support_messages(id,thread_id,author_id,is_staff,body) VALUES(?,?,?,?,?)",
+        [
+          randomUUID(),
+          req.thread.id,
+          req.authenticatedUser.id,
+          staff,
+          parsed.data.body,
+        ],
+      );
+      await connection.execute(
+        "UPDATE support_threads SET status=?,updated_at=UTC_TIMESTAMP(3) WHERE id=?",
+        [staff ? parsed.data.status || "ANSWERED" : "RECEIVED", req.thread.id],
+      );
+      await connection.commit();
+      return res.status(201).json({ message: "Mensagem salva." });
+    } catch (error) {
+      await connection.rollback();
+      throw error;
+    } finally {
+      connection.release();
     }
-    await connection.execute(
-      "INSERT INTO support_messages(id,thread_id,author_id,is_staff,body) VALUES(?,?,?,?,?)",
-      [
-        randomUUID(),
-        req.thread.id,
-        req.authenticatedUser.id,
-        staff,
-        parsed.data.body,
-      ],
-    );
-    await connection.execute(
-      "UPDATE support_threads SET status=?,updated_at=UTC_TIMESTAMP(3) WHERE id=?",
-      [staff ? parsed.data.status || "ANSWERED" : "RECEIVED", req.thread.id],
-    );
-    await connection.commit();
-    return res.status(201).json({ message: "Mensagem salva." });
-  } catch (error) {
-    await connection.rollback();
-    throw error;
-  } finally {
-    connection.release();
-  }
-});
+  },
+);
 router.patch("/:id/consent", limiter, access, async (req, res) => {
   if (req.thread.user_id !== req.authenticatedUser.id)
     return res
       .status(403)
       .json({ error: "Só o titular pode alterar o compartilhamento." });
-  const parsed = z.object({ sharePortfolio: z.boolean() }).safeParse(req.body);
+  const parsed = z
+    .object({ sharePortfolio: z.boolean() })
+    .strict()
+    .safeParse(req.body);
   if (!parsed.success)
     return res.status(400).json({ error: "Escolha inválida." });
   await pool.execute(

@@ -172,6 +172,16 @@ function App() {
                     <Route index element={<Dashboard />} />
                     <Route path="aprender" element={<Aprender />} />
                     <Route path="conversas" element={<Conversas />} />
+                    <Route
+                      element={
+                        <RequirePermission permission="support:manage" />
+                      }
+                    >
+                      <Route
+                        path="atendimentos"
+                        element={<Conversas teamView />}
+                      />
+                    </Route>
                     <Route path="analises" element={<Analises />} />
                     <Route path="ranking" element={<IncomeRanking />} />
                     <Route path="carteira" element={<Carteira />} />

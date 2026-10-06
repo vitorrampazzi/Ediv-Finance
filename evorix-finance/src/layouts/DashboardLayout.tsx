@@ -76,6 +76,7 @@ const pageTitles: Record<string, string> = {
   "/app/ranking": "Ranking de previsões",
   "/app/aprender": "Aprender",
   "/app/conversas": "Conversas",
+  "/app/atendimentos": "Atendimentos",
   "/app/carteira": "Minha carteira",
   "/app/favoritos": "Favoritos",
   "/app/assessoria": "Assessoria",
@@ -261,7 +262,11 @@ function ProfileMenu({
               <CircleUserRound size={16} aria-hidden="true" /> Perfil
             </Link>
             <Link
-              to="/app/conversas"
+              to={
+                userCan(user, "support:manage")
+                  ? "/app/atendimentos"
+                  : "/app/conversas"
+              }
               onClick={() => setOpen(false)}
               className="flex min-h-11 items-center gap-3 rounded-lg px-3 text-sm text-evo-textSec"
             >
@@ -376,7 +381,7 @@ export const DashboardLayout = () => {
           )}
           {userCan(user, "support:manage") && (
             <NavigationLink
-              to="/app/conversas"
+              to="/app/atendimentos"
               label="Atendimentos"
               icon={Headset}
               collapsed={collapsed}

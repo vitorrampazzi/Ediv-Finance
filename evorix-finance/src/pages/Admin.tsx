@@ -392,7 +392,7 @@ export function AdminPage() {
         <Link className={button} to="/app/ranking">
           Preparar pesquisa
         </Link>
-        <Link className={button} to="/app/conversas">
+        <Link className={button} to="/app/atendimentos">
           Atendimentos
         </Link>
       </div>

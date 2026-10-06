@@ -4,6 +4,7 @@ import { Card } from "../components/Card";
 import { apiRequest, ApiError } from "../lib/api";
 import { formatMoney } from "../lib/finance";
 import { useAuth } from "../context/authContext";
+import { userCan } from "../lib/permissions";
 type Thread = {
   id: string;
   subject: string;
@@ -30,14 +31,20 @@ const statuses: Record<string, string> = {
   IN_PROGRESS: "Em atendimento",
   ANSWERED: "Respondida",
 };
-export function Conversas() {
+export function Conversas({ teamView = false }: { teamView?: boolean }) {
   const { user } = useAuth();
-  return <MemberConversations key={user?.id + ":" + user?.role} />;
+  return (
+    <MemberConversations
+      teamView={teamView}
+      key={user?.id + ":" + user?.role + ":" + teamView}
+    />
+  );
 }
-function MemberConversations() {
+function MemberConversations({ teamView }: { teamView: boolean }) {
   const { user, refreshSession } = useAuth();
+  const staff = teamView && userCan(user, "support:manage");
+  const apiBase = teamView ? "/api/support/team" : "/api/support";
   const [threads, setThreads] = useState<Thread[]>([]);
-  const [staff, setStaff] = useState(false);
   const [selected, setSelected] = useState("");
   const [conversation, setConversation] = useState<Conversation | null>(null);
   const [subject, setSubject] = useState("");
@@ -50,20 +57,18 @@ function MemberConversations() {
   const [loading, setLoading] = useState(true);
   const list = async () => {
     const data = await apiRequest<{ threads: Thread[]; canManage: boolean }>(
-      "/api/support",
+      apiBase,
     );
     setThreads(data.threads);
-    setStaff(data.canManage);
   };
   useEffect(() => {
     const controller = new AbortController();
-    apiRequest<{ threads: Thread[]; canManage: boolean }>("/api/support", {
+    apiRequest<{ threads: Thread[]; canManage: boolean }>(apiBase, {
       signal: controller.signal,
     })
       .then((data) => {
         if (controller.signal.aborted) return;
         setThreads(data.threads);
-        setStaff(data.canManage);
       })
       .catch((reason) => {
         if (!controller.signal.aborted) setError(reason.message);
@@ -78,11 +83,11 @@ function MemberConversations() {
         if (!controller.signal.aborted) setLoading(false);
       });
     return () => controller.abort();
-  }, [refreshSession]);
+  }, [apiBase, refreshSession]);
   useEffect(() => {
     if (!selected) return;
     const controller = new AbortController();
-    apiRequest<Conversation>("/api/support/" + selected, {
+    apiRequest<Conversation>(apiBase + "/" + selected, {
       signal: controller.signal,
     })
       .then((data) => {
@@ -98,7 +103,7 @@ function MemberConversations() {
           void refreshSession().catch(() => {});
       });
     return () => controller.abort();
-  }, [selected, refreshSession]);
+  }, [apiBase, selected, refreshSession]);
   const act = async (work: () => Promise<void>) => {
     setBusy(true);
     setError("");
@@ -155,49 +160,51 @@ function MemberConversations() {
       )}
       <div className="grid items-start gap-5 lg:grid-cols-[.8fr_1.2fr]">
         <div className="space-y-5">
-          <Card glow="none">
-            <h2 className="font-semibold">Nova conversa</h2>
-            <form onSubmit={create} className="mt-4 space-y-4">
-              <label className="block text-sm">
-                Assunto
-                <input
-                  className="field mt-1"
-                  required
-                  minLength={3}
-                  maxLength={160}
-                  value={subject}
-                  onChange={(e) => setSubject(e.target.value)}
-                />
-              </label>
-              <label className="block text-sm">
-                Sua mensagem
-                <textarea
-                  className="field mt-1 min-h-28 py-3"
-                  required
-                  minLength={2}
-                  maxLength={3000}
-                  value={body}
-                  onChange={(e) => setBody(e.target.value)}
-                />
-              </label>
-              <label className="flex gap-3 text-xs leading-relaxed">
-                <input
-                  className="mt-1 h-4 w-4 shrink-0"
-                  type="checkbox"
-                  checked={share}
-                  onChange={(e) => setShare(e.target.checked)}
-                />
-                Autorizo a equipe a consultar minhas operações de carteira nesta
-                conversa. Posso revogar a autorização depois.
-              </label>
-              <p className="text-xs text-evo-textSec">
-                Não envie senhas, CPF ou dados bancários.
-              </p>
-              <button className="action" disabled={busy}>
-                Enviar pergunta
-              </button>
-            </form>
-          </Card>
+          {!teamView && (
+            <Card glow="none">
+              <h2 className="font-semibold">Nova conversa</h2>
+              <form onSubmit={create} className="mt-4 space-y-4">
+                <label className="block text-sm">
+                  Assunto
+                  <input
+                    className="field mt-1"
+                    required
+                    minLength={3}
+                    maxLength={160}
+                    value={subject}
+                    onChange={(e) => setSubject(e.target.value)}
+                  />
+                </label>
+                <label className="block text-sm">
+                  Sua mensagem
+                  <textarea
+                    className="field mt-1 min-h-28 py-3"
+                    required
+                    minLength={2}
+                    maxLength={3000}
+                    value={body}
+                    onChange={(e) => setBody(e.target.value)}
+                  />
+                </label>
+                <label className="flex gap-3 text-xs leading-relaxed">
+                  <input
+                    className="mt-1 h-4 w-4 shrink-0"
+                    type="checkbox"
+                    checked={share}
+                    onChange={(e) => setShare(e.target.checked)}
+                  />
+                  Autorizo a equipe a consultar minhas operações de carteira
+                  nesta conversa. Posso revogar a autorização depois.
+                </label>
+                <p className="text-xs text-evo-textSec">
+                  Não envie senhas, CPF ou dados bancários.
+                </p>
+                <button className="action" disabled={busy}>
+                  Enviar pergunta
+                </button>
+              </form>
+            </Card>
+          )}
           <Card glow="none">
             <div className="flex justify-between gap-3">
               <h2 className="font-semibold">
@@ -342,7 +349,7 @@ function MemberConversations() {
                 onSubmit={(event) => {
                   event.preventDefault();
                   void act(async () => {
-                    await apiRequest("/api/support/" + selected + "/messages", {
+                    await apiRequest(apiBase + "/" + selected + "/messages", {
                       method: "POST",
                       body: JSON.stringify({
                         body: reply,
@@ -351,9 +358,7 @@ function MemberConversations() {
                     });
                     setReply("");
                     setConversation(
-                      await apiRequest<Conversation>(
-                        "/api/support/" + selected,
-                      ),
+                      await apiRequest<Conversation>(apiBase + "/" + selected),
                     );
                     await list();
                   });
@@ -385,7 +390,7 @@ function MemberConversations() {
                 )}
                 <div className="flex flex-wrap gap-3">
                   <button className="action" disabled={busy}>
-                    Enviar mensagem
+                    {staff ? "Enviar resposta da equipe" : "Enviar mensagem"}
                   </button>
                   <button
                     type="button"
@@ -395,7 +400,7 @@ function MemberConversations() {
                       void act(async () => {
                         setConversation(
                           await apiRequest<Conversation>(
-                            "/api/support/" + selected,
+                            apiBase + "/" + selected,
                           ),
                         );
                       })

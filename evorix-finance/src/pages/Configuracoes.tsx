@@ -4,6 +4,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { Card } from "../components/Card";
 import { useAuth } from "../context/authContext";
 import { apiRequest } from "../lib/api";
+import { PasswordInput } from "../components/PasswordInput";
 export const Configuracoes = () => {
   const { deleteAccount } = useAuth();
   const navigate = useNavigate();
@@ -63,23 +64,29 @@ export const Configuracoes = () => {
           Use pelo menos 12 caracteres. A alteração encerra todas as sessões.
         </p>
         <form onSubmit={change} className="mt-5 grid gap-4 sm:grid-cols-2">
-          <label className="block text-sm sm:col-span-2">
-            Senha atual
-            <input
-              className="field mt-2"
-              type="password"
+          <div className="text-sm sm:col-span-2">
+            <label htmlFor="settings-current-password" className="block">
+              Senha atual
+            </label>
+            <PasswordInput
+              id="settings-current-password"
+              visibilityLabel="senha atual"
+              containerClassName="mt-2"
               required
               autoComplete="current-password"
               maxLength={128}
               value={currentPassword}
               onChange={(e) => setCurrentPassword(e.target.value)}
             />
-          </label>
-          <label className="block text-sm">
-            Nova senha
-            <input
-              className="field mt-2"
-              type="password"
+          </div>
+          <div className="text-sm">
+            <label htmlFor="settings-new-password" className="block">
+              Nova senha
+            </label>
+            <PasswordInput
+              id="settings-new-password"
+              visibilityLabel="nova senha"
+              containerClassName="mt-2"
               required
               minLength={12}
               maxLength={128}
@@ -87,12 +94,15 @@ export const Configuracoes = () => {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
             />
-          </label>
-          <label className="block text-sm">
-            Repita a nova senha
-            <input
-              className="field mt-2"
-              type="password"
+          </div>
+          <div className="text-sm">
+            <label htmlFor="settings-confirm-password" className="block">
+              Repita a nova senha
+            </label>
+            <PasswordInput
+              id="settings-confirm-password"
+              visibilityLabel="confirmação da nova senha"
+              containerClassName="mt-2"
               required
               minLength={12}
               maxLength={128}
@@ -100,7 +110,7 @@ export const Configuracoes = () => {
               value={repeat}
               onChange={(e) => setRepeat(e.target.value)}
             />
-          </label>
+          </div>
           <button className="action sm:col-span-2" disabled={busy}>
             Salvar e entrar novamente
           </button>
@@ -166,18 +176,21 @@ export const Configuracoes = () => {
               });
             }}
           >
-            <label className="block text-sm">
-              Senha atual
-              <input
-                className="field mt-2"
-                type="password"
+            <div className="text-sm">
+              <label htmlFor="delete-account-password" className="block">
+                Senha atual
+              </label>
+              <PasswordInput
+                id="delete-account-password"
+                visibilityLabel="senha para confirmar a exclusão"
+                containerClassName="mt-2"
                 autoComplete="current-password"
                 required
                 maxLength={128}
                 value={deletePassword}
                 onChange={(e) => setDeletePassword(e.target.value)}
               />
-            </label>
+            </div>
             <label className="block text-sm">
               Digite EXCLUIR
               <input
