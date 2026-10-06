@@ -5,6 +5,7 @@ import { useAuth } from "../context/authContext";
 import { apiRequest, ApiError } from "../lib/api";
 import { roleLabels } from "../lib/permissions";
 import type { AuthUser } from "../context/AuthProvider";
+import { LaunchReadiness } from "../components/LaunchReadiness";
 
 type Role = AuthUser["role"];
 interface Account extends Omit<AuthUser, "permissions"> {
@@ -396,6 +397,7 @@ export function AdminPage() {
           Atendimentos
         </Link>
       </div>
+      <LaunchReadiness />
       <section className="space-y-4">
         <h2 className="flex items-center gap-2 text-lg font-semibold">
           <Users size={20} /> Usuários

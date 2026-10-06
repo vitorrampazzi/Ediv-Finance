@@ -9,6 +9,7 @@ import {
   lockAccessControl,
 } from "./permissions.js";
 import { compareResearch, readEntries } from "./research-diff.js";
+import { researchStatus } from "./research-status.js";
 import {
   fileBody,
   readUpload,
@@ -18,6 +19,7 @@ import {
 } from "./spreadsheet.js";
 
 const router = Router();
+router.get("/status", async (_req, res) => res.json(await researchStatus()));
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   limit: 20,

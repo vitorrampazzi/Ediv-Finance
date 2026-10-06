@@ -6,7 +6,9 @@ O nome Ediv é uma abreviação de Escola do Dividendo. A rota `/ranking` aprese
 
 ## Educação, ranking e atualização
 
-A experiência principal agora é o ranking de cenários, apoiado por uma trilha de aprendizado e um assistente educativo. Autoria, categoria, registro, contato e horários continuam sem preenchimento até serem informados. Não há cobrança habilitada.
+A experiência principal é o ranking de cenários, apoiado por uma trilha de aprendizado. O assistente educativo está disponível apenas na QA para avaliação. Autoria, categoria, registro, contato e horários continuam sem preenchimento até serem informados. Não há cobrança habilitada.
+
+Para convidar os primeiros usuários, consulte o [guia de divulgação da versão beta](docs/DIVULGACAO-BETA.md). A Administração mostra as pendências do lançamento e permite verificar a conexão SMTP sem enviar mensagens.
 
 Veja [as mudanças e a ordem de publicação](docs/ATUALIZACAO-EDIV.md), [os perfis e o painel de administração](docs/PERMISSOES.md) e [a rotina de backup criptografado](docs/BACKUP.md). As migrações até 007 devem estar aplicadas antes do deploy.
 

@@ -15,6 +15,8 @@ import { SiteFooter, SiteHeader } from "../components/SiteChrome";
 import { useAuth } from "../context/authContext";
 import { authLink } from "../lib/authDestination";
 import { assistantEnabled } from "../lib/features";
+import { ResearchAvailability } from "../components/ResearchAvailability";
+import { GettingStarted } from "../components/GettingStarted";
 
 const currency = new Intl.NumberFormat("pt-BR", {
   style: "currency",
@@ -39,22 +41,23 @@ export function Home() {
         <section className="mx-auto grid max-w-7xl items-center gap-10 px-5 pb-14 pt-10 md:grid-cols-[1.1fr_.9fr] md:px-8 md:pb-20 md:pt-16">
           <div>
             <span className="inline-flex items-center gap-2 rounded-full border border-evo-accent/20 bg-evo-accent/10 px-3 py-1.5 text-xs font-medium text-evo-accent">
-              <Sparkles size={14} aria-hidden="true" /> Escola do dividendo
+              <Sparkles size={14} aria-hidden="true" /> Escola do dividendo ·
+              Beta
             </span>
             <h1 className="mt-6 max-w-2xl text-4xl font-bold leading-tight tracking-tight sm:text-5xl">
               Entenda os cenários. Invista em conhecimento.
             </h1>
             <p className="mt-5 max-w-xl text-base leading-relaxed text-evo-textSec">
               Aprenda a interpretar cenários e entender os riscos. Crie sua
-              conta gratuita para acessar o ranking de previsões e os módulos de
-              pesquisa das empresas.
+              conta gratuita para conhecer o ranking, estudar os módulos de
+              pesquisa e organizar sua carteira.
             </p>
             <div className="mt-8 flex flex-wrap gap-3">
               <Link
                 to={user ? "/ranking" : authLink("cadastro", "/ranking")}
                 className="inline-flex min-h-12 items-center gap-2 rounded-lg bg-evo-primary px-5 font-semibold text-white hover:bg-evo-primaryHover"
               >
-                {user ? "Abrir ranking" : "Criar conta e acessar o ranking"}{" "}
+                {user ? "Abrir ranking" : "Criar conta grátis"}{" "}
                 <ArrowRight size={17} aria-hidden="true" />
               </Link>
               <Link
@@ -74,6 +77,7 @@ export function Home() {
               Mercado, primeira aula e glossário abertos. Conta gratuita para
               acessar o ranking, a trilha completa e organizar sua carteira.
             </p>
+            <ResearchAvailability />
           </div>
           <div className="rounded-2xl border border-evo-border bg-evo-card p-6 shadow-xl md:p-8">
             <div className="flex items-start gap-4">
@@ -215,6 +219,7 @@ export function Home() {
             </p>
           </div>
         </section>
+        <GettingStarted />
       </main>
 
       <SiteFooter />

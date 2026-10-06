@@ -11,6 +11,7 @@ import { apiRequest } from "../lib/api";
 import { useAuth } from "../context/authContext";
 import { authLink, safeAuthDestination } from "../lib/authDestination";
 import { PasswordInput } from "../components/PasswordInput";
+import { ResearchAvailability } from "../components/ResearchAvailability";
 
 function AuthShell({
   title,
@@ -66,6 +67,101 @@ function ErrorMessage({ children }: { children: string }) {
       <CircleAlert size={17} className="mt-0.5 shrink-0" aria-hidden="true" />
       {children}
     </p>
+  );
+}
+
+function ConfirmationHelp({
+  email,
+  destination,
+  initialLink = "",
+}: {
+  email: string;
+  destination: string;
+  initialLink?: string;
+}) {
+  const { resendVerification } = useAuth();
+  const [busy, setBusy] = useState(false);
+  const [message, setMessage] = useState("");
+  const [error, setError] = useState("");
+  const [link, setLink] = useState(initialLink);
+  const [remaining, setRemaining] = useState(0);
+  useEffect(() => {
+    if (remaining <= 0) return;
+    const timer = window.setTimeout(
+      () => setRemaining((value) => Math.max(0, value - 1)),
+      1000,
+    );
+    return () => window.clearTimeout(timer);
+  }, [remaining]);
+  async function resend() {
+    setBusy(true);
+    setMessage("");
+    setError("");
+    setLink("");
+    try {
+      const result = await resendVerification(email, destination);
+      setMessage(result.message || "Confira sua caixa de entrada.");
+      setLink(result.verificationUrl || "");
+      setRemaining(60);
+    } catch (reason) {
+      setError(
+        reason instanceof Error ? reason.message : "Não foi possível reenviar.",
+      );
+    } finally {
+      setBusy(false);
+    }
+  }
+  return (
+    <div className="mt-5 space-y-4 rounded-xl border border-evo-border bg-evo-bgMain p-4">
+      <h2 className="font-semibold">Próximo passo: confirmar seu e-mail</h2>
+      <p className="break-words text-sm text-evo-textSec">
+        Endereço informado:{" "}
+        <strong className="text-evo-textMain">{email}</strong>
+      </p>
+      <ol className="list-decimal space-y-2 pl-5 text-sm leading-relaxed text-evo-textSec">
+        <li>Confira a caixa de entrada, o spam e a aba de promoções.</li>
+        <li>
+          Abra o link de confirmação em até 30 minutos. Se houver mais de um
+          e-mail, use o mais recente.
+        </li>
+        <li>Depois de confirmar, entre com sua senha para continuar.</li>
+      </ol>
+      <button
+        type="button"
+        className="action-secondary w-full"
+        disabled={busy || remaining > 0}
+        onClick={() => void resend()}
+      >
+        {busy
+          ? "Reenviando…"
+          : remaining > 0
+            ? `Reenviar em ${remaining}s`
+            : "Reenviar confirmação"}
+      </button>
+      {message && (
+        <p role="status" className="notice-success">
+          {message}
+        </p>
+      )}
+      {error && <ErrorMessage>{error}</ErrorMessage>}
+      {link && (
+        <a
+          className="block min-h-11 text-sm text-evo-accent underline"
+          href={link}
+        >
+          Confirmar e-mail (ambiente de desenvolvimento)
+        </a>
+      )}
+      <Link className="action w-full" to={authLink("entrar", destination)}>
+        Já confirmei, entrar e continuar
+      </Link>
+      <Link
+        className="inline-flex min-h-11 items-center text-xs text-evo-textSec underline"
+        to="/suporte"
+      >
+        Ainda preciso de ajuda
+      </Link>
+    </div>
   );
 }
 
@@ -236,6 +332,7 @@ export function RegisterPage() {
   const [message, setMessage] = useState("");
   const [verificationUrl, setVerificationUrl] = useState("");
   const [busy, setBusy] = useState(false);
+  const [submittedEmail, setSubmittedEmail] = useState("");
 
   useEffect(() => {
     if (user) navigate(destination, { replace: true });
@@ -251,6 +348,8 @@ export function RegisterPage() {
       const result = await register(name, email, password, destination);
       setMessage(result.message || "Cadastro recebido.");
       setVerificationUrl(result.verificationUrl || "");
+      setSubmittedEmail(email.trim());
+      setPassword("");
     } catch (reason) {
       setError(
         reason instanceof Error
@@ -265,103 +364,113 @@ export function RegisterPage() {
   return (
     <AuthShell
       title="Criar conta grátis"
-      description="Libere o ranking completo, os módulos da pesquisa e todas as aulas. Organize sua carteira e salve favoritos."
+      description="Estude os conceitos, conheça o formato da pesquisa, organize sua carteira e salve favoritos. Sem cobrança nesta versão."
     >
-      <form onSubmit={submit} className="mt-6 space-y-4">
-        <div>
-          <label
-            htmlFor="register-name"
-            className="mb-1.5 block text-sm font-medium"
-          >
-            Nome
-          </label>
-          <input
-            id="register-name"
-            type="text"
-            autoComplete="name"
-            required
-            minLength={2}
-            maxLength={100}
-            value={name}
-            onChange={(event) => setName(event.target.value)}
-            className="min-h-11 w-full rounded-lg border border-evo-border bg-evo-bgMain px-3 text-evo-textMain"
-          />
-        </div>
-        <div>
-          <label
-            htmlFor="register-email"
-            className="mb-1.5 block text-sm font-medium"
-          >
-            E-mail
-          </label>
-          <input
-            id="register-email"
-            type="email"
-            autoComplete="email"
-            required
-            maxLength={254}
-            value={email}
-            onChange={(event) => setEmail(event.target.value)}
-            className="min-h-11 w-full rounded-lg border border-evo-border bg-evo-bgMain px-3 text-evo-textMain"
-          />
-        </div>
-        <div>
-          <label
-            htmlFor="register-password"
-            className="mb-1.5 block text-sm font-medium"
-          >
-            Senha
-          </label>
-          <PasswordInput
-            id="register-password"
-            aria-describedby="register-password-hint"
-            autoComplete="new-password"
-            required
-            minLength={12}
-            maxLength={128}
-            value={password}
-            onChange={(event) => setPassword(event.target.value)}
-            className="min-h-11 w-full rounded-lg border border-evo-border bg-evo-bgMain px-3 text-evo-textMain"
-          />
-          <p
-            id="register-password-hint"
-            className="mt-1.5 text-xs text-evo-textSec"
-          >
-            Use pelo menos 12 caracteres. Não reutilize a senha de outro
-            serviço.
+      {!message && <ResearchAvailability />}
+      {message ? (
+        <>
+          <p role="status" className="mt-5 notice-success">
+            {message}
           </p>
-        </div>
-        {error && <ErrorMessage>{error}</ErrorMessage>}
-        {message && (
-          <div
-            role="status"
-            className="rounded-lg border border-evo-green/20 bg-evo-green/5 p-3 text-sm text-evo-green"
+          <ConfirmationHelp
+            email={submittedEmail}
+            destination={destination}
+            initialLink={verificationUrl}
+          />
+          <button
+            type="button"
+            className="mt-3 inline-flex min-h-11 items-center text-sm text-evo-accent underline"
+            onClick={() => {
+              setMessage("");
+              setVerificationUrl("");
+              setError("");
+            }}
           >
-            <p>{message}</p>
-            <Link
-              className="mt-3 inline-flex min-h-11 items-center underline"
-              to={authLink("entrar", destination)}
+            Corrigir o endereço informado
+          </button>
+        </>
+      ) : (
+        <form onSubmit={submit} className="mt-6 space-y-4">
+          <div>
+            <label
+              htmlFor="register-name"
+              className="mb-1.5 block text-sm font-medium"
             >
-              Depois de confirmar o e-mail, entrar e continuar
-            </Link>
-            {verificationUrl && (
-              <a
-                href={verificationUrl}
-                className="mt-2 inline-block break-all font-medium underline"
-              >
-                Confirmar e-mail (link de desenvolvimento)
-              </a>
-            )}
+              Nome
+            </label>
+            <input
+              id="register-name"
+              type="text"
+              autoComplete="name"
+              required
+              minLength={2}
+              maxLength={100}
+              value={name}
+              onChange={(event) => setName(event.target.value)}
+              className="min-h-11 w-full rounded-lg border border-evo-border bg-evo-bgMain px-3 text-evo-textMain"
+            />
           </div>
-        )}
-        <button
-          type="submit"
-          disabled={busy}
-          className="inline-flex min-h-11 w-full items-center justify-center rounded-lg bg-evo-primary px-4 font-semibold text-white transition hover:bg-evo-primaryHover disabled:opacity-60"
-        >
-          {busy ? "Criando conta…" : "Criar conta grátis"}
-        </button>
-      </form>
+          <div>
+            <label
+              htmlFor="register-email"
+              className="mb-1.5 block text-sm font-medium"
+            >
+              E-mail
+            </label>
+            <input
+              id="register-email"
+              type="email"
+              autoComplete="email"
+              required
+              maxLength={254}
+              value={email}
+              onChange={(event) => setEmail(event.target.value)}
+              className="min-h-11 w-full rounded-lg border border-evo-border bg-evo-bgMain px-3 text-evo-textMain"
+            />
+          </div>
+          <div>
+            <label
+              htmlFor="register-password"
+              className="mb-1.5 block text-sm font-medium"
+            >
+              Senha
+            </label>
+            <PasswordInput
+              id="register-password"
+              aria-describedby="register-password-hint"
+              autoComplete="new-password"
+              required
+              minLength={12}
+              maxLength={128}
+              value={password}
+              onChange={(event) => setPassword(event.target.value)}
+              className="min-h-11 w-full rounded-lg border border-evo-border bg-evo-bgMain px-3 text-evo-textMain"
+            />
+            <p
+              id="register-password-hint"
+              className="mt-1.5 text-xs text-evo-textSec"
+            >
+              Use pelo menos 12 caracteres. Não reutilize a senha de outro
+              serviço.
+            </p>
+          </div>
+          {error && <ErrorMessage>{error}</ErrorMessage>}
+          <button
+            type="submit"
+            disabled={busy}
+            className="inline-flex min-h-11 w-full items-center justify-center rounded-lg bg-evo-primary px-4 font-semibold text-white transition hover:bg-evo-primaryHover disabled:opacity-60"
+          >
+            {busy ? "Criando conta…" : "Criar conta grátis"}
+          </button>
+        </form>
+      )}
+      {!message && error && email && (
+        <ConfirmationHelp
+          key={email}
+          email={email.trim()}
+          destination={destination}
+        />
+      )}
       <p className="mt-4 text-xs leading-relaxed text-evo-textSec">
         O cadastro guarda seu nome, e-mail e senha protegida para autenticação.
         Consulte nossa política de privacidade e uso. Não informe CPF, dados

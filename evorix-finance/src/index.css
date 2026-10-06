@@ -37,6 +37,9 @@ textarea {
   .action {
     @apply inline-flex min-h-11 items-center justify-center gap-2 rounded-lg bg-evo-primary px-4 text-sm font-semibold text-white transition hover:bg-evo-primaryHover disabled:cursor-not-allowed disabled:opacity-50;
   }
+  .action-secondary {
+    @apply inline-flex min-h-11 items-center justify-center gap-2 rounded-lg border border-evo-border px-4 py-2 text-sm font-medium transition hover:bg-evo-bgMain disabled:cursor-not-allowed disabled:opacity-50;
+  }
   .notice-error {
     @apply rounded-lg border border-evo-red/30 bg-evo-red/10 p-3 text-sm text-evo-textMain;
   }
