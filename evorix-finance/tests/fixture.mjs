@@ -63,12 +63,14 @@ export async function createFixture() {
       TRUST_PROXY: "false",
       BRAPI_API_KEY: "",
       AI_ASSISTANT_ENABLED: "true",
+      EDIV_ASSISTANT_PREVIEW: "true",
       GEMINI_API_KEY: "ediv-fake-key-for-tests",
       AI_USER_DAILY_LIMIT: "20",
       AI_DAILY_LIMIT: "100",
     });
     delete process.env.VERCEL;
     delete process.env.VERCEL_URL;
+    delete process.env.VERCEL_ENV;
     globalThis.fetch = async (input, options) => {
       const url = new URL(
         typeof input === "string" ? input : input.url || String(input),

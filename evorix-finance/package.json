@@ -12,6 +12,8 @@
     "db:transfer:aiven": "node --env-file=.env --env-file=.env.aiven server/transfer-aiven.js",
     "db:bootstrap:aiven-app": "node --env-file=.env --env-file=.env.aiven server/bootstrap-aiven-app.js",
     "dev:api:aiven": "node --watch --env-file=.env.aiven.runtime server/index.js",
+    "dev:api:qa": "node --watch --env-file=.env.qa server/index.js",
+    "db:provision:qa": "node --env-file=.env.aiven server/provision-qa.js",
     "build": "node scripts/build.mjs",
     "lint": "eslint .",
     "test": "node --test tests/unit.test.mjs",

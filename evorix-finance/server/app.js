@@ -82,7 +82,9 @@ app.use("/api/portfolio", portfolioRouter);
 app.use("/api/favorites", favoritesRouter);
 app.use("/api/rankings/drafts", researchDraftRouter);
 app.use("/api/rankings", rankingRouter);
-app.use("/api/assistant", assistantRouter);
+if (config.assistantFeatureEnabled) {
+  app.use("/api/assistant", assistantRouter);
+}
 app.use("/api/support", supportRouter);
 app.use("/api/learning", learningRouter);
 app.use("/api/admin", adminRouter);

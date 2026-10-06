@@ -10,6 +10,7 @@ import { apiRequest } from "../lib/api";
 import { useAuth } from "../context/authContext";
 import { AccountGate } from "../components/AccountGate";
 import { OrbitCoins } from "../components/OrbitCoins";
+import { assistantEnabled } from "../lib/features";
 
 type Lesson = {
   id: string;
@@ -278,18 +279,20 @@ function LearningSession() {
                 </p>
               )}
             </fieldset>
-            <button
-              className="mt-4 inline-flex min-h-11 items-center gap-2 text-sm text-evo-accent"
-              onClick={() =>
-                window.dispatchEvent(
-                  new CustomEvent("ediv-assistant-question", {
-                    detail: "Explique de forma educativa: " + lesson.title,
-                  }),
-                )
-              }
-            >
-              <MessageCircle size={16} /> Pedir uma explicação ao assistente
-            </button>
+            {assistantEnabled && (
+              <button
+                className="mt-4 inline-flex min-h-11 items-center gap-2 text-sm text-evo-accent"
+                onClick={() =>
+                  window.dispatchEvent(
+                    new CustomEvent("ediv-assistant-question", {
+                      detail: "Explique de forma educativa: " + lesson.title,
+                    }),
+                  )
+                }
+              >
+                <MessageCircle size={16} /> Pedir uma explicação ao assistente
+              </button>
+            )}
           </section>
         ),
       )}

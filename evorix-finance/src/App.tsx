@@ -72,7 +72,14 @@ const IncomeRanking = lazy(() =>
     default: module.IncomeRanking,
   })),
 );
-import { EdivAssistant } from "./components/EdivAssistant";
+import { assistantEnabled, qaEnvironment } from "./lib/features";
+const EdivAssistant = assistantEnabled
+  ? lazy(() =>
+      import("./components/EdivAssistant").then((module) => ({
+        default: module.EdivAssistant,
+      })),
+    )
+  : null;
 
 const Aprender = lazy(() =>
   import("./pages/Aprender").then((module) => ({ default: module.Aprender })),
@@ -93,6 +100,12 @@ const Suporte = lazy(() =>
 function App() {
   return (
     <BrowserRouter>
+      {qaEnvironment && (
+        <aside className="border-b border-evo-accent/30 bg-evo-card px-4 py-3 text-center text-xs text-evo-textMain">
+          <strong>Ambiente QA</strong> · Versão de avaliação com assistente
+          experimental. Use apenas dados fictícios nos testes.
+        </aside>
+      )}
       <AuthProvider>
         <FavoritesProvider>
           <PageErrorBoundary>
@@ -200,7 +213,11 @@ function App() {
               </Routes>
             </Suspense>
           </PageErrorBoundary>
-          <EdivAssistant />
+          {EdivAssistant && (
+            <Suspense fallback={null}>
+              <EdivAssistant />
+            </Suspense>
+          )}
         </FavoritesProvider>
       </AuthProvider>
     </BrowserRouter>

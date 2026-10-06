@@ -14,6 +14,7 @@ import { RankingHighlights } from "../components/RankingHighlights";
 import { SiteFooter, SiteHeader } from "../components/SiteChrome";
 import { useAuth } from "../context/authContext";
 import { authLink } from "../lib/authDestination";
+import { assistantEnabled } from "../lib/features";
 
 const currency = new Intl.NumberFormat("pt-BR", {
   style: "currency",
@@ -98,9 +99,10 @@ export function Home() {
               <div>
                 <h2 className="font-semibold">Aprenda antes de decidir</h2>
                 <p className="mt-2 text-sm leading-relaxed text-evo-textSec">
-                  Aulas curtas, glossário e um assistente educativo ajudam você
-                  a entender o que está vendo. Sua carteira continua sob seu
-                  controle.
+                  {assistantEnabled
+                    ? "Aulas curtas, glossário e um assistente educativo ajudam você a entender o que está vendo."
+                    : "Aulas curtas e glossário ajudam você a entender o que está vendo."}{" "}
+                  Sua carteira continua sob seu controle.
                 </p>
               </div>
             </div>

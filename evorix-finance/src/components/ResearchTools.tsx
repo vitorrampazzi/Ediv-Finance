@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { apiRequest } from "../lib/api";
+import { assistantEnabled } from "../lib/features";
 import type { RankingFundamentalData } from "./RankingFundamentals";
 export type ResearchEntry = RankingFundamentalData & {
   rank: number;
@@ -59,22 +60,24 @@ export function IndicatorHelp({ field }: { field: string }) {
         Entender este indicador
       </summary>
       <p className="mt-2 leading-relaxed text-evo-textSec">{text}</p>
-      <button
-        type="button"
-        className="mt-2 min-h-11 underline"
-        onClick={() =>
-          window.dispatchEvent(
-            new CustomEvent("ediv-assistant-question", {
-              detail:
-                "Explique o conceito de " +
-                labels[field] +
-                " e os cuidados ao interpretar esse indicador, sem recomendar investimentos.",
-            }),
-          )
-        }
-      >
-        Continuar a dúvida no assistente
-      </button>
+      {assistantEnabled && (
+        <button
+          type="button"
+          className="mt-2 min-h-11 underline"
+          onClick={() =>
+            window.dispatchEvent(
+              new CustomEvent("ediv-assistant-question", {
+                detail:
+                  "Explique o conceito de " +
+                  labels[field] +
+                  " e os cuidados ao interpretar esse indicador, sem recomendar investimentos.",
+              }),
+            )
+          }
+        >
+          Continuar a dúvida no assistente
+        </button>
+      )}
     </details>
   );
 }

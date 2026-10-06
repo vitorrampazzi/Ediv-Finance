@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "../context/authContext";
 import { apiRequest } from "../lib/api";
+import { assistantEnabled } from "../lib/features";
 type Information = {
   email: string;
   hours: string;
@@ -69,7 +70,7 @@ export function Privacidade() {
     <section className="mx-auto max-w-4xl space-y-8 px-5 py-12">
       <header>
         <p className="text-sm text-evo-accent">
-          Transparência · versão de 05/10/2026
+          Transparência · versão de 06/10/2026
         </p>
         <h1 className="mt-2 text-3xl font-bold">
           Privacidade e uso da plataforma
@@ -88,10 +89,14 @@ export function Privacidade() {
           "Fornecedores e transmissão",
           "O aplicativo é hospedado na Vercel e usa MySQL gerenciado para os dados. E-mails de confirmação e recuperação passam pelo serviço transacional configurado. Consultas de mercado enviam tickers ao provedor de cotações. Estes fornecedores podem tratar dados fora do Brasil conforme seus serviços.",
         ],
-        [
-          "Assistente educativo",
-          "A IA é opcional. Após sua confirmação no chat, a pergunta e o histórico recente são enviados ao Google Gemini. No plano gratuito, o conteúdo pode ser usado para melhorar serviços e passar por revisão humana. A Ediv não envia automaticamente sua carteira ou perfil e não grava esse histórico no banco. Respostas podem conter erros; confira fontes oficiais. A opção local processa perguntas apenas no navegador.",
-        ],
+        ...(assistantEnabled
+          ? [
+              [
+                "Assistente educativo experimental",
+                "Disponível neste ambiente de avaliação. Após sua confirmação no chat, a pergunta e o histórico recente são enviados ao Google Gemini. No plano gratuito, o conteúdo pode ser usado para melhorar serviços e passar por revisão humana. A Ediv não envia automaticamente sua carteira ou perfil e não grava esse histórico no banco. Respostas podem conter erros; confira fontes oficiais. A opção local processa perguntas apenas no navegador.",
+              ],
+            ]
+          : []),
         [
           "Compartilhamento com a equipe",
           "Ao abrir uma conversa, você pode autorizar a visualização das operações da sua carteira pela equipe. A escolha vem desmarcada e pode ser revogada. As mensagens escritas por você continuam no atendimento até a exclusão da conta. Não envie senhas ou dados desnecessários.",

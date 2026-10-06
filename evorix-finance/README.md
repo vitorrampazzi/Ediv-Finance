@@ -126,3 +126,9 @@ Após a transferência, `npm run db:bootstrap:aiven-app` cria o usuário de runt
 ## Escopo e próximos passos
 
 Este backend registra operações manuais de carteira, mas não envia ordens nem movimenta dinheiro. O valor total que o usuário informa é exibido como declaração pessoal; a estimativa de mercado usa apenas posições com quantidade cadastrada e cotação disponível. Preços podem atrasar ou falhar e não são saldo de corretora. Recuperação de senha, exclusão/exportação de conta e encerramento de sessões estão disponíveis. Não há MFA, pagamentos, conexão automática com corretoras, KYC ou trilha de auditoria financeira certificada. Antes de publicar, defina requisitos de privacidade, licença de dados, política de retenção, monitoramento e resposta a incidentes, e faça revisão de segurança independente.
+
+## Ambientes de publicação
+
+`main` publica o site sem assistente. `QA` mantém o assistente experimental em
+Preview, com banco separado e dados fictícios. Consulte [AMBIENTES.md](docs/AMBIENTES.md)
+para configuração e fluxo de trabalho.

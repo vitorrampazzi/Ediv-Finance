@@ -1,5 +1,6 @@
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
+import { assistantFeatureEnabled } from "../deployment-policy.mjs";
 
 const isProduction = process.env.NODE_ENV === "production";
 
@@ -10,13 +11,21 @@ function required(name) {
 }
 
 const projectProductionUrl = process.env.VERCEL_PROJECT_PRODUCTION_URL?.trim();
+const isQaDeployment =
+  process.env.VERCEL_ENV === "preview" &&
+  process.env.VERCEL_GIT_COMMIT_REF === "QA";
+const qaHostname =
+  process.env.VERCEL_BRANCH_URL?.trim() || process.env.VERCEL_URL?.trim();
 const appBaseUrl =
+  (isQaDeployment && qaHostname ? `https://${qaHostname}` : null) ||
   process.env.APP_BASE_URL?.trim().replace(/\/$/, "") ||
   (projectProductionUrl
     ? `https://${projectProductionUrl}`
     : "http://localhost:5173");
 const appOriginValues = (
-  process.env.APP_ORIGIN?.trim() || new URL(appBaseUrl).origin
+  (isQaDeployment
+    ? new URL(appBaseUrl).origin
+    : process.env.APP_ORIGIN?.trim()) || new URL(appBaseUrl).origin
 )
   .split(",")
   .map((value) => value.trim())
@@ -36,6 +45,13 @@ const mysqlSslCa =
 
 if (!appOrigins.includes(parsedAppUrl.origin)) {
   throw new Error("APP_ORIGIN must include the origin of APP_BASE_URL.");
+}
+
+if (
+  isQaDeployment &&
+  process.env.MYSQL_DATABASE?.trim() !== "ediv_finance_qa"
+) {
+  throw new Error("QA requires the isolated ediv_finance_qa database.");
 }
 
 if (isProduction) {
@@ -82,7 +98,9 @@ export const config = Object.freeze({
     1000,
     Math.max(1, Number(process.env.AI_DAILY_LIMIT || 100) || 100),
   ),
-  aiAssistantEnabled: process.env.AI_ASSISTANT_ENABLED === "true",
+  assistantFeatureEnabled: assistantFeatureEnabled(),
+  aiAssistantEnabled:
+    assistantFeatureEnabled() && process.env.AI_ASSISTANT_ENABLED === "true",
   aiUserDailyLimit: Math.min(
     100,
     Math.max(
