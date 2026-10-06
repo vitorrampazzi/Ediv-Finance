@@ -1,12 +1,12 @@
 import { randomBytes, randomUUID, createHash } from "node:crypto";
 import argon2 from "argon2";
-import nodemailer from "nodemailer";
 import { Router } from "express";
 import { rateLimit } from "express-rate-limit";
 import { z } from "zod";
 import { config } from "./config.js";
 import { pool } from "./database.js";
 import { MysqlLimitStore } from "./limit-store.js";
+import { smtp, accountEmail } from "./mail.js";
 import {
   permissionsForRole,
   lockAccessControl,
@@ -21,7 +21,6 @@ const ARGON_OPTIONS = {
 };
 const SESSION_TOKEN_PATTERN = /^[A-Za-z0-9_-]{43}$/;
 const dummyPasswordHash = argon2.hash(randomBytes(32), ARGON_OPTIONS);
-const smtp = config.smtpUrl ? nodemailer.createTransport(config.smtpUrl) : null;
 const router = Router();
 
 const registerSchema = z
@@ -181,6 +180,12 @@ async function sendVerification(email, name, token, next) {
     to: email,
     subject: "Confirme seu e-mail — Ediv Finance",
     text: `Olá, ${name}.\n\nPara confirmar seu endereço de e-mail, abra este link em até 30 minutos:\n${link}\n\nSe você não solicitou este cadastro, ignore esta mensagem.`,
+    html: accountEmail({
+      heading: "Confirme seu e-mail",
+      introduction: `Olá, ${name}. Confirme seu endereço para acessar sua conta gratuita na Ediv Finance.`,
+      link,
+      action: "Confirmar meu e-mail",
+    }),
   });
   return {};
 }
@@ -282,7 +287,7 @@ router.post("/register", registrationLimiter, async (req, res) => {
     );
     return res.status(503).json({
       error:
-        "Não foi possível enviar o e-mail de confirmação. Tente novamente mais tarde.",
+        "Não foi possível enviar o e-mail de confirmação. Aguarde um pouco e use Reenviar confirmação; não é necessário repetir o cadastro.",
     });
   }
 
@@ -567,6 +572,13 @@ router.post("/password/forgot", recoveryLimiter, async (req, res) => {
           to: rows[0].email,
           subject: "Redefina sua senha — Ediv Finance",
           text: `Use o link em até 30 minutos: ${url}\nSe não solicitou, ignore. Sua senha não mudou.`,
+          html: accountEmail({
+            heading: "Redefina sua senha",
+            introduction:
+              "Recebemos um pedido para redefinir sua senha. Ela só será alterada após você abrir o link e escolher uma nova senha.",
+            link: String(url),
+            action: "Escolher nova senha",
+          }),
         });
       } catch (error) {
         console.error(

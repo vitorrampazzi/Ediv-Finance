@@ -324,7 +324,7 @@ export function SiteFooter() {
             constituem recomendação de investimento.
           </p>
           <p className="mt-4 text-xs text-evo-textSec">
-            © {new Date().getFullYear()} Ediv Finance.
+            © {new Date().getFullYear()} Ediv Finance. · Versão beta
           </p>
         </div>
       </div>

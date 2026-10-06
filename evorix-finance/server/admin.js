@@ -5,6 +5,9 @@ import { rateLimit } from "express-rate-limit";
 import { pool } from "./database.js";
 import { requireAuthenticatedUser } from "./auth.js";
 import { MysqlLimitStore } from "./limit-store.js";
+import { config } from "./config.js";
+import { researchStatus } from "./research-status.js";
+import { emailConfiguration, verifyEmailConnection } from "./mail.js";
 import {
   requirePermission,
   lockAccessControl,
@@ -22,6 +25,49 @@ const limiter = rateLimit({
   message: { error: "Muitas alterações de acesso. Aguarde alguns minutos." },
 });
 const roles = z.enum(["USER", "ANALYST", "ADMIN"]);
+const emailCheckLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  limit: 3,
+  store: new MysqlLimitStore("launch-email-check"),
+  standardHeaders: "draft-8",
+  legacyHeaders: false,
+  message: {
+    error: "Aguarde alguns minutos antes de verificar o e-mail novamente.",
+  },
+});
+
+router.get("/launch", async (_req, res) => {
+  const research = await researchStatus();
+  const hostname = new URL(config.appBaseUrl).hostname;
+  res.json({
+    appUrl: config.appBaseUrl,
+    environment: config.isQaDeployment
+      ? "QA"
+      : config.isProduction
+        ? "Produção"
+        : "Local",
+    researchPublished: research.published,
+    email: emailConfiguration(),
+    customDomain:
+      !hostname.endsWith(".vercel.app") &&
+      hostname !== "localhost" &&
+      hostname !== "127.0.0.1",
+    professionalIdentified: Boolean(
+      config.professionalName &&
+      config.professionalCategory &&
+      config.professionalRegistration,
+    ),
+    supportConfigured: Boolean(config.supportEmail && config.supportHours),
+  });
+});
+router.post(
+  "/launch/email-check",
+  requirePermission("users:manage"),
+  emailCheckLimiter,
+  async (_req, res) => {
+    res.json(await verifyEmailConnection());
+  },
+);
 const querySchema = z.object({
   page: z.coerce.number().int().min(1).max(100000).default(1),
   q: z.string().trim().max(120).default(""),
@@ -120,11 +166,9 @@ router.patch(
         !actor.email_verified_at
       ) {
         await connection.rollback();
-        return res
-          .status(403)
-          .json({
-            error: "Seu acesso administrativo foi alterado. Entre novamente.",
-          });
+        return res.status(403).json({
+          error: "Seu acesso administrativo foi alterado. Entre novamente.",
+        });
       }
       const [targets] = await connection.execute(
         "SELECT u.id,u.name,u.email,u.created_at,u.email_verified_at,a.role,a.blocked_at FROM users u LEFT JOIN user_access a ON a.user_id=u.id WHERE u.id=? FOR UPDATE",
@@ -152,21 +196,17 @@ router.patch(
       }
       if (target.id === req.authenticatedUser.id) {
         await connection.rollback();
-        return res
-          .status(409)
-          .json({
-            error:
-              "Altere seu perfil ou bloqueio usando outra conta Administrador. Você não pode remover seu próprio acesso aqui.",
-          });
+        return res.status(409).json({
+          error:
+            "Altere seu perfil ou bloqueio usando outra conta Administrador. Você não pode remover seu próprio acesso aqui.",
+        });
       }
       if (after.role !== "USER" && !target.email_verified_at) {
         await connection.rollback();
-        return res
-          .status(409)
-          .json({
-            error:
-              "A conta precisa confirmar o e-mail antes de receber acesso à equipe.",
-          });
+        return res.status(409).json({
+          error:
+            "A conta precisa confirmar o e-mail antes de receber acesso à equipe.",
+        });
       }
       if (
         before.role === "ADMIN" &&
@@ -176,12 +216,10 @@ router.patch(
         (await activeAdministratorCount(connection)) <= 1
       ) {
         await connection.rollback();
-        return res
-          .status(409)
-          .json({
-            error:
-              "Mantenha ao menos um Administrador ativo com e-mail confirmado.",
-          });
+        return res.status(409).json({
+          error:
+            "Mantenha ao menos um Administrador ativo com e-mail confirmado.",
+        });
       }
       await connection.execute(
         "INSERT INTO user_access(user_id,role,blocked_at) VALUES(?,?,IF(?,UTC_TIMESTAMP(3),NULL)) ON DUPLICATE KEY UPDATE role=?,blocked_at=IF(?,COALESCE(blocked_at,UTC_TIMESTAMP(3)),NULL)",

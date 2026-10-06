@@ -7,6 +7,7 @@ import {
 import { Link, useLocation } from "react-router-dom";
 import { AccountGate } from "./AccountGate";
 import { OrbitCoins } from "./OrbitCoins";
+import { ResearchAvailability } from "./ResearchAvailability";
 
 export function RankingAccessLanding({
   compact = false,
@@ -45,6 +46,7 @@ export function RankingAccessLanding({
               consulte os dados que ajudam a entender o negócio. O acesso ao
               ranking é exclusivo para quem criar uma conta gratuita e entrar.
             </p>
+            <ResearchAvailability />
           </div>
           <div className="shrink-0 self-end sm:self-center">
             <OrbitCoins variant="ranking" size={compact ? "sm" : "hero"} />
