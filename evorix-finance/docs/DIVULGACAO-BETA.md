@@ -5,7 +5,7 @@
 - Produção, para visitantes: https://evorix-finance.vercel.app/
 - QA, para avaliação interna: https://ediv-finance-git-qa-vitors-projects-7b84bd52.vercel.app/
 
-O domínio próprio ficará para depois. O site publicado funciona sem o computador do desenvolvedor ligado.
+O domínio `escoladodividendo.com.br` está em configuração no Registro.br, Vercel e Resend. Consulte [o estado e os registros necessários](DOMINIO.md). Até confirmar DNS e HTTPS, o endereço de produção acima continua sendo o link funcional. O site publicado funciona sem o computador do desenvolvedor ligado.
 
 **Pendência identificada em 06/10/2026:** a conexão e autenticação SMTP passaram no diagnóstico em produção, mas o domínio do remetente ainda é `resend.dev`. Esse domínio só permite testes para o e-mail do dono da conta Resend. Novos cadastros públicos ficam em preparação até usar um domínio verificado no remetente; o login de contas confirmadas continua disponível. A home direciona visitantes à primeira aula. QA mantém os cadastros de avaliação com links locais de confirmação.
 
@@ -64,9 +64,9 @@ Faça um novo deploy e confira `/suporte`. Preencher as variáveis não verifica
 
 Finalize a identificação do responsável pela plataforma e a política de retenção e de backups descritas em `/privacidade`. Essas condições dependem do responsável e não foram inventadas pelo desenvolvimento.
 
-### 4. Domínio próprio, depois
+### 4. Domínio próprio
 
-1. Informe o domínio completo e quem administra o DNS.
+1. Domínio confirmado: `escoladodividendo.com.br`; DNS administrado pelo Registro.br. Estado da configuração em [DOMINIO.md](DOMINIO.md).
 2. Adicione o domínio ao projeto **ediv-finance** na Vercel.
 3. O dono configura os registros que a Vercel mostrar, preservando os registros de e-mail existentes.
 4. Após a validação, ajuste `APP_BASE_URL` e `APP_ORIGIN` para o HTTPS final em Production e faça novo deploy.
