@@ -51,25 +51,43 @@ export function Analises({ publicView = false }: { publicView?: boolean }) {
     <section
       className={`mx-auto max-w-7xl space-y-6 ${publicView ? "px-5 py-6 md:px-8 md:py-10" : ""}`}
     >
-      <div className="relative flex flex-col items-start justify-between gap-4 overflow-hidden rounded-xl border border-evo-border bg-evo-card p-5 sm:flex-row sm:items-center sm:p-6">
-        <div
-          className="pointer-events-none absolute inset-0 bg-gradient-to-r from-evo-green/5 via-transparent to-evo-accent/5"
-          aria-hidden="true"
-        />
+      <div
+        className={
+          publicView
+            ? "relative flex flex-col items-start justify-between gap-4 overflow-hidden rounded-xl border border-evo-border bg-evo-card p-5 sm:flex-row sm:items-center sm:p-6"
+            : "relative flex items-start justify-between gap-5 border-b border-evo-border pb-8 sm:pb-10"
+        }
+      >
+        {publicView && (
+          <div
+            className="pointer-events-none absolute inset-0 bg-gradient-to-r from-evo-green/5 via-transparent to-evo-accent/5"
+            aria-hidden="true"
+          />
+        )}
         <div className="relative z-10 min-w-0">
           <p className="text-xs font-semibold uppercase tracking-[.18em] text-evo-accent">
-            Mercado brasileiro
+            {publicView ? "Mercado brasileiro" : "Caderno de mercado / B3"}
           </p>
-          <h1 className="mt-2 text-2xl font-bold tracking-tight text-evo-textMain">
-            Ativos negociados na B3
+          <h1
+            className={
+              publicView
+                ? "mt-2 text-2xl font-bold tracking-tight text-evo-textMain"
+                : "mt-3 text-3xl font-semibold leading-tight tracking-[-.04em] text-evo-textMain sm:text-5xl"
+            }
+          >
+            {publicView
+              ? "Ativos negociados na B3"
+              : "O mercado, em perspectiva."}
           </h1>
-          <p className="mt-2 max-w-3xl text-sm leading-relaxed text-evo-textSec">
+          <p className="mt-3 max-w-2xl text-sm leading-relaxed text-evo-textSec">
             Pesquise ações, units, fundos, ETFs e BDRs. Os preços são
             informativos e não representam execução de ordens nem recomendação
             de investimento.
           </p>
         </div>
-        <div className="relative z-10 shrink-0 self-end sm:self-center">
+        <div
+          className={`relative z-10 shrink-0 ${publicView ? "self-end sm:self-center" : "self-start opacity-80"}`}
+        >
           <OrbitCoins variant="real" size="sm" />
         </div>
       </div>
@@ -155,93 +173,209 @@ export function Analises({ publicView = false }: { publicView?: boolean }) {
         )}
       </div>
 
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
-        {assets.map((asset) => {
-          const percentage =
-            asset.changePercent === null ? null : Number(asset.changePercent);
-          const favorite = isFavorito(asset.symbol);
-          return (
-            <Card
-              key={asset.symbol}
-              glow="none"
-              className="relative flex flex-col gap-4"
-            >
-              {user ? (
-                <button
-                  type="button"
-                  aria-label={
-                    favorite
-                      ? `Remover ${asset.symbol} dos favoritos`
-                      : `Adicionar ${asset.symbol} aos favoritos`
-                  }
-                  aria-pressed={favorite}
-                  onClick={() => void toggleFavorito(asset.symbol)}
-                  className={`absolute right-4 top-4 rounded p-1 ${favorite ? "text-yellow-400" : "text-evo-textSec hover:text-yellow-400"}`}
-                >
-                  <Star size={18} fill={favorite ? "currentColor" : "none"} />
-                </button>
-              ) : (
-                <Link
-                  to="/entrar"
-                  title="Entre para salvar nos favoritos"
-                  className="absolute right-4 top-4 rounded p-1 text-evo-textSec"
-                >
-                  <Star size={18} />
-                </Link>
-              )}
-              <div className="pr-8">
-                <h2 className="font-bold text-evo-textMain">{asset.symbol}</h2>
-                <p className="mt-1 line-clamp-2 min-h-8 text-xs text-evo-textSec">
-                  {asset.name}
-                </p>
-              </div>
-              <div className="flex flex-wrap items-end justify-between gap-2">
-                <div>
-                  <span className="block text-[11px] text-evo-textSec">
-                    Preço informado
-                  </span>
-                  <strong className="font-numbers text-xl">
-                    {money.format(Number(asset.price))}
-                  </strong>
+      {publicView ? (
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
+          {assets.map((asset) => {
+            const percentage =
+              asset.changePercent === null ? null : Number(asset.changePercent);
+            const favorite = isFavorito(asset.symbol);
+            return (
+              <Card
+                key={asset.symbol}
+                glow="none"
+                className="relative flex flex-col gap-4"
+              >
+                {user ? (
+                  <button
+                    type="button"
+                    aria-label={
+                      favorite
+                        ? `Remover ${asset.symbol} dos favoritos`
+                        : `Adicionar ${asset.symbol} aos favoritos`
+                    }
+                    aria-pressed={favorite}
+                    onClick={() => void toggleFavorito(asset.symbol)}
+                    className={`absolute right-4 top-4 rounded p-1 ${favorite ? "text-yellow-400" : "text-evo-textSec hover:text-yellow-400"}`}
+                  >
+                    <Star size={18} fill={favorite ? "currentColor" : "none"} />
+                  </button>
+                ) : (
+                  <Link
+                    to="/entrar"
+                    title="Entre para salvar nos favoritos"
+                    className="absolute right-4 top-4 rounded p-1 text-evo-textSec"
+                  >
+                    <Star size={18} />
+                  </Link>
+                )}
+                <div className="pr-8">
+                  <h2 className="font-bold text-evo-textMain">
+                    {asset.symbol}
+                  </h2>
+                  <p className="mt-1 line-clamp-2 min-h-8 text-xs text-evo-textSec">
+                    {asset.name}
+                  </p>
                 </div>
-                <p
-                  className={`flex items-center gap-1 text-sm font-medium ${percentage === null ? "text-evo-textSec" : percentage >= 0 ? "text-evo-green" : "text-evo-red"}`}
+                <div className="flex flex-wrap items-end justify-between gap-2">
+                  <div>
+                    <span className="block text-[11px] text-evo-textSec">
+                      Preço informado
+                    </span>
+                    <strong className="font-numbers text-xl">
+                      {money.format(Number(asset.price))}
+                    </strong>
+                  </div>
+                  <p
+                    className={`flex items-center gap-1 text-sm font-medium ${percentage === null ? "text-evo-textSec" : percentage >= 0 ? "text-evo-green" : "text-evo-red"}`}
+                  >
+                    {percentage === null ? (
+                      "—"
+                    ) : (
+                      <>
+                        {percentage >= 0 ? (
+                          <ArrowUp size={14} />
+                        ) : (
+                          <ArrowDown size={14} />
+                        )}
+                        {percentage > 0 ? "+" : ""}
+                        {percentage.toLocaleString("pt-BR", {
+                          minimumFractionDigits: 2,
+                          maximumFractionDigits: 2,
+                        })}
+                        %
+                      </>
+                    )}
+                  </p>
+                </div>
+                <div className="mt-auto flex flex-wrap items-center justify-between gap-2 border-t border-evo-border pt-3 text-[11px] text-evo-textSec">
+                  <span>{asset.sector || asset.subType || "B3"}</span>
+                  <span>
+                    {asset.volume
+                      ? `Volume ${Number(asset.volume).toLocaleString("pt-BR")}`
+                      : "Volume indisponível"}
+                  </span>
+                </div>
+              </Card>
+            );
+          })}
+        </div>
+      ) : (
+        <div aria-busy={loading}>
+          <div
+            aria-hidden="true"
+            className="hidden grid-cols-[minmax(0,1.3fr)_minmax(8rem,.8fr)_minmax(7rem,.6fr)_minmax(8rem,.8fr)_3rem] gap-5 border-b border-evo-border pb-3 text-[11px] font-medium uppercase tracking-[.13em] text-evo-textSec md:grid"
+          >
+            <span>Ativo / setor</span>
+            <span className="text-right">Preço informado</span>
+            <span className="text-right">Variação</span>
+            <span className="text-right">Volume informado</span>
+            <span className="sr-only">Favorito</span>
+          </div>
+          <ul
+            aria-label="Ativos encontrados"
+            className="divide-y divide-evo-border border-b border-evo-border"
+          >
+            {assets.map((asset) => {
+              const percentage =
+                asset.changePercent === null
+                  ? null
+                  : Number(asset.changePercent);
+              const favorite = isFavorito(asset.symbol);
+              return (
+                <li
+                  key={asset.symbol}
+                  className="grid grid-cols-[minmax(0,1fr)_auto_2.75rem] items-center gap-x-3 gap-y-3 py-5 transition-colors hover:bg-evo-bgSec/30 md:grid-cols-[minmax(0,1.3fr)_minmax(8rem,.8fr)_minmax(7rem,.6fr)_minmax(8rem,.8fr)_3rem] md:gap-x-5 md:py-6"
                 >
-                  {percentage === null ? (
-                    "—"
-                  ) : (
-                    <>
-                      {percentage >= 0 ? (
-                        <ArrowUp size={14} />
-                      ) : (
-                        <ArrowDown size={14} />
-                      )}
-                      {percentage > 0 ? "+" : ""}
-                      {percentage.toLocaleString("pt-BR", {
-                        minimumFractionDigits: 2,
-                        maximumFractionDigits: 2,
-                      })}
-                      %
-                    </>
-                  )}
-                </p>
-              </div>
-              <div className="mt-auto flex flex-wrap items-center justify-between gap-2 border-t border-evo-border pt-3 text-[11px] text-evo-textSec">
-                <span>{asset.sector || asset.subType || "B3"}</span>
-                <span>
-                  {asset.volume
-                    ? `Volume ${Number(asset.volume).toLocaleString("pt-BR")}`
-                    : "Volume indisponível"}
-                </span>
-              </div>
-            </Card>
-          );
-        })}
-      </div>
+                  <div className="col-start-1 row-start-1 min-w-0">
+                    <h2 className="text-base font-semibold tracking-tight text-evo-textMain">
+                      {asset.symbol}
+                    </h2>
+                    <p
+                      className="mt-1 truncate text-xs text-evo-textSec"
+                      title={asset.name}
+                    >
+                      {asset.name}
+                    </p>
+                    <p className="mt-1 hidden text-[11px] text-evo-textSec/75 md:block">
+                      {asset.sector || asset.subType || "B3"}
+                    </p>
+                  </div>
+                  <p className="col-start-2 row-start-1 text-right">
+                    <span className="sr-only">Preço informado: </span>
+                    <strong className="font-numbers text-base font-medium text-evo-textMain sm:text-lg">
+                      {money.format(Number(asset.price))}
+                    </strong>
+                  </p>
+                  <p
+                    className={`col-start-2 row-start-2 flex items-center justify-end gap-1 whitespace-nowrap font-numbers text-xs font-medium md:col-start-3 md:row-start-1 md:text-sm ${percentage === null ? "text-evo-textSec" : percentage >= 0 ? "text-evo-green" : "text-evo-red"}`}
+                  >
+                    <span className="sr-only">Variação informada: </span>
+                    {percentage === null ? (
+                      "Indisponível"
+                    ) : (
+                      <>
+                        {percentage >= 0 ? (
+                          <ArrowUp size={14} aria-hidden="true" />
+                        ) : (
+                          <ArrowDown size={14} aria-hidden="true" />
+                        )}
+                        {percentage > 0 ? "+" : ""}
+                        {percentage.toLocaleString("pt-BR", {
+                          minimumFractionDigits: 2,
+                          maximumFractionDigits: 2,
+                        })}
+                        %
+                      </>
+                    )}
+                  </p>
+                  <p className="col-start-1 row-start-2 text-[11px] text-evo-textSec md:col-start-4 md:row-start-1 md:text-right md:text-xs">
+                    <span className="md:hidden">Volume </span>
+                    <span className="sr-only hidden md:inline">
+                      Volume informado:{" "}
+                    </span>
+                    {asset.volume !== null
+                      ? Number(asset.volume).toLocaleString("pt-BR")
+                      : "indisponível"}
+                  </p>
+                  <div className="col-start-3 row-start-1 flex justify-end md:col-start-5">
+                    {user ? (
+                      <button
+                        type="button"
+                        aria-label={
+                          favorite
+                            ? `Remover ${asset.symbol} dos favoritos`
+                            : `Adicionar ${asset.symbol} aos favoritos`
+                        }
+                        aria-pressed={favorite}
+                        onClick={() => void toggleFavorito(asset.symbol)}
+                        className={`inline-flex min-h-11 min-w-11 items-center justify-center rounded-full transition-colors hover:bg-evo-bgSec ${favorite ? "text-yellow-400" : "text-evo-textSec hover:text-yellow-400"}`}
+                      >
+                        <Star
+                          size={18}
+                          fill={favorite ? "currentColor" : "none"}
+                          aria-hidden="true"
+                        />
+                      </button>
+                    ) : (
+                      <Link
+                        to="/entrar"
+                        aria-label={`Entre para salvar ${asset.symbol} nos favoritos`}
+                        className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-full text-evo-textSec hover:bg-evo-bgSec"
+                      >
+                        <Star size={18} aria-hidden="true" />
+                      </Link>
+                    )}
+                  </div>
+                </li>
+              );
+            })}
+          </ul>
+        </div>
+      )}
       {!loading && assets.length === 0 && !error && (
-        <Card glow="none" className="text-sm text-evo-textSec">
+        <p className="border-y border-evo-border py-10 text-sm text-evo-textSec">
           Nenhum ativo corresponde à sua busca.
-        </Card>
+        </p>
       )}
 
       <div className="flex flex-wrap items-center justify-between gap-3 border-t border-evo-border pt-4">

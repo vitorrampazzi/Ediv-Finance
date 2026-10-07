@@ -85,6 +85,21 @@ const pageTitles: Record<string, string> = {
   "/app/admin": "Administração",
 };
 
+const navigationGroups = [
+  {
+    label: "Pesquisa e aprendizado",
+    items: navigation.filter((item) =>
+      ["/app/ranking", "/app/aprender", "/app/analises"].includes(item.to),
+    ),
+  },
+  {
+    label: "Seu acompanhamento",
+    items: navigation.filter((item) =>
+      ["/app", "/app/carteira", "/app/favoritos"].includes(item.to),
+    ),
+  },
+];
+
 function NavigationLink({
   to,
   label,
@@ -103,11 +118,12 @@ function NavigationLink({
       to={to}
       end={end}
       title={collapsed ? label : undefined}
+      aria-label={collapsed ? label : undefined}
       className={({ isActive }) =>
-        `flex min-h-11 items-center gap-3 rounded-lg px-3 py-2.5 text-sm transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-evo-accent ${collapsed ? "justify-center" : ""} ${isActive ? "border border-evo-accent/20 bg-evo-accent/10 text-evo-accent" : "text-evo-textSec hover:bg-evo-card hover:text-evo-textMain"}`
+        `relative flex min-h-11 items-center gap-3 border-l-2 px-3 py-2.5 text-sm transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-evo-accent ${collapsed ? "justify-center" : ""} ${isActive ? "border-evo-green bg-white/[0.03] text-evo-textMain" : "border-transparent text-evo-textSec hover:bg-white/[0.03] hover:text-evo-textMain"}`
       }
     >
-      <Icon size={20} aria-hidden="true" />
+      <Icon size={18} strokeWidth={1.6} aria-hidden="true" />
       {!collapsed && <span className="font-medium">{label}</span>}
     </NavLink>
   );
@@ -265,7 +281,7 @@ export const DashboardLayout = () => {
   const title = pageTitles[location.pathname] ?? "Ediv Finance";
 
   return (
-    <div className="flex min-h-screen bg-evo-bgMain font-sans text-evo-textMain">
+    <div className="account-workspace flex min-h-screen bg-evo-bgMain font-sans text-evo-textMain">
       <a
         href="#conteudo"
         className="sr-only z-50 rounded bg-evo-primary px-4 py-2 text-white focus:not-sr-only focus:fixed focus:left-4 focus:top-4"
@@ -273,12 +289,12 @@ export const DashboardLayout = () => {
         Pular para o conteúdo
       </a>
       <aside
-        className={`hidden shrink-0 border-r border-evo-border bg-evo-bgSec transition-[width] duration-200 lg:sticky lg:top-0 lg:flex lg:h-screen lg:min-h-0 lg:flex-col ${collapsed ? "w-20" : "w-64"}`}
+        className={`hidden shrink-0 border-r border-evo-border/70 bg-evo-bgMain transition-[width] duration-200 motion-reduce:transition-none lg:sticky lg:top-0 lg:flex lg:h-screen lg:min-h-0 lg:flex-col ${collapsed ? "w-20" : "w-60"}`}
       >
         <Link
           to="/app"
           aria-label="Ediv Finance, visão geral"
-          className={`flex min-h-20 items-center px-5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-inset focus-visible:outline-evo-accent ${collapsed ? "justify-center" : ""}`}
+          className={`flex min-h-24 items-center px-5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-inset focus-visible:outline-evo-accent ${collapsed ? "justify-center" : ""}`}
         >
           <img
             src="/ediv-logo.png"
@@ -287,7 +303,7 @@ export const DashboardLayout = () => {
             className="h-10 w-10 shrink-0 object-contain mix-blend-screen"
           />
           {!collapsed && (
-            <span className="ml-3 text-base font-bold tracking-tight">
+            <span className="ml-3 text-base font-semibold tracking-tight">
               Ediv Finance
             </span>
           )}
@@ -296,7 +312,7 @@ export const DashboardLayout = () => {
           type="button"
           onClick={() => setCollapsed((value) => !value)}
           aria-label={collapsed ? "Expandir navegação" : "Recolher navegação"}
-          className="mx-3 mb-3 flex min-h-10 items-center justify-center gap-2 rounded-lg text-xs text-evo-textSec transition hover:bg-white/[0.04] hover:text-evo-textMain focus-visible:outline focus-visible:outline-2 focus-visible:outline-evo-accent"
+          className="mx-4 mb-5 flex min-h-10 items-center justify-center gap-2 border-y border-evo-border/60 text-xs text-evo-textSec transition hover:bg-white/[0.03] hover:text-evo-textMain focus-visible:outline focus-visible:outline-2 focus-visible:outline-evo-accent"
         >
           {collapsed ? (
             <ChevronRight size={16} aria-hidden="true" />
@@ -308,44 +324,63 @@ export const DashboardLayout = () => {
         </button>
         <nav
           aria-label="Navegação principal"
-          className="min-h-0 flex-1 space-y-1 overflow-y-auto px-3"
+          className="min-h-0 flex-1 space-y-7 overflow-y-auto px-4 pb-5"
         >
-          {navigation.map((item) => (
-            <NavigationLink key={item.to} {...item} collapsed={collapsed} />
+          {navigationGroups.map((group) => (
+            <div key={group.label} className="space-y-1">
+              {!collapsed && (
+                <p className="mb-3 px-3 text-[10px] font-medium uppercase tracking-[.14em] text-evo-textSec">
+                  {group.label}
+                </p>
+              )}
+              {group.items.map((item) => (
+                <NavigationLink key={item.to} {...item} collapsed={collapsed} />
+              ))}
+            </div>
           ))}
-          {userCan(user, "users:read") && (
-            <NavigationLink
-              to="/app/admin"
-              label="Administração"
-              icon={ShieldCheck}
-              collapsed={collapsed}
-            />
-          )}
-          {userCan(user, "support:manage") && (
-            <NavigationLink
-              to="/app/atendimentos"
-              label="Atendimentos"
-              icon={Headset}
-              collapsed={collapsed}
-            />
+          {(userCan(user, "users:read") || userCan(user, "support:manage")) && (
+            <div className="space-y-1 border-t border-evo-border/60 pt-4">
+              {!collapsed && (
+                <p className="mb-3 px-3 text-[10px] font-medium uppercase tracking-[.14em] text-evo-textSec">
+                  Gestão
+                </p>
+              )}
+              {userCan(user, "users:read") && (
+                <NavigationLink
+                  to="/app/admin"
+                  label="Administração"
+                  icon={ShieldCheck}
+                  collapsed={collapsed}
+                />
+              )}
+              {userCan(user, "support:manage") && (
+                <NavigationLink
+                  to="/app/atendimentos"
+                  label="Atendimentos"
+                  icon={Headset}
+                  collapsed={collapsed}
+                />
+              )}
+            </div>
           )}
         </nav>
-        <div className="shrink-0 border-t border-evo-border p-3">
+        <div className="shrink-0 border-t border-evo-border/70 p-4">
           <NavLink
             to="/app/assessoria"
             title={collapsed ? "Assessoria" : undefined}
+            aria-label={collapsed ? "Assessoria" : undefined}
             className={({ isActive }) =>
-              `flex min-h-11 items-center gap-3 rounded-lg px-3 text-sm transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-evo-accent ${collapsed ? "justify-center" : ""} ${isActive ? "border border-evo-accent/20 bg-evo-accent/10 text-evo-accent" : "text-evo-textSec hover:bg-evo-card hover:text-evo-textMain"}`
+              `flex min-h-11 items-center gap-3 border-l-2 px-3 text-sm transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-evo-accent ${collapsed ? "justify-center" : ""} ${isActive ? "border-evo-green text-evo-textMain" : "border-transparent text-evo-textSec hover:bg-white/[0.03] hover:text-evo-textMain"}`
             }
           >
-            <Headset size={20} aria-hidden="true" />
+            <Headset size={18} strokeWidth={1.6} aria-hidden="true" />
             {!collapsed && <span>Assessoria</span>}
           </NavLink>
         </div>
       </aside>
 
       <div className="flex min-h-screen min-w-0 flex-1 flex-col">
-        <header className="sticky top-0 z-20 flex min-h-16 items-center justify-between border-b border-evo-border bg-evo-bgSec/95 px-4 backdrop-blur md:min-h-20 md:px-8">
+        <header className="sticky top-0 z-20 flex min-h-16 items-center justify-between gap-3 border-b border-evo-border/70 bg-evo-bgMain/95 px-4 backdrop-blur md:min-h-20 md:px-8">
           <div className="flex min-w-0 items-center gap-3">
             <img
               src="/ediv-logo.png"
@@ -353,18 +388,24 @@ export const DashboardLayout = () => {
               aria-hidden="true"
               className="h-8 w-8 shrink-0 object-contain mix-blend-screen lg:hidden"
             />
-            <p className="truncate text-base font-semibold text-evo-textMain md:text-xl">
-              {title}
-            </p>
+            <div className="min-w-0">
+              <p className="hidden text-[10px] uppercase tracking-[.16em] text-evo-textSec sm:block">
+                Seu espaço Ediv
+              </p>
+              <p className="truncate text-sm font-medium text-evo-textMain sm:mt-1 md:text-base">
+                {title}
+              </p>
+            </div>
           </div>
           <div className="flex shrink-0 items-center gap-2 md:gap-4">
-            <span className="hidden rounded-full border border-evo-accent/20 bg-evo-accent/10 px-3 py-1 text-xs font-medium text-evo-accent sm:inline-flex">
-              Cotações com atraso
+            <span className="hidden items-center gap-2 text-[11px] text-evo-textSec md:inline-flex">
+              <span aria-hidden="true" className="h-1.5 w-1.5 rounded-full bg-evo-accent" />
+              Cotações podem ter atraso
             </span>
             <Link
               to="/app/assessoria"
               aria-label="Assessoria"
-              className="min-h-11 rounded-lg p-2 text-evo-textSec"
+              className="inline-flex min-h-11 min-w-11 items-center justify-center text-evo-textSec transition hover:text-evo-textMain focus-visible:outline focus-visible:outline-2 focus-visible:outline-evo-accent"
             >
               <Headset size={20} />
             </Link>
@@ -381,7 +422,7 @@ export const DashboardLayout = () => {
 
         <main
           id="conteudo"
-          className="w-full flex-1 px-4 pt-5 pb-24 md:px-8 md:pt-8 lg:pb-8"
+          className="w-full flex-1 px-4 pt-6 pb-24 md:px-8 md:pt-10 lg:pb-8"
         >
           <Outlet />
           <footer className="mx-auto mt-10 max-w-7xl border-t border-evo-border pt-4 text-xs leading-relaxed text-evo-textSec">
@@ -400,7 +441,7 @@ export const DashboardLayout = () => {
 
       <nav
         aria-label="Navegação móvel"
-        className="fixed inset-x-0 bottom-0 z-30 grid grid-cols-6 border-t border-evo-border bg-evo-bgSec/95 px-1 pb-[env(safe-area-inset-bottom)] pt-1 backdrop-blur lg:hidden"
+        className="fixed inset-x-0 bottom-0 z-30 grid grid-cols-6 border-t border-evo-border bg-evo-bgMain/95 px-1 pb-[env(safe-area-inset-bottom)] pt-1 backdrop-blur lg:hidden"
       >
         {navigation.map(({ to, shortLabel, icon: Icon, end }) => (
           <NavLink
@@ -408,10 +449,10 @@ export const DashboardLayout = () => {
             to={to}
             end={end}
             className={({ isActive }) =>
-              `flex min-h-14 flex-col items-center justify-center gap-1 rounded-lg text-[10px] focus-visible:outline focus-visible:outline-2 focus-visible:outline-evo-accent ${isActive ? "text-evo-accent" : "text-evo-textSec"}`
+              `flex min-h-14 flex-col items-center justify-center gap-1 border-t-2 text-[10px] focus-visible:outline focus-visible:outline-2 focus-visible:outline-evo-accent ${isActive ? "border-evo-green text-evo-textMain" : "border-transparent text-evo-textSec"}`
             }
           >
-            <Icon size={19} aria-hidden="true" />
+            <Icon size={19} strokeWidth={1.6} aria-hidden="true" />
             <span>{shortLabel}</span>
           </NavLink>
         ))}

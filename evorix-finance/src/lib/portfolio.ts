@@ -1,4 +1,5 @@
 import { apiRequest } from "./api";
+import type { PortfolioInsights } from "./portfolioInsights";
 export type AssetType =
   "ACAO" | "FII" | "ETF" | "RENDA_FIXA" | "CRYPTO" | "OUTRO";
 export type Quote = {
@@ -31,6 +32,7 @@ export type PortfolioTransaction = {
   tradedAt: string;
 };
 export type PortfolioData = {
+  insights?: PortfolioInsights;
   positions: Position[];
   transactions: PortfolioTransaction[];
   transactionCount: number;

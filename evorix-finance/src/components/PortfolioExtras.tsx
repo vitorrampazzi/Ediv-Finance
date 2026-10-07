@@ -172,7 +172,7 @@ export function PortfolioExtras({
           {message}
         </p>
       )}
-      <Card glow="none">
+      <Card variant="editorial" glow="none">
         <h2 className="text-lg font-semibold">
           Importar ou exportar operações
         </h2>
@@ -275,7 +275,7 @@ export function PortfolioExtras({
       {data && (
         <>
           <section className="grid gap-4 sm:grid-cols-2">
-            <Card glow="none">
+            <Card variant="editorial" glow="none">
               <h2 className="text-sm text-evo-textSec">
                 Resultado realizado em vendas
               </h2>
@@ -287,7 +287,7 @@ export function PortfolioExtras({
                 informadas e antes de impostos.
               </p>
             </Card>
-            <Card glow="none">
+            <Card variant="editorial" glow="none">
               <h2 className="text-sm text-evo-textSec">Proventos recebidos</h2>
               <p className="mt-2 font-numbers text-xl">
                 {formatMoney(data.summary.receivedIncome)}
@@ -298,7 +298,7 @@ export function PortfolioExtras({
               </p>
             </Card>
           </section>
-          <Card glow="none">
+          <Card variant="editorial" glow="none">
             <h2 className="text-lg font-semibold">Histórico dos registros</h2>
             <p className="mt-2 text-sm text-evo-textSec">
               Custo das posições abertas, resultado realizado e proventos
@@ -426,7 +426,7 @@ export function PortfolioExtras({
           </Card>
         </>
       )}
-      <Card glow="none">
+      <Card variant="editorial" glow="none">
         <h2 className="text-lg font-semibold">
           Proventos e eventos corporativos
         </h2>

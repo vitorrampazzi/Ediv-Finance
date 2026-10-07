@@ -5,11 +5,11 @@ import {
   ChevronRight,
   CircleAlert,
   Plus,
-  RefreshCw,
   Trash2,
 } from "lucide-react";
 import { Card } from "../components/Card";
 import { OrbitCoins } from "../components/OrbitCoins";
+import { PortfolioPulse } from "../components/PortfolioPulse";
 import { PortfolioExtras } from "../components/PortfolioExtras";
 import { formatMoney } from "../lib/finance";
 
@@ -25,6 +25,7 @@ export const Carteira = () => {
   const {
     portfolio,
     loading,
+    refreshing,
     editingId,
     setEditingId,
     saving,
@@ -38,18 +39,14 @@ export const Carteira = () => {
     form,
     setForm,
     loadPortfolio,
-    investedTotal,
-    quotedPositions,
-    marketValue,
     submit,
     deleteTransaction,
   } = usePortfolio();
   return (
     <div className="mx-auto max-w-7xl space-y-6">
-      <div className="relative flex flex-col items-start justify-between gap-4 overflow-hidden rounded-xl border border-evo-border bg-evo-card p-4 shadow-lg sm:flex-row sm:items-center sm:p-6">
-        <div className="absolute inset-0 bg-gradient-to-r from-evo-green/5 to-transparent pointer-events-none" />
+      <div className="relative flex flex-col items-start justify-between gap-4 border-b border-evo-border pb-7 sm:flex-row sm:items-center">
         <div className="relative z-10">
-          <h1 className="text-2xl font-bold tracking-tight text-evo-textMain">
+          <h1 className="text-3xl font-semibold tracking-tight text-evo-textMain">
             Minha Carteira
           </h1>
           <p className="mt-1 text-evo-textSec">
@@ -80,60 +77,15 @@ export const Carteira = () => {
         </p>
       )}
 
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 2xl:grid-cols-4">
-        <Card glow="none" className="p-4">
-          <p className="text-sm text-evo-textSec">Ativos na carteira</p>
-          <p className="mt-2 text-2xl font-bold text-evo-textMain">
-            {portfolio.positions.length}
-          </p>
-        </Card>
-        <Card glow="none" className="min-w-0 p-4">
-          <p className="text-sm text-evo-textSec">Custo registrado</p>
-          <p className="mt-2 font-numbers text-base font-bold text-evo-textMain sm:text-lg 2xl:text-xl">
-            {loading
-              ? "Carregando…"
-              : error
-                ? "Indisponível"
-                : formatMoney(String(investedTotal))}
-          </p>
-        </Card>
-        <Card glow="none" className="min-w-0 p-4">
-          <p className="text-sm text-evo-textSec">Valor de mercado estimado</p>
-          <p className="mt-2 font-numbers text-base font-bold text-evo-textMain sm:text-lg 2xl:text-xl">
-            {loading
-              ? "Carregando…"
-              : error ||
-                  (portfolio.positions.length > 0 && !quotedPositions.length)
-                ? "Indisponível"
-                : formatMoney(String(marketValue))}
-          </p>
-          <p className="mt-1 text-xs text-evo-textSec">
-            {quotedPositions.length} de {portfolio.positions.length} posições
-            cotadas
-          </p>
-        </Card>
-        <Card
-          glow="none"
-          className="flex min-w-0 items-center justify-between p-4"
-        >
-          <div>
-            <p className="text-sm text-evo-textSec">Operações registradas</p>
-            <p className="mt-2 text-2xl font-bold text-evo-textMain">
-              {portfolio.transactionCount}
-            </p>
-          </div>
-          <button
-            type="button"
-            onClick={() => void loadPortfolio()}
-            aria-label="Atualizar carteira"
-            className="rounded-lg p-2 text-evo-textSec hover:bg-white/5 hover:text-evo-textMain"
-          >
-            <RefreshCw size={18} />
-          </button>
-        </Card>
-      </div>
+      <PortfolioPulse
+        insights={portfolio.insights}
+        loading={loading}
+        refreshing={refreshing}
+        compact
+        onRefresh={() => void loadPortfolio()}
+      />
 
-      <Card glow="none" className="space-y-4">
+      <Card variant="editorial" glow="none" className="space-y-4">
         <div>
           <h2
             id="operation-form"
@@ -309,7 +261,7 @@ export const Carteira = () => {
         ])}
         onChanged={() => loadPortfolio().then(() => undefined)}
       />
-      <Card glow="none" className="overflow-hidden p-0">
+      <Card variant="editorial" glow="none" className="overflow-hidden p-0">
         <div className="border-b border-evo-border p-5">
           <h2 className="font-semibold text-evo-textMain">
             Posições e preços estimados
@@ -414,7 +366,7 @@ export const Carteira = () => {
         </div>
       </Card>
 
-      <Card glow="none" className="overflow-hidden p-0">
+      <Card variant="editorial" glow="none" className="overflow-hidden p-0">
         <div className="border-b border-evo-border p-5">
           <h2 className="font-semibold text-evo-textMain">
             Histórico de operações

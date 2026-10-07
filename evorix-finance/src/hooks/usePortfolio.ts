@@ -19,6 +19,7 @@ export function usePortfolio() {
     transactionHistoryTruncated: false,
   });
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [editingId, setEditingId] = useState("");
   const [saving, setSaving] = useState(false);
   const [deletingId, setDeletingId] = useState("");
@@ -40,6 +41,7 @@ export function usePortfolio() {
   const loadPortfolio = useCallback(
     async (page = historyPage) => {
       setError("");
+      setRefreshing(true);
       try {
         const result = await fetchPortfolio(page);
         setPortfolio(result);
@@ -53,6 +55,7 @@ export function usePortfolio() {
         );
       } finally {
         setLoading(false);
+        setRefreshing(false);
       }
       return null;
     },
@@ -165,6 +168,7 @@ export function usePortfolio() {
   };
 
   return {
+    refreshing,
     portfolio,
     loading,
     editingId,
