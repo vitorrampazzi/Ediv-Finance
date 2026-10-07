@@ -14,7 +14,6 @@ import { SiteFooter, SiteHeader } from "../components/SiteChrome";
 import { useAuth } from "../context/authContext";
 import { authLink } from "../lib/authDestination";
 import { RankingPreview } from "../components/RankingPreview";
-import { ResearchAvailability } from "../components/ResearchAvailability";
 import { GettingStarted } from "../components/GettingStarted";
 import { useRegistrationAvailability } from "../hooks/useRegistrationAvailability";
 
@@ -101,7 +100,6 @@ export function Home() {
                 </Link>
               </p>
             )}
-            <ResearchAvailability />
           </div>
           <RankingPreview />
         </section>
