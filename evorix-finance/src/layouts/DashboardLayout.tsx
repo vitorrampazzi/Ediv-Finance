@@ -398,10 +398,6 @@ export const DashboardLayout = () => {
             </div>
           </div>
           <div className="flex shrink-0 items-center gap-2 md:gap-4">
-            <span className="hidden items-center gap-2 text-[11px] text-evo-textSec md:inline-flex">
-              <span aria-hidden="true" className="h-1.5 w-1.5 rounded-full bg-evo-accent" />
-              Cotações podem ter atraso
-            </span>
             <Link
               to="/app/assessoria"
               aria-label="Assessoria"
@@ -426,9 +422,8 @@ export const DashboardLayout = () => {
         >
           <Outlet />
           <footer className="mx-auto mt-10 max-w-7xl border-t border-evo-border pt-4 text-xs leading-relaxed text-evo-textSec">
-            Cotações podem ter atraso ou indisponibilidade. As operações são
-            registros pessoais, sem envio a corretoras. O conteúdo não constitui
-            recomendação de investimento.{" "}
+            As operações são registros pessoais, sem envio a corretoras. O
+            conteúdo não constitui recomendação de investimento.{" "}
             <Link to="/privacidade" className="ml-2 underline">
               Privacidade
             </Link>{" "}

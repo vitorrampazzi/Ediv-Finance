@@ -39,8 +39,8 @@ export function AuthShell({
         </Link>
         <p className="mt-6 border-t border-evo-border pt-4 text-xs leading-relaxed text-evo-textSec">
           Esta versão permite salvar operações manuais de carteira, mas não
-          conecta corretoras nem movimenta dinheiro. As cotações podem ter
-          atraso; nunca use a senha de outro serviço.
+          conecta corretoras nem movimenta dinheiro. Nunca use a senha de outro
+          serviço.
         </p>
       </section>
     </main>

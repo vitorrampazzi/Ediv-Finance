@@ -380,9 +380,8 @@ export function Analises({ publicView = false }: { publicView?: boolean }) {
 
       <div className="flex flex-wrap items-center justify-between gap-3 border-t border-evo-border pt-4">
         <p className="max-w-3xl text-xs leading-relaxed text-evo-textSec">
-          Fonte: brapi.dev. Os preços podem ter atraso ou indisponibilidade.
-          “Consulta ao provedor” indica quando a lista foi consultada; não
-          garante o horário exato da negociação.
+          Fonte: brapi.dev. “Consulta ao provedor” indica quando a lista foi
+          consultada; não garante o horário exato da negociação.
         </p>
         <nav
           aria-label="Paginação dos ativos"

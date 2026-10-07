@@ -323,10 +323,9 @@ export function SiteFooter() {
 
         <div className="mt-8 border-t border-evo-border pt-5">
           <p className="text-xs leading-relaxed text-evo-textSec">
-            Cotações podem ter atraso, indisponibilidade ou divergência em
-            relação à fonte. A Ediv Finance não é corretora, não executa ordens
-            e não movimenta dinheiro. As informações são educativas e não
-            constituem recomendação de investimento.
+            A Ediv Finance não é corretora, não executa ordens e não movimenta
+            dinheiro. As informações são educativas e não constituem
+            recomendação de investimento.
           </p>
           <p className="mt-4 text-xs text-evo-textSec">
             © {new Date().getFullYear()} Ediv Finance. · Versão beta
