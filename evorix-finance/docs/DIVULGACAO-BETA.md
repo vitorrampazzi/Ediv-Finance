@@ -2,12 +2,13 @@
 
 ## Endereços
 
-- Produção, para visitantes: https://evorix-finance.vercel.app/
+- Produção, para visitantes: https://escoladodividendo.com.br/
+- Endereço anterior, ainda funcional: https://evorix-finance.vercel.app/
 - QA, para avaliação interna: https://ediv-finance-git-qa-vitors-projects-7b84bd52.vercel.app/
 
-O domínio `escoladodividendo.com.br` está em configuração no Registro.br, Vercel e Resend. Consulte [o estado e os registros necessários](DOMINIO.md). Até confirmar DNS e HTTPS, o endereço de produção acima continua sendo o link funcional. O site publicado funciona sem o computador do desenvolvedor ligado.
+O domínio `escoladodividendo.com.br` está verificado na Vercel e no Resend. Consulte [o estado e os registros configurados](DOMINIO.md). O site publicado funciona sem o computador do desenvolvedor ligado.
 
-**Pendência identificada em 06/10/2026:** a conexão e autenticação SMTP passaram no diagnóstico em produção, mas o domínio do remetente ainda é `resend.dev`. Esse domínio só permite testes para o e-mail do dono da conta Resend. Novos cadastros públicos ficam em preparação até usar um domínio verificado no remetente; o login de contas confirmadas continua disponível. A home direciona visitantes à primeira aula. QA mantém os cadastros de avaliação com links locais de confirmação.
+**Configuração em 06/10/2026:** o domínio real foi verificado no Resend, e Production foi configurado com `Ediv Finance <naoresponda@escoladodividendo.com.br>` como remetente. O bloqueio conhecido do remetente `resend.dev` é retirado pelo novo deploy. Ainda é preciso conferir o fluxo real e a entrega dos e-mails antes da divulgação. QA mantém os cadastros de avaliação com links locais de confirmação.
 
 Após verificar o domínio no Resend, atualize `MAIL_FROM` em Production e faça um deploy. A restrição conhecida sai automaticamente; ainda é necessário conferir a entrega real, o cadastro e a recuperação. A conexão SMTP não comprova entrega. Fonte: [Resend — limitações do domínio de teste](https://resend.com/docs/knowledge-base/403-error-resend-dev-domain).
 
@@ -75,7 +76,7 @@ Finalize a identificação do responsável pela plataforma e a política de rete
 
 ## Texto para um convite inicial
 
-> Conheça a versão beta da Ediv Finance, uma plataforma da Escola do Dividendo para aprender conceitos e acompanhar o mercado. A primeira aula e o glossário estão abertos; o cadastro e a primeira pesquisa do ranking estão em preparação. Explore: https://evorix-finance.vercel.app/
+> Conheça a versão beta da Ediv Finance, uma plataforma da Escola do Dividendo para aprender conceitos e acompanhar o mercado. A primeira aula e o glossário estão abertos, e a primeira pesquisa do ranking está em preparação. Explore: https://escoladodividendo.com.br/
 
 Após publicar a pesquisa real, revise o trecho do ranking e as condições de acesso. Nenhum convite foi enviado ou publicado automaticamente.
 
