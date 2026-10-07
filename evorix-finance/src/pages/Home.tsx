@@ -207,8 +207,8 @@ export function Home() {
               </p>
             )}
             <p className="mt-2 text-xs leading-relaxed text-evo-textSec">
-              Fonte: brapi.dev. Preços podem ter atraso ou indisponibilidade.
-              Conteúdo informativo, sem recomendação de compra ou venda.
+              Fonte: brapi.dev. Conteúdo informativo, sem recomendação de compra
+              ou venda.
             </p>
           </div>
         </section>

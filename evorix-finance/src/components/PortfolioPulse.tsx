@@ -370,26 +370,12 @@ export function PortfolioPulse({
           </section>
         </div>
       )}
-      {(insights.coverage.unpricedTickers.length > 0 ||
-        insights.coverage.stalePositionCount > 0) && (
+      {insights.coverage.unpricedTickers.length > 0 && (
         <div className="flex items-start gap-3 border-l-2 border-evo-border pl-4 text-xs leading-relaxed text-evo-textSec">
           <CircleHelp size={17} className="mt-0.5 shrink-0" />
           <p>
-            {insights.coverage.unpricedTickers.length > 0 && (
-              <>
-                Sem preço disponível:{" "}
-                {insights.coverage.unpricedTickers.join(", ")}. Essas posições
-                ficam fora da estimativa de mercado e da variação.{" "}
-              </>
-            )}
-            {insights.coverage.stalePositionCount > 0 && (
-              <>
-                O provedor marcou preços de{" "}
-                {insights.coverage.stalePositionCount} posição(ões) como
-                desatualizados.{" "}
-              </>
-            )}
-            Os preços disponíveis podem ter horários diferentes.
+            Sem preço disponível: {insights.coverage.unpricedTickers.join(", ")}
+            . Essas posições ficam fora da estimativa de mercado e da variação.
           </p>
         </div>
       )}

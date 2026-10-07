@@ -267,8 +267,8 @@ export const Carteira = () => {
             Posições e preços estimados
           </h2>
           <p className="mt-1 text-sm text-evo-textSec">
-            A estimativa usa a cotação mais recente recebida e pode ter atraso.
-            Custos e quantidades vêm das operações que você informou.
+            A estimativa usa a cotação mais recente recebida. Custos e
+            quantidades vêm das operações que você informou.
           </p>
         </div>
         <div className="overflow-x-auto">
@@ -352,11 +352,6 @@ export const Carteira = () => {
                       {position.unrealizedPnl
                         ? formatMoney(position.unrealizedPnl)
                         : "—"}
-                      {position.quote?.stale ? (
-                        <span className="block text-[10px] text-yellow-300">
-                          último preço disponível
-                        </span>
-                      ) : null}
                     </td>
                   </tr>
                 ))

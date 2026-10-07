@@ -81,7 +81,7 @@ function getLocalAnswer(question: string): LocalAnswer {
     )
   ) {
     return {
-      text: "A página Mercado consulta dados do provedor disponível. Cotações podem ter atraso, indisponibilidade ou divergência; o horário da consulta não garante que seja o horário da negociação. Confira a fonte e os horários exibidos junto aos dados.",
+      text: "A página Mercado apresenta as cotações retornadas pelo provedor disponível. Confira a fonte e os horários exibidos junto aos dados. Quando não houver preço disponível, o site identifica essa condição.",
       href: "/mercado",
       linkLabel: "Ver mercado",
     };

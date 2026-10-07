@@ -79,7 +79,7 @@ export function Privacidade() {
       {[
         [
           "O que a Ediv oferece",
-          "A Ediv Finance oferece conteúdo educativo, um ranking de previsões e registros pessoais de carteira. Projeções dependem de premissas e podem falhar. O site não é corretora, não executa ordens e não movimenta dinheiro. Cotações dependem do provedor e podem estar atrasadas ou indisponíveis.",
+          "A Ediv Finance oferece conteúdo educativo, um ranking de previsões e registros pessoais de carteira. Projeções dependem de premissas e podem falhar. O site não é corretora, não executa ordens e não movimenta dinheiro. Cotações dependem da disponibilidade do provedor.",
         ],
         [
           "Dados da sua conta",

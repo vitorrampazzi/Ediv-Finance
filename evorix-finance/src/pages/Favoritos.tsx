@@ -230,7 +230,6 @@ export const Favoritos = () => {
                         : quote?.checkedAt
                           ? `Consulta ao provedor ${new Date(quote.checkedAt).toLocaleString("pt-BR")}`
                           : "Horário indisponível"}
-                      {quote?.stale ? " · último preço disponível" : ""}
                     </p>
                     <div className="col-start-3 row-start-1 flex justify-end md:col-start-5">
                       <button
@@ -254,8 +253,8 @@ export const Favoritos = () => {
             </ul>
           </div>
           <p className="text-xs leading-relaxed text-evo-textSec">
-            Fonte: brapi.dev. Cotações podem ter atraso ou indisponibilidade;
-            não são recomendações de investimento.
+            Fonte: brapi.dev. Conteúdo informativo, sem recomendação de
+            investimento.
           </p>
         </>
       )}
