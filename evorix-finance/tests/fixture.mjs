@@ -6,21 +6,27 @@ export async function createFixture() {
   const schema = "ediv_test_" + randomBytes(6).toString("hex");
   if (!/^ediv_test_[a-f0-9]{12}$/.test(schema))
     throw new Error("Nome do banco de testes inválido.");
-  const ca = await readFile(
-    process.env.TARGET_MYSQL_SSL_CA_FILE || ".aiven/ca.pem",
-    "utf8",
-  );
+  const disposable = process.env.EDIV_TEST_MYSQL_DISPOSABLE === "true";
+  const host = process.env.TARGET_MYSQL_HOST;
+  if (disposable && !["127.0.0.1", "localhost", "::1"].includes(host))
+    throw new Error("O MySQL descartável deve estar no loopback local.");
+  const ca = disposable
+    ? null
+    : await readFile(
+        process.env.TARGET_MYSQL_SSL_CA_FILE || ".aiven/ca.pem",
+        "utf8",
+      );
   const credentials = {
-    host: process.env.TARGET_MYSQL_HOST,
+    host,
     port: Number(process.env.TARGET_MYSQL_PORT || 3306),
     user: process.env.TARGET_MYSQL_USER,
     password: process.env.TARGET_MYSQL_PASSWORD,
-    ssl: { ca, rejectUnauthorized: true },
+    ...(disposable ? {} : { ssl: { ca, rejectUnauthorized: true } }),
     connectTimeout: 10000,
   };
   if (!credentials.host || !credentials.user || !credentials.password)
     throw new Error(
-      "Configure .env.aiven para criar o banco isolado de testes.",
+      "Configure TARGET_MYSQL_* para criar o banco isolado de testes.",
     );
   const admin = await createConnection(credentials);
   let created = false;
@@ -53,8 +59,9 @@ export async function createFixture() {
       MYSQL_USER: credentials.user,
       MYSQL_PASSWORD: credentials.password,
       MYSQL_DATABASE: schema,
-      MYSQL_SSL: "true",
-      MYSQL_SSL_CA: ca,
+      MYSQL_SSL: disposable ? "false" : "true",
+      MYSQL_SSL_CA: ca || "",
+      MYSQL_SSL_CA_FILE: "",
       MYSQL_CONNECTION_LIMIT: "4",
       APP_BASE_URL: "http://127.0.0.1:4180",
       APP_ORIGIN: "http://127.0.0.1:4180",

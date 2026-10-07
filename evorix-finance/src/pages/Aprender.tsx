@@ -22,7 +22,7 @@ type Lesson = {
   answer?: number;
   explanation?: string;
 };
-type LearningData = {
+export type LearningData = {
   lessons: Lesson[];
   glossary: string[][];
   access: "preview" | "full";
@@ -39,17 +39,32 @@ function readProgress(): string[] {
     return [];
   }
 }
-export function Aprender() {
+export function Aprender({
+  initialContent,
+}: {
+  initialContent?: LearningData;
+}) {
   const { user } = useAuth();
-  return <LearningSession key={user?.id || "visitor"} />;
+  return (
+    <LearningSession
+      key={user?.id || "visitor"}
+      initialContent={initialContent}
+    />
+  );
 }
-function LearningSession() {
+function LearningSession({
+  initialContent,
+}: {
+  initialContent?: LearningData;
+}) {
   const { user, loading: authLoading, refreshSession } = useAuth();
   const userId = user?.id;
-  const [content, setContent] = useState<LearningData | null>(null);
+  const [content, setContent] = useState<LearningData | null>(
+    initialContent ?? null,
+  );
   const [loadedFor, setLoadedFor] = useState<string | null>(null);
   const requestKey = userId || "visitor";
-  const loading = loadedFor !== requestKey || authLoading;
+  const loading = !content && (loadedFor !== requestKey || authLoading);
   const [error, setError] = useState("");
   const [completed, setCompleted] = useState<string[]>(() =>
     user ? [] : readProgress().filter((id) => id === "ranking"),

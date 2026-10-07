@@ -31,6 +31,10 @@ const Favoritos = lazy(() =>
   import("./pages/Favoritos").then((module) => ({ default: module.Favoritos })),
 );
 import { PageErrorBoundary } from "./components/PageErrorBoundary";
+import { PageMetadata } from "./components/PageMetadata";
+const Glossario = lazy(() =>
+  import("./pages/Glossario").then((module) => ({ default: module.Glossario })),
+);
 import { FavoritesProvider } from "./context/FavoritesProvider";
 import { AuthProvider } from "./context/AuthProvider";
 import { RequireAuth } from "./components/RequireAuth";
@@ -39,27 +43,27 @@ const AdminPage = lazy(() =>
   import("./pages/Admin").then((module) => ({ default: module.AdminPage })),
 );
 const LoginPage = lazy(() =>
-  import("./pages/Autenticacao").then((module) => ({
+  import("./pages/auth/LoginPage").then((module) => ({
     default: module.LoginPage,
   })),
 );
 const RegisterPage = lazy(() =>
-  import("./pages/Autenticacao").then((module) => ({
+  import("./pages/auth/RegisterPage").then((module) => ({
     default: module.RegisterPage,
   })),
 );
 const VerifyEmailPage = lazy(() =>
-  import("./pages/Autenticacao").then((module) => ({
+  import("./pages/auth/VerifyEmailPage").then((module) => ({
     default: module.VerifyEmailPage,
   })),
 );
 const ForgotPasswordPage = lazy(() =>
-  import("./pages/Autenticacao").then((module) => ({
+  import("./pages/auth/ForgotPasswordPage").then((module) => ({
     default: module.ForgotPasswordPage,
   })),
 );
 const ResetPasswordPage = lazy(() =>
-  import("./pages/Autenticacao").then((module) => ({
+  import("./pages/auth/ResetPasswordPage").then((module) => ({
     default: module.ResetPasswordPage,
   })),
 );
@@ -100,6 +104,7 @@ const Suporte = lazy(() =>
 function App() {
   return (
     <BrowserRouter>
+      <PageMetadata />
       {qaEnvironment && (
         <aside className="border-b border-evo-accent/30 bg-evo-card px-4 py-3 text-center text-xs text-evo-textMain">
           <strong>Ambiente QA</strong> · Versão de avaliação com assistente
@@ -121,6 +126,14 @@ function App() {
             >
               <Routes>
                 <Route path="/" element={<Home />} />
+                <Route
+                  path="/glossario"
+                  element={
+                    <PublicLayout>
+                      <Glossario />
+                    </PublicLayout>
+                  }
+                />
                 <Route
                   path="/mercado"
                   element={

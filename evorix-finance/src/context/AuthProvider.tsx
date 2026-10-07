@@ -51,9 +51,15 @@ async function apiRequest(
   return body;
 }
 
-export function AuthProvider({ children }: { children: ReactNode }) {
+export function AuthProvider({
+  children,
+  initialLoading = true,
+}: {
+  children: ReactNode;
+  initialLoading?: boolean;
+}) {
   const [user, setUser] = useState<AuthUser | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(initialLoading);
   const sessionRevision = useRef(0);
   const refreshSession = useCallback(async () => {
     const revision = sessionRevision.current;

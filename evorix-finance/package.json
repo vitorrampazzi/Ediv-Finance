@@ -16,7 +16,7 @@
     "db:provision:qa": "node --env-file=.env.aiven server/provision-qa.js",
     "build": "node scripts/build.mjs",
     "lint": "eslint .",
-    "test": "node --test tests/unit.test.mjs",
+    "test": "node --test tests/unit.test.mjs tests/site.test.mjs",
     "test:integration:aiven": "node --env-file=.env.aiven tests/integration.test.mjs",
     "test:browser:aiven": "node --env-file=.env.aiven tests/browser.mjs",
     "test:backup:aiven": "node --env-file=.env.aiven tests/backup.mjs",
@@ -24,7 +24,11 @@
     "db:backup:aiven": "node --env-file=.env.aiven.runtime --env-file=.env.backup server/backup.js backup",
     "db:restore": "node --env-file=.env.restore --env-file=.env.backup server/backup.js restore",
     "access:preserve-team:aiven": "node --env-file=.env.aiven.runtime server/setup-access.js legacy",
-    "access:grant-admin:aiven": "node --env-file=.env.aiven.runtime server/setup-access.js admin"
+    "access:grant-admin:aiven": "node --env-file=.env.aiven.runtime server/setup-access.js admin",
+    "test:integration": "node tests/integration.test.mjs",
+    "test:browser": "node tests/browser.mjs",
+    "test:backup": "node tests/backup.mjs",
+    "export:source": "node scripts/export-source.mjs"
   },
   "engines": {
     "node": "22.x"
@@ -58,6 +62,7 @@
     "eslint-plugin-react-hooks": "^7.1.1",
     "eslint-plugin-react-refresh": "^0.5.6",
     "globals": "^17.12.0",
+    "playwright": "1.62.1",
     "postcss": "^8.5.28",
     "prettier": "^3.9.9",
     "tailwindcss": "^4.3.3",

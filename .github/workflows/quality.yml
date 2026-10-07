@@ -1,0 +1,59 @@
+name: Qualidade Ediv
+
+on:
+  pull_request:
+    branches: [main, QA]
+  push:
+    branches: [main, QA]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: quality-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  quality:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    defaults:
+      run:
+        working-directory: evorix-finance
+    services:
+      mysql:
+        image: mysql:8.4
+        env:
+          MYSQL_ROOT_PASSWORD: ediv_disposable_ci_only
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1 -pediv_disposable_ci_only"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=12
+    env:
+      EDIV_TEST_MYSQL_DISPOSABLE: 'true'
+      TARGET_MYSQL_HOST: 127.0.0.1
+      TARGET_MYSQL_PORT: '3306'
+      TARGET_MYSQL_USER: root
+      TARGET_MYSQL_PASSWORD: ediv_disposable_ci_only
+      # No Aiven, SMTP, Gemini, Vercel or production secrets are available here.
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: evorix-finance/package-lock.json
+      - run: npm ci
+      - run: npm run lint
+      - run: npm test
+      - run: npm run build
+      - run: npm run test:integration
+      - run: npx playwright install --with-deps chromium
+      - run: npm run test:browser
+      - run: npm run test:backup
