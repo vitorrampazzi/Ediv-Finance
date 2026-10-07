@@ -5,13 +5,9 @@ import {
   ArrowRight,
   ArrowUp,
   Search,
-  Star,
 } from "lucide-react";
-import { Link } from "react-router-dom";
 import { Card } from "../components/Card";
 import { OrbitCoins } from "../components/OrbitCoins";
-import { useAuth } from "../context/authContext";
-import { useFavoritos } from "../hooks/useFavoritos";
 import { useMarketAssets } from "../hooks/useMarketAssets";
 
 const money = new Intl.NumberFormat("pt-BR", {
@@ -38,8 +34,6 @@ export function Analises({ publicView = false }: { publicView?: boolean }) {
     page,
     limit: 24,
   });
-  const { user } = useAuth();
-  const { toggleFavorito, isFavorito, error: favoriteError } = useFavoritos();
   const pages = Math.max(1, Math.ceil(total / 24));
 
   useEffect(() => {
@@ -151,14 +145,6 @@ export function Analises({ publicView = false }: { publicView?: boolean }) {
           {error}
         </p>
       )}
-      {favoriteError && (
-        <p
-          role="alert"
-          className="rounded-lg border border-evo-red/20 bg-evo-red/5 p-3 text-sm text-evo-red"
-        >
-          {favoriteError}
-        </p>
-      )}
       <div className="flex flex-wrap items-center justify-between gap-2 text-sm text-evo-textSec">
         <span>
           {loading
@@ -178,37 +164,13 @@ export function Analises({ publicView = false }: { publicView?: boolean }) {
           {assets.map((asset) => {
             const percentage =
               asset.changePercent === null ? null : Number(asset.changePercent);
-            const favorite = isFavorito(asset.symbol);
             return (
               <Card
                 key={asset.symbol}
                 glow="none"
                 className="relative flex flex-col gap-4"
               >
-                {user ? (
-                  <button
-                    type="button"
-                    aria-label={
-                      favorite
-                        ? `Remover ${asset.symbol} dos favoritos`
-                        : `Adicionar ${asset.symbol} aos favoritos`
-                    }
-                    aria-pressed={favorite}
-                    onClick={() => void toggleFavorito(asset.symbol)}
-                    className={`absolute right-4 top-4 rounded p-1 ${favorite ? "text-yellow-400" : "text-evo-textSec hover:text-yellow-400"}`}
-                  >
-                    <Star size={18} fill={favorite ? "currentColor" : "none"} />
-                  </button>
-                ) : (
-                  <Link
-                    to="/entrar"
-                    title="Entre para salvar nos favoritos"
-                    className="absolute right-4 top-4 rounded p-1 text-evo-textSec"
-                  >
-                    <Star size={18} />
-                  </Link>
-                )}
-                <div className="pr-8">
+                <div>
                   <h2 className="font-bold text-evo-textMain">
                     {asset.symbol}
                   </h2>
@@ -263,13 +225,12 @@ export function Analises({ publicView = false }: { publicView?: boolean }) {
         <div aria-busy={loading}>
           <div
             aria-hidden="true"
-            className="hidden grid-cols-[minmax(0,1.3fr)_minmax(8rem,.8fr)_minmax(7rem,.6fr)_minmax(8rem,.8fr)_3rem] gap-5 border-b border-evo-border pb-3 text-[11px] font-medium uppercase tracking-[.13em] text-evo-textSec md:grid"
+            className="hidden grid-cols-[minmax(0,1.3fr)_minmax(8rem,.8fr)_minmax(7rem,.6fr)_minmax(8rem,.8fr)] gap-5 border-b border-evo-border pb-3 text-[11px] font-medium uppercase tracking-[.13em] text-evo-textSec md:grid"
           >
             <span>Ativo / setor</span>
             <span className="text-right">Preço informado</span>
             <span className="text-right">Variação</span>
             <span className="text-right">Volume informado</span>
-            <span className="sr-only">Favorito</span>
           </div>
           <ul
             aria-label="Ativos encontrados"
@@ -280,11 +241,10 @@ export function Analises({ publicView = false }: { publicView?: boolean }) {
                 asset.changePercent === null
                   ? null
                   : Number(asset.changePercent);
-              const favorite = isFavorito(asset.symbol);
               return (
                 <li
                   key={asset.symbol}
-                  className="grid grid-cols-[minmax(0,1fr)_auto_2.75rem] items-center gap-x-3 gap-y-3 py-5 transition-colors hover:bg-evo-bgSec/30 md:grid-cols-[minmax(0,1.3fr)_minmax(8rem,.8fr)_minmax(7rem,.6fr)_minmax(8rem,.8fr)_3rem] md:gap-x-5 md:py-6"
+                  className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-3 gap-y-3 py-5 transition-colors hover:bg-evo-bgSec/30 md:grid-cols-[minmax(0,1.3fr)_minmax(8rem,.8fr)_minmax(7rem,.6fr)_minmax(8rem,.8fr)] md:gap-x-5 md:py-6"
                 >
                   <div className="col-start-1 row-start-1 min-w-0">
                     <h2 className="text-base font-semibold tracking-tight text-evo-textMain">
@@ -337,35 +297,6 @@ export function Analises({ publicView = false }: { publicView?: boolean }) {
                       ? Number(asset.volume).toLocaleString("pt-BR")
                       : "indisponível"}
                   </p>
-                  <div className="col-start-3 row-start-1 flex justify-end md:col-start-5">
-                    {user ? (
-                      <button
-                        type="button"
-                        aria-label={
-                          favorite
-                            ? `Remover ${asset.symbol} dos favoritos`
-                            : `Adicionar ${asset.symbol} aos favoritos`
-                        }
-                        aria-pressed={favorite}
-                        onClick={() => void toggleFavorito(asset.symbol)}
-                        className={`inline-flex min-h-11 min-w-11 items-center justify-center rounded-full transition-colors hover:bg-evo-bgSec ${favorite ? "text-yellow-400" : "text-evo-textSec hover:text-yellow-400"}`}
-                      >
-                        <Star
-                          size={18}
-                          fill={favorite ? "currentColor" : "none"}
-                          aria-hidden="true"
-                        />
-                      </button>
-                    ) : (
-                      <Link
-                        to="/entrar"
-                        aria-label={`Entre para salvar ${asset.symbol} nos favoritos`}
-                        className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-full text-evo-textSec hover:bg-evo-bgSec"
-                      >
-                        <Star size={18} aria-hidden="true" />
-                      </Link>
-                    )}
-                  </div>
                 </li>
               );
             })}

@@ -22,7 +22,9 @@ export function safeAuthDestination(value: unknown): string {
       ].some(
         (path) =>
           url.pathname === path ||
-          (path === "/app" && url.pathname.startsWith("/app/")),
+          (path === "/app" && url.pathname.startsWith("/app/")) ||
+          (path === "/ranking" &&
+            /^\/ranking\/acao\/[A-Za-z0-9.-]{1,16}$/.test(url.pathname)),
       )
     )
       return "/app";

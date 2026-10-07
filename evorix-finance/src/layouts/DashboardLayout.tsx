@@ -2,16 +2,13 @@ import { useEffect, useRef, useState } from "react";
 import {
   BookOpen,
   BarChart3,
-  Briefcase,
   ChevronLeft,
   ChevronRight,
   LogOut,
   TrendingUp,
   CircleUserRound,
   Headset,
-  LayoutDashboard,
   Settings,
-  Star,
   ShieldCheck,
 } from "lucide-react";
 import {
@@ -34,20 +31,6 @@ const navigation = [
     end: false,
   },
   {
-    to: "/app/aprender",
-    label: "Aprender",
-    shortLabel: "Aprender",
-    icon: BookOpen,
-    end: false,
-  },
-  {
-    to: "/app",
-    label: "Visão geral",
-    shortLabel: "Início",
-    icon: LayoutDashboard,
-    end: true,
-  },
-  {
     to: "/app/analises",
     label: "Análises",
     shortLabel: "Análises",
@@ -55,30 +38,21 @@ const navigation = [
     end: false,
   },
   {
-    to: "/app/carteira",
-    label: "Minha carteira",
-    shortLabel: "Carteira",
-    icon: Briefcase,
-    end: false,
-  },
-  {
-    to: "/app/favoritos",
-    label: "Favoritos",
-    shortLabel: "Favoritos",
-    icon: Star,
+    to: "/app/aprender",
+    label: "Escola de dividendos",
+    shortLabel: "Aprender",
+    icon: BookOpen,
     end: false,
   },
 ];
 
 const pageTitles: Record<string, string> = {
-  "/app": "Visão geral",
+  "/app": "Ranking de previsões",
   "/app/analises": "Análises",
   "/app/ranking": "Ranking de previsões",
   "/app/aprender": "Aprender",
   "/app/conversas": "Conversas",
   "/app/atendimentos": "Atendimentos",
-  "/app/carteira": "Minha carteira",
-  "/app/favoritos": "Favoritos",
   "/app/assessoria": "Assessoria",
   "/app/perfil": "Meu perfil",
   "/app/config": "Configurações",
@@ -87,16 +61,8 @@ const pageTitles: Record<string, string> = {
 
 const navigationGroups = [
   {
-    label: "Pesquisa e aprendizado",
-    items: navigation.filter((item) =>
-      ["/app/ranking", "/app/aprender", "/app/analises"].includes(item.to),
-    ),
-  },
-  {
-    label: "Seu acompanhamento",
-    items: navigation.filter((item) =>
-      ["/app", "/app/carteira", "/app/favoritos"].includes(item.to),
-    ),
+    label: "Pesquisa e educação",
+    items: navigation,
   },
 ];
 
@@ -109,7 +75,7 @@ function NavigationLink({
 }: {
   to: string;
   label: string;
-  icon: typeof LayoutDashboard;
+  icon: typeof TrendingUp;
   end?: boolean;
   collapsed?: boolean;
 }) {
@@ -232,11 +198,11 @@ function ProfileMenu({
               {userCan(user, "support:manage") ? "Atendimentos" : "Conversas"}
             </Link>
             <Link
-              to="/app/assessoria"
+              to="/aprender"
               onClick={() => setOpen(false)}
               className="flex min-h-11 items-center gap-3 rounded-lg px-3 text-sm text-evo-textSec"
             >
-              Assessoria
+              Sobre a escola
             </Link>
             <Link
               to="/app/config"
@@ -278,7 +244,9 @@ export const DashboardLayout = () => {
   const location = useLocation();
   const { user, logout } = useAuth();
   const [collapsed, setCollapsed] = useState(false);
-  const title = pageTitles[location.pathname] ?? "Ediv Finance";
+  const title = location.pathname.startsWith("/app/ranking/acao/")
+    ? "Caderno da empresa"
+    : (pageTitles[location.pathname] ?? "Ediv Finance");
 
   return (
     <div className="account-workspace flex min-h-screen bg-evo-bgMain font-sans text-evo-textMain">
@@ -292,8 +260,8 @@ export const DashboardLayout = () => {
         className={`hidden shrink-0 border-r border-evo-border/70 bg-evo-bgMain transition-[width] duration-200 motion-reduce:transition-none lg:sticky lg:top-0 lg:flex lg:h-screen lg:min-h-0 lg:flex-col ${collapsed ? "w-20" : "w-60"}`}
       >
         <Link
-          to="/app"
-          aria-label="Ediv Finance, visão geral"
+          to="/app/ranking"
+          aria-label="Ediv Finance, ranking de previsões"
           className={`flex min-h-24 items-center px-5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-inset focus-visible:outline-evo-accent ${collapsed ? "justify-center" : ""}`}
         >
           <img
@@ -366,15 +334,15 @@ export const DashboardLayout = () => {
         </nav>
         <div className="shrink-0 border-t border-evo-border/70 p-4">
           <NavLink
-            to="/app/assessoria"
-            title={collapsed ? "Assessoria" : undefined}
-            aria-label={collapsed ? "Assessoria" : undefined}
+            to="/app/conversas"
+            title={collapsed ? "Dúvidas e suporte" : undefined}
+            aria-label={collapsed ? "Dúvidas e suporte" : undefined}
             className={({ isActive }) =>
               `flex min-h-11 items-center gap-3 border-l-2 px-3 text-sm transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-evo-accent ${collapsed ? "justify-center" : ""} ${isActive ? "border-evo-green text-evo-textMain" : "border-transparent text-evo-textSec hover:bg-white/[0.03] hover:text-evo-textMain"}`
             }
           >
             <Headset size={18} strokeWidth={1.6} aria-hidden="true" />
-            {!collapsed && <span>Assessoria</span>}
+            {!collapsed && <span>Dúvidas e suporte</span>}
           </NavLink>
         </div>
       </aside>
@@ -399,8 +367,8 @@ export const DashboardLayout = () => {
           </div>
           <div className="flex shrink-0 items-center gap-2 md:gap-4">
             <Link
-              to="/app/assessoria"
-              aria-label="Assessoria"
+              to="/app/conversas"
+              aria-label="Dúvidas e suporte"
               className="inline-flex min-h-11 min-w-11 items-center justify-center text-evo-textSec transition hover:text-evo-textMain focus-visible:outline focus-visible:outline-2 focus-visible:outline-evo-accent"
             >
               <Headset size={20} />
@@ -422,8 +390,8 @@ export const DashboardLayout = () => {
         >
           <Outlet />
           <footer className="mx-auto mt-10 max-w-7xl border-t border-evo-border pt-4 text-xs leading-relaxed text-evo-textSec">
-            As operações são registros pessoais, sem envio a corretoras. O
-            conteúdo não constitui recomendação de investimento.{" "}
+            Pesquisa e educação sobre ações e dividendos. Previsões dependem de
+            premissas e não garantem retorno.{" "}
             <Link to="/privacidade" className="ml-2 underline">
               Privacidade
             </Link>{" "}
@@ -436,7 +404,7 @@ export const DashboardLayout = () => {
 
       <nav
         aria-label="Navegação móvel"
-        className="fixed inset-x-0 bottom-0 z-30 grid grid-cols-6 border-t border-evo-border bg-evo-bgMain/95 px-1 pb-[env(safe-area-inset-bottom)] pt-1 backdrop-blur lg:hidden"
+        className="fixed inset-x-0 bottom-0 z-30 grid grid-cols-3 border-t border-evo-border bg-evo-bgMain/95 px-1 pb-[env(safe-area-inset-bottom)] pt-1 backdrop-blur lg:hidden"
       >
         {navigation.map(({ to, shortLabel, icon: Icon, end }) => (
           <NavLink
