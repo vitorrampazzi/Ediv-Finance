@@ -22,6 +22,13 @@ A migração 007 cria tabelas sem remover registros existentes. Backup e exporta
 
 ## Verificações repetíveis
 
+O CI executa as suítes em um MySQL 8.4 descartável no runner, sem acesso ao Aiven.
+Os comandos `test:integration`, `test:browser` e `test:backup` leem `TARGET_MYSQL_*`
+do ambiente. Defina `EDIV_TEST_MYSQL_DISPOSABLE=true` somente para um servidor em
+`127.0.0.1`, `localhost` ou `::1`; o runner recusa outros hosts nesse modo.
+Nesse caso TLS é desativado exclusivamente para o container local de teste.
+O acesso ao Aiven continua exigindo validação do certificado.
+
 ```powershell
 npm test
 npm run test:integration:aiven

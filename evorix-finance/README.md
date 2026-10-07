@@ -14,8 +14,6 @@ Veja [as mudanças e a ordem de publicação](docs/ATUALIZACAO-EDIV.md), [os per
 
 ## Requisitos
 
-Os recursos de pesquisa, notificações, progresso por conta e comandos de testes estão em [TESTES-E-MELHORIAS.md](docs/TESTES-E-MELHORIAS.md). A migração 007 deve ser aplicada antes de publicar esta versão.
-
 - Node.js 22.x (22.14 ou superior dentro desta versão)
 - MySQL 8.0 ou compatível, acessível a partir desta máquina
 - Um serviço SMTP para enviar confirmações de e-mail em produção
@@ -134,3 +132,7 @@ Este backend registra operações manuais de carteira, mas não envia ordens nem
 `main` publica o site sem assistente. `QA` mantém o assistente experimental em
 Preview, com banco separado e dados fictícios. Consulte [AMBIENTES.md](docs/AMBIENTES.md)
 para configuração e fluxo de trabalho.
+
+## Qualidade e publicação
+
+Veja [as melhorias técnicas, exportação segura e pendências da equipe](docs/MELHORIAS-LANCAMENTO.md). O CI usa MySQL descartável e não recebe credenciais do Aiven.

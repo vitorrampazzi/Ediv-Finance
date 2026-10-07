@@ -276,6 +276,11 @@ export function SiteFooter() {
                 </Link>
               </li>
               <li>
+                <Link className="hover:text-evo-textMain" to="/glossario">
+                  Glossário
+                </Link>
+              </li>
+              <li>
                 <Link className="hover:text-evo-textMain" to="/assessoria">
                   Assessoria
                 </Link>

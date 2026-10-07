@@ -1,5 +1,3 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
-import type { FormEvent } from "react";
 import {
   ArrowDownRight,
   ArrowUpRight,
@@ -13,232 +11,39 @@ import {
 import { Card } from "../components/Card";
 import { OrbitCoins } from "../components/OrbitCoins";
 import { PortfolioExtras } from "../components/PortfolioExtras";
-import { formatMoney, sumMoney } from "../lib/finance";
-import { apiRequest } from "../lib/api";
+import { formatMoney } from "../lib/finance";
 
-type AssetType = "ACAO" | "FII" | "ETF" | "RENDA_FIXA" | "CRYPTO" | "OUTRO";
-type Quote = {
-  source: string;
-  marketTime: string | null;
-  stale?: boolean;
-  unavailable?: boolean;
-};
-type Position = {
-  ticker: string;
-  assetName: string;
-  assetType: AssetType;
-  quantity: string;
-  costBasis: string;
-  averageCost: string;
-  currentPrice: string | null;
-  marketValue: string | null;
-  unrealizedPnl: string | null;
-  quote: Quote | null;
-};
-type PortfolioTransaction = {
-  id: string;
-  side: "BUY" | "SELL";
-  ticker: string;
-  assetName: string;
-  assetType: AssetType;
-  quantity: string;
-  unitPrice: string;
-  fees: string;
-  tradedAt: string;
-};
-type PortfolioData = {
-  positions: Position[];
-  transactions: PortfolioTransaction[];
-  transactionCount: number;
-  historyPage: number;
-  historyPages: number;
-  transactionHistoryTruncated: boolean;
-};
-
-const typeLabels: Record<AssetType, string> = {
-  ACAO: "Ações",
-  FII: "FIIs",
-  ETF: "ETFs",
-  RENDA_FIXA: "Renda fixa",
-  CRYPTO: "Criptoativos",
-  OUTRO: "Outro",
-};
-const integerFormat = new Intl.NumberFormat("pt-BR", {
-  maximumFractionDigits: 0,
-});
-const fetchPortfolio = (historyPage = 1) =>
-  apiRequest<PortfolioData>(`/api/portfolio?historyPage=${historyPage}`);
-const localToday = () => {
-  const date = new Date();
-  date.setMinutes(date.getMinutes() - date.getTimezoneOffset());
-  return date.toISOString().slice(0, 10);
-};
-
-function formatQuantity(value: string) {
-  const [whole, fraction = ""] = value.split(".");
-  const decimals = fraction.replace(/0+$/, "");
-  return `${integerFormat.format(BigInt(whole))}${decimals ? `,${decimals}` : ""}`;
-}
-
-function formatDate(value: string) {
-  return value.slice(0, 10).split("-").reverse().join("/");
-}
-
+import { usePortfolio } from "../hooks/usePortfolio";
+import {
+  type AssetType,
+  typeLabels,
+  formatQuantity,
+  formatDate,
+  localToday,
+} from "../lib/portfolio";
 export const Carteira = () => {
-  const [portfolio, setPortfolio] = useState<PortfolioData>({
-    positions: [],
-    transactions: [],
-    transactionCount: 0,
-    historyPage: 1,
-    historyPages: 1,
-    transactionHistoryTruncated: false,
-  });
-  const [loading, setLoading] = useState(true);
-  const [editingId, setEditingId] = useState("");
-  const [saving, setSaving] = useState(false);
-  const [deletingId, setDeletingId] = useState("");
-  const [pendingDeleteId, setPendingDeleteId] = useState("");
-  const [historyPage, setHistoryPage] = useState(1);
-  const [error, setError] = useState("");
-  const [message, setMessage] = useState("");
-  const [form, setForm] = useState({
-    side: "BUY" as "BUY" | "SELL",
-    ticker: "",
-    assetName: "",
-    assetType: "ACAO" as AssetType,
-    quantity: "",
-    unitPrice: "",
-    fees: "0",
-    tradedAt: localToday(),
-  });
-
-  const loadPortfolio = useCallback(
-    async (page = historyPage) => {
-      setError("");
-      try {
-        const result = await fetchPortfolio(page);
-        setPortfolio(result);
-        if (result.historyPage !== page) setHistoryPage(result.historyPage);
-        return result;
-      } catch (reason) {
-        setError(
-          reason instanceof Error
-            ? reason.message
-            : "Não foi possível carregar a carteira.",
-        );
-      } finally {
-        setLoading(false);
-      }
-      return null;
-    },
-    [historyPage],
-  );
-
-  useEffect(() => {
-    let active = true;
-    fetchPortfolio(historyPage)
-      .then((result) => {
-        if (active) setPortfolio(result);
-      })
-      .catch((reason) => {
-        if (active)
-          setError(
-            reason instanceof Error
-              ? reason.message
-              : "Não foi possível carregar a carteira.",
-          );
-      })
-      .finally(() => {
-        if (active) setLoading(false);
-      });
-    return () => {
-      active = false;
-    };
-  }, [historyPage]);
-
-  const investedTotal = useMemo(
-    () => sumMoney(portfolio.positions.map((position) => position.costBasis)),
-    [portfolio.positions],
-  );
-  const quotedPositions = useMemo(
-    () =>
-      portfolio.positions.filter((position) => position.marketValue !== null),
-    [portfolio.positions],
-  );
-  const marketValue = useMemo(
-    () => sumMoney(quotedPositions.map((position) => position.marketValue!)),
-    [quotedPositions],
-  );
-
-  const submit = async (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    setSaving(true);
-    setError("");
-    setMessage("");
-    try {
-      await apiRequest(
-        "/api/portfolio/transactions" + (editingId ? "/" + editingId : ""),
-        {
-          method: editingId ? "PUT" : "POST",
-          body: JSON.stringify({
-            ...form,
-            ticker: form.ticker.toUpperCase(),
-            fees: form.fees || "0",
-          }),
-        },
-      );
-      setMessage(
-        editingId
-          ? "Operação corrigida. A carteira foi recalculada."
-          : "Operação registrada na sua carteira.",
-      );
-      setEditingId("");
-      setForm((current) => ({
-        ...current,
-        ticker: "",
-        assetName: "",
-        quantity: "",
-        unitPrice: "",
-        fees: "0",
-      }));
-      setHistoryPage(1);
-      await loadPortfolio(1);
-    } catch (reason) {
-      setError(
-        reason instanceof Error
-          ? reason.message
-          : "Não foi possível registrar a operação.",
-      );
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  const deleteTransaction = async (transaction: PortfolioTransaction) => {
-    setDeletingId(transaction.id);
-    setError("");
-    setMessage("");
-    try {
-      await apiRequest(
-        `/api/portfolio/transactions/${encodeURIComponent(transaction.id)}`,
-        { method: "DELETE" },
-      );
-      setPendingDeleteId("");
-      setMessage(
-        `Operação de ${transaction.ticker} excluída. A carteira foi recalculada.`,
-      );
-      await loadPortfolio();
-    } catch (reason) {
-      setError(
-        reason instanceof Error
-          ? reason.message
-          : "Não foi possível excluir a operação.",
-      );
-    } finally {
-      setDeletingId("");
-    }
-  };
-
+  const {
+    portfolio,
+    loading,
+    editingId,
+    setEditingId,
+    saving,
+    deletingId,
+    pendingDeleteId,
+    setPendingDeleteId,
+    historyPage,
+    setHistoryPage,
+    error,
+    message,
+    form,
+    setForm,
+    loadPortfolio,
+    investedTotal,
+    quotedPositions,
+    marketValue,
+    submit,
+    deleteTransaction,
+  } = usePortfolio();
   return (
     <div className="mx-auto max-w-7xl space-y-6">
       <div className="relative flex flex-col items-start justify-between gap-4 overflow-hidden rounded-xl border border-evo-border bg-evo-card p-4 shadow-lg sm:flex-row sm:items-center sm:p-6">

@@ -3,9 +3,8 @@ import {
   ArrowRight,
   ArrowUp,
   BarChart3,
-  BriefcaseBusiness,
+  BookOpen,
   CircleAlert,
-  ShieldCheck,
   Sparkles,
 } from "lucide-react";
 import { Link } from "react-router-dom";
@@ -14,7 +13,7 @@ import { RankingHighlights } from "../components/RankingHighlights";
 import { SiteFooter, SiteHeader } from "../components/SiteChrome";
 import { useAuth } from "../context/authContext";
 import { authLink } from "../lib/authDestination";
-import { assistantEnabled } from "../lib/features";
+import { RankingPreview } from "../components/RankingPreview";
 import { ResearchAvailability } from "../components/ResearchAvailability";
 import { GettingStarted } from "../components/GettingStarted";
 import { useRegistrationAvailability } from "../hooks/useRegistrationAvailability";
@@ -41,14 +40,17 @@ export function Home() {
       <SiteHeader />
 
       <main id="conteudo">
-        <section className="mx-auto grid max-w-7xl items-center gap-10 px-5 pb-14 pt-10 md:grid-cols-[1.1fr_.9fr] md:px-8 md:pb-20 md:pt-16">
+        <section className="home-editorial mx-auto grid max-w-7xl items-center gap-12 px-5 pb-16 pt-12 md:grid-cols-[1.2fr_.8fr] md:px-8 md:pb-24 md:pt-20">
           <div>
-            <span className="inline-flex items-center gap-2 rounded-full border border-evo-accent/20 bg-evo-accent/10 px-3 py-1.5 text-xs font-medium text-evo-accent">
+            <span className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[.18em] text-evo-accent">
               <Sparkles size={14} aria-hidden="true" /> Escola do dividendo ·
               Beta
             </span>
-            <h1 className="mt-6 max-w-2xl text-4xl font-bold leading-tight tracking-tight sm:text-5xl">
-              Entenda os cenários. Invista em conhecimento.
+            <h1 className="mt-7 max-w-2xl text-4xl font-bold leading-[1.07] tracking-[-.045em] sm:text-5xl lg:text-6xl">
+              Aprenda sobre ações e dividendos.
+              <span className="block mt-2 font-normal text-evo-textSec">
+                Entenda cada cenário.
+              </span>
             </h1>
             <p className="mt-5 max-w-xl text-base leading-relaxed text-evo-textSec">
               Aprenda a interpretar cenários e entender os riscos.{" "}
@@ -76,7 +78,7 @@ export function Home() {
               </Link>
               <Link
                 to="/mercado"
-                className="inline-flex min-h-12 items-center gap-2 rounded-lg border border-evo-border px-5 font-semibold text-evo-textMain hover:bg-evo-card"
+                className="inline-flex min-h-12 items-center gap-2 rounded-lg px-3 text-sm text-evo-textSec hover:text-evo-textMain"
               >
                 <BarChart3 size={17} aria-hidden="true" /> Ver mercado
               </Link>
@@ -84,7 +86,7 @@ export function Home() {
                 to="/aprender"
                 className="inline-flex min-h-12 items-center gap-2 rounded-lg border border-evo-border px-5 font-semibold text-evo-textMain hover:bg-evo-card"
               >
-                <ArrowUp size={17} aria-hidden="true" /> Aprender
+                <BookOpen size={17} aria-hidden="true" /> Aprender
               </Link>
             </div>
             <p className="mt-4 text-xs text-evo-textSec">
@@ -101,38 +103,7 @@ export function Home() {
             )}
             <ResearchAvailability />
           </div>
-          <div className="rounded-2xl border border-evo-border bg-evo-card p-6 shadow-xl md:p-8">
-            <div className="flex items-start gap-4">
-              <span className="rounded-xl bg-evo-green/10 p-3 text-evo-green">
-                <BriefcaseBusiness size={22} aria-hidden="true" />
-              </span>
-              <div>
-                <h2 className="font-semibold">
-                  Uma previsão precisa de contexto
-                </h2>
-                <p className="mt-2 text-sm leading-relaxed text-evo-textSec">
-                  Confira a tese, o horizonte, a data e os riscos de cada
-                  publicação. Potencial de valorização é uma estimativa, não uma
-                  promessa.
-                </p>
-              </div>
-            </div>
-            <div className="my-6 border-t border-evo-border" />
-            <div className="flex items-start gap-4">
-              <span className="rounded-xl bg-evo-accent/10 p-3 text-evo-accent">
-                <ShieldCheck size={22} aria-hidden="true" />
-              </span>
-              <div>
-                <h2 className="font-semibold">Aprenda antes de decidir</h2>
-                <p className="mt-2 text-sm leading-relaxed text-evo-textSec">
-                  {assistantEnabled
-                    ? "Aulas curtas, glossário e um assistente educativo ajudam você a entender o que está vendo."
-                    : "Aulas curtas e glossário ajudam você a entender o que está vendo."}{" "}
-                  Sua carteira continua sob seu controle.
-                </p>
-              </div>
-            </div>
-          </div>
+          <RankingPreview />
         </section>
 
         <RankingHighlights />

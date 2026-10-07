@@ -1,10 +1,11 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useRankingPublication } from "../hooks/useRankingPublication";
+import { useMemo, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { BookOpen, FileSpreadsheet, Search, Star, Upload } from "lucide-react";
 import { Card } from "../components/Card";
 import { RankingFundamentals } from "../components/RankingFundamentals";
-import type { RankingFundamentalData } from "../components/RankingFundamentals";
-import { apiRequest, ApiError } from "../lib/api";
+import type { Entry } from "../lib/ranking";
+import { ApiError } from "../lib/api";
 import { useAuth } from "../context/authContext";
 import { useFavoritos } from "../hooks/useFavoritos";
 import { rankingDemoEntries } from "../lib/rankingDemo";
@@ -18,45 +19,6 @@ import {
   IndicatorHelp,
 } from "../components/ResearchTools";
 
-type Entry = RankingFundamentalData & {
-  rank: number;
-  ticker: string;
-  companyName: string;
-  expectedReturnPercent: string;
-  targetPrice: string | null;
-  horizonMonths: number | null;
-  thesis: string | null;
-  risks: string | null;
-  sector: string | null;
-  referencePrice?: string;
-  revenueHistory?: { period: string; value: number }[];
-};
-type Ranking = {
-  id: string | null;
-  title: string;
-  authorName: string | null;
-  professionalCategory: string | null;
-  professionalRegistration: string | null;
-  entries: Entry[];
-  updatedAt: string | null;
-  sourceFileName: string | null;
-  canManage: boolean;
-  history: { id: string; title: string; createdAt: string }[];
-  access?: "full";
-  totalEntries?: number;
-};
-const empty: Ranking = {
-  id: null,
-  title: "Ranking de cenários",
-  authorName: null,
-  professionalCategory: null,
-  professionalRegistration: null,
-  entries: [],
-  updatedAt: null,
-  sourceFileName: null,
-  canManage: false,
-  history: [],
-};
 const money = new Intl.NumberFormat("pt-BR", {
   style: "currency",
   currency: "BRL",
@@ -90,21 +52,24 @@ export function IncomeRanking() {
 
 function MemberIncomeRanking() {
   const [searchParams, setSearchParams] = useSearchParams();
-  const { user, loading: authLoading, refreshSession } = useAuth();
-  const userId = user?.id;
+  const { user, refreshSession } = useAuth();
   const { toggleFavorito, isFavorito, error: favoriteError } = useFavoritos();
-  const [ranking, setRanking] = useState<Ranking>(empty);
   const [publication, setPublication] = useState(() =>
     /^\d{1,20}$/.test(searchParams.get("publication") || "")
       ? searchParams.get("publication") || ""
       : "",
   );
-  const [requestLoading, setLoading] = useState(true);
-  const [loadedFor, setLoadedFor] = useState<string | null>(null);
-  const requestKey =
-    (userId || "visitor") + ":" + (userId ? publication : "latest");
-  const loading = requestLoading || authLoading || loadedFor !== requestKey;
-  const [error, setError] = useState("");
+  const {
+    ranking,
+    loading,
+    error,
+    setError,
+    load,
+    applyRanking,
+    setLoading,
+    setLoadedFor,
+    requestKey,
+  } = useRankingPublication(publication);
   const [message, setMessage] = useState("");
   const [search, setSearch] = useState("");
   const [sector, setSector] = useState("");
@@ -119,59 +84,6 @@ function MemberIncomeRanking() {
     professionalCategory: "",
     professionalRegistration: "",
   });
-  const load = useCallback(
-    (signal?: AbortSignal) =>
-      apiRequest<Ranking>(
-        "/api/rankings" +
-          (publication && userId
-            ? "?publication=" + encodeURIComponent(publication)
-            : ""),
-        { signal },
-      ),
-    [publication, userId],
-  );
-  const applyRanking = useCallback((data: Ranking) => {
-    setRanking(data);
-    setError("");
-  }, []);
-  useEffect(() => {
-    if (authLoading) return;
-    const controller = new AbortController();
-    load(controller.signal)
-      .then(async (data) => {
-        if (!controller.signal.aborted) await applyRanking(data);
-      })
-      .catch(async (reason) => {
-        if (
-          !controller.signal.aborted &&
-          reason instanceof ApiError &&
-          reason.status === 401
-        ) {
-          try {
-            await refreshSession();
-          } catch {
-            if (!controller.signal.aborted)
-              setError(
-                "Não foi possível verificar sua sessão. Atualize a página e entre novamente.",
-              );
-          }
-          return;
-        }
-        if (!controller.signal.aborted)
-          setError(
-            reason instanceof Error
-              ? reason.message
-              : "Não foi possível carregar.",
-          );
-      })
-      .finally(() => {
-        if (!controller.signal.aborted) {
-          setLoading(false);
-          setLoadedFor(requestKey);
-        }
-      });
-    return () => controller.abort();
-  }, [load, applyRanking, authLoading, requestKey, refreshSession]);
   const displayMode = searchParams.get("visual");
   const showingDemo =
     displayMode === "demo" ||

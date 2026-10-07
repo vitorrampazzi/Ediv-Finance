@@ -23,6 +23,10 @@ body {
   color: #f2f4f7;
 }
 
+.home-editorial {
+  background-image: radial-gradient(ellipse at 10% 5%, rgb(36 152 155 / 7%), transparent 58%);
+}
+
 button,
 input,
 select,
