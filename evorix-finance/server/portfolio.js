@@ -5,7 +5,11 @@ import { z } from "zod";
 import { requireAuthenticatedUser } from "./auth.js";
 import { pool } from "./database.js";
 import { getMarketQuotes } from "./market.js";
-import { ledger, toUnits, fromUnits, multiplyUnits } from "./ledger.js";
+import { ledger, toUnits, fromUnits } from "./ledger.js";
+import {
+  portfolioInsights,
+  valuePortfolioPositions,
+} from "./portfolio-insights.js";
 import {
   readUpload,
   fileBody,
@@ -154,29 +158,12 @@ router.get("/", async (req, res) => {
     ["ACAO", "FII", "ETF"].includes(p.assetType),
   );
   const quotes = await getMarketQuotes(marketable.map((p) => p.ticker));
-  const byTicker = new Map(quotes.map((q) => [q.symbol, q]));
-  const positions = calculated.positions.map((p) => {
-    const quote = byTicker.get(p.ticker) || null;
-    const price = quote?.price ? toUnits(quote.price) : null;
-    const marketValue =
-      price === null
-        ? null
-        : fromUnits(multiplyUnits(toUnits(p.quantity), price));
-    return {
-      ...p,
-      quote,
-      currentPrice: price === null ? null : fromUnits(price),
-      marketValue,
-      unrealizedPnl:
-        marketValue === null
-          ? null
-          : fromUnits(toUnits(marketValue) - toUnits(p.costBasis)),
-    };
-  });
+  const positions = valuePortfolioPositions(calculated.positions, quotes);
   const historyPages = Math.max(1, Math.ceil(data.transactions.length / 100));
   const historyPage = Math.min(page, historyPages);
   return res.json({
     positions,
+    insights: portfolioInsights(positions, calculated.summary),
     summary: calculated.summary,
     monthly: calculated.monthly,
     events: data.events.map((e) => ({

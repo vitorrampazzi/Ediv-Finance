@@ -569,6 +569,85 @@ try {
     },
   );
   await check(
+    "Painel explica resultado parcial sem inventar rentabilidade diária",
+    async () => {
+      const ids = [];
+      try {
+        for (const row of [
+          {
+            ticker: "PETR4",
+            assetName: "Empresa fictícia A",
+            assetType: "ACAO",
+            quantity: "10",
+            unitPrice: "8",
+          },
+          {
+            ticker: "ITUB4",
+            assetName: "Empresa fictícia B",
+            assetType: "ACAO",
+            quantity: "5",
+            unitPrice: "22",
+          },
+          {
+            ticker: "TESTEFIXO",
+            assetName: "Registro fictício sem cotação",
+            assetType: "RENDA_FIXA",
+            quantity: "3",
+            unitPrice: "100",
+          },
+        ]) {
+          const added = await fixture.request(
+            fixture.accounts.a,
+            "/api/portfolio/transactions",
+            {
+              method: "POST",
+              body: { ...row, side: "BUY", fees: "0", tradedAt: "2026-01-01" },
+            },
+          );
+          assert.equal(added.status, 201);
+        }
+        const snapshot = await fixture.request(
+          fixture.accounts.a,
+          "/api/portfolio",
+        );
+        assert.equal(snapshot.body.insights.status, "PARTIAL");
+        assert.equal(snapshot.body.insights.quotedMarketValue, "200.00000000");
+        assert.equal(snapshot.body.insights.unrealizedPnl, "10.00000000");
+        ids.push(...snapshot.body.transactions.map((row) => row.id));
+        await page.setViewportSize({ width: 1366, height: 900 });
+        await page.goto(root + "/app");
+        await expect(
+          page.getByRole("region", { name: "Leitura da sua carteira" }),
+        ).toContainText("Valor estimado da parte cotada");
+        await expect(
+          page.getByRole("region", { name: "Leitura da sua carteira" }),
+        ).toContainText("TESTEFIXO");
+        await expect(
+          page.getByRole("heading", { name: "O que explica a variação" }),
+        ).toBeVisible();
+        await noOverflow(page);
+        await page.screenshot({
+          path: ".test-artifacts/dashboard-desktop.png",
+          fullPage: true,
+        });
+        await page.setViewportSize({ width: 360, height: 900 });
+        await noOverflow(page);
+        await page.screenshot({
+          path: ".test-artifacts/dashboard-mobile.png",
+          fullPage: true,
+        });
+        await page.setViewportSize({ width: 1366, height: 900 });
+      } finally {
+        for (const id of ids)
+          await fixture.request(
+            fixture.accounts.a,
+            "/api/portfolio/transactions/" + id,
+            { method: "DELETE" },
+          );
+      }
+    },
+  );
+  await check(
     "Administrador gerencia perfil e vê auditoria no celular",
     async () => {
       const adminContext = await context(fixture.accounts.admin, {

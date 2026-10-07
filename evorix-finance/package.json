@@ -16,7 +16,7 @@
     "db:provision:qa": "node --env-file=.env.aiven server/provision-qa.js",
     "build": "node scripts/build.mjs",
     "lint": "eslint .",
-    "test": "node --test tests/unit.test.mjs tests/site.test.mjs",
+    "test": "node --test tests/unit.test.mjs tests/site.test.mjs tests/portfolio-insights.test.mjs",
     "test:integration:aiven": "node --env-file=.env.aiven tests/integration.test.mjs",
     "test:browser:aiven": "node --env-file=.env.aiven tests/browser.mjs",
     "test:backup:aiven": "node --env-file=.env.aiven tests/backup.mjs",

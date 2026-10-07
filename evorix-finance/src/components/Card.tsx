@@ -1,13 +1,20 @@
-import React from 'react';
+import React from "react";
 
 interface CardProps {
   children: React.ReactNode;
   className?: string;
-  glow?: 'blue' | 'green' | 'yellow' | 'none';
+  glow?: "blue" | "green" | "yellow" | "none";
+  variant?: "panel" | "editorial";
   style?: React.CSSProperties;
 }
 
-export const Card = ({ children, className = '', glow = 'none', style }: CardProps) => {
+export const Card = ({
+  children,
+  className = "",
+  glow = "none",
+  variant = "panel",
+  style,
+}: CardProps) => {
   const glowMap = {
     blue: "shadow-[0_0_40px_-15px_rgba(109,151,128,0.14)] border-evo-accent/20",
     green: "shadow-[0_0_40px_-15px_rgba(121,168,142,0.1)] border-evo-green/20",
@@ -15,11 +22,25 @@ export const Card = ({ children, className = '', glow = 'none', style }: CardPro
     none: "border-white/5",
   };
 
+  if (variant === "editorial") {
+    return (
+      <div
+        style={style}
+        className={`relative border-y border-evo-border bg-transparent py-6 ${className}`}
+      >
+        {children}
+      </div>
+    );
+  }
+
   return (
-    <div style={style} className={`relative rounded-2xl bg-evo-card backdrop-blur-xl p-5 border ${glowMap[glow]}
+    <div
+      style={style}
+      className={`relative rounded-2xl bg-evo-card backdrop-blur-xl p-5 border ${glowMap[glow]}
       before:absolute before:inset-0 before:rounded-2xl before:p-px 
       before:bg-gradient-to-b before:from-white/10 before:to-transparent 
-      before:-z-10 before:content-[''] transition-all duration-300 ${className}`}>
+      before:-z-10 before:content-[''] transition-all duration-300 ${className}`}
+    >
       {children}
     </div>
   );

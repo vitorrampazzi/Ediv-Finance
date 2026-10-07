@@ -27,6 +27,16 @@ body {
   background-image: radial-gradient(ellipse at 10% 5%, rgb(36 152 155 / 7%), transparent 58%);
 }
 
+.portfolio-value {
+  font-size: clamp(1.35rem, 3.6vw, 3.25rem);
+  line-height: 1.25;
+  overflow-wrap: anywhere;
+}
+
+.portfolio-empty {
+  background-image: radial-gradient(ellipse at 0 0, rgb(36 152 155 / 6%), transparent 68%);
+}
+
 button,
 input,
 select,
