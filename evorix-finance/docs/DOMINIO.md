@@ -2,7 +2,7 @@
 
 ## Destino e serviços
 
-- Endereço principal planejado: https://escoladodividendo.com.br/
+- Endereço principal: https://escoladodividendo.com.br/
 - Endereço alternativo: https://www.escoladodividendo.com.br/
 - Projeto de produção: `vitors-projects-7b84bd52/ediv-finance`, branch `main`.
 - Hospedagem: Vercel; registro e DNS: Registro.br; envio transacional: Resend.
@@ -10,7 +10,9 @@
 
 ## Preparação em 06/10/2026
 
-Os dois endereços foram adicionados ao projeto correto na Vercel; `www` redireciona permanentemente (308) à raiz. O domínio real foi adicionado à conta Resend usada pela aplicação. O Registro.br foi colocado no modo avançado; a zona estava vazia. Após a transição inicial, os seis registros abaixo foram salvos às 16:34 (Brasília), com autorização explícita de envio pelo Resend. A zona foi reaberta e os registros persistidos foram conferidos. A verificação foi solicitada no Resend; os provedores ainda aguardam propagação. Ainda não há confirmação de HTTPS ou entrega de e-mail concluídos.
+Os dois endereços estão verificados na Vercel; `www` redireciona permanentemente (308) à raiz. O Registro.br foi colocado no modo avançado; a zona estava vazia. Após a transição inicial, os seis registros abaixo foram salvos às 16:34 (Brasília), com autorização explícita de envio pelo Resend. A zona foi reaberta e os registros persistidos foram conferidos. O Resend confirmou DNS às 18:42 e domínio verificado às 18:51 (Brasília).
+
+`APP_BASE_URL`, `APP_ORIGIN` e `MAIL_FROM` foram configurados somente em Production na Vercel com os valores abaixo. A entrega de e-mail e os fluxos da conta devem ser conferidos após o deploy; verificação de domínio não comprova entrega na caixa de entrada.
 
 ## Registros exigidos pelos provedores
 
@@ -45,4 +47,4 @@ Mantenha os servidores DNS do Registro.br. Não remova registros existentes de o
 5. Publique os metadados de `index.html` e faça um novo deploy de `main`.
 6. Confira cadastro, confirmação e recuperação pelo domínio principal. SMTP autenticado não comprova entrega na caixa de entrada.
 
-Até a verificação, preserve o remetente de teste e a preparação do cadastro público. O endereço antigo de produção continua disponível: https://evorix-finance.vercel.app/.
+O endereço antigo de produção continua disponível: https://evorix-finance.vercel.app/. As novas mensagens usam o domínio principal nos links de confirmação e recuperação. O remetente não é uma caixa postal de suporte: recebimento continua desativado no Resend.
