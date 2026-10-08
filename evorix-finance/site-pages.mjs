@@ -36,9 +36,9 @@ export const publicPages = {
       "Saiba quais dados a Ediv Finance usa, como funcionam suas ferramentas e quais controles sua conta oferece.",
   },
   "/suporte": {
-    title: "Contato e suporte | Ediv Finance",
+    title: "Dúvidas e suporte | Ediv Finance",
     description:
-      "Consulte os canais de suporte, informações profissionais e condições de atendimento da Ediv Finance.",
+      "Encontre respostas sobre pesquisas, dividendos, acesso à conta e ferramentas. Consulte a central de ajuda e converse com a equipe Ediv.",
   },
 };
 export const accountPaths = [
