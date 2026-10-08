@@ -1,67 +1,135 @@
-import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Clock3, Headphones, Mail, MessageCircle } from "lucide-react";
+import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/authContext";
-import { apiRequest } from "../lib/api";
 import { assistantEnabled } from "../lib/features";
-type Information = {
-  email: string;
-  hours: string;
-  professionalName: string;
-  category: string;
-  registration: string;
-};
+import { authLink } from "../lib/authDestination";
+import { useSupportInformation } from "../hooks/useSupportInformation";
+import { SupportHelpCenter } from "../components/support/SupportHelpCenter";
 export function Suporte() {
   const { user } = useAuth();
-  const [info, setInfo] = useState<Information | null>(null);
-  const [error, setError] = useState("");
-  useEffect(() => {
-    const controller = new AbortController();
-    apiRequest<Information>("/api/support/information", {
-      signal: controller.signal,
-    })
-      .then(setInfo)
-      .catch(() => {
-        if (!controller.signal.aborted)
-          setError("Os contatos não puderam ser carregados.");
-      });
-    return () => controller.abort();
-  }, []);
+  const navigate = useNavigate();
+  const { info, loading, error } = useSupportInformation();
+  const contact = (topic?: string) => {
+    const destination =
+      "/app/conversas" + (topic ? "?topic=" + encodeURIComponent(topic) : "");
+    navigate(user ? destination : authLink("entrar", destination));
+  };
   return (
-    <section className="mx-auto max-w-4xl space-y-6 px-5 py-12">
-      <h1 className="text-3xl font-bold">Contato e suporte</h1>
-      <p className="text-evo-textSec">
-        Envie perguntas pelo atendimento da conta. As mensagens ficam
-        registradas para a equipe responder; não há promessa de resposta
-        imediata nem atendimento humano contínuo.
-      </p>
-      {error && (
-        <p role="alert" className="notice-error">
-          {error}
+    <section className="mx-auto max-w-6xl space-y-10 px-4 py-9 sm:px-6 sm:py-12">
+      <header className="border-b border-evo-border pb-7">
+        <p className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[.16em] text-evo-accent">
+          <Headphones size={16} aria-hidden="true" />
+          Central de ajuda · Ediv Finance
         </p>
-      )}
-      <dl className="grid gap-5 rounded-xl border border-evo-border bg-evo-card p-5 sm:grid-cols-2">
-        {[
-          ["E-mail público", info?.email],
-          ["Horário de resposta", info?.hours],
-          ["Nome profissional", info?.professionalName],
-          ["Categoria", info?.category],
-          ["Registro", info?.registration],
-        ].map(([label, value]) => (
-          <div key={label}>
-            <dt className="text-sm text-evo-textSec">{label}</dt>
-            <dd className="mt-1 min-h-6 break-words">
-              {value || "Não informado"}
-            </dd>
+        <h1 className="mt-4 text-3xl font-semibold tracking-tight sm:text-4xl">
+          Dúvidas e suporte
+        </h1>
+        <p className="mt-3 max-w-2xl text-sm leading-7 text-evo-textSec">
+          Do primeiro acesso à leitura de uma pesquisa: encontre uma explicação,
+          retome seus estudos ou leve sua dúvida à equipe.
+        </p>
+        <div className="mt-5 flex flex-wrap gap-3">
+          <button className="action" type="button" onClick={() => contact()}>
+            <MessageCircle size={16} aria-hidden="true" />
+            {user ? "Abrir minhas conversas" : "Entrar e falar com a equipe"}
+          </button>
+          <Link to="/recuperar-senha" className="action-secondary">
+            Preciso recuperar meu acesso
+          </Link>
+        </div>
+      </header>
+      <SupportHelpCenter publicView={!user} onContact={contact} />
+      <section
+        aria-labelledby="contact-information-title"
+        className="space-y-5 border-t border-evo-border pt-7"
+      >
+        <h2 id="contact-information-title" className="text-xl font-semibold">
+          Como falar com a Ediv
+        </h2>
+        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
+          <div className="min-w-0 border-l-2 border-evo-border pl-5">
+            <h3 className="inline-flex items-center gap-2 text-sm font-semibold">
+              <MessageCircle
+                size={17}
+                className="text-evo-accent"
+                aria-hidden="true"
+              />
+              Conversas da sua conta
+            </h3>
+            <p className="mt-3 text-sm leading-relaxed text-evo-textSec">
+              Suas mensagens ficam registradas em um atendimento privado. Você
+              pode continuar o assunto e consultar as respostas quando precisar.
+            </p>
+            <button
+              type="button"
+              onClick={() => contact()}
+              className="mt-3 min-h-11 text-sm text-evo-accent underline underline-offset-4"
+            >
+              {user ? "Acompanhar atendimento" : "Entrar para acompanhar"}
+            </button>
           </div>
-        ))}
-      </dl>
-      <Link className="action" to={user ? "/app/conversas" : "/entrar"}>
-        Abrir atendimento
-      </Link>
-      <p className="text-sm text-evo-textSec">
-        A assinatura de assessoria está em preparação e ainda não é vendida.
-        Informações de autoria de cada ranking aparecem na própria publicação.
-      </p>
+          <div className="min-w-0 border-l-2 border-evo-border pl-5">
+            <h3 className="inline-flex items-center gap-2 text-sm font-semibold">
+              <Clock3
+                size={17}
+                className="text-evo-accent"
+                aria-hidden="true"
+              />
+              Disponibilidade de resposta
+            </h3>
+            <p className="mt-3 text-sm leading-relaxed text-evo-textSec">
+              {info?.hours ||
+                "Envie suas perguntas a qualquer hora. As respostas seguem a disponibilidade da equipe; o horário de atendimento ainda será informado."}
+            </p>
+          </div>
+          {info?.email && (
+            <div className="min-w-0 border-l-2 border-evo-border pl-5">
+              <h3 className="inline-flex items-center gap-2 text-sm font-semibold">
+                <Mail
+                  size={17}
+                  className="text-evo-accent"
+                  aria-hidden="true"
+                />
+                Contato público
+              </h3>
+              <a
+                className="mt-3 inline-flex min-h-11 break-all text-sm text-evo-accent underline"
+                href={"mailto:" + info.email}
+              >
+                {info.email}
+              </a>
+            </div>
+          )}
+          {info?.professionalName && (
+            <div className="min-w-0 border-l-2 border-evo-border pl-5">
+              <h3 className="text-sm font-semibold">
+                Responsável pelo atendimento
+              </h3>
+              <p className="mt-3 break-words text-sm">
+                {info.professionalName}
+              </p>
+              {info.category && (
+                <p className="mt-1 text-xs text-evo-textSec">{info.category}</p>
+              )}
+              {info.registration && (
+                <p className="mt-1 text-xs text-evo-textSec">
+                  Registro: {info.registration}
+                </p>
+              )}
+            </div>
+          )}
+        </div>
+        {loading && (
+          <p role="status" className="text-xs text-evo-textSec">
+            Carregando informações de contato…
+          </p>
+        )}
+        {error && (
+          <p role="status" className="notice-error">
+            {error} As respostas rápidas continuam disponíveis acima.
+          </p>
+        )}
+      </section>
     </section>
   );
 }

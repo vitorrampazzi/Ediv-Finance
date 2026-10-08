@@ -240,7 +240,7 @@ export function SiteFooter() {
               </li>
               <li>
                 <Link className="hover:text-evo-textMain" to="/suporte">
-                  Contato e suporte
+                  Dúvidas e suporte
                 </Link>
               </li>
               {!user && (
