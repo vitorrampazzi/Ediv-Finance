@@ -1,6 +1,6 @@
 import {
   BookOpen,
-  BriefcaseBusiness,
+  Building2,
   ChartNoAxesCombined,
   ArrowRight,
 } from "lucide-react";
@@ -11,7 +11,7 @@ import { authLink } from "../lib/authDestination";
 const questions = [
   [
     "Preciso pagar para começar?",
-    "Não. A conta, as aulas e as ferramentas de carteira e favoritos são gratuitas nesta versão. A assessoria é separada, está em preparação e ainda não é vendida.",
+    "Não. A conta gratuita libera o ranking, os cadernos de pesquisa e a trilha educativa nesta versão. A assessoria é um serviço separado, ainda em preparação.",
   ],
   [
     "O ranking já tem a pesquisa do corretor?",
@@ -19,7 +19,7 @@ const questions = [
   ],
   [
     "A Ediv conecta minha corretora ou movimenta meu dinheiro?",
-    "Não. Você registra operações ou importa um arquivo para organizar sua carteira. A Ediv não executa ordens nem tem acesso à sua conta na corretora.",
+    "Não. A Ediv é uma plataforma de pesquisa e educação. Você estuda empresas, cenários e dividendos; não executamos ordens nem acessamos sua conta na corretora.",
   ],
   [
     "Por que preciso confirmar meu e-mail?",
@@ -45,32 +45,30 @@ export function GettingStarted() {
         <h2 className="mt-2 text-2xl font-bold">Comece pelo conhecimento</h2>
         <p className="mt-3 max-w-2xl text-sm leading-relaxed text-evo-textSec">
           Explore no seu ritmo. Entenda os conceitos, conheça o formato da
-          pesquisa e organize os investimentos que você informa.
+          pesquisa e conheça o negócio por trás de cada ação.
         </p>
         <div className="mt-6 grid gap-4 md:grid-cols-3">
           {[
             {
-              Icon: BookOpen,
-              title: "1. Aprenda os fundamentos",
-              text: "A primeira aula e o glossário estão abertos. Com sua conta, continue a trilha e acompanhe seu progresso.",
-              to: "/aprender",
-              action: "Começar a aprender",
-            },
-            {
               Icon: ChartNoAxesCombined,
-              title: "2. Entenda os cenários",
-              text: "Conheça o ranking e os módulos de pesquisa. Observe a identificação de demonstração, as fontes e os riscos.",
-              to: user ? "/ranking" : authLink("cadastro", "/ranking"),
+              title: "1. Explore as previsões",
+              text: "Leia os cenários do ranking, o horizonte e as premissas. Abra uma empresa para entender a tese da pesquisa.",
+              to: user ? "/app/ranking" : authLink("cadastro", "/app/ranking"),
               action: user ? "Abrir ranking" : "Criar conta grátis",
             },
             {
-              Icon: BriefcaseBusiness,
-              title: "3. Organize sua carteira",
-              text: "Informe suas operações, acompanhe os valores disponíveis e salve empresas para estudar. Sem conectar sua corretora.",
-              to: user
-                ? "/app/carteira"
-                : authLink("cadastro", "/app/carteira"),
-              action: "Organizar minha carteira",
+              Icon: Building2,
+              title: "2. Conheça as empresas",
+              text: "Explore as cotações e indicadores disponíveis. Relacione os números à história, ao setor e aos riscos do negócio.",
+              to: user ? "/app/analises" : "/mercado",
+              action: "Explorar análises",
+            },
+            {
+              Icon: BookOpen,
+              title: "3. Entenda os dividendos",
+              text: "Estude como empresas geram caixa, distribuem resultados e sustentam seus pagamentos. Continue pelas aulas e exercícios.",
+              to: user ? "/app/aprender" : "/aprender",
+              action: "Entrar na escola",
             },
           ].map(({ Icon, title, text, to, action }) => (
             <article

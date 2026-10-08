@@ -1,7 +1,7 @@
 import {
   ArrowRight,
   BarChart3,
-  Headset,
+  BookOpen,
   Menu,
   TrendingUp,
   X,
@@ -14,8 +14,24 @@ import { useAuth } from "../context/authContext";
 export function SiteHeader() {
   const { user } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-
   const menuButton = useRef<HTMLButtonElement>(null);
+  const links = [
+    {
+      to: user ? "/app/ranking" : "/ranking",
+      label: "Ranking de previsões",
+      Icon: TrendingUp,
+    },
+    {
+      to: user ? "/app/analises" : "/mercado",
+      label: "Análises de ações",
+      Icon: BarChart3,
+    },
+    {
+      to: user ? "/app/aprender" : "/aprender",
+      label: "Aprender",
+      Icon: BookOpen,
+    },
+  ];
   useEffect(() => {
     const close = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
@@ -34,7 +50,7 @@ export function SiteHeader() {
       >
         Pular para o conteúdo
       </a>
-      <header className="border-b border-evo-border sticky top-0 z-40 bg-evo-bgMain/95 backdrop-blur">
+      <header className="sticky top-0 z-40 border-b border-evo-border bg-evo-bgMain/95 backdrop-blur">
         <div className="relative mx-auto flex min-h-16 max-w-7xl items-center justify-between gap-3 px-4 py-3 sm:px-5 md:min-h-20 md:px-8">
           <Link
             to="/"
@@ -47,97 +63,52 @@ export function SiteHeader() {
               aria-hidden="true"
               className="h-10 w-10 object-contain mix-blend-screen"
             />
-            <span className="hidden font-semibold tracking-tight text-evo-textMain md:inline">
+            <span className="hidden font-semibold tracking-tight md:inline">
               Ediv Finance
             </span>
           </Link>
-
           <nav
             aria-label="Navegação principal"
-            className="hidden items-center gap-1 lg:flex lg:gap-2"
+            className="hidden items-center gap-2 lg:flex"
           >
-            <NavLink
-              to="/"
-              end
-              className={({ isActive }) =>
-                `inline-flex min-h-10 items-center rounded-lg px-2 text-sm font-medium transition hover:bg-evo-card lg:px-3 ${isActive ? "text-evo-textMain" : "text-evo-textSec hover:text-evo-textMain"}`
-              }
-            >
-              Início
-            </NavLink>
-            <NavLink
-              to="/mercado"
-              className={({ isActive }) =>
-                `inline-flex min-h-10 items-center gap-2 rounded-lg px-2 text-sm font-medium transition hover:bg-evo-card lg:px-3 ${isActive ? "text-evo-textMain" : "text-evo-textSec hover:text-evo-textMain"}`
-              }
-            >
-              <BarChart3 size={16} aria-hidden="true" /> Mercado
-            </NavLink>
-            <NavLink
-              to="/ranking"
-              className={({ isActive }) =>
-                `inline-flex min-h-10 items-center gap-1.5 rounded-lg px-2 text-sm font-medium transition hover:bg-evo-card lg:px-3 ${isActive ? "text-evo-textMain" : "text-evo-textSec hover:text-evo-textMain"}`
-              }
-            >
-              <TrendingUp size={16} aria-hidden="true" /> Ranking
-            </NavLink>
-            <NavLink
-              to="/aprender"
-              className="inline-flex min-h-11 items-center rounded-lg px-3 text-sm text-evo-textSec hover:text-evo-textMain"
-              onClick={() => setMobileMenuOpen(false)}
-            >
-              Aprender
-            </NavLink>
-            <NavLink
-              to="/assessoria"
-              className={({ isActive }) =>
-                `inline-flex min-h-10 items-center gap-1.5 rounded-lg px-2 text-sm font-medium transition hover:bg-evo-card lg:px-3 ${isActive ? "text-evo-accent" : "text-evo-textSec hover:text-evo-textMain"}`
-              }
-            >
-              <Headset size={16} aria-hidden="true" />
-              <span>Assessoria</span>
-            </NavLink>
-            {user ? (
-              <Link
-                to="/app"
-                className="inline-flex min-h-10 items-center rounded-lg bg-evo-primary px-3 text-sm font-semibold text-white transition hover:bg-evo-primaryHover sm:px-4"
+            {links.map(({ to, label, Icon }) => (
+              <NavLink
+                key={to}
+                to={to}
+                className={({ isActive }) =>
+                  `inline-flex min-h-11 items-center gap-2 px-3 text-sm font-medium ${isActive ? "text-evo-accent" : "text-evo-textSec hover:text-evo-textMain"}`
+                }
               >
+                <Icon size={16} aria-hidden="true" />
+                {label}
+              </NavLink>
+            ))}
+            {user ? (
+              <Link to="/app/ranking" className="action">
                 Minha conta
               </Link>
             ) : (
               <>
                 <Link
                   to="/entrar"
-                  className="inline-flex min-h-10 items-center rounded-lg px-2 text-sm font-medium text-evo-textSec transition hover:bg-evo-card hover:text-evo-textMain lg:px-3"
+                  className="inline-flex min-h-11 items-center px-3 text-sm text-evo-textSec"
                 >
                   Entrar
                 </Link>
-                <Link
-                  to="/cadastro"
-                  className="inline-flex min-h-10 items-center gap-1.5 rounded-lg bg-evo-primary px-3 text-sm font-semibold text-white transition hover:bg-evo-primaryHover sm:px-4"
-                >
-                  Criar conta <ArrowRight size={15} aria-hidden="true" />
+                <Link to="/cadastro" className="action">
+                  Criar conta <ArrowRight size={15} />
                 </Link>
               </>
             )}
           </nav>
-
           <div className="flex items-center gap-2 lg:hidden">
-            {user ? (
-              <Link
-                to="/app"
-                className="inline-flex min-h-10 items-center rounded-lg bg-evo-primary px-3 text-xs font-semibold text-white transition hover:bg-evo-primaryHover"
-              >
-                Minha conta
-              </Link>
-            ) : (
-              <Link
-                to="/cadastro"
-                className="inline-flex min-h-10 items-center gap-1 rounded-lg bg-evo-primary px-3 text-xs font-semibold text-white transition hover:bg-evo-primaryHover"
-              >
-                Criar conta <ArrowRight size={14} aria-hidden="true" />
-              </Link>
-            )}
+            <Link
+              to={user ? "/app/ranking" : "/cadastro"}
+              className="inline-flex min-h-11 items-center gap-1 rounded-lg bg-evo-primary px-3 text-xs font-semibold text-white"
+            >
+              {user ? "Minha conta" : "Criar conta"}
+              <ArrowRight size={14} aria-hidden="true" />
+            </Link>
             <button
               ref={menuButton}
               type="button"
@@ -145,7 +116,7 @@ export function SiteHeader() {
               aria-label={mobileMenuOpen ? "Fechar menu" : "Abrir menu"}
               aria-expanded={mobileMenuOpen}
               aria-controls="public-mobile-menu"
-              className="inline-flex h-10 w-10 items-center justify-center rounded-lg border border-evo-border text-evo-textSec hover:bg-evo-card hover:text-evo-textMain focus-visible:outline focus-visible:outline-2 focus-visible:outline-evo-accent"
+              className="inline-flex h-11 w-11 items-center justify-center border border-evo-border text-evo-textSec"
             >
               {mobileMenuOpen ? (
                 <X size={19} aria-hidden="true" />
@@ -154,62 +125,30 @@ export function SiteHeader() {
               )}
             </button>
           </div>
-
           {mobileMenuOpen && (
             <nav
               id="public-mobile-menu"
               aria-label="Navegação móvel"
               className="absolute inset-x-4 top-[calc(100%-0.25rem)] z-50 grid gap-1 rounded-xl border border-evo-border bg-evo-card p-2 shadow-2xl lg:hidden"
             >
-              <NavLink
-                to="/"
-                end
-                onClick={() => setMobileMenuOpen(false)}
-                className={({ isActive }) =>
-                  `flex min-h-11 items-center rounded-lg px-3 text-sm font-medium ${isActive ? "bg-evo-accent/10 text-evo-accent" : "text-evo-textSec hover:bg-white/[0.04] hover:text-evo-textMain"}`
-                }
-              >
-                Início
-              </NavLink>
-              <NavLink
-                to="/mercado"
-                onClick={() => setMobileMenuOpen(false)}
-                className={({ isActive }) =>
-                  `flex min-h-11 items-center gap-2 rounded-lg px-3 text-sm font-medium ${isActive ? "bg-evo-accent/10 text-evo-accent" : "text-evo-textSec hover:bg-white/[0.04] hover:text-evo-textMain"}`
-                }
-              >
-                <BarChart3 size={17} aria-hidden="true" /> Mercado
-              </NavLink>
-              <NavLink
-                to="/ranking"
-                onClick={() => setMobileMenuOpen(false)}
-                className={({ isActive }) =>
-                  `flex min-h-11 items-center gap-2 rounded-lg px-3 text-sm font-medium ${isActive ? "bg-evo-accent/10 text-evo-accent" : "text-evo-textSec hover:bg-white/[0.04] hover:text-evo-textMain"}`
-                }
-              >
-                <TrendingUp size={17} aria-hidden="true" /> Ranking
-              </NavLink>
-              <NavLink
-                to="/aprender"
-                onClick={() => setMobileMenuOpen(false)}
-                className="flex min-h-11 items-center px-3 text-sm text-evo-textSec"
-              >
-                Aprender
-              </NavLink>
-              <NavLink
-                to="/assessoria"
-                onClick={() => setMobileMenuOpen(false)}
-                className={({ isActive }) =>
-                  `flex min-h-11 items-center gap-2 rounded-lg px-3 text-sm font-medium ${isActive ? "bg-evo-accent/10 text-evo-accent" : "text-evo-textSec hover:bg-white/[0.04] hover:text-evo-textMain"}`
-                }
-              >
-                <Headset size={17} aria-hidden="true" /> Assessoria
-              </NavLink>
+              {links.map(({ to, label, Icon }) => (
+                <NavLink
+                  key={to}
+                  to={to}
+                  onClick={() => setMobileMenuOpen(false)}
+                  className={({ isActive }) =>
+                    `flex min-h-11 items-center gap-3 rounded-lg px-3 text-sm ${isActive ? "bg-evo-accent/10 text-evo-accent" : "text-evo-textSec hover:text-evo-textMain"}`
+                  }
+                >
+                  <Icon size={17} aria-hidden="true" />
+                  {label}
+                </NavLink>
+              ))}
               {!user && (
                 <Link
                   to="/entrar"
                   onClick={() => setMobileMenuOpen(false)}
-                  className="flex min-h-11 items-center rounded-lg px-3 text-sm font-medium text-evo-textSec hover:bg-white/[0.04] hover:text-evo-textMain"
+                  className="flex min-h-11 items-center px-3 text-sm text-evo-textSec"
                 >
                   Entrar
                 </Link>
@@ -221,7 +160,6 @@ export function SiteHeader() {
     </>
   );
 }
-
 export function SiteFooter() {
   const { user } = useAuth();
 
@@ -247,7 +185,7 @@ export function SiteFooter() {
             </Link>
             <p className="mt-3 max-w-sm text-sm leading-relaxed text-evo-textSec">
               Educação financeira para entender previsões, avaliar riscos e
-              acompanhar sua carteira com clareza.
+              conhecer as empresas e seus dividendos com clareza.
             </p>
           </div>
           <div>
@@ -262,7 +200,7 @@ export function SiteFooter() {
               </li>
               <li>
                 <Link className="hover:text-evo-textMain" to="/mercado">
-                  Mercado
+                  Análises de ações
                 </Link>
               </li>
               <li>
@@ -278,11 +216,6 @@ export function SiteFooter() {
               <li>
                 <Link className="hover:text-evo-textMain" to="/glossario">
                   Glossário
-                </Link>
-              </li>
-              <li>
-                <Link className="hover:text-evo-textMain" to="/assessoria">
-                  Assessoria
                 </Link>
               </li>
             </ul>

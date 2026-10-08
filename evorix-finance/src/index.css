@@ -105,83 +105,214 @@ button:disabled {
   background: #629a94;
 }
 
-@keyframes spinY {
-  from {
-    transform: rotateY(0deg);
+.research-visual {
+  position: relative;
+  flex-shrink: 0;
+  width: 92px;
+  height: 86px;
+  pointer-events: none;
+  color: #94b7b0;
+}
+
+.research-visual--hero {
+  width: 128px;
+  height: 118px;
+}
+
+.research-visual-grid {
+  position: absolute;
+  inset: 9% 4% 3% 2%;
+  background-image:
+    linear-gradient(rgb(148 183 176 / 9%) 1px, transparent 1px),
+    linear-gradient(90deg, rgb(148 183 176 / 9%) 1px, transparent 1px);
+  background-size: 18% 20%;
+  mask-image: radial-gradient(ellipse, #000 20%, transparent 74%);
+}
+
+.research-visual-plot {
+  position: absolute;
+  inset: 11% 7% 0 0;
+  animation: researchPlotReveal 8s ease-in-out infinite;
+}
+
+.research-visual-plot svg {
+  width: 100%;
+  height: 100%;
+}
+
+.research-visual-sheet {
+  position: absolute;
+  top: 3%;
+  right: 0;
+  width: 47%;
+  padding: 10% 6% 8%;
+  border: 1px solid rgb(175 194 191 / 32%);
+  background: #363e47;
+  box-shadow: -4px 7px 15px rgb(18 25 31 / 12%);
+  transform: rotate(7deg);
+  animation: researchSheetFloat 7s ease-in-out infinite;
+}
+
+.research-visual-sheet-heading {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+}
+
+.research-visual-sheet-heading svg {
+  width: 46%;
+  height: auto;
+}
+
+.research-visual-sheet-heading span {
+  color: #c5d4d0;
+  font-size: 4px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+}
+
+.research-visual-lines {
+  display: grid;
+  gap: 4px;
+  margin-top: 7px;
+}
+
+.research-visual-lines span {
+  width: var(--research-line-width);
+  height: 2px;
+  background: #94b7b0;
+  transform-origin: left;
+  opacity: 0.45;
+  animation: researchLineRead 8s ease-in-out infinite;
+  animation-delay: var(--research-line-delay);
+}
+
+.research-visual-sheet-footer {
+  display: flex;
+  gap: 3px;
+  margin-top: 8px;
+}
+
+.research-visual-sheet-footer span {
+  width: 3px;
+  height: 3px;
+  background: #94b7b0;
+  opacity: 0.45;
+}
+
+.research-visual-note {
+  position: absolute;
+  left: 4%;
+  bottom: 0;
+  display: grid;
+  gap: 3px;
+  width: 22%;
+  padding: 5%;
+  border-left: 1px solid #94b7b0;
+  background: #363e47;
+  transform: rotate(-7deg);
+  animation: researchNoteFloat 9s ease-in-out infinite;
+}
+
+.research-visual-note svg {
+  width: 100%;
+  height: auto;
+}
+
+.research-visual-note span {
+  display: block;
+  height: 1px;
+  background: #94b7b0;
+  opacity: 0.35;
+}
+
+.research-visual--learning .research-visual-sheet {
+  width: 54%;
+  top: 10%;
+}
+
+.research-visual--learning .research-visual-sheet-heading svg {
+  width: 65%;
+}
+
+.research-visual--learning .research-visual-plot {
+  opacity: 0.5;
+}
+
+@keyframes researchSheetFloat {
+  0%,
+  100% {
+    transform: translateY(0) rotate(7deg);
   }
-  to {
-    transform: rotateY(360deg);
+  50% {
+    transform: translateY(-5px) rotate(4deg);
   }
 }
 
-.animate-spin-y {
-  animation: spinY 4s linear infinite;
-  transform-style: preserve-3d;
-}
-
-@keyframes orbit {
-  from {
-    transform: rotate(var(--orbit-phase, 0deg));
+@keyframes researchNoteFloat {
+  0%,
+  100% {
+    transform: translateY(0) rotate(-7deg);
   }
-  to {
-    transform: rotate(calc(var(--orbit-phase, 0deg) + 360deg));
+  50% {
+    transform: translateY(4px) rotate(-3deg);
   }
 }
 
-.orbit-coins {
-  --coin-core: 36px;
-  --coin-radius: 31px;
-  --coin-orbit-size: 16px;
-  width: calc(var(--coin-core) * 2.3);
-  height: calc(var(--coin-core) * 2.3);
-}
-
-.orbit-coins--hero {
-  --coin-core: 48px;
-  --coin-radius: 42px;
-  --coin-orbit-size: 20px;
-}
-
-.coin-orbit {
-  transform: rotate(var(--orbit-phase));
-  animation: orbit var(--orbit-duration) linear infinite;
-  animation-delay: var(--orbit-delay);
-}
-
-.coin-orbit-value {
-  display: inline-block;
-  transform: rotate(calc(var(--orbit-phase) * -1));
-  animation: coinCounterOrbit var(--orbit-duration) linear infinite;
-  animation-delay: var(--orbit-delay);
-}
-
-@keyframes coinCounterOrbit {
-  from {
-    transform: rotate(calc(var(--orbit-phase) * -1));
+@keyframes researchPlotReveal {
+  0%,
+  100% {
+    clip-path: inset(0 0 0 0);
+    opacity: 0.72;
   }
-  to {
-    transform: rotate(calc(var(--orbit-phase) * -1 - 360deg));
+  42% {
+    clip-path: inset(0 0 0 0);
+    opacity: 1;
+  }
+  66% {
+    clip-path: inset(0 30% 0 0);
+    opacity: 0.55;
+  }
+}
+
+@keyframes researchLineRead {
+  0%,
+  100% {
+    transform: scaleX(1);
+    opacity: 0.45;
+  }
+  50% {
+    transform: scaleX(0.75);
+    opacity: 0.7;
   }
 }
 
 @media (min-width: 640px) {
-  .orbit-coins {
-    --coin-core: 48px;
-    --coin-radius: 42px;
-    --coin-orbit-size: 20px;
+  .research-visual--sm {
+    width: 112px;
+    height: 103px;
   }
-  .orbit-coins--hero {
-    --coin-core: 84px;
-    --coin-radius: 70px;
-    --coin-orbit-size: 26px;
+  .research-visual--hero {
+    width: 196px;
+    height: 177px;
+  }
+  .research-visual--hero .research-visual-sheet-heading span {
+    font-size: 7px;
+  }
+  .research-visual--hero .research-visual-lines {
+    gap: 6px;
+    margin-top: 10px;
+  }
+  .research-visual--hero .research-visual-lines span {
+    height: 3px;
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .orbit-coins .coin-orbit,
-  .orbit-coins .coin-orbit-value,
-  .orbit-coins .animate-spin-y,
-  .orbit-coins .animate-pulse {
+  .research-visual *,
+  .research-visual *::before,
+  .research-visual *::after {
     animation: none !important;
   }
 }

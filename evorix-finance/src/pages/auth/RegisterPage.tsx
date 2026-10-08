@@ -57,7 +57,7 @@ export function RegisterPage() {
   return (
     <AuthShell
       title="Criar conta grátis"
-      description="Estude os conceitos, conheça o formato da pesquisa, organize sua carteira e salve favoritos. Sem cobrança nesta versão."
+      description="Explore as previsões de ações, leia a pesquisa por empresa e aprenda sobre dividendos. Sem cobrança nesta versão."
     >
       {!message && availability.current?.available && <ResearchAvailability />}
       {message ? (

@@ -1,18 +1,12 @@
 import { lazy, Suspense } from "react";
-import { BrowserRouter, Routes, Route, Link } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Link, Navigate } from "react-router-dom";
 const DashboardLayout = lazy(() =>
   import("./layouts/DashboardLayout").then((module) => ({
     default: module.DashboardLayout,
   })),
 );
-const Dashboard = lazy(() =>
-  import("./pages/Dashboard").then((module) => ({ default: module.Dashboard })),
-);
 const Analises = lazy(() =>
   import("./pages/analises").then((module) => ({ default: module.Analises })),
-);
-const Carteira = lazy(() =>
-  import("./pages/Carteira").then((module) => ({ default: module.Carteira })),
 );
 const Assessoria = lazy(() =>
   import("./pages/Assessoria").then((module) => ({
@@ -27,15 +21,11 @@ const Configuracoes = lazy(() =>
     default: module.Configuracoes,
   })),
 );
-const Favoritos = lazy(() =>
-  import("./pages/Favoritos").then((module) => ({ default: module.Favoritos })),
-);
 import { PageErrorBoundary } from "./components/PageErrorBoundary";
 import { PageMetadata } from "./components/PageMetadata";
 const Glossario = lazy(() =>
   import("./pages/Glossario").then((module) => ({ default: module.Glossario })),
 );
-import { FavoritesProvider } from "./context/FavoritesProvider";
 import { AuthProvider } from "./context/AuthProvider";
 import { RequireAuth } from "./components/RequireAuth";
 import { RequirePermission } from "./components/RequirePermission";
@@ -76,6 +66,11 @@ const IncomeRanking = lazy(() =>
     default: module.IncomeRanking,
   })),
 );
+const StockResearch = lazy(() =>
+  import("./pages/StockResearch").then((module) => ({
+    default: module.StockResearch,
+  })),
+);
 import { assistantEnabled, qaEnvironment } from "./lib/features";
 const EdivAssistant = assistantEnabled
   ? lazy(() =>
@@ -107,131 +102,142 @@ function App() {
       <PageMetadata />
       {qaEnvironment && (
         <aside className="border-b border-evo-accent/30 bg-evo-card px-4 py-3 text-center text-xs text-evo-textMain">
-          <strong>Ambiente QA</strong> · Versão de avaliação com assistente
-          experimental. Use apenas dados fictícios nos testes.
+          <strong>POC · Ambiente QA</strong> · Pesquisa de ações e escola de
+          dividendos. Use apenas dados fictícios nesta avaliação.
         </aside>
       )}
       <AuthProvider>
-        <FavoritesProvider>
-          <PageErrorBoundary>
-            <Suspense
-              fallback={
-                <p
-                  role="status"
-                  className="p-10 text-center text-sm text-evo-textSec"
-                >
-                  Carregando página…
-                </p>
-              }
-            >
-              <Routes>
-                <Route path="/" element={<Home />} />
-                <Route
-                  path="/glossario"
-                  element={
-                    <PublicLayout>
-                      <Glossario />
-                    </PublicLayout>
-                  }
-                />
-                <Route
-                  path="/mercado"
-                  element={
-                    <PublicLayout>
-                      <Analises publicView />
-                    </PublicLayout>
-                  }
-                />
-                <Route
-                  path="/ranking"
-                  element={
-                    <PublicLayout>
-                      <IncomeRanking />
-                    </PublicLayout>
-                  }
-                />
-                <Route
-                  path="/assessoria"
-                  element={
-                    <PublicLayout>
-                      <Assessoria />
-                    </PublicLayout>
-                  }
-                />
-                <Route
-                  path="/aprender"
-                  element={
-                    <PublicLayout>
-                      <Aprender />
-                    </PublicLayout>
-                  }
-                />
-                <Route
-                  path="/privacidade"
-                  element={
-                    <PublicLayout>
-                      <Privacidade />
-                    </PublicLayout>
-                  }
-                />
-                <Route
-                  path="/suporte"
-                  element={
-                    <PublicLayout>
-                      <Suporte />
-                    </PublicLayout>
-                  }
-                />
-                <Route
-                  path="/recuperar-senha"
-                  element={<ForgotPasswordPage />}
-                />
-                <Route
-                  path="/redefinir-senha"
-                  element={<ResetPasswordPage />}
-                />
-                <Route path="/entrar" element={<LoginPage />} />
-                <Route path="/cadastro" element={<RegisterPage />} />
-                <Route path="/verificar" element={<VerifyEmailPage />} />
-                <Route element={<RequireAuth />}>
-                  <Route path="/app" element={<DashboardLayout />}>
-                    <Route index element={<Dashboard />} />
-                    <Route path="aprender" element={<Aprender />} />
-                    <Route path="conversas" element={<Conversas />} />
+        <PageErrorBoundary>
+          <Suspense
+            fallback={
+              <p
+                role="status"
+                className="p-10 text-center text-sm text-evo-textSec"
+              >
+                Carregando página…
+              </p>
+            }
+          >
+            <Routes>
+              <Route path="/" element={<Home />} />
+              <Route
+                path="/glossario"
+                element={
+                  <PublicLayout>
+                    <Glossario />
+                  </PublicLayout>
+                }
+              />
+              <Route
+                path="/mercado"
+                element={
+                  <PublicLayout>
+                    <Analises publicView />
+                  </PublicLayout>
+                }
+              />
+              <Route
+                path="/ranking"
+                element={
+                  <PublicLayout>
+                    <IncomeRanking />
+                  </PublicLayout>
+                }
+              />
+              <Route
+                path="/ranking/acao/:ticker"
+                element={
+                  <PublicLayout>
+                    <StockResearch />
+                  </PublicLayout>
+                }
+              />
+              <Route
+                path="/assessoria"
+                element={
+                  <PublicLayout>
+                    <Assessoria />
+                  </PublicLayout>
+                }
+              />
+              <Route
+                path="/aprender"
+                element={
+                  <PublicLayout>
+                    <Aprender />
+                  </PublicLayout>
+                }
+              />
+              <Route
+                path="/privacidade"
+                element={
+                  <PublicLayout>
+                    <Privacidade />
+                  </PublicLayout>
+                }
+              />
+              <Route
+                path="/suporte"
+                element={
+                  <PublicLayout>
+                    <Suporte />
+                  </PublicLayout>
+                }
+              />
+              <Route path="/recuperar-senha" element={<ForgotPasswordPage />} />
+              <Route path="/redefinir-senha" element={<ResetPasswordPage />} />
+              <Route path="/entrar" element={<LoginPage />} />
+              <Route path="/cadastro" element={<RegisterPage />} />
+              <Route path="/verificar" element={<VerifyEmailPage />} />
+              <Route element={<RequireAuth />}>
+                <Route path="/app" element={<DashboardLayout />}>
+                  <Route
+                    index
+                    element={<Navigate to="/app/ranking" replace />}
+                  />
+                  <Route path="aprender" element={<Aprender />} />
+                  <Route path="conversas" element={<Conversas />} />
+                  <Route
+                    element={<RequirePermission permission="support:manage" />}
+                  >
                     <Route
-                      element={
-                        <RequirePermission permission="support:manage" />
-                      }
-                    >
-                      <Route
-                        path="atendimentos"
-                        element={<Conversas teamView />}
-                      />
-                    </Route>
-                    <Route path="analises" element={<Analises />} />
-                    <Route path="ranking" element={<IncomeRanking />} />
-                    <Route path="carteira" element={<Carteira />} />
-                    <Route path="favoritos" element={<Favoritos />} />
-                    <Route path="assessoria" element={<Assessoria />} />
-                    <Route path="perfil" element={<Perfil />} />
-                    <Route path="config" element={<Configuracoes />} />
-                    <Route
-                      element={<RequirePermission permission="users:read" />}
-                    >
-                      <Route path="admin" element={<AdminPage />} />
-                    </Route>
+                      path="atendimentos"
+                      element={<Conversas teamView />}
+                    />
+                  </Route>
+                  <Route path="analises" element={<Analises />} />
+                  <Route path="ranking" element={<IncomeRanking />} />
+                  <Route
+                    path="ranking/acao/:ticker"
+                    element={<StockResearch />}
+                  />
+                  <Route
+                    path="carteira"
+                    element={<Navigate to="/app/ranking" replace />}
+                  />
+                  <Route
+                    path="favoritos"
+                    element={<Navigate to="/app/ranking" replace />}
+                  />
+                  <Route path="assessoria" element={<Assessoria />} />
+                  <Route path="perfil" element={<Perfil />} />
+                  <Route path="config" element={<Configuracoes />} />
+                  <Route
+                    element={<RequirePermission permission="users:read" />}
+                  >
+                    <Route path="admin" element={<AdminPage />} />
                   </Route>
                 </Route>
-                <Route path="*" element={<NotFound />} />
-              </Routes>
-            </Suspense>
-          </PageErrorBoundary>
-          {EdivAssistant && (
-            <Suspense fallback={null}>
-              <EdivAssistant />
-            </Suspense>
-          )}
-        </FavoritesProvider>
+              </Route>
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </Suspense>
+        </PageErrorBoundary>
+        {EdivAssistant && (
+          <Suspense fallback={null}>
+            <EdivAssistant />
+          </Suspense>
+        )}
       </AuthProvider>
     </BrowserRouter>
   );

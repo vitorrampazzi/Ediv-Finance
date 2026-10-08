@@ -6,6 +6,7 @@ import { useAuth } from "../context/authContext";
 import { RankingAccessLanding } from "./RankingAccessLanding";
 
 type Publication = {
+  id: string | null;
   title: string;
   updatedAt: string | null;
   entries: {
@@ -130,7 +131,15 @@ function MemberRankingHighlights() {
             {entries.slice(0, 3).map((entry) => (
               <Link
                 key={entry.ticker}
-                to={showingDemo ? "/ranking?visual=demo" : "/ranking"}
+                to={
+                  "/app/ranking/acao/" +
+                  encodeURIComponent(entry.ticker) +
+                  "?visual=" +
+                  (showingDemo ? "demo" : "real") +
+                  (!showingDemo && publication.id
+                    ? "&publication=" + encodeURIComponent(publication.id)
+                    : "")
+                }
                 className="rounded-xl border border-evo-border bg-evo-card p-5 hover:border-evo-accent/40"
               >
                 <h3 className="font-bold">{entry.ticker}</h3>

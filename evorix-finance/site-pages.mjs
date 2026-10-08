@@ -3,7 +3,7 @@ export const publicPages = {
   "/": {
     title: "Ediv Finance",
     description:
-      "Educação sobre ações e dividendos, pesquisa com contexto e ferramentas para organizar sua carteira. Conheça a Ediv Finance.",
+      "Previsões de ações, pesquisa por empresa e educação sobre dividendos. Conheça a Ediv Finance.",
   },
   "/mercado": {
     title: "Mercado de ações | Ediv Finance",
@@ -16,9 +16,9 @@ export const publicPages = {
       "Conheça o ranking de cenários da Ediv Finance. Acesse pesquisas, premissas, horizonte e riscos com uma conta gratuita.",
   },
   "/aprender": {
-    title: "Aprender sobre investimentos | Ediv Finance",
+    title: "Escola de dividendos | Ediv Finance",
     description:
-      "Aprenda a interpretar projeções, dividendos e riscos. Comece pela primeira aula gratuita da Ediv Finance.",
+      "Estude dividendos, geração de caixa, projeções e riscos. Explore as aulas e cursos da escola de dividendos.",
   },
   "/glossario": {
     title: "Glossário de investimentos | Ediv Finance",

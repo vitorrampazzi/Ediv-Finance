@@ -79,11 +79,11 @@ export function Privacidade() {
       {[
         [
           "O que a Ediv oferece",
-          "A Ediv Finance oferece conteúdo educativo, um ranking de previsões e registros pessoais de carteira. Projeções dependem de premissas e podem falhar. O site não é corretora, não executa ordens e não movimenta dinheiro. Cotações dependem da disponibilidade do provedor.",
+          "A Ediv Finance oferece pesquisas de ações e educação sobre dividendos. Você pode ler cenários por empresa, estudar indicadores e acompanhar sua formação. Projeções dependem de premissas e podem falhar. O site não é corretora, não executa ordens e não movimenta dinheiro. Cotações dependem da disponibilidade do provedor.",
         ],
         [
           "Dados da sua conta",
-          "Guardamos nome, e-mail, senha com hash, sessões, operações, eventos informados, favoritos, preferências e conversas enviadas à equipe. Usamos esses dados para autenticar, calcular os registros e oferecer as funções que você solicita. Não pedimos senha da corretora ou dados bancários.",
+          "Guardamos nome, e-mail, senha com hash, sessões, progresso educativo, preferências e conversas enviadas à equipe. Dados de recursos usados em versões anteriores permanecem sujeitos à exportação e à exclusão da conta. Usamos os dados para autenticar e oferecer as funções que você solicita. Não pedimos senha da corretora ou dados bancários.",
         ],
         [
           "Fornecedores e transmissão",
@@ -99,11 +99,11 @@ export function Privacidade() {
           : []),
         [
           "Compartilhamento com a equipe",
-          "Ao abrir uma conversa, você pode autorizar a visualização das operações da sua carteira pela equipe. A escolha vem desmarcada e pode ser revogada. As mensagens escritas por você continuam no atendimento até a exclusão da conta. Não envie senhas ou dados desnecessários.",
+          "As mensagens que você envia são acessíveis à equipe autorizada de atendimento e continuam no histórico até a exclusão da conta. Compartilhamentos autorizados em versões anteriores podem ser revogados na própria conversa. Não envie senhas ou dados desnecessários.",
         ],
         [
           "Controle dos dados",
-          "Nas configurações você pode exportar seus registros, alterar a senha, encerrar sessões e excluir a conta. O cookie de sessão é necessário para login. O progresso das aulas é salvo neste navegador e pode ser apagado na página Aprender. Não é usado para publicidade.",
+          "Nas configurações você pode exportar seus registros, alterar a senha, encerrar sessões e excluir a conta. O cookie de sessão é necessário para login. O progresso das aulas fica na sua conta após o login; o progresso de visitante fica neste navegador. Você pode reiniciá-lo na página Aprender. Não é usado para publicidade.",
         ],
         [
           "Retenção e operação",

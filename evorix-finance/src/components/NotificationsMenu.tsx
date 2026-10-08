@@ -143,7 +143,7 @@ export function NotificationsMenu() {
                     </Link>
                     {item.favoriteTickers.length > 0 && (
                       <p className="mt-1 text-xs">
-                        Atualização nos seus favoritos:{" "}
+                        Empresas citadas nesta atualização:{" "}
                         {item.favoriteTickers.join(", ")}
                       </p>
                     )}
