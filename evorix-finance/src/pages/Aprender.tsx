@@ -193,7 +193,7 @@ function LearningSession({
       className="mx-auto max-w-6xl space-y-9 px-4 py-8 sm:px-6"
     >
       <header className="border-b border-evo-border pb-7">
-        <div className="flex items-start justify-between gap-4">
+        <div className="flex flex-col items-start justify-between gap-4 sm:flex-row">
           <div className="min-w-0 flex-1">
             <p className="text-xs font-semibold uppercase tracking-[0.18em] text-evo-accent">
               Escola do Dividendo · Aprender
@@ -209,7 +209,7 @@ function LearningSession({
               resultados. Comece pelos fundamentos e avance no seu ritmo.
             </p>
           </div>
-          <div className="shrink-0">
+          <div className="shrink-0 self-end sm:self-center">
             <OrbitCoins variant="learning" size="hero" />
           </div>
         </div>

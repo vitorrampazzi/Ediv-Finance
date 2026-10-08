@@ -154,10 +154,10 @@ export const Configuracoes = () => {
       <Card glow="none" className="border-evo-red/40">
         <h2 className="text-lg font-semibold">Excluir minha conta</h2>
         <p className="mt-2 text-sm text-evo-textSec">
-          A exclusão apaga o perfil e os registros vinculados, incluindo
-          carteira, eventos e conversas. Faça sua exportação antes de continuar.
-          Cópias de segurança podem permanecer até expirar a retenção definida
-          pela operação.
+          A exclusão apaga o perfil e os dados vinculados, incluindo registros
+          de versões anteriores e conversas. Faça sua exportação antes de
+          continuar. Cópias de segurança podem permanecer até expirar a retenção
+          definida pela operação.
         </p>
         {!open ? (
           <button

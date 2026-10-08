@@ -27,6 +27,7 @@ const money = new Intl.NumberFormat("pt-BR", {
   style: "currency",
   currency: "BRL",
 });
+const noEntries: Entry[] = [];
 const date = (value: string) =>
   new Date(
     value.replace(" ", "T") + (value.endsWith("Z") ? "" : "Z"),
@@ -64,6 +65,7 @@ function MemberIncomeRanking() {
     setLoading,
     setLoadedFor,
     requestKey,
+    current,
   } = useRankingPublication(publication);
   const [message, setMessage] = useState("");
   const [search, setSearch] = useState("");
@@ -89,10 +91,14 @@ function MemberIncomeRanking() {
       ranking.entries.length === 0);
   const sourceEntries: Entry[] = showingDemo
     ? rankingDemoEntries
-    : ranking.entries;
+    : current
+      ? ranking.entries
+      : noEntries;
   const totalEntries = showingDemo
     ? rankingDemoEntries.length
-    : (ranking.totalEntries ?? ranking.entries.length);
+    : current
+      ? (ranking.totalEntries ?? ranking.entries.length)
+      : 0;
   const changeView = (mode: "demo" | "real", resetPublication = false) => {
     setSearch("");
     setSector("");
@@ -448,7 +454,7 @@ function MemberIncomeRanking() {
           demo={showingDemo}
         />
       )}
-      {!loading && !error && !showingDemo && (
+      {!loading && !error && !showingDemo && current && (
         <VersionComparison
           key={ranking.id}
           publicationId={ranking.id}
@@ -459,14 +465,22 @@ function MemberIncomeRanking() {
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
             <h2 className="text-xl font-semibold">
-              {showingDemo ? "Explore os cenários de exemplo" : ranking.title}
+              {showingDemo
+                ? "Explore os cenários de exemplo"
+                : current
+                  ? ranking.title
+                  : "Pesquisa selecionada"}
             </h2>
             <p className="mt-1 text-xs text-evo-textSec">
               {showingDemo
                 ? "Ordem ilustrativa para apresentação da interface"
-                : ranking.updatedAt
-                  ? "Publicado em " + date(ranking.updatedAt)
-                  : "Aguardando a primeira publicação"}
+                : !current
+                  ? loading
+                    ? "Carregando a versão selecionada…"
+                    : "Pesquisa indisponível"
+                  : ranking.updatedAt
+                    ? "Publicado em " + date(ranking.updatedAt)
+                    : "Aguardando a primeira publicação"}
             </p>
           </div>
           {!showingDemo && (
@@ -496,7 +510,7 @@ function MemberIncomeRanking() {
             </label>
           )}
         </div>
-        {!showingDemo && (
+        {!showingDemo && current && (
           <div className="grid gap-3 rounded-xl border border-evo-border bg-evo-card p-4 text-sm sm:grid-cols-3">
             <p>
               Responsável
@@ -577,6 +591,14 @@ function MemberIncomeRanking() {
           <Card>
             <p role="status">Carregando publicação…</p>
           </Card>
+        ) : !showingDemo && !current ? (
+          <p
+            role="status"
+            className="border-y border-evo-border py-8 text-sm text-evo-textSec"
+          >
+            A pesquisa desta versão não está disponível agora. Escolha outra
+            publicação ou atualize a página.
+          </p>
         ) : !sourceEntries.length ? (
           <Card>
             <h3 className="font-semibold">
@@ -702,7 +724,7 @@ function MemberIncomeRanking() {
             adequado para você.
           </>
         )}
-        {!showingDemo && ranking.sourceFileName && (
+        {!showingDemo && current && ranking.sourceFileName && (
           <span className="mt-2 block">Origem: {ranking.sourceFileName}</span>
         )}
       </aside>
