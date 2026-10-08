@@ -19,10 +19,10 @@ export function AuthShell({
           className="mb-8 inline-flex items-center gap-2 text-sm text-evo-textSec hover:text-evo-textMain"
         >
           <img
-            src="/ediv-logo.png"
+            src="/ediv-logo-transparent.png"
             alt=""
             aria-hidden="true"
-            className="h-8 w-8 object-contain mix-blend-screen"
+            className="h-8 w-8 object-contain"
           />
           Ediv Finance
         </Link>

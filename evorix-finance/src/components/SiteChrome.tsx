@@ -58,10 +58,10 @@ export function SiteHeader() {
             aria-label="Ediv Finance, página inicial"
           >
             <img
-              src="/ediv-logo.png"
+              src="/ediv-logo-transparent.png"
               alt=""
               aria-hidden="true"
-              className="h-10 w-10 object-contain mix-blend-screen"
+              className="h-10 w-10 object-contain"
             />
             <span className="hidden font-semibold tracking-tight md:inline">
               Ediv Finance
@@ -174,10 +174,10 @@ export function SiteFooter() {
               aria-label="Ediv Finance, página inicial"
             >
               <img
-                src="/ediv-logo.png"
+                src="/ediv-logo-transparent.png"
                 alt=""
                 aria-hidden="true"
-                className="h-9 w-9 object-contain mix-blend-screen"
+                className="h-9 w-9 object-contain"
               />
               <span className="font-semibold tracking-tight text-evo-textMain">
                 Ediv Finance

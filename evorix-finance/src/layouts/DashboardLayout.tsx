@@ -265,10 +265,10 @@ export const DashboardLayout = () => {
           className={`flex min-h-24 items-center px-5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-inset focus-visible:outline-evo-accent ${collapsed ? "justify-center" : ""}`}
         >
           <img
-            src="/ediv-logo.png"
+            src="/ediv-logo-transparent.png"
             alt=""
             aria-hidden="true"
-            className="h-10 w-10 shrink-0 object-contain mix-blend-screen"
+            className="h-10 w-10 shrink-0 object-contain"
           />
           {!collapsed && (
             <span className="ml-3 text-base font-semibold tracking-tight">
@@ -351,10 +351,10 @@ export const DashboardLayout = () => {
         <header className="sticky top-0 z-20 flex min-h-16 items-center justify-between gap-3 border-b border-evo-border/70 bg-evo-bgMain/95 px-4 backdrop-blur md:min-h-20 md:px-8">
           <div className="flex min-w-0 items-center gap-3">
             <img
-              src="/ediv-logo.png"
+              src="/ediv-logo-transparent.png"
               alt=""
               aria-hidden="true"
-              className="h-8 w-8 shrink-0 object-contain mix-blend-screen lg:hidden"
+              className="h-8 w-8 shrink-0 object-contain lg:hidden"
             />
             <div className="min-w-0">
               <p className="hidden text-[10px] uppercase tracking-[.16em] text-evo-textSec sm:block">
