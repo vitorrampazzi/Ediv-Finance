@@ -65,7 +65,7 @@ export function OrbitCoins({
               <path
                 d={`M${x + 6} ${[53, 33, 48, 19][index]}V${[95, 84, 99, 72][index]}`}
                 stroke="currentColor"
-                strokeOpacity=".5"
+                strokeOpacity=".65"
               />
               <rect
                 x={x}
@@ -74,14 +74,14 @@ export function OrbitCoins({
                 height={[20, 26, 25, 26][index]}
                 rx="1"
                 fill="currentColor"
-                opacity={[0.35, 0.52, 0.3, 0.67][index]}
+                opacity={[0.45, 0.62, 0.4, 0.75][index]}
               />
             </g>
           ))}
           <path
             d="M18 84L38 74L61 84L84 62L110 70L141 42"
             stroke="currentColor"
-            strokeWidth="1.8"
+            strokeWidth="2.2"
             strokeLinejoin="round"
           />
           <circle cx="84" cy="62" r="3" fill="currentColor" />

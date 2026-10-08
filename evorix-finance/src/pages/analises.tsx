@@ -49,7 +49,7 @@ export function Analises({ publicView = false }: { publicView?: boolean }) {
         className={
           publicView
             ? "relative flex flex-col items-start justify-between gap-4 overflow-hidden rounded-xl border border-evo-border bg-evo-card p-5 sm:flex-row sm:items-center sm:p-6"
-            : "relative flex items-start justify-between gap-5 border-b border-evo-border pb-8 sm:pb-10"
+            : "relative flex flex-col items-start justify-between gap-5 border-b border-evo-border pb-8 sm:flex-row sm:pb-10"
         }
       >
         {publicView && (
@@ -80,7 +80,7 @@ export function Analises({ publicView = false }: { publicView?: boolean }) {
           </p>
         </div>
         <div
-          className={`relative z-10 shrink-0 ${publicView ? "self-end sm:self-center" : "self-start opacity-80"}`}
+          className={`relative z-10 shrink-0 ${publicView ? "self-end sm:self-center" : "self-end sm:self-start"}`}
         >
           <OrbitCoins variant="real" size="sm" />
         </div>
