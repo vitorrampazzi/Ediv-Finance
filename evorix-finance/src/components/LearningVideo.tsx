@@ -14,8 +14,15 @@ export function LearningVideo({
   const [loadPlayer, setLoadPlayer] = useState(false);
   const approvedUrl = approvedVideoEmbed(embedUrl);
   return (
-    <section aria-label={"Vídeo da aula: " + title}>
-      <div className="relative flex aspect-video min-h-52 items-center justify-center overflow-hidden border border-evo-border bg-evo-bgMain p-6 sm:min-h-64">
+    <section className="min-w-0" aria-label={"Vídeo da aula: " + title}>
+      <div
+        className={
+          "relative flex w-full min-w-0 items-center justify-center overflow-hidden border border-evo-border bg-evo-bgMain " +
+          (approvedUrl && loadPlayer
+            ? "aspect-video"
+            : "min-h-52 p-6 sm:min-h-64")
+        }
+      >
         {approvedUrl && loadPlayer ? (
           <iframe
             src={approvedUrl}

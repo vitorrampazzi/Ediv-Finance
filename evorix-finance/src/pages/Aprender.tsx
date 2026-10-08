@@ -328,7 +328,7 @@ function LearningSession({
           >
             {selectedLesson.title}
           </h2>
-          <div className="mt-6 grid items-start gap-7 lg:grid-cols-[minmax(0,1fr)_17rem]">
+          <div className="mt-6 grid grid-cols-1 items-start gap-7 lg:grid-cols-[minmax(0,1fr)_17rem]">
             <div className="order-last min-w-0 lg:order-first">
               {selectedLesson.locked ? (
                 <AccountGate
