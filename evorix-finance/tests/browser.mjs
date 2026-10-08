@@ -204,9 +204,9 @@ try {
       .fill(fixture.accounts.a.email);
     await page.getByLabel("Senha", { exact: true }).fill(fixture.password);
     await page.getByRole("button", { name: "Entrar", exact: true }).click();
-    await page.waitForURL("**/app");
+    await page.waitForURL("**/app/ranking");
     await expect(
-      page.getByRole("heading", { name: /Visão geral/i }).first(),
+      page.getByRole("heading", { name: /Ranking de previsões/i }).first(),
     ).toBeVisible();
   });
   await check("Usuário não acessa Administração nem Atendimentos", async () => {
@@ -235,6 +235,9 @@ try {
       await expect(
         page.getByRole("status").filter({ hasText: "alterado(s)" }),
       ).toBeVisible();
+      await page.goto(
+        root + "/app/ranking/acao/PETR4?visual=real&publication=" + second,
+      );
       const help = page
         .locator("summary")
         .filter({ hasText: "Entender este indicador" })
@@ -278,7 +281,7 @@ try {
   await check(
     "Progresso de aula sobrevive à recarga e outra sessão",
     async () => {
-      await page.goto(root + "/app/aprender");
+      await page.goto(root + "/app/aprender#risco");
       await page
         .getByRole("button", {
           name: "Não; pode reduzir concentração, mas não elimina riscos",
@@ -297,7 +300,7 @@ try {
       const other = await context(null);
       await other.addCookies(await guest.cookies());
       const otherPage = await other.newPage();
-      await otherPage.goto(root + "/app/aprender");
+      await otherPage.goto(root + "/app/aprender#risco");
       await expect(otherPage.getByRole("progressbar")).toHaveAttribute(
         "aria-valuenow",
         "1",
@@ -448,7 +451,7 @@ try {
       for (const path of [
         "/app/ranking",
         "/app/atendimentos",
-        "/app/carteira",
+        "/app/aprender",
         "/app/config",
       ]) {
         await analystPage.goto(root + path);
@@ -493,160 +496,6 @@ try {
       /concentra|diversificar/i,
     );
   });
-  await check(
-    "Favorito salvo no ranking persiste na aba Favoritos",
-    async () => {
-      await page.goto(root + "/app/ranking");
-      await page
-        .getByRole("button", {
-          name: "Adicionar aos favoritos PETR4",
-          exact: true,
-        })
-        .click();
-      await expect(
-        page.getByRole("button", {
-          name: "Remover dos favoritos PETR4",
-          exact: true,
-        }),
-      ).toHaveAttribute("aria-pressed", "true");
-      await page.reload();
-      await expect(
-        page.getByRole("button", {
-          name: "Remover dos favoritos PETR4",
-          exact: true,
-        }),
-      ).toHaveAttribute("aria-pressed", "true");
-      await page.goto(root + "/app/favoritos");
-      await expect(page.locator("body")).toContainText("PETR4");
-    },
-  );
-  await check(
-    "Carteira permite registrar, corrigir e excluir pela tela",
-    async () => {
-      await page.goto(root + "/app/carteira");
-      await page.getByLabel("Ticker", { exact: true }).fill("PETR4");
-      await page
-        .getByLabel("Nome do ativo", { exact: true })
-        .fill("Empresa de teste");
-      await page.getByLabel("Quantidade", { exact: true }).fill("10");
-      await page.getByLabel("Preço unitário (R$)", { exact: true }).fill("10");
-      await page
-        .locator("form")
-        .filter({ has: page.getByLabel("Ticker", { exact: true }) })
-        .getByLabel("Data", { exact: true })
-        .fill("2026-01-01");
-      await page
-        .getByRole("button", { name: "Adicionar operação", exact: true })
-        .click();
-      await expect(
-        page
-          .getByRole("status")
-          .filter({ hasText: "Operação registrada na sua carteira" }),
-      ).toBeVisible();
-      await page
-        .getByRole("button", { name: "Editar operação de PETR4", exact: true })
-        .click();
-      await page.getByLabel("Quantidade", { exact: true }).fill("12");
-      await page
-        .getByRole("button", { name: "Salvar correção", exact: true })
-        .click();
-      await expect(
-        page.getByRole("status").filter({ hasText: "Operação corrigida" }),
-      ).toBeVisible();
-      await page
-        .getByRole("button", { name: /^Excluir operação de compra de PETR4/ })
-        .click();
-      await page
-        .getByRole("button", { name: "Confirmar", exact: true })
-        .click();
-      await expect(
-        page.getByRole("status").filter({ hasText: "excluída" }),
-      ).toBeVisible();
-      const data = await (
-        await page.request.get(root + "/api/portfolio")
-      ).json();
-      assert.equal(data.positions.length, 0);
-    },
-  );
-  await check(
-    "Painel explica resultado parcial sem inventar rentabilidade diária",
-    async () => {
-      const ids = [];
-      try {
-        for (const row of [
-          {
-            ticker: "PETR4",
-            assetName: "Empresa fictícia A",
-            assetType: "ACAO",
-            quantity: "10",
-            unitPrice: "8",
-          },
-          {
-            ticker: "ITUB4",
-            assetName: "Empresa fictícia B",
-            assetType: "ACAO",
-            quantity: "5",
-            unitPrice: "22",
-          },
-          {
-            ticker: "TESTEFIXO",
-            assetName: "Registro fictício sem cotação",
-            assetType: "RENDA_FIXA",
-            quantity: "3",
-            unitPrice: "100",
-          },
-        ]) {
-          const added = await fixture.request(
-            fixture.accounts.a,
-            "/api/portfolio/transactions",
-            {
-              method: "POST",
-              body: { ...row, side: "BUY", fees: "0", tradedAt: "2026-01-01" },
-            },
-          );
-          assert.equal(added.status, 201);
-        }
-        const snapshot = await fixture.request(
-          fixture.accounts.a,
-          "/api/portfolio",
-        );
-        assert.equal(snapshot.body.insights.status, "PARTIAL");
-        assert.equal(snapshot.body.insights.quotedMarketValue, "200.00000000");
-        assert.equal(snapshot.body.insights.unrealizedPnl, "10.00000000");
-        ids.push(...snapshot.body.transactions.map((row) => row.id));
-        await page.setViewportSize({ width: 1366, height: 900 });
-        await page.goto(root + "/app");
-        await expect(
-          page.getByRole("region", { name: "Leitura da sua carteira" }),
-        ).toContainText("Valor estimado da parte cotada");
-        await expect(
-          page.getByRole("region", { name: "Leitura da sua carteira" }),
-        ).toContainText("TESTEFIXO");
-        await expect(
-          page.getByRole("heading", { name: "O que explica a variação" }),
-        ).toBeVisible();
-        await noOverflow(page);
-        await page.screenshot({
-          path: ".test-artifacts/dashboard-desktop.png",
-          fullPage: true,
-        });
-        await page.setViewportSize({ width: 360, height: 900 });
-        await noOverflow(page);
-        await page.screenshot({
-          path: ".test-artifacts/dashboard-mobile.png",
-          fullPage: true,
-        });
-        await page.setViewportSize({ width: 1366, height: 900 });
-      } finally {
-        for (const id of ids)
-          await fixture.request(
-            fixture.accounts.a,
-            "/api/portfolio/transactions/" + id,
-            { method: "DELETE" },
-          );
-      }
-    },
-  );
   await check(
     "Administrador gerencia perfil e vê auditoria no celular",
     async () => {

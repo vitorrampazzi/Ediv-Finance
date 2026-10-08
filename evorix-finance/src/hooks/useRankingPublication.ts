@@ -20,6 +20,7 @@ export function useRankingPublication(publication: string) {
   const [ranking, setRanking] = useState<Ranking>(empty);
   const [requestLoading, setLoading] = useState(true);
   const [loadedFor, setLoadedFor] = useState<string | null>(null);
+  const [rankingFor, setRankingFor] = useState<string | null>(null);
   const requestKey =
     (userId || "visitor") + ":" + (userId ? publication : "latest");
   const loading = requestLoading || authLoading || loadedFor !== requestKey;
@@ -35,10 +36,14 @@ export function useRankingPublication(publication: string) {
       ),
     [publication, userId],
   );
-  const applyRanking = useCallback((data: Ranking) => {
-    setRanking(data);
-    setError("");
-  }, []);
+  const applyRanking = useCallback(
+    (data: Ranking) => {
+      setRanking(data);
+      setError("");
+      setRankingFor(requestKey);
+    },
+    [requestKey],
+  );
   useEffect(() => {
     if (authLoading) return;
     const controller = new AbortController();
@@ -88,5 +93,6 @@ export function useRankingPublication(publication: string) {
     setLoading,
     setLoadedFor,
     requestKey,
+    current: rankingFor === requestKey,
   };
 }

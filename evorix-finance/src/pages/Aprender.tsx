@@ -1,16 +1,22 @@
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import {
   BookOpen,
   CheckCircle2,
   MessageCircle,
   LockKeyhole,
+  ArrowDown,
+  ArrowRight,
+  Clock3,
 } from "lucide-react";
 import { apiRequest } from "../lib/api";
 import { useAuth } from "../context/authContext";
 import { AccountGate } from "../components/AccountGate";
 import { OrbitCoins } from "../components/OrbitCoins";
 import { assistantEnabled } from "../lib/features";
+import { LearningVideo } from "../components/LearningVideo";
+import { LearningPractice } from "../components/LearningPractice";
+import { learningChapters, learningCourses } from "../lib/learningCatalog";
 
 type Lesson = {
   id: string;
@@ -21,6 +27,9 @@ type Lesson = {
   choices?: string[];
   answer?: number;
   explanation?: string;
+  sections?: { title: string; text: string }[];
+  takeaways?: string[];
+  sources?: { title: string; url: string }[];
 };
 export type LearningData = {
   lessons: Lesson[];
@@ -72,8 +81,12 @@ function LearningSession({
   const [progressBusy, setProgressBusy] = useState(false);
   const [answers, setAnswers] = useState<Record<string, number>>({});
   const [search, setSearch] = useState("");
-  const [current, setCurrent] = useState("100");
-  const [target, setTarget] = useState("120");
+  const location = useLocation();
+  const [selectedId, setSelectedId] = useState(() =>
+    lessonIds.includes(location.hash.slice(1))
+      ? location.hash.slice(1)
+      : "ranking",
+  );
   useEffect(() => {
     if (authLoading) return;
     const controller = new AbortController();
@@ -156,36 +169,69 @@ function LearningSession({
       setProgressBusy(false);
     }
   }
-  const potential =
-    Number(current) > 0 && Number(target) > 0
-      ? (Number(target) / Number(current) - 1) * 100
-      : null;
+  const selectedLesson =
+    lessons.find((lesson) => lesson.id === selectedId) ?? lessons[0];
+  const selectedChapter =
+    learningChapters.find((chapter) => chapter.id === selectedId) ??
+    learningChapters[0];
+  const selectedCourse =
+    learningCourses.find((course) =>
+      course.chapterIds.some((id) => id === selectedId),
+    ) ?? learningCourses[0];
+  const selectedIndex = lessons.findIndex(
+    (lesson) => lesson.id === selectedLesson?.id,
+  );
+  const nextLesson = lessons[selectedIndex + 1];
+  const matchingTerms = glossary.filter(([term, text]) =>
+    (term + " " + text)
+      .toLocaleLowerCase("pt-BR")
+      .includes(search.toLocaleLowerCase("pt-BR")),
+  );
   return (
     <section
       id="pagina-conteudo"
-      className="mx-auto max-w-6xl space-y-6 px-4 py-8 sm:px-6"
+      className="mx-auto max-w-6xl space-y-9 px-4 py-8 sm:px-6"
     >
-      <section className="rounded-2xl border border-evo-border bg-evo-card p-6 sm:p-8">
-        <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
+      <header className="border-b border-evo-border pb-7">
+        <div className="flex flex-col items-start justify-between gap-4 sm:flex-row">
           <div className="min-w-0 flex-1">
-            <BookOpen className="text-evo-accent" />
-            <h1 className="mt-4 text-3xl font-bold">Aprender para entender</h1>
-            <p className="mt-3 max-w-3xl leading-relaxed text-evo-textSec">
-              Uma trilha curta para ler as análises com mais clareza, questionar
-              premissas e entender sua carteira. Exemplos educativos não são
-              recomendações de investimento.
+            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-evo-accent">
+              Escola do Dividendo · Aprender
+            </p>
+            <h1 className="mt-3 max-w-3xl text-3xl font-semibold tracking-tight sm:text-4xl">
+              Entenda o negócio.
+              <br />
+              Entenda o dividendo.
+            </h1>
+            <p className="mt-4 max-w-2xl text-sm leading-7 text-evo-textSec">
+              Cursos, leituras e exercícios para interpretar a pesquisa do
+              corretor e entender como as empresas geram e distribuem
+              resultados. Comece pelos fundamentos e avance no seu ritmo.
             </p>
           </div>
           <div className="shrink-0 self-end sm:self-center">
             <OrbitCoins variant="learning" size="hero" />
           </div>
         </div>
-        <p className="mt-4 text-sm text-evo-accent">
-          {completed.length} de {lessonIds.length} etapas concluídas · progresso
-          {user ? "salvo na sua conta" : "salvo neste navegador"}
-        </p>
+        <div className="mt-6 flex flex-wrap items-center justify-between gap-4">
+          <p className="text-sm text-evo-textSec">
+            <strong className="text-evo-textMain">
+              {completed.length} de {lessonIds.length} aulas concluídas
+            </strong>{" "}
+            ·{" "}
+            {user
+              ? "progresso salvo na sua conta"
+              : "progresso salvo neste navegador"}
+          </p>
+          <a
+            className="inline-flex min-h-11 items-center gap-2 text-sm text-evo-accent"
+            href="#cursos"
+          >
+            Conhecer os cursos <ArrowDown size={16} aria-hidden="true" />
+          </a>
+        </div>
         <div
-          className="mt-3 h-2 rounded bg-evo-bgMain"
+          className="mt-3 h-1 bg-evo-bgMain"
           role="progressbar"
           aria-label="Progresso da trilha"
           aria-valuenow={completed.length}
@@ -193,11 +239,11 @@ function LearningSession({
           aria-valuemax={lessonIds.length}
         >
           <div
-            className="h-full rounded bg-evo-accent"
+            className="h-full bg-evo-accent transition-[width]"
             style={{ width: (completed.length / lessonIds.length) * 100 + "%" }}
           />
         </div>
-      </section>
+      </header>
       {(loading || authLoading) && (
         <p role="status" className="text-sm text-evo-textSec">
           Carregando aulas…
@@ -210,218 +256,379 @@ function LearningSession({
       )}
       {!user && !loading && content && (
         <p className="text-sm text-evo-textSec">
-          A primeira aula e o glossário são abertos. Crie sua conta gratuita
-          para acessar a trilha completa.
+          A primeira aula e o glossário são abertos. Sua conta gratuita libera
+          as outras aulas e salva seu progresso.
         </p>
       )}
-      <nav aria-label="Etapas educativas" className="flex flex-wrap gap-2">
-        {lessons.map((l) => (
-          <a
-            key={l.id}
-            href={"#" + l.id}
-            className="rounded-full border border-evo-border px-3 py-2 text-xs"
-          >
-            {l.title}
-          </a>
-        ))}
-      </nav>
-      {lessons.map((lesson) =>
-        lesson.locked ? (
-          <section
-            id={lesson.id}
-            key={lesson.id}
-            className="scroll-mt-24 rounded-xl border border-evo-border bg-evo-card p-5 sm:p-7"
-          >
-            <div className="flex items-center gap-3">
-              <LockKeyhole
-                size={18}
-                className="text-evo-accent"
-                aria-hidden="true"
-              />
-              <h2 className="text-xl font-semibold">{lesson.title}</h2>
-            </div>
-            <p className="mt-3 text-sm text-evo-textSec">
-              Esta etapa faz parte da trilha completa para contas gratuitas.
-            </p>
-          </section>
-        ) : (
-          <section
-            id={lesson.id}
-            key={lesson.id}
-            className="scroll-mt-24 rounded-xl border border-evo-border bg-evo-card p-5 sm:p-7"
-          >
-            <div className="flex items-start justify-between gap-3">
-              <h2 className="text-xl font-semibold">{lesson.title}</h2>
-              {completed.includes(lesson.id) && (
-                <CheckCircle2
-                  aria-label="Etapa concluída"
-                  className="shrink-0 text-evo-accent"
-                />
-              )}
-            </div>
-            <p className="mt-4 max-w-4xl text-sm leading-7 text-evo-textSec">
-              {lesson.text}
-            </p>
-            <fieldset className="mt-5 rounded-lg border border-evo-border p-4">
-              <legend className="px-2 text-sm font-semibold">
-                {lesson.question}
-              </legend>
-              <div className="grid gap-2">
-                {(lesson.choices || []).map((choice, i) => (
-                  <button
-                    key={choice}
-                    type="button"
-                    disabled={progressBusy || loading}
-                    aria-pressed={answers[lesson.id] === i}
-                    className={
-                      "min-h-11 rounded-lg border p-3 text-left text-sm " +
-                      (answers[lesson.id] === i
-                        ? "border-evo-accent bg-evo-accent/10"
-                        : "border-evo-border hover:bg-white/5")
-                    }
-                    onClick={() => void chooseAnswer(lesson, i)}
-                  >
-                    {choice}
-                  </button>
-                ))}
-              </div>
-              {answers[lesson.id] !== undefined && (
-                <p role="status" className="mt-3 text-sm leading-relaxed">
-                  {answers[lesson.id] === lesson.answer
-                    ? "Correto! "
-                    : "Vamos revisar: "}
-                  {lesson.explanation}
-                </p>
-              )}
-            </fieldset>
-            {assistantEnabled && (
-              <button
-                className="mt-4 inline-flex min-h-11 items-center gap-2 text-sm text-evo-accent"
-                onClick={() =>
-                  window.dispatchEvent(
-                    new CustomEvent("ediv-assistant-question", {
-                      detail: "Explique de forma educativa: " + lesson.title,
-                    }),
-                  )
-                }
-              >
-                <MessageCircle size={16} /> Pedir uma explicação ao assistente
-              </button>
-            )}
-          </section>
-        ),
-      )}
-      {!user && !loading && content && (
-        <AccountGate
-          title="Continue aprendendo"
-          description="Crie sua conta gratuita para liberar todas as aulas, exercícios e os recursos de pesquisa da Ediv."
-          next="/aprender"
-        />
-      )}
-      <section className="rounded-xl border border-evo-border bg-evo-card p-6">
-        <h2 className="text-xl font-semibold">Explore um cenário hipotético</h2>
-        <p className="mt-2 text-sm text-evo-textSec">
-          Compare dois preços para entender a fórmula do potencial. Não usa
-          cotações reais nem estima chances de retorno.
-        </p>
-        <div className="mt-4 grid gap-3 sm:grid-cols-2">
-          <label className="text-sm">
-            Preço de referência (R$)
-            <input
-              className="field mt-1"
-              type="number"
-              min="0.01"
-              step="0.01"
-              value={current}
-              onChange={(e) => setCurrent(e.target.value)}
-            />
-          </label>
-          <label className="text-sm">
-            Preço no cenário (R$)
-            <input
-              className="field mt-1"
-              type="number"
-              min="0.01"
-              step="0.01"
-              value={target}
-              onChange={(e) => setTarget(e.target.value)}
-            />
-          </label>
+      <section
+        id="cursos"
+        aria-labelledby="courses-title"
+        className="scroll-mt-24"
+      >
+        <div className="flex flex-wrap items-end justify-between gap-3">
+          <h2 id="courses-title" className="text-2xl font-semibold">
+            Trilhas para estudar
+          </h2>
+          <p className="text-xs text-evo-textSec">
+            Leituras disponíveis · vídeos em preparação
+          </p>
         </div>
-        <p className="mt-4 font-numbers">
-          {potential === null
-            ? "Informe dois preços positivos."
-            : "Variação hipotética: " +
-              potential.toLocaleString("pt-BR", { maximumFractionDigits: 2 }) +
-              "%"}
-        </p>
-        <p className="mt-2 text-xs text-evo-textSec">
-          Fórmula: (preço no cenário ÷ preço de referência − 1) × 100. Não
-          inclui custos, impostos ou dividendos.
-        </p>
+        <div className="mt-5 grid gap-6 md:grid-cols-2">
+          {learningCourses.map((course) => {
+            const count = course.chapterIds.filter((id) =>
+              completed.includes(id),
+            ).length;
+            const minutes = learningChapters
+              .filter((chapter) => course.chapterIds.includes(chapter.id))
+              .reduce((sum, chapter) => sum + chapter.readingMinutes, 0);
+            return (
+              <article
+                key={course.id}
+                className="flex flex-col border-t-2 border-evo-accent/50 bg-evo-card/25 px-5 py-6 sm:px-6"
+              >
+                <p className="text-xs uppercase tracking-[0.12em] text-evo-accent">
+                  {course.eyebrow}
+                </p>
+                <h3 className="mt-3 text-xl font-semibold">{course.title}</h3>
+                <p className="mt-3 flex-1 text-sm leading-relaxed text-evo-textSec">
+                  {course.description}
+                </p>
+                <div className="mt-5 flex flex-wrap items-center gap-4 text-xs text-evo-textSec">
+                  <span>{course.chapterIds.length} aulas</span>
+                  <span>{minutes} min de leitura estimada</span>
+                  <span>
+                    {count}/{course.chapterIds.length} concluídas
+                  </span>
+                </div>
+                <a
+                  href="#sala-de-aula"
+                  onClick={() => setSelectedId(course.chapterIds[0])}
+                  className="mt-5 inline-flex min-h-11 items-center gap-2 self-start text-sm font-semibold text-evo-accent"
+                >
+                  Abrir curso <ArrowRight size={16} aria-hidden="true" />
+                </a>
+              </article>
+            );
+          })}
+        </div>
       </section>
-      <section className="space-y-3">
-        <h2 className="text-xl font-semibold">Glossário</h2>
-        <label className="block">
+      {selectedLesson && (
+        <section
+          id="sala-de-aula"
+          className="scroll-mt-24 border-t border-evo-border pt-7"
+          aria-labelledby="classroom-title"
+        >
+          <p className="text-xs uppercase tracking-[0.14em] text-evo-textSec">
+            Sala de aula · {selectedCourse.title}
+          </p>
+          <h2
+            id="classroom-title"
+            aria-live="polite"
+            className="mt-2 text-2xl font-semibold"
+          >
+            {selectedLesson.title}
+          </h2>
+          <div className="mt-6 grid grid-cols-1 items-start gap-7 lg:grid-cols-[minmax(0,1fr)_17rem]">
+            <div className="order-last min-w-0 lg:order-first">
+              {selectedLesson.locked ? (
+                <AccountGate
+                  title="Entre para estudar esta aula"
+                  description="Sua conta gratuita libera a leitura, o exercício e o acompanhamento do progresso."
+                  next={location.pathname + "#" + selectedLesson.id}
+                />
+              ) : (
+                <>
+                  <LearningVideo
+                    key={selectedLesson.id}
+                    title={selectedLesson.title}
+                    embedUrl={selectedChapter.videoEmbedUrl}
+                    readingTarget={"#leitura-" + selectedLesson.id}
+                  />
+                  <div className="mt-4 flex flex-wrap items-center gap-3 text-xs text-evo-textSec">
+                    <BookOpen size={15} aria-hidden="true" />
+                    <span>Material de leitura disponível</span>
+                    <Clock3 size={15} aria-hidden="true" />
+                    <span>
+                      {selectedChapter.readingMinutes} min de leitura estimada
+                    </span>
+                    {completed.includes(selectedLesson.id) && (
+                      <span className="inline-flex items-center gap-1 text-evo-accent">
+                        <CheckCircle2 size={15} aria-hidden="true" /> Aula
+                        concluída
+                      </span>
+                    )}
+                  </div>
+                  <article
+                    id={"leitura-" + selectedLesson.id}
+                    className="scroll-mt-24 py-7"
+                    aria-labelledby="reading-title"
+                  >
+                    <h3 id="reading-title" className="text-lg font-semibold">
+                      Para entender esta aula
+                    </h3>
+                    <p className="mt-4 text-sm leading-7 text-evo-textSec">
+                      {selectedLesson.text}
+                    </p>
+                    {selectedLesson.sections?.map((part) => (
+                      <section key={part.title} className="mt-6">
+                        <h4 className="font-semibold">{part.title}</h4>
+                        <p className="mt-2 text-sm leading-7 text-evo-textSec">
+                          {part.text}
+                        </p>
+                      </section>
+                    ))}
+                    {!!selectedLesson.takeaways?.length && (
+                      <aside className="mt-7 border-l-2 border-evo-accent pl-5">
+                        <h4 className="font-semibold">
+                          Leve estes pontos com você
+                        </h4>
+                        <ul className="mt-3 list-disc space-y-2 pl-4 text-sm leading-relaxed text-evo-textSec">
+                          {selectedLesson.takeaways.map((takeaway) => (
+                            <li key={takeaway}>{takeaway}</li>
+                          ))}
+                        </ul>
+                      </aside>
+                    )}
+                    {!!selectedLesson.sources?.length && (
+                      <div className="mt-6 text-xs leading-relaxed text-evo-textSec">
+                        <p className="font-semibold">
+                          Para aprofundar nas fontes
+                        </p>
+                        <ul className="mt-2 space-y-2">
+                          {selectedLesson.sources.map((source) => (
+                            <li key={source.url}>
+                              <a
+                                className="underline underline-offset-4"
+                                href={source.url}
+                                target="_blank"
+                                rel="noreferrer"
+                              >
+                                {source.title}{" "}
+                                <span className="sr-only">
+                                  (abre em nova guia)
+                                </span>
+                              </a>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+                  </article>
+                  <fieldset className="border-y border-evo-border px-0 py-5">
+                    <legend className="pr-3 font-semibold">
+                      Confira o que aprendeu
+                    </legend>
+                    <p className="mb-4 text-sm leading-relaxed">
+                      {selectedLesson.question}
+                    </p>
+                    <div className="grid gap-2">
+                      {(selectedLesson.choices || []).map((choice, index) => (
+                        <button
+                          key={choice}
+                          type="button"
+                          disabled={progressBusy || loading}
+                          aria-pressed={answers[selectedLesson.id] === index}
+                          className={
+                            "min-h-11 border p-3 text-left text-sm " +
+                            (answers[selectedLesson.id] === index
+                              ? "border-evo-accent bg-evo-accent/10"
+                              : "border-evo-border hover:bg-white/5")
+                          }
+                          onClick={() =>
+                            void chooseAnswer(selectedLesson, index)
+                          }
+                        >
+                          {choice}
+                        </button>
+                      ))}
+                    </div>
+                    {answers[selectedLesson.id] !== undefined && (
+                      <p
+                        role="status"
+                        className="mt-4 border-l-2 border-evo-accent pl-4 text-sm leading-relaxed"
+                      >
+                        {answers[selectedLesson.id] === selectedLesson.answer
+                          ? "Correto! "
+                          : "Vamos revisar: "}
+                        {selectedLesson.explanation}
+                      </p>
+                    )}
+                    {progressBusy && (
+                      <p
+                        role="status"
+                        className="mt-3 text-xs text-evo-textSec"
+                      >
+                        Salvando progresso…
+                      </p>
+                    )}
+                  </fieldset>
+                  {assistantEnabled && (
+                    <button
+                      className="mt-4 inline-flex min-h-11 items-center gap-2 text-sm text-evo-accent"
+                      onClick={() =>
+                        window.dispatchEvent(
+                          new CustomEvent("ediv-assistant-question", {
+                            detail:
+                              "Explique de forma educativa: " +
+                              selectedLesson.title,
+                          }),
+                        )
+                      }
+                    >
+                      <MessageCircle size={16} aria-hidden="true" /> Pedir uma
+                      explicação ao assistente
+                    </button>
+                  )}
+                  {nextLesson && (
+                    <a
+                      className="mt-6 inline-flex min-h-11 items-center gap-2 text-sm font-semibold text-evo-accent"
+                      href="#sala-de-aula"
+                      onClick={() => setSelectedId(nextLesson.id)}
+                    >
+                      Próxima aula: {nextLesson.title}
+                      <ArrowRight size={16} aria-hidden="true" />
+                    </a>
+                  )}
+                </>
+              )}
+            </div>
+            <nav
+              aria-label="Aulas e capítulos do curso"
+              className="order-first border-t border-evo-border pt-4 lg:order-last lg:border-t-0 lg:border-l lg:pl-5 lg:pt-0"
+            >
+              <h3 className="text-sm font-semibold">Seu roteiro de estudo</h3>
+              {learningCourses.map((course) => (
+                <div key={course.id} className="mt-5">
+                  <p className="mb-2 text-xs uppercase tracking-[0.08em] text-evo-textSec">
+                    {course.id === "pesquisa"
+                      ? "01 · Pesquisa de ações"
+                      : "02 · Dividendos"}
+                  </p>
+                  <ol className="space-y-1">
+                    {course.chapterIds.map((id) => {
+                      const lesson = lessons.find((item) => item.id === id);
+                      const chapter = learningChapters.find(
+                        (item) => item.id === id,
+                      );
+                      if (!lesson || !chapter) return null;
+                      return (
+                        <li key={id}>
+                          <button
+                            id={id}
+                            type="button"
+                            aria-current={
+                              selectedId === id ? "step" : undefined
+                            }
+                            onClick={() => setSelectedId(id)}
+                            className={
+                              "flex min-h-14 w-full items-start justify-between gap-3 border-l-2 px-3 py-3 text-left " +
+                              (selectedId === id
+                                ? "border-evo-accent bg-evo-accent/5"
+                                : "border-transparent hover:bg-white/5")
+                            }
+                          >
+                            <span className="min-w-0">
+                              <span className="block text-sm font-medium">
+                                {lesson.title}
+                              </span>
+                              <span className="mt-1 block text-xs leading-relaxed text-evo-textSec">
+                                {chapter.subtitle}
+                              </span>
+                            </span>
+                            {lesson.locked ? (
+                              <LockKeyhole
+                                size={16}
+                                className="mt-1 shrink-0 text-evo-textSec"
+                                aria-label="Requer conta"
+                              />
+                            ) : completed.includes(id) ? (
+                              <CheckCircle2
+                                size={16}
+                                className="mt-1 shrink-0 text-evo-accent"
+                                aria-label="Concluída"
+                              />
+                            ) : null}
+                          </button>
+                        </li>
+                      );
+                    })}
+                  </ol>
+                </div>
+              ))}
+              <p className="mt-6 text-xs leading-relaxed text-evo-textSec">
+                As gravações serão publicadas após a preparação e revisão do
+                corretor. O progresso é registrado pelos exercícios de cada
+                aula.
+              </p>
+            </nav>
+          </div>
+        </section>
+      )}
+      <LearningPractice />
+      <section aria-labelledby="learning-glossary-title">
+        <div className="flex flex-wrap items-end justify-between gap-3">
+          <h2 id="learning-glossary-title" className="text-2xl font-semibold">
+            Um conceito por vez
+          </h2>
+          <Link
+            to="/glossario"
+            className="inline-flex min-h-11 items-center gap-2 text-sm text-evo-accent"
+          >
+            Abrir glossário completo <ArrowRight size={15} aria-hidden="true" />
+          </Link>
+        </div>
+        <label className="mt-4 block">
           <span className="sr-only">Buscar um conceito</span>
           <input
             className="field"
-            placeholder="Buscar um conceito…"
+            placeholder="Buscar dividendo, payout, data-ex…"
             value={search}
-            onChange={(e) => setSearch(e.target.value)}
+            onChange={(event) => setSearch(event.target.value)}
           />
         </label>
-        <dl className="grid gap-3 sm:grid-cols-2">
-          {glossary
-            .filter(([term, text]) =>
-              (term + " " + text).toLowerCase().includes(search.toLowerCase()),
-            )
-            .map(([term, text]) => (
-              <div
-                key={term}
-                className="rounded-xl border border-evo-border bg-evo-card p-4"
-              >
-                <dt className="font-semibold">{term}</dt>
-                <dd className="mt-2 text-sm leading-relaxed text-evo-textSec">
-                  {text}
-                </dd>
-              </div>
-            ))}
+        <dl className="mt-3 grid gap-x-6 sm:grid-cols-2">
+          {matchingTerms.map(([term, text]) => (
+            <div key={term} className="border-b border-evo-border py-4">
+              <dt className="font-semibold">{term}</dt>
+              <dd className="mt-2 text-sm leading-relaxed text-evo-textSec">
+                {text}
+              </dd>
+            </div>
+          ))}
         </dl>
+        {glossary.length > 0 && matchingTerms.length === 0 && (
+          <p role="status" className="mt-4 text-sm text-evo-textSec">
+            Nenhum conceito encontrado. Tente outro termo.
+          </p>
+        )}
       </section>
-      <div className="flex flex-wrap gap-3">
+      <footer className="flex flex-wrap items-center justify-between gap-4 border-t border-evo-border pt-6">
         <Link to="/ranking" className="action">
-          Explorar o ranking
+          Aplicar a leitura no ranking{" "}
+          <ArrowRight size={16} aria-hidden="true" />
         </Link>
         <button
-          className="min-h-11 rounded-lg border border-evo-border px-4 text-sm"
+          type="button"
+          className="action-secondary"
           disabled={progressBusy || loading}
           onClick={() => void resetProgress()}
         >
           Reiniciar progresso
         </button>
-      </div>
-      <p className="text-xs leading-relaxed text-evo-textSec">
-        Fontes para aprofundar:{" "}
-        <a
-          href="https://www.gov.br/investidor/pt-br"
-          target="_blank"
-          rel="noreferrer"
-          className="underline"
-        >
-          Portal do Investidor — CVM
-        </a>{" "}
-        e{" "}
-        <a
-          href="https://borainvestir.b3.com.br/"
-          target="_blank"
-          rel="noreferrer"
-          className="underline"
-        >
-          Bora Investir — B3
-        </a>
-        . Os textos desta trilha são explicações educativas da Ediv.
-      </p>
+        <p className="w-full text-xs leading-relaxed text-evo-textSec">
+          Conteúdo educativo da Ediv. Os exemplos são fictícios e não indicam o
+          que comprar ou vender. Consulte também o{" "}
+          <a
+            href="https://www.gov.br/investidor/pt-br"
+            target="_blank"
+            rel="noreferrer"
+            className="underline"
+          >
+            Portal do Investidor — CVM
+          </a>{" "}
+          e as fontes oficiais indicadas em cada aula.
+        </p>
+      </footer>
     </section>
   );
 }

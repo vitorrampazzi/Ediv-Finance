@@ -1,13 +1,18 @@
 import { useRankingPublication } from "../hooks/useRankingPublication";
 import { useMemo, useState } from "react";
-import { Link, useSearchParams } from "react-router-dom";
-import { BookOpen, FileSpreadsheet, Search, Star, Upload } from "lucide-react";
+import { Link, useLocation, useSearchParams } from "react-router-dom";
+import {
+  ArrowUpRight,
+  BookOpen,
+  FileSpreadsheet,
+  Search,
+  Upload,
+} from "lucide-react";
 import { Card } from "../components/Card";
 import { RankingFundamentals } from "../components/RankingFundamentals";
 import type { Entry } from "../lib/ranking";
 import { ApiError } from "../lib/api";
 import { useAuth } from "../context/authContext";
-import { useFavoritos } from "../hooks/useFavoritos";
 import { rankingDemoEntries } from "../lib/rankingDemo";
 import { RankingAccessLanding } from "../components/RankingAccessLanding";
 import { OrbitCoins } from "../components/OrbitCoins";
@@ -16,13 +21,13 @@ import { userCan } from "../lib/permissions";
 import {
   CompanyComparison,
   VersionComparison,
-  IndicatorHelp,
 } from "../components/ResearchTools";
 
 const money = new Intl.NumberFormat("pt-BR", {
   style: "currency",
   currency: "BRL",
 });
+const noEntries: Entry[] = [];
 const date = (value: string) =>
   new Date(
     value.replace(" ", "T") + (value.endsWith("Z") ? "" : "Z"),
@@ -33,7 +38,6 @@ const button =
   "inline-flex min-h-11 items-center justify-center gap-2 rounded-lg bg-evo-primary px-4 text-sm font-semibold text-white hover:bg-evo-primaryHover disabled:opacity-50";
 export function IncomeRanking() {
   const { user, loading } = useAuth();
-  const [routeParams] = useSearchParams();
   if (loading)
     return (
       <p role="status" className="p-8 text-center text-sm text-evo-textSec">
@@ -41,24 +45,16 @@ export function IncomeRanking() {
       </p>
     );
   if (!user) return <RankingAccessLanding />;
-  return (
-    <MemberIncomeRanking
-      key={
-        user.id + ":" + user.role + ":" + (routeParams.get("publication") || "")
-      }
-    />
-  );
+  return <MemberIncomeRanking key={user.id + ":" + user.role} />;
 }
 
 function MemberIncomeRanking() {
   const [searchParams, setSearchParams] = useSearchParams();
+  const location = useLocation();
   const { user, refreshSession } = useAuth();
-  const { toggleFavorito, isFavorito, error: favoriteError } = useFavoritos();
-  const [publication, setPublication] = useState(() =>
-    /^\d{1,20}$/.test(searchParams.get("publication") || "")
-      ? searchParams.get("publication") || ""
-      : "",
-  );
+  const publication = /^\d{1,20}$/.test(searchParams.get("publication") || "")
+    ? searchParams.get("publication") || ""
+    : "";
   const {
     ranking,
     loading,
@@ -69,6 +65,7 @@ function MemberIncomeRanking() {
     setLoading,
     setLoadedFor,
     requestKey,
+    current,
   } = useRankingPublication(publication);
   const [message, setMessage] = useState("");
   const [search, setSearch] = useState("");
@@ -94,11 +91,15 @@ function MemberIncomeRanking() {
       ranking.entries.length === 0);
   const sourceEntries: Entry[] = showingDemo
     ? rankingDemoEntries
-    : ranking.entries;
+    : current
+      ? ranking.entries
+      : noEntries;
   const totalEntries = showingDemo
     ? rankingDemoEntries.length
-    : (ranking.totalEntries ?? ranking.entries.length);
-  const changeView = (mode: "demo" | "real") => {
+    : current
+      ? (ranking.totalEntries ?? ranking.entries.length)
+      : 0;
+  const changeView = (mode: "demo" | "real", resetPublication = false) => {
     setSearch("");
     setSector("");
     setHorizon("");
@@ -106,8 +107,19 @@ function MemberIncomeRanking() {
     setSearchParams((current) => {
       const next = new URLSearchParams(current);
       next.set("visual", mode);
+      if (resetPublication) next.delete("publication");
       return next;
     });
+  };
+  const researchLink = (ticker: string) => {
+    const params = new URLSearchParams(searchParams);
+    params.set("visual", showingDemo ? "demo" : "real");
+    if (!showingDemo && (ranking.id || publication))
+      params.set("publication", ranking.id || publication);
+    const base = location.pathname.startsWith("/app/")
+      ? "/app/ranking/acao/"
+      : "/ranking/acao/";
+    return base + encodeURIComponent(ticker) + "?" + params.toString();
   };
   const sectors = [
     ...new Set(
@@ -169,8 +181,7 @@ function MemberIncomeRanking() {
         setMessage(result.message);
         setPreview([]);
         setFile(null);
-        setPublication("");
-        changeView("real");
+        changeView("real", true);
         if (!publication) {
           await applyRanking(await load());
           setLoading(false);
@@ -195,7 +206,7 @@ function MemberIncomeRanking() {
       id="pagina-conteudo"
       className="mx-auto max-w-7xl space-y-6 px-4 py-6 sm:px-6 md:py-10"
     >
-      <section className="rounded-2xl border border-evo-border bg-evo-card p-6 sm:p-8">
+      <section className="border-b border-evo-border pb-6 sm:pb-8">
         <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
           <div className="min-w-0 flex-1">
             <p className="text-xs font-semibold uppercase tracking-widest text-evo-accent">
@@ -271,9 +282,9 @@ function MemberIncomeRanking() {
           </dl>
         </section>
       )}
-      {(error || favoriteError) && (
+      {error && (
         <p role="alert" className="notice-error">
-          {error || favoriteError}
+          {error}
         </p>
       )}
       {message && (
@@ -443,7 +454,7 @@ function MemberIncomeRanking() {
           demo={showingDemo}
         />
       )}
-      {!loading && !error && !showingDemo && (
+      {!loading && !error && !showingDemo && current && (
         <VersionComparison
           key={ranking.id}
           publicationId={ranking.id}
@@ -454,14 +465,22 @@ function MemberIncomeRanking() {
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
             <h2 className="text-xl font-semibold">
-              {showingDemo ? "Explore os cenários de exemplo" : ranking.title}
+              {showingDemo
+                ? "Explore os cenários de exemplo"
+                : current
+                  ? ranking.title
+                  : "Pesquisa selecionada"}
             </h2>
             <p className="mt-1 text-xs text-evo-textSec">
               {showingDemo
                 ? "Ordem ilustrativa para apresentação da interface"
-                : ranking.updatedAt
-                  ? "Publicado em " + date(ranking.updatedAt)
-                  : "Aguardando a primeira publicação"}
+                : !current
+                  ? loading
+                    ? "Carregando a versão selecionada…"
+                    : "Pesquisa indisponível"
+                  : ranking.updatedAt
+                    ? "Publicado em " + date(ranking.updatedAt)
+                    : "Aguardando a primeira publicação"}
             </p>
           </div>
           {!showingDemo && (
@@ -471,8 +490,14 @@ function MemberIncomeRanking() {
                 className={input + " mt-1"}
                 value={publication}
                 onChange={(e) => {
-                  setPublication(e.target.value);
+                  const selected = e.target.value;
                   setLoading(true);
+                  setSearchParams((current) => {
+                    const next = new URLSearchParams(current);
+                    if (selected) next.set("publication", selected);
+                    else next.delete("publication");
+                    return next;
+                  });
                 }}
               >
                 <option value="">Publicação mais recente</option>
@@ -485,7 +510,7 @@ function MemberIncomeRanking() {
             </label>
           )}
         </div>
-        {!showingDemo && (
+        {!showingDemo && current && (
           <div className="grid gap-3 rounded-xl border border-evo-border bg-evo-card p-4 text-sm sm:grid-cols-3">
             <p>
               Responsável
@@ -566,6 +591,14 @@ function MemberIncomeRanking() {
           <Card>
             <p role="status">Carregando publicação…</p>
           </Card>
+        ) : !showingDemo && !current ? (
+          <p
+            role="status"
+            className="border-y border-evo-border py-8 text-sm text-evo-textSec"
+          >
+            A pesquisa desta versão não está disponível agora. Escolha outra
+            publicação ou atualize a página.
+          </p>
         ) : !sourceEntries.length ? (
           <Card>
             <h3 className="font-semibold">
@@ -584,140 +617,100 @@ function MemberIncomeRanking() {
         ) : !entries.length ? (
           <Card>Nenhum ativo corresponde aos filtros.</Card>
         ) : (
-          entries.map((entry) => (
-            <article
-              key={entry.ticker}
-              className="rounded-xl border border-evo-border bg-evo-card p-5"
-            >
-              <div className="flex flex-wrap items-start justify-between gap-4">
-                <div className="flex min-w-0 items-start gap-3">
-                  <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-evo-accent/10 font-semibold text-evo-accent">
-                    {entry.rank}
-                  </span>
-                  <div>
-                    <h3 className="font-bold">
-                      {entry.ticker}{" "}
-                      <span className="font-normal text-evo-textSec">
-                        {entry.companyName}
-                      </span>
-                    </h3>
-                    {showingDemo && (
-                      <span className="mt-2 inline-block rounded-md bg-evo-accent/10 px-2 py-1 text-[11px] font-semibold text-evo-accent">
-                        Empresa fictícia · exemplo visual
-                      </span>
-                    )}
-                    <p className="mt-1 text-xs text-evo-textSec">
-                      {entry.sector || "Setor não informado"}
-                    </p>
-                  </div>
-                </div>
-                {showingDemo ? (
-                  <span className="text-xs text-evo-textSec">
-                    Sem operações ou favoritos
-                  </span>
-                ) : user ? (
-                  <button
+          <ol className="divide-y divide-evo-border border-y border-evo-border">
+            {entries.map((entry) => (
+              <li key={entry.ticker}>
+                <article>
+                  <Link
+                    to={researchLink(entry.ticker)}
+                    className="group block py-5 transition-colors hover:bg-evo-accent/5 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-evo-accent sm:px-3"
                     aria-label={
-                      (isFavorito(entry.ticker)
-                        ? "Remover dos"
-                        : "Adicionar aos") +
-                      " favoritos " +
-                      entry.ticker
+                      "Abrir pesquisa de " +
+                      entry.companyName +
+                      " (" +
+                      entry.ticker +
+                      ")"
                     }
-                    aria-pressed={isFavorito(entry.ticker)}
-                    onClick={() => void toggleFavorito(entry.ticker)}
-                    className="min-h-11 min-w-11 rounded-lg border border-evo-border p-3"
                   >
-                    <Star
-                      size={17}
-                      fill={isFavorito(entry.ticker) ? "currentColor" : "none"}
-                    />
-                  </button>
-                ) : (
-                  <Link to="/entrar" className="text-sm text-evo-accent">
-                    Entrar para favoritar
+                    <div className="flex items-start justify-between gap-4">
+                      <div className="flex min-w-0 items-start gap-3 sm:gap-5">
+                        <span
+                          className="w-7 shrink-0 pt-1 font-numbers text-lg text-evo-textSec"
+                          aria-hidden="true"
+                        >
+                          {String(entry.rank).padStart(2, "0")}
+                        </span>
+                        <div className="min-w-0">
+                          <h3 className="break-words text-xl font-semibold group-hover:text-evo-accent">
+                            {entry.ticker}
+                            <span className="mt-1 block text-sm font-normal text-evo-textSec sm:ml-3 sm:mt-0 sm:inline">
+                              {entry.companyName}
+                            </span>
+                          </h3>
+                          <p className="mt-2 text-xs text-evo-textSec">
+                            {entry.sector || "Setor não informado"}
+                            {showingDemo ? " · Empresa fictícia" : ""}
+                          </p>
+                        </div>
+                      </div>
+                      <ArrowUpRight
+                        size={21}
+                        className="mt-1 shrink-0 text-evo-accent"
+                        aria-hidden="true"
+                      />
+                    </div>
+                    <div className="ml-10 mt-4 sm:ml-12">
+                      <dl className="grid grid-cols-2 gap-x-4 gap-y-3 sm:grid-cols-3">
+                        <div>
+                          <dt className="text-xs text-evo-textSec">
+                            {showingDemo
+                              ? "Potencial simulado"
+                              : "Potencial informado"}
+                          </dt>
+                          <dd className="mt-1 font-numbers text-xl font-semibold text-evo-accent">
+                            {Number(entry.expectedReturnPercent).toLocaleString(
+                              "pt-BR",
+                            )}
+                            %
+                          </dd>
+                        </div>
+                        <div>
+                          <dt className="text-xs text-evo-textSec">
+                            {showingDemo
+                              ? "Preço-alvo simulado"
+                              : "Preço-alvo informado"}
+                          </dt>
+                          <dd className="mt-1 font-numbers text-lg">
+                            {entry.targetPrice
+                              ? money.format(Number(entry.targetPrice))
+                              : "Não informado"}
+                          </dd>
+                        </div>
+                        <div>
+                          <dt className="text-xs text-evo-textSec">
+                            Horizonte
+                          </dt>
+                          <dd className="mt-1 font-numbers text-lg">
+                            {entry.horizonMonths
+                              ? entry.horizonMonths + " meses"
+                              : "Não informado"}
+                          </dd>
+                        </div>
+                      </dl>
+                      <p className="mt-4 line-clamp-2 whitespace-pre-wrap break-words text-sm leading-relaxed text-evo-textSec">
+                        {entry.thesis ||
+                          "A justificativa ainda não foi informada pelo autor."}
+                      </p>
+                      <span className="mt-3 inline-flex items-center gap-2 text-xs font-semibold text-evo-accent">
+                        Ler tese, história e indicadores{" "}
+                        <ArrowUpRight size={14} aria-hidden="true" />
+                      </span>
+                    </div>
                   </Link>
-                )}
-              </div>
-              <dl
-                className={`mt-4 grid grid-cols-2 gap-4 border-y border-evo-border py-4 ${showingDemo ? "lg:grid-cols-4" : "sm:grid-cols-3"}`}
-              >
-                {showingDemo && (
-                  <div>
-                    <dt className="text-xs text-evo-textSec">
-                      Referência simulada
-                    </dt>
-                    <dd className="mt-1 font-numbers text-lg">
-                      {money.format(Number(entry.referencePrice))}
-                    </dd>
-                  </div>
-                )}
-                <div>
-                  <dt className="text-xs text-evo-textSec">
-                    {showingDemo ? "Potencial simulado" : "Potencial informado"}
-                  </dt>
-                  <dd className="mt-1 font-numbers text-lg">
-                    {Number(entry.expectedReturnPercent).toLocaleString(
-                      "pt-BR",
-                    )}
-                    %
-                  </dd>
-                  <IndicatorHelp field="expectedReturnPercent" />
-                </div>
-                <div>
-                  <dt className="text-xs text-evo-textSec">
-                    {showingDemo
-                      ? "Preço-alvo simulado"
-                      : "Preço-alvo informado"}
-                  </dt>
-                  <dd className="mt-1">
-                    {entry.targetPrice
-                      ? money.format(Number(entry.targetPrice))
-                      : "Não informado"}
-                  </dd>
-                  <IndicatorHelp field="targetPrice" />
-                </div>
-                <div>
-                  <dt className="text-xs text-evo-textSec">Horizonte</dt>
-                  <dd className="mt-1">
-                    {entry.horizonMonths
-                      ? entry.horizonMonths + " meses"
-                      : "Não informado"}
-                  </dd>
-                  <IndicatorHelp field="horizonMonths" />
-                </div>
-              </dl>
-              <div className="mt-4 grid gap-4 md:grid-cols-2">
-                <div>
-                  <h4 className="text-sm font-semibold">Tese do cenário</h4>
-                  <p className="mt-2 whitespace-pre-wrap break-words text-sm leading-relaxed text-evo-textSec">
-                    {entry.thesis ||
-                      "A justificativa ainda não foi informada pelo autor."}
-                  </p>
-                </div>
-                <div>
-                  <h4 className="text-sm font-semibold">
-                    O que pode contrariar a previsão?
-                  </h4>
-                  <p className="mt-2 whitespace-pre-wrap break-words text-sm leading-relaxed text-evo-textSec">
-                    {entry.risks ||
-                      "Os riscos específicos ainda não foram informados. Não interprete isso como ausência de risco."}
-                  </p>
-                </div>
-              </div>
-              <RankingFundamentals
-                data={entry}
-                demo={showingDemo}
-                revenueHistory={showingDemo ? entry.revenueHistory : undefined}
-              />
-              <Link
-                to="/aprender#ranking"
-                className="mt-4 inline-block text-xs text-evo-accent underline"
-              >
-                Entender potencial, preço-alvo e prazo
-              </Link>
-            </article>
-          ))
+                </article>
+              </li>
+            ))}
+          </ol>
         )}
       </section>
       <aside className="rounded-xl border border-evo-border bg-evo-card p-4 text-xs leading-relaxed text-evo-textSec">
@@ -731,7 +724,7 @@ function MemberIncomeRanking() {
             adequado para você.
           </>
         )}
-        {!showingDemo && ranking.sourceFileName && (
+        {!showingDemo && current && ranking.sourceFileName && (
           <span className="mt-2 block">Origem: {ranking.sourceFileName}</span>
         )}
       </aside>

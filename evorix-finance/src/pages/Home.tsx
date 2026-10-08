@@ -55,13 +55,13 @@ export function Home() {
               Aprenda a interpretar cenários e entender os riscos.{" "}
               {awaitingRegistration && !user
                 ? "Explore o mercado, a primeira aula e o glossário enquanto preparamos a abertura dos cadastros."
-                : "Crie sua conta gratuita para conhecer o ranking, estudar os módulos de pesquisa e organizar sua carteira."}
+                : "Crie sua conta gratuita para explorar previsões, conhecer as empresas por trás das ações e aprender sobre dividendos."}
             </p>
             <div className="mt-8 flex flex-wrap gap-3">
               <Link
                 to={
                   user
-                    ? "/ranking"
+                    ? "/app/ranking"
                     : awaitingRegistration
                       ? "/aprender"
                       : authLink("cadastro", "/ranking")
@@ -79,7 +79,7 @@ export function Home() {
                 to="/mercado"
                 className="inline-flex min-h-12 items-center gap-2 rounded-lg px-3 text-sm text-evo-textSec hover:text-evo-textMain"
               >
-                <BarChart3 size={17} aria-hidden="true" /> Ver mercado
+                <BarChart3 size={17} aria-hidden="true" /> Análises de ações
               </Link>
               <Link
                 to="/aprender"
@@ -90,7 +90,7 @@ export function Home() {
             </div>
             <p className="mt-4 text-xs text-evo-textSec">
               Mercado, primeira aula e glossário abertos. Conta gratuita para
-              acessar o ranking, a trilha completa e organizar sua carteira.
+              acessar as pesquisas por empresa e a escola de dividendos.
             </p>
             {awaitingRegistration && !user && (
               <p className="mt-3 text-xs text-evo-textSec">

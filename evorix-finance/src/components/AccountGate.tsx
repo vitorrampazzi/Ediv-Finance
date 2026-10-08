@@ -4,7 +4,7 @@ import { authLink } from "../lib/authDestination";
 
 export function AccountGate({
   title = "Continue sua pesquisa",
-  description = "Crie sua conta gratuita para explorar o ranking completo, consultar os dados das empresas e salvar seus favoritos.",
+  description = "Crie sua conta gratuita para explorar o ranking completo, consultar a pesquisa das empresas e continuar as aulas sobre dividendos.",
   next,
   compact = false,
 }: {

@@ -49,7 +49,6 @@ function MemberConversations({ teamView }: { teamView: boolean }) {
   const [conversation, setConversation] = useState<Conversation | null>(null);
   const [subject, setSubject] = useState("");
   const [body, setBody] = useState("");
-  const [share, setShare] = useState(false);
   const [reply, setReply] = useState("");
   const [status, setStatus] = useState("ANSWERED");
   const [busy, setBusy] = useState(false);
@@ -127,11 +126,10 @@ function MemberConversations({ teamView }: { teamView: boolean }) {
     void act(async () => {
       const result = await apiRequest<{ id: string }>("/api/support", {
         method: "POST",
-        body: JSON.stringify({ subject, body, sharePortfolio: share }),
+        body: JSON.stringify({ subject, body, sharePortfolio: false }),
       });
       setSubject("");
       setBody("");
-      setShare(false);
       setConversation(null);
       setSelected(result.id);
       await list();
@@ -146,7 +144,7 @@ function MemberConversations({ teamView }: { teamView: boolean }) {
         </h1>
         <p className="mt-2 max-w-3xl text-sm leading-relaxed text-evo-textSec">
           {staff
-            ? "Você pode responder às conversas e consultar operações quando o titular autorizar o compartilhamento. "
+            ? "Você pode responder às dúvidas e acompanhar os atendimentos dos alunos. "
             : "Você pode deixar perguntas a qualquer hora. "}
           A equipe responde conforme a disponibilidade; o horário de atendimento
           ainda será informado. Este canal não representa assinatura ativa nem
@@ -185,16 +183,6 @@ function MemberConversations({ teamView }: { teamView: boolean }) {
                     value={body}
                     onChange={(e) => setBody(e.target.value)}
                   />
-                </label>
-                <label className="flex gap-3 text-xs leading-relaxed">
-                  <input
-                    className="mt-1 h-4 w-4 shrink-0"
-                    type="checkbox"
-                    checked={share}
-                    onChange={(e) => setShare(e.target.checked)}
-                  />
-                  Autorizo a equipe a consultar minhas operações de carteira
-                  nesta conversa. Posso revogar a autorização depois.
                 </label>
                 <p className="text-xs text-evo-textSec">
                   Não envie senhas, CPF ou dados bancários.
@@ -272,41 +260,42 @@ function MemberConversations({ teamView }: { teamView: boolean }) {
                   {statuses[visible.thread.status]}
                 </span>
               </div>
-              {visible.thread.user_id === user?.id && (
-                <label className="mt-4 flex items-start gap-2 text-xs">
-                  <input
-                    type="checkbox"
-                    disabled={busy}
-                    checked={Boolean(visible.thread.share_portfolio)}
-                    onChange={(e) => {
-                      const value = e.target.checked;
-                      void act(async () => {
-                        await apiRequest(
-                          "/api/support/" + selected + "/consent",
-                          {
-                            method: "PATCH",
-                            body: JSON.stringify({ sharePortfolio: value }),
-                          },
-                        );
-                        setConversation((current) =>
-                          current
-                            ? {
-                                ...current,
-                                thread: {
-                                  ...current.thread,
-                                  share_portfolio: value,
-                                },
-                                portfolio: null,
-                              }
-                            : null,
-                        );
-                      });
-                    }}
-                  />
-                  Permitir consulta das minhas operações pela equipe nesta
-                  conversa
-                </label>
-              )}
+              {visible.thread.user_id === user?.id &&
+                visible.thread.share_portfolio && (
+                  <label className="mt-4 flex items-start gap-2 text-xs">
+                    <input
+                      type="checkbox"
+                      disabled={busy}
+                      checked={Boolean(visible.thread.share_portfolio)}
+                      onChange={(e) => {
+                        const value = e.target.checked;
+                        void act(async () => {
+                          await apiRequest(
+                            "/api/support/" + selected + "/consent",
+                            {
+                              method: "PATCH",
+                              body: JSON.stringify({ sharePortfolio: value }),
+                            },
+                          );
+                          setConversation((current) =>
+                            current
+                              ? {
+                                  ...current,
+                                  thread: {
+                                    ...current.thread,
+                                    share_portfolio: value,
+                                  },
+                                  portfolio: null,
+                                }
+                              : null,
+                          );
+                        });
+                      }}
+                    />
+                    Acesso autorizado a registros de versões anteriores.
+                    Desmarque para revogar.
+                  </label>
+                )}
               <ol
                 className="my-5 max-h-[32rem] space-y-3 overflow-auto"
                 aria-label="Mensagens da conversa"

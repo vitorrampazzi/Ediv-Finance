@@ -22,7 +22,7 @@ type AssistantMessage = {
 type LocalAnswer = Omit<AssistantMessage, "id" | "role">;
 
 const suggestions = [
-  "Como registro minha carteira?",
+  "Como estudo uma empresa pelo ranking?",
   "O que é diversificação?",
   "Como funciona o ranking?",
   "Qual a diferença entre dividendos e valorização?",
@@ -42,7 +42,7 @@ function getLocalAnswer(question: string): LocalAnswer {
     };
   if (/dividendo|jcp|provento/.test(normalized))
     return {
-      text: "Dividendos e JCP são distribuições da empresa. Um pagamento anunciado ainda não é dinheiro recebido. A valorização é a mudança no preço do ativo, e só se realiza quando há venda. Na carteira, registre separadamente o valor líquido recebido e os eventos anunciados; distribuições futuras não são garantidas.",
+      text: "Dividendos e JCP são distribuições da empresa. Um pagamento anunciado ainda não é dinheiro recebido. A valorização é a mudança no preço do ativo. Ao estudar uma empresa, observe sua geração de caixa, as datas informadas e a sustentabilidade dos pagamentos; distribuições futuras não são garantidas.",
       href: "/aprender#dividendos",
       linkLabel: "Entender dividendos",
     };
@@ -69,9 +69,9 @@ function getLocalAnswer(question: string): LocalAnswer {
     )
   ) {
     return {
-      text: "No painel, abra Minha carteira para registrar uma compra ou venda manualmente. Esses registros servem para acompanhar sua carteira; o site não se conecta à corretora nem envia ordens. É preciso entrar na conta.",
-      href: "/app/carteira",
-      linkLabel: "Abrir minha carteira",
+      text: "A Ediv está focada em pesquisa de ações e educação sobre dividendos. A área de carteira não faz parte desta POC. Entre no ranking e abra uma empresa para conhecer sua tese, os riscos e os indicadores publicados.",
+      href: "/app/ranking",
+      linkLabel: "Abrir ranking de previsões",
     };
   }
 

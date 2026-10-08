@@ -119,8 +119,9 @@ export const Configuracoes = () => {
       <Card glow="none">
         <h2 className="text-lg font-semibold">Sessões e cópia dos dados</h2>
         <p className="mt-2 text-sm text-evo-textSec">
-          A exportação inclui seu perfil, operações, eventos, favoritos,
-          preferências e conversas. Guarde o arquivo em um lugar privado.
+          A exportação inclui os dados salvos na sua conta e registros de
+          recursos usados em versões anteriores. Guarde o arquivo em um lugar
+          privado.
         </p>
         <div className="mt-4 flex flex-wrap gap-3">
           <a className="action" href="/api/auth/export">
@@ -153,10 +154,10 @@ export const Configuracoes = () => {
       <Card glow="none" className="border-evo-red/40">
         <h2 className="text-lg font-semibold">Excluir minha conta</h2>
         <p className="mt-2 text-sm text-evo-textSec">
-          A exclusão apaga o perfil e os registros vinculados, incluindo
-          carteira, eventos e conversas. Faça sua exportação antes de continuar.
-          Cópias de segurança podem permanecer até expirar a retenção definida
-          pela operação.
+          A exclusão apaga o perfil e os dados vinculados, incluindo registros
+          de versões anteriores e conversas. Faça sua exportação antes de
+          continuar. Cópias de segurança podem permanecer até expirar a retenção
+          definida pela operação.
         </p>
         {!open ? (
           <button
