@@ -1,4 +1,5 @@
 import { ArrowLeft, ArrowUpRight, BookOpen, FileText } from "lucide-react";
+import { useLayoutEffect } from "react";
 import {
   Link,
   useLocation,
@@ -34,6 +35,12 @@ export function StockResearch() {
   const { user, loading } = useAuth();
   const { ticker = "" } = useParams<{ ticker: string }>();
   const [params] = useSearchParams();
+  const { pathname, search, hash } = useLocation();
+
+  useLayoutEffect(() => {
+    if (!hash) window.scrollTo({ top: 0, left: 0, behavior: "instant" });
+  }, [pathname, search, hash]);
+
   if (loading)
     return (
       <p role="status" className={page}>
