@@ -51,7 +51,7 @@ const pageTitles: Record<string, string> = {
   "/app/analises": "Análises",
   "/app/ranking": "Ranking de previsões",
   "/app/aprender": "Aprender",
-  "/app/conversas": "Conversas",
+  "/app/conversas": "Dúvidas e suporte",
   "/app/atendimentos": "Atendimentos",
   "/app/assessoria": "Assessoria",
   "/app/perfil": "Meu perfil",
