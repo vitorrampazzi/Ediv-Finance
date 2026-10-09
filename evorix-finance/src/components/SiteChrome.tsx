@@ -234,6 +234,11 @@ export function SiteFooter() {
                 </Link>
               </li>
               <li>
+                <Link className="hover:text-evo-textMain" to="/metodologia">
+                  Pesquisa e metodologia
+                </Link>
+              </li>
+              <li>
                 <Link className="hover:text-evo-textMain" to="/privacidade">
                   Privacidade e uso
                 </Link>

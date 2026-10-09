@@ -1,4 +1,11 @@
-import { ArrowLeft, ArrowUpRight, BookOpen, FileText } from "lucide-react";
+import {
+  ArrowLeft,
+  ArrowRight,
+  ArrowUpRight,
+  BookOpen,
+  FileText,
+  ShieldAlert,
+} from "lucide-react";
 import { useLayoutEffect } from "react";
 import {
   Link,
@@ -9,6 +16,8 @@ import {
 import { RankingAccessLanding } from "../components/RankingAccessLanding";
 import { RankingFundamentals } from "../components/RankingFundamentals";
 import { IndicatorHelp } from "../components/ResearchTools";
+import { ResearchCoverage } from "../components/ResearchCoverage";
+import { ResearchSources } from "../components/ResearchSources";
 import { useAuth } from "../context/authContext";
 import { useRankingPublication } from "../hooks/useRankingPublication";
 import { rankingDemoEntries } from "../lib/rankingDemo";
@@ -29,7 +38,7 @@ const publicationDate = (value: string) => {
     : parsed.toLocaleString("pt-BR");
 };
 const page = "mx-auto max-w-6xl px-4 py-6 sm:px-6 md:py-10";
-const section = "scroll-mt-24 border-t border-evo-border py-7 sm:py-9";
+const section = "scroll-mt-40 border-t border-evo-border py-7 sm:py-9";
 
 export function StockResearch() {
   const { user, loading } = useAuth();
@@ -62,8 +71,17 @@ function MemberStockResearch() {
   const publication = /^\d{1,20}$/.test(params.get("publication") || "")
     ? params.get("publication") || ""
     : "";
-  const { ranking, loading, error, load, applyRanking } =
-    useRankingPublication(publication);
+  const {
+    ranking,
+    loading,
+    error,
+    setError,
+    load,
+    applyRanking,
+    setLoading,
+    setLoadedFor,
+    requestKey,
+  } = useRankingPublication(publication);
   const explicitMode = params.get("visual");
   const demo =
     explicitMode === "demo" ||
@@ -83,6 +101,25 @@ function MemberStockResearch() {
     (location.pathname.startsWith("/app/") ? "/app/ranking" : "/ranking") +
     "?" +
     backParams.toString();
+  const learningPath = location.pathname.startsWith("/app/")
+    ? "/app/aprender"
+    : "/aprender";
+  const retry = async () => {
+    setLoading(true);
+    setError("");
+    try {
+      applyRanking(await load());
+    } catch (reason) {
+      setError(
+        reason instanceof Error
+          ? reason.message
+          : "Não foi possível abrir esta pesquisa.",
+      );
+    } finally {
+      setLoading(false);
+      setLoadedFor(requestKey);
+    }
+  };
   const backLink = (
     <Link
       to={back}
@@ -114,11 +151,7 @@ function MemberStockResearch() {
         <button
           type="button"
           className="mt-4 min-h-11 text-sm text-evo-accent underline"
-          onClick={() =>
-            void load()
-              .then(applyRanking)
-              .catch(() => {})
-          }
+          onClick={() => void retry()}
         >
           Tentar novamente
         </button>
@@ -139,6 +172,19 @@ function MemberStockResearch() {
     );
 
   const story = demo ? researchDemoStories[entry.ticker] : undefined;
+  const orderedEntries = [...entries].sort((a, b) => a.rank - b.rank);
+  const entryIndex = orderedEntries.findIndex(
+    (item) => item.ticker === entry.ticker,
+  );
+  const previous = orderedEntries[entryIndex - 1];
+  const next = orderedEntries[entryIndex + 1];
+  const companyLink = (code: string) =>
+    (location.pathname.startsWith("/app/")
+      ? "/app/ranking/acao/"
+      : "/ranking/acao/") +
+    encodeURIComponent(code) +
+    "?" +
+    backParams.toString();
   return (
     <article id="pagina-conteudo" className={page}>
       {backLink}
@@ -204,20 +250,48 @@ function MemberStockResearch() {
           </div>
         </dl>
       </header>
+      <section
+        aria-label="Como ler este caderno"
+        className="mb-6 grid gap-4 border-l-2 border-evo-accent bg-evo-accent/5 p-4 text-xs sm:grid-cols-3 sm:p-5"
+      >
+        <div>
+          <h2 className="font-semibold">Comece pela tese</h2>
+          <p className="mt-2 leading-5 text-evo-textSec">
+            Entenda as premissas antes de comparar o potencial com outras
+            empresas.
+          </p>
+        </div>
+        <div>
+          <h2 className="font-semibold">Observe o contraponto</h2>
+          <p className="mt-2 leading-5 text-evo-textSec">
+            Os riscos mostram quais condições podem fazer o cenário não se
+            concretizar.
+          </p>
+        </div>
+        <div>
+          <h2 className="font-semibold">Leia os dados com contexto</h2>
+          <p className="mt-2 leading-5 text-evo-textSec">
+            Preço-alvo é um cenário da publicação. Verifique prazo, período e
+            fonte.
+          </p>
+        </div>
+      </section>
       <nav
         aria-label="Seções da pesquisa"
-        className="flex flex-wrap gap-x-6 gap-y-2 border-b border-evo-border pb-5 text-sm"
+        className="sticky top-16 z-10 -mx-4 flex gap-2 overflow-x-auto border-y border-evo-border bg-evo-bgMain/95 px-4 py-2 text-sm backdrop-blur sm:mx-0 sm:gap-4 md:top-20"
       >
         {[
           ["tese", "Opinião e cenário"],
+          ["riscos", "Riscos"],
           ["historia", "A empresa"],
           ["estatisticas", "Estatísticas"],
           ["fundamentos", "Fundamentos"],
+          ["fontes", "Fontes e versão"],
         ].map(([anchor, label]) => (
           <a
             key={anchor}
             href={"#" + anchor}
-            className="inline-flex min-h-11 items-center text-evo-textSec hover:text-evo-accent"
+            className="inline-flex min-h-11 shrink-0 items-center rounded-md px-2 text-evo-textSec hover:bg-evo-accent/5 hover:text-evo-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-evo-accent"
           >
             {label}
           </a>
@@ -238,10 +312,16 @@ function MemberStockResearch() {
               {entry.thesis?.trim() ||
                 "A opinião e a justificativa ainda não foram publicadas pelo responsável nesta versão."}
             </p>
-            <h3 className="mt-7 text-lg font-semibold">
+          </section>
+          <section id="riscos" className={section}>
+            <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-widest text-evo-accent">
+              <ShieldAlert size={17} aria-hidden="true" /> Contraponto do
+              cenário
+            </div>
+            <h2 className="mt-3 text-2xl font-semibold">
               O que pode contrariar a previsão?
-            </h3>
-            <p className="mt-3 whitespace-pre-wrap break-words text-sm leading-7 text-evo-textSec">
+            </h2>
+            <p className="mt-5 whitespace-pre-wrap break-words border-l-2 border-evo-border pl-4 text-sm leading-7 text-evo-textSec">
               {entry.risks?.trim() ||
                 "Os riscos específicos ainda não foram informados. Isso não significa ausência de risco."}
             </p>
@@ -269,13 +349,13 @@ function MemberStockResearch() {
                   ))}
                 </ol>
               </>
-            ) : (
+            ) : !entry.companyInformation?.trim() ? (
               <p className="mt-5 text-sm leading-7 text-evo-textSec">
                 Conteúdo ainda não publicado. Este espaço receberá a trajetória
                 da empresa, fatos relevantes e o contexto selecionado pela
                 equipe.
               </p>
-            )}
+            ) : null}
             {!demo && entry.companyInformation?.trim() && (
               <div className="mt-6">
                 <h3 className="text-lg font-semibold">
@@ -295,7 +375,7 @@ function MemberStockResearch() {
                   {story.dividendLens}
                 </p>
                 <Link
-                  to="/aprender#dividendos"
+                  to={learningPath + "#dividendos"}
                   className="mt-3 inline-flex min-h-11 items-center gap-2 text-sm text-evo-accent underline"
                 >
                   <BookOpen size={16} aria-hidden="true" /> Aprender sobre
@@ -360,14 +440,56 @@ function MemberStockResearch() {
               data={entry}
               demo={demo}
               revenueHistory={demo ? entry.revenueHistory : undefined}
+              initiallyOpen
             />
+          </section>
+          <section id="fontes" className={section}>
+            <p className="text-xs font-semibold uppercase tracking-widest text-evo-accent">
+              05 / Origem e contexto
+            </p>
+            <h2 className="mt-3 text-2xl font-semibold">
+              Fontes e versão da pesquisa
+            </h2>
+            <dl className="mt-5 grid gap-5 text-sm sm:grid-cols-2">
+              <div>
+                <dt className="text-xs text-evo-textSec">Período dos dados</dt>
+                <dd className="mt-2 break-words">
+                  {entry.referencePeriod || "Não informado nesta publicação"}
+                </dd>
+              </div>
+              <div>
+                <dt className="text-xs text-evo-textSec">Data da publicação</dt>
+                <dd className="mt-2">
+                  {demo
+                    ? "Exemplo ilustrativo; sem publicação real"
+                    : ranking.updatedAt
+                      ? publicationDate(ranking.updatedAt)
+                      : "Não informada"}
+                </dd>
+              </div>
+            </dl>
+            <h3 className="mb-3 mt-6 text-sm font-semibold">
+              Materiais informados pela equipe
+            </h3>
+            <ResearchSources text={entry.dataSource} />
+            <p className="mt-4 text-xs leading-6 text-evo-textSec">
+              Estes fundamentos pertencem à versão selecionada; eles não
+              acompanham automaticamente as mudanças das cotações.
+            </p>
+            <Link
+              to="/metodologia"
+              className="mt-3 inline-flex min-h-11 items-center gap-2 text-sm text-evo-accent underline"
+            >
+              Como funciona a pesquisa{" "}
+              <ArrowUpRight size={14} aria-hidden="true" />
+            </Link>
           </section>
         </div>
         <aside
           className="min-w-0 border-t border-evo-border py-7 text-xs lg:border-l lg:border-t-0 lg:pl-7"
           aria-label="Contexto da publicação"
         >
-          <div className="lg:sticky lg:top-8">
+          <div className="lg:sticky lg:top-40">
             <FileText
               size={20}
               className="text-evo-accent"
@@ -409,22 +531,88 @@ function MemberStockResearch() {
                 </>
               )}
               <div>
-                <dt className="text-evo-textSec">Fonte dos dados</dt>
-                <dd className="mt-2 whitespace-pre-wrap break-words leading-6">
-                  {entry.dataSource || "Não informada nesta publicação"}
+                <dt className="text-evo-textSec">Período dos dados</dt>
+                <dd className="mt-2 break-words">
+                  {entry.referencePeriod || "Não informado"}
                 </dd>
               </div>
             </dl>
+            <ResearchCoverage entry={entry} />
             <Link
-              to="/aprender#ranking"
+              to={learningPath + "#ranking"}
               className="mt-7 inline-flex min-h-11 items-center gap-2 text-evo-accent underline"
             >
               Como interpretar a pesquisa{" "}
               <ArrowUpRight size={14} aria-hidden="true" />
             </Link>
+            <Link
+              to="/glossario"
+              className="flex min-h-11 items-center gap-2 text-evo-accent underline"
+            >
+              Consultar o glossário <BookOpen size={14} aria-hidden="true" />
+            </Link>
           </div>
         </aside>
       </div>
+      <nav
+        aria-label="Outras pesquisas desta publicação"
+        className="grid gap-3 border-t border-evo-border py-6 sm:grid-cols-2"
+      >
+        {previous ? (
+          <Link
+            to={companyLink(previous.ticker)}
+            className="flex min-h-16 items-center gap-3 rounded-lg border border-evo-border p-4 hover:border-evo-accent/50"
+          >
+            <ArrowLeft
+              size={17}
+              className="shrink-0 text-evo-accent"
+              aria-hidden="true"
+            />
+            <span className="min-w-0">
+              <span className="block text-xs text-evo-textSec">
+                Pesquisa anterior
+              </span>
+              <span className="mt-1 block break-words text-sm font-semibold">
+                {previous.ticker} · {previous.companyName}
+              </span>
+            </span>
+          </Link>
+        ) : (
+          <Link
+            to={back}
+            className="flex min-h-16 items-center gap-3 rounded-lg border border-evo-border p-4 text-sm text-evo-accent hover:border-evo-accent/50"
+          >
+            <ArrowLeft size={17} aria-hidden="true" /> Ver todas as pesquisas
+          </Link>
+        )}
+        {next ? (
+          <Link
+            to={companyLink(next.ticker)}
+            className="flex min-h-16 items-center justify-between gap-3 rounded-lg border border-evo-border p-4 hover:border-evo-accent/50"
+          >
+            <span className="min-w-0">
+              <span className="block text-xs text-evo-textSec">
+                Próxima pesquisa
+              </span>
+              <span className="mt-1 block break-words text-sm font-semibold">
+                {next.ticker} · {next.companyName}
+              </span>
+            </span>
+            <ArrowRight
+              size={17}
+              className="shrink-0 text-evo-accent"
+              aria-hidden="true"
+            />
+          </Link>
+        ) : (
+          <Link
+            to={learningPath + "#ranking"}
+            className="flex min-h-16 items-center justify-between gap-3 rounded-lg border border-evo-border p-4 text-sm text-evo-accent hover:border-evo-accent/50"
+          >
+            Continuar nos minicursos <BookOpen size={17} aria-hidden="true" />
+          </Link>
+        )}
+      </nav>
       <footer className="border-t border-evo-border pt-5 text-xs leading-6 text-evo-textSec">
         {demo
           ? "Empresas e conteúdos desta demonstração são fictícios. Nenhum exemplo representa uma previsão real da equipe."

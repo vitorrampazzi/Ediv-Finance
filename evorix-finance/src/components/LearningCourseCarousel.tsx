@@ -6,6 +6,7 @@ import {
   CheckCircle2,
   Clock3,
 } from "lucide-react";
+import { approvedVideoEmbed } from "../lib/learningCatalog";
 
 type Course = {
   id: string;
@@ -17,10 +18,10 @@ type Course = {
 
 type LearningCourseCarouselProps = {
   courses: Course[];
-  chapters: { id: string; readingMinutes: number }[];
+  chapters: { id: string; readingMinutes: number; videoEmbedUrl: string | null }[];
   completed: string[];
   selectedCourseId: string;
-  onSelect: (firstChapterId: string) => void;
+  onSelect: (chapterId: string) => void;
 };
 
 export function LearningCourseCarousel({
@@ -70,6 +71,18 @@ export function LearningCourseCarousel({
     };
   }, [courses.length]);
 
+  useEffect(() => {
+    const viewport = viewportRef.current;
+    const selected = trackRef.current?.querySelector<HTMLElement>("[data-selected-course='true']");
+    if (!viewport || !selected) return;
+    const bounds = viewport.getBoundingClientRect();
+    const card = selected.getBoundingClientRect();
+    const adjustment = card.left < bounds.left
+      ? card.left - bounds.left
+      : card.right > bounds.right ? card.right - bounds.right : 0;
+    if (adjustment) viewport.scrollBy({ left: adjustment, behavior: "instant" });
+  }, [selectedCourseId]);
+
   function scrollCourses(direction: -1 | 1) {
     const viewport = viewportRef.current;
     const track = trackRef.current;
@@ -98,7 +111,7 @@ export function LearningCourseCarousel({
             Minicursos
           </h2>
           <p className="mt-2 text-xs leading-relaxed text-evo-textSec">
-            Leituras disponíveis · vídeos em preparação
+            Escolha um curso, acompanhe seu percurso e continue pela próxima aula.
           </p>
         </div>
         <div
@@ -145,10 +158,13 @@ export function LearningCourseCarousel({
             const minutes = chapters
               .filter((chapter) => course.chapterIds.includes(chapter.id))
               .reduce((sum, chapter) => sum + chapter.readingMinutes, 0);
-            const firstChapterId = course.chapterIds[0];
+            const firstChapterId = course.chapterIds.find((id) => !completed.includes(id)) ?? course.chapterIds[0];
+            const courseFinished = count === course.chapterIds.length && count > 0;
+            const availableVideos = chapters.filter((chapter) => course.chapterIds.includes(chapter.id) && approvedVideoEmbed(chapter.videoEmbedUrl)).length;
             return (
               <li
                 key={course.id}
+                data-selected-course={selected ? "true" : undefined}
                 className="flex w-[min(85vw,22rem)] shrink-0 snap-start sm:w-[clamp(18rem,calc((100%_-_1.25rem)/2),34rem)]"
               >
                 <article
@@ -165,7 +181,7 @@ export function LearningCourseCarousel({
                     </span>
                     {selected && (
                       <span className="rounded-full bg-evo-accent/10 px-3 py-1 text-xs font-medium text-evo-accent">
-                        Em estudo
+                        Selecionado
                       </span>
                     )}
                   </div>
@@ -189,17 +205,30 @@ export function LearningCourseCarousel({
                       {count}/{course.chapterIds.length} concluídas
                     </span>
                   </div>
+                  <div
+                    className="mt-4 h-1.5 overflow-hidden rounded-full bg-evo-bgMain"
+                    role="progressbar"
+                    aria-label={"Exercícios concluídos: " + course.title}
+                    aria-valuemin={0}
+                    aria-valuemax={course.chapterIds.length}
+                    aria-valuenow={count}
+                  >
+                    <div className="h-full bg-evo-accent transition-[width] motion-reduce:transition-none" style={{ width: `${course.chapterIds.length ? (count / course.chapterIds.length) * 100 : 0}%` }} />
+                  </div>
+                  <p className="mt-3 text-xs leading-5 text-evo-textSec">
+                    {availableVideos ? `${availableVideos} ${availableVideos === 1 ? "vídeo disponível" : "vídeos disponíveis"}` : "Vídeos em preparação"} · Leituras e exercícios disponíveis
+                  </p>
                   {firstChapterId && (
-                    <a
-                      href="#sala-de-aula"
+                    <button
+                      type="button"
                       onClick={() => onSelect(firstChapterId)}
                       aria-current={selected ? "true" : undefined}
-                      aria-label={"Abrir minicurso: " + course.title}
+                      aria-label={(courseFinished ? "Revisar minicurso: " : count > 0 ? "Continuar minicurso: " : "Abrir minicurso: ") + course.title}
                       className="mt-5 inline-flex min-h-11 items-center justify-between gap-3 border-t border-evo-border pt-4 text-sm font-semibold text-evo-accent focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-evo-accent"
                     >
-                      Abrir minicurso
+                      {courseFinished ? "Revisar minicurso" : count > 0 ? "Continuar minicurso" : "Começar minicurso"}
                       <ArrowRight size={16} aria-hidden="true" />
-                    </a>
+                    </button>
                   )}
                 </article>
               </li>

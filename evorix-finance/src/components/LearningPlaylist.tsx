@@ -40,6 +40,7 @@ export function LearningPlaylist({
   const listRef = useRef<HTMLOListElement>(null);
   const itemRefs = useRef(new Map<string, HTMLButtonElement>());
   const selectedIndex = items.findIndex((item) => item.id === selectedId);
+  const completedCount = items.filter((item) => item.completed).length;
 
   useEffect(() => {
     const container = listRef.current;
@@ -129,7 +130,7 @@ export function LearningPlaylist({
           </h3>
           <p className="mt-1 text-xs text-evo-textSec" aria-live="polite">
             {String(Math.max(0, selectedIndex + 1)).padStart(2, "0")} de{" "}
-            {String(items.length).padStart(2, "0")} aulas
+            {String(items.length).padStart(2, "0")} aulas · {completedCount} concluídas
           </p>
         </div>
         <div className="flex shrink-0 gap-1">
@@ -221,7 +222,7 @@ export function LearningPlaylist({
                       Leitura · {item.readingMinutes} min
                     </span>
                     <span>
-                      {item.videoAvailable
+                      {item.locked ? "Conteúdo com conta gratuita" : item.videoAvailable
                         ? "Vídeo disponível"
                         : "Vídeo em preparação"}
                     </span>
@@ -254,7 +255,7 @@ export function LearningPlaylist({
         </p>
       ) : (
         <p className="border-t border-evo-border px-4 py-3 text-[11px] leading-5 text-evo-textSec">
-          Escolha uma aula para abrir o conteúdo. Avance no seu ritmo.
+          O progresso acompanha os exercícios concluídos. Use as setas do teclado para escolher uma aula.
         </p>
       )}
     </aside>

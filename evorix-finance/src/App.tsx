@@ -96,6 +96,11 @@ const Suporte = lazy(() =>
     default: module.Suporte,
   })),
 );
+const Metodologia = lazy(() =>
+  import("./pages/Metodologia").then((module) => ({
+    default: module.Metodologia,
+  })),
+);
 function App() {
   return (
     <BrowserRouter>
@@ -165,6 +170,14 @@ function App() {
                 element={
                   <PublicLayout>
                     <Aprender />
+                  </PublicLayout>
+                }
+              />
+              <Route
+                path="/metodologia"
+                element={
+                  <PublicLayout>
+                    <Metodologia />
                   </PublicLayout>
                 }
               />

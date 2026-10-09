@@ -15,6 +15,12 @@ As aulas bloqueadas abrem o convite de acesso por conta. A indicação de conclu
 refere-se ao exercício, não à porcentagem assistida do vídeo. Não há vídeo ou
 duração de vídeo fictícios: as estimativas exibidas são de leitura.
 
+O bloco “Seu percurso” indica a próxima aula com exercício pendente. Ao abrir
+um curso, a interface prefere seu próximo capítulo não concluído; cursos terminados
+podem ser revisados. A seleção fica no endereço, por exemplo
+`/app/aprender?aula=dividendos#sala-de-aula`, permitindo compartilhar ou voltar
+diretamente ao capítulo. Reiniciar o progresso pede confirmação.
+
 ## Publicar quando o material chegar
 
 1. Receber os vídeos selecionados, títulos e ordem dos capítulos. Confirmar que

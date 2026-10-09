@@ -7,6 +7,7 @@ import {
   FileSpreadsheet,
   Search,
   Upload,
+  RotateCcw,
 } from "lucide-react";
 import { Card } from "../components/Card";
 import { RankingFundamentals } from "../components/RankingFundamentals";
@@ -17,6 +18,8 @@ import { rankingDemoEntries } from "../lib/rankingDemo";
 import { RankingAccessLanding } from "../components/RankingAccessLanding";
 import { OrbitCoins } from "../components/OrbitCoins";
 import { ResearchEditor } from "../components/ResearchEditor";
+import { PublicationReview } from "../components/PublicationReview";
+import { getResearchCoverage } from "../lib/researchCoverage";
 import { userCan } from "../lib/permissions";
 import {
   CompanyComparison,
@@ -126,15 +129,25 @@ function MemberIncomeRanking() {
       sourceEntries.map((e) => e.sector).filter((s): s is string => Boolean(s)),
     ),
   ].sort();
+  const hasFilters = Boolean(search.trim() || sector || horizon);
+  const clearFilters = () => {
+    setSearch("");
+    setSector("");
+    setHorizon("");
+    setSort("rank");
+  };
+  const learningPath = location.pathname.startsWith("/app/")
+    ? "/app/aprender"
+    : "/aprender";
   const entries = useMemo(
     () =>
       sourceEntries
         .filter(
           (e) =>
-            (!search ||
+            (!search.trim() ||
               (e.ticker + " " + e.companyName)
-                .toLowerCase()
-                .includes(search.toLowerCase())) &&
+                .toLocaleLowerCase("pt-BR")
+                .includes(search.trim().toLocaleLowerCase("pt-BR"))) &&
             (!sector || e.sector === sector) &&
             (!horizon ||
               (e.horizonMonths !== null && e.horizonMonths <= Number(horizon))),
@@ -148,6 +161,24 @@ function MemberIncomeRanking() {
         ),
     [sourceEntries, search, sector, horizon, sort],
   );
+  const retryPublication = async () => {
+    setLoading(true);
+    setError("");
+    try {
+      applyRanking(await load());
+    } catch (reason) {
+      if (reason instanceof ApiError && reason.status === 401)
+        void refreshSession().catch(() => {});
+      setError(
+        reason instanceof Error
+          ? reason.message
+          : "Não foi possível carregar esta publicação.",
+      );
+    } finally {
+      setLoading(false);
+      setLoadedFor(requestKey);
+    }
+  };
   const sendFile = async (publish: boolean) => {
     if (!file) return;
     setBusy(true);
@@ -225,7 +256,7 @@ function MemberIncomeRanking() {
               )}
             </p>
             <div className="mt-5 flex flex-wrap gap-3">
-              <Link to="/aprender#ranking" className={button}>
+              <Link to={learningPath + "#ranking"} className={button}>
                 <BookOpen size={17} /> Como interpretar o ranking
               </Link>
               <button
@@ -237,6 +268,12 @@ function MemberIncomeRanking() {
                   ? "Ver publicações da equipe"
                   : "Explorar demonstração"}
               </button>
+              <Link
+                to="/metodologia"
+                className="inline-flex min-h-11 items-center text-sm text-evo-textSec underline hover:text-evo-accent"
+              >
+                Como funciona a pesquisa
+              </Link>
               <span className="self-center text-xs text-evo-textSec">
                 A ordem da lista não representa uma probabilidade de lucro.
               </span>
@@ -246,6 +283,41 @@ function MemberIncomeRanking() {
             <OrbitCoins variant="ranking" size="hero" />
           </div>
         </div>
+      </section>
+      <section
+        aria-label="Guia de leitura do ranking"
+        className="grid gap-4 border-b border-evo-border pb-6 sm:grid-cols-3"
+      >
+        {[
+          [
+            "01",
+            "Entenda a tese",
+            "Abra a empresa para conhecer as premissas que sustentam o cenário.",
+          ],
+          [
+            "02",
+            "Leia os riscos",
+            "Confira o que pode contrariar a previsão antes de comparar percentuais.",
+          ],
+          [
+            "03",
+            "Confira a versão",
+            "Use o prazo, a data e as fontes da publicação para dar contexto aos números.",
+          ],
+        ].map(([number, title, text]) => (
+          <div key={number} className="flex items-start gap-3">
+            <span
+              className="pt-0.5 font-numbers text-sm text-evo-accent"
+              aria-hidden="true"
+            >
+              {number}
+            </span>
+            <div>
+              <h2 className="text-sm font-semibold">{title}</h2>
+              <p className="mt-1 text-xs leading-5 text-evo-textSec">{text}</p>
+            </div>
+          </div>
+        ))}
       </section>
       {showingDemo && (
         <section
@@ -283,9 +355,17 @@ function MemberIncomeRanking() {
         </section>
       )}
       {error && (
-        <p role="alert" className="notice-error">
-          {error}
-        </p>
+        <div className="notice-error">
+          <p role="alert">{error}</p>
+          <button
+            type="button"
+            disabled={loading || busy}
+            onClick={() => void retryPublication()}
+            className="mt-3 inline-flex min-h-11 items-center gap-2 text-sm font-semibold underline disabled:opacity-50"
+          >
+            <RotateCcw size={15} aria-hidden="true" /> Recarregar publicação
+          </button>
+        </div>
       )}
       {message && (
         <p role="status" className="notice-success">
@@ -293,7 +373,11 @@ function MemberIncomeRanking() {
         </p>
       )}
       {userCan(user, "rankings:write") && ranking.canManage && (
-        <details className="rounded-xl border border-evo-border bg-evo-card p-5">
+        <details
+          id="publicar-pesquisa"
+          open={location.hash === "#publicar-pesquisa"}
+          className="scroll-mt-28 rounded-xl border border-evo-border bg-evo-card p-5"
+        >
           <summary className="cursor-pointer font-semibold">
             Área da equipe · preparar nova publicação
           </summary>
@@ -336,20 +420,26 @@ function MemberIncomeRanking() {
                 }
                 <input
                   className={input + " mt-1"}
+                  disabled={busy}
                   maxLength={key === "title" ? 160 : 120}
                   value={metadata[key]}
-                  onChange={(e) =>
+                  onChange={(e) => {
                     setMetadata((current) => ({
                       ...current,
                       [key]: e.target.value,
-                    }))
-                  }
+                    }));
+                    setPreview([]);
+                  }}
                 />
               </label>
             ))}
           </div>
           <ResearchEditor
             metadata={metadata}
+            onContentChange={() => {
+              setFile(null);
+              setPreview([]);
+            }}
             onMetadata={(value) => {
               setMetadata(value);
               setFile(null);
@@ -384,7 +474,7 @@ function MemberIncomeRanking() {
           )}
           <button
             className={button + " mt-4"}
-            disabled={!file || busy}
+            disabled={!file || busy || loading}
             onClick={() => void sendFile(false)}
           >
             <FileSpreadsheet size={16} />
@@ -392,9 +482,8 @@ function MemberIncomeRanking() {
           </button>
           {preview.length > 0 && (
             <section className="mt-5 space-y-3">
-              <h2 className="font-semibold">
-                Prévia · {preview.length} ativos
-              </h2>
+              <h2 className="font-semibold">Prévia · {preview.length} ações</h2>
+              <PublicationReview entries={preview} metadata={metadata} />
               <div className="max-h-72 overflow-auto rounded-lg border border-evo-border">
                 <table className="w-full min-w-[500px] text-left text-sm">
                   <caption className="sr-only">Ativos a publicar</caption>
@@ -581,24 +670,63 @@ function MemberIncomeRanking() {
             <option value="name">Nome da empresa</option>
           </select>
         </div>
-        <p className="text-xs text-evo-textSec">
-          {entries.length} de {totalEntries}{" "}
-          {showingDemo
-            ? "empresas fictícias · valores simulados para apresentação."
-            : "ativos · valores informados pelo autor, sem garantia de retorno."}
-        </p>
-        {loading && !showingDemo ? (
-          <Card>
-            <p role="status">Carregando publicação…</p>
-          </Card>
-        ) : !showingDemo && !current ? (
+        <div className="flex flex-wrap items-center justify-between gap-2">
           <p
             role="status"
-            className="border-y border-evo-border py-8 text-sm text-evo-textSec"
+            aria-live="polite"
+            className="text-xs text-evo-textSec"
           >
-            A pesquisa desta versão não está disponível agora. Escolha outra
-            publicação ou atualize a página.
+            {loading && !showingDemo
+              ? "Carregando pesquisas…"
+              : `${entries.length} de ${totalEntries} `}
+            {loading && !showingDemo
+              ? ""
+              : showingDemo
+                ? "empresas fictícias · valores simulados para apresentação."
+                : "ações · valores informados pelo autor, sem garantia de retorno."}
           </p>
+          {(hasFilters || sort !== "rank") && (
+            <button
+              type="button"
+              onClick={clearFilters}
+              className="inline-flex min-h-11 items-center gap-2 text-xs font-semibold text-evo-accent hover:underline"
+            >
+              <RotateCcw size={14} aria-hidden="true" /> Limpar filtros
+            </button>
+          )}
+        </div>
+        {loading && !showingDemo ? (
+          <Card>
+            <p role="status" className="text-sm text-evo-textSec">
+              Buscando as pesquisas da versão selecionada…
+            </p>
+            <div
+              aria-hidden="true"
+              className="mt-5 space-y-5 motion-safe:animate-pulse"
+            >
+              {[0, 1, 2].map((item) => (
+                <div key={item} className="border-t border-evo-border pt-4">
+                  <div className="h-4 w-32 rounded bg-evo-border/60" />
+                  <div className="mt-3 h-3 w-3/4 rounded bg-evo-border/40" />
+                  <div className="mt-2 h-3 w-1/2 rounded bg-evo-border/40" />
+                </div>
+              ))}
+            </div>
+          </Card>
+        ) : !showingDemo && !current ? (
+          <div className="border-y border-evo-border py-8 text-sm text-evo-textSec">
+            <p role="status">
+              A pesquisa desta versão não está disponível agora. Escolha outra
+              publicação no histórico ou tente carregar novamente.
+            </p>
+            <button
+              type="button"
+              onClick={() => void retryPublication()}
+              className="mt-3 min-h-11 font-semibold text-evo-accent underline"
+            >
+              Tentar novamente
+            </button>
+          </div>
         ) : !sourceEntries.length ? (
           <Card>
             <h3 className="font-semibold">
@@ -608,108 +736,132 @@ function MemberIncomeRanking() {
               Enquanto isso, conheça os conceitos usados para avaliar cenários.
             </p>
             <Link
-              to="/aprender"
+              to={learningPath}
               className="mt-4 inline-block text-evo-accent underline"
             >
               Começar a aprender
             </Link>
           </Card>
         ) : !entries.length ? (
-          <Card>Nenhum ativo corresponde aos filtros.</Card>
+          <Card>
+            <h3 className="font-semibold">Nenhuma ação corresponde à busca</h3>
+            <p className="mt-2 text-sm text-evo-textSec">
+              Tente outro nome ou ticker, amplie o prazo ou consulte todos os
+              setores desta publicação.
+            </p>
+            <button
+              type="button"
+              onClick={clearFilters}
+              className="mt-3 inline-flex min-h-11 items-center gap-2 text-sm font-semibold text-evo-accent underline"
+            >
+              <RotateCcw size={15} aria-hidden="true" /> Mostrar todas as
+              pesquisas
+            </button>
+          </Card>
         ) : (
           <ol className="divide-y divide-evo-border border-y border-evo-border">
-            {entries.map((entry) => (
-              <li key={entry.ticker}>
-                <article>
-                  <Link
-                    to={researchLink(entry.ticker)}
-                    className="group block py-5 transition-colors hover:bg-evo-accent/5 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-evo-accent sm:px-3"
-                    aria-label={
-                      "Abrir pesquisa de " +
-                      entry.companyName +
-                      " (" +
-                      entry.ticker +
-                      ")"
-                    }
-                  >
-                    <div className="flex items-start justify-between gap-4">
-                      <div className="flex min-w-0 items-start gap-3 sm:gap-5">
-                        <span
-                          className="w-7 shrink-0 pt-1 font-numbers text-lg text-evo-textSec"
+            {entries.map((entry) => {
+              const coverage = getResearchCoverage(entry);
+              return (
+                <li key={entry.ticker}>
+                  <article>
+                    <Link
+                      to={researchLink(entry.ticker)}
+                      className="group block py-5 transition-colors hover:bg-evo-accent/5 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-evo-accent sm:px-3"
+                      aria-label={
+                        "Abrir pesquisa de " +
+                        entry.companyName +
+                        " (" +
+                        entry.ticker +
+                        ")"
+                      }
+                    >
+                      <div className="flex items-start justify-between gap-4">
+                        <div className="flex min-w-0 items-start gap-3 sm:gap-5">
+                          <span
+                            className="w-7 shrink-0 pt-1 font-numbers text-lg text-evo-textSec"
+                            aria-hidden="true"
+                          >
+                            {String(entry.rank).padStart(2, "0")}
+                          </span>
+                          <div className="min-w-0">
+                            <h3 className="break-words text-xl font-semibold group-hover:text-evo-accent">
+                              {entry.ticker}
+                              <span className="mt-1 block text-sm font-normal text-evo-textSec sm:ml-3 sm:mt-0 sm:inline">
+                                {entry.companyName}
+                              </span>
+                            </h3>
+                            <p className="mt-2 text-xs text-evo-textSec">
+                              {entry.sector || "Setor não informado"}
+                              {showingDemo ? " · Empresa fictícia" : ""}
+                            </p>
+                          </div>
+                        </div>
+                        <ArrowUpRight
+                          size={21}
+                          className="mt-1 shrink-0 text-evo-accent"
                           aria-hidden="true"
-                        >
-                          {String(entry.rank).padStart(2, "0")}
-                        </span>
-                        <div className="min-w-0">
-                          <h3 className="break-words text-xl font-semibold group-hover:text-evo-accent">
-                            {entry.ticker}
-                            <span className="mt-1 block text-sm font-normal text-evo-textSec sm:ml-3 sm:mt-0 sm:inline">
-                              {entry.companyName}
-                            </span>
-                          </h3>
-                          <p className="mt-2 text-xs text-evo-textSec">
-                            {entry.sector || "Setor não informado"}
-                            {showingDemo ? " · Empresa fictícia" : ""}
-                          </p>
-                        </div>
+                        />
                       </div>
-                      <ArrowUpRight
-                        size={21}
-                        className="mt-1 shrink-0 text-evo-accent"
-                        aria-hidden="true"
-                      />
-                    </div>
-                    <div className="ml-10 mt-4 sm:ml-12">
-                      <dl className="grid grid-cols-2 gap-x-4 gap-y-3 sm:grid-cols-3">
-                        <div>
-                          <dt className="text-xs text-evo-textSec">
-                            {showingDemo
-                              ? "Potencial simulado"
-                              : "Potencial informado"}
-                          </dt>
-                          <dd className="mt-1 font-numbers text-xl font-semibold text-evo-accent">
-                            {Number(entry.expectedReturnPercent).toLocaleString(
-                              "pt-BR",
-                            )}
-                            %
-                          </dd>
-                        </div>
-                        <div>
-                          <dt className="text-xs text-evo-textSec">
-                            {showingDemo
-                              ? "Preço-alvo simulado"
-                              : "Preço-alvo informado"}
-                          </dt>
-                          <dd className="mt-1 font-numbers text-lg">
-                            {entry.targetPrice
-                              ? money.format(Number(entry.targetPrice))
-                              : "Não informado"}
-                          </dd>
-                        </div>
-                        <div>
-                          <dt className="text-xs text-evo-textSec">
-                            Horizonte
-                          </dt>
-                          <dd className="mt-1 font-numbers text-lg">
-                            {entry.horizonMonths
-                              ? entry.horizonMonths + " meses"
-                              : "Não informado"}
-                          </dd>
-                        </div>
-                      </dl>
-                      <p className="mt-4 line-clamp-2 whitespace-pre-wrap break-words text-sm leading-relaxed text-evo-textSec">
-                        {entry.thesis ||
-                          "A justificativa ainda não foi informada pelo autor."}
-                      </p>
-                      <span className="mt-3 inline-flex items-center gap-2 text-xs font-semibold text-evo-accent">
-                        Ler tese, história e indicadores{" "}
-                        <ArrowUpRight size={14} aria-hidden="true" />
-                      </span>
-                    </div>
-                  </Link>
-                </article>
-              </li>
-            ))}
+                      <div className="ml-10 mt-4 sm:ml-12">
+                        <dl className="grid grid-cols-2 gap-x-4 gap-y-3 sm:grid-cols-3">
+                          <div>
+                            <dt className="text-xs text-evo-textSec">
+                              {showingDemo
+                                ? "Potencial simulado"
+                                : "Potencial informado"}
+                            </dt>
+                            <dd className="mt-1 font-numbers text-xl font-semibold text-evo-accent">
+                              {Number(
+                                entry.expectedReturnPercent,
+                              ).toLocaleString("pt-BR")}
+                              %
+                            </dd>
+                          </div>
+                          <div>
+                            <dt className="text-xs text-evo-textSec">
+                              {showingDemo
+                                ? "Preço-alvo simulado"
+                                : "Preço-alvo informado"}
+                            </dt>
+                            <dd className="mt-1 font-numbers text-lg">
+                              {entry.targetPrice
+                                ? money.format(Number(entry.targetPrice))
+                                : "Não informado"}
+                            </dd>
+                          </div>
+                          <div>
+                            <dt className="text-xs text-evo-textSec">
+                              Horizonte
+                            </dt>
+                            <dd className="mt-1 font-numbers text-lg">
+                              {entry.horizonMonths
+                                ? entry.horizonMonths + " meses"
+                                : "Não informado"}
+                            </dd>
+                          </div>
+                        </dl>
+                        <p className="mt-4 line-clamp-2 whitespace-pre-wrap break-words text-sm leading-relaxed text-evo-textSec">
+                          {entry.thesis ||
+                            "A justificativa ainda não foi informada pelo autor."}
+                        </p>
+                        <p className="mt-3 text-xs text-evo-textSec">
+                          {coverage.filled}/{coverage.total} campos de leitura
+                          preenchidos
+                          {entry.referencePeriod
+                            ? ` · ${entry.referencePeriod}`
+                            : " · Período não informado"}
+                        </p>
+                        <span className="mt-3 inline-flex items-center gap-2 text-xs font-semibold text-evo-accent">
+                          Ler tese, história e indicadores{" "}
+                          <ArrowUpRight size={14} aria-hidden="true" />
+                        </span>
+                      </div>
+                    </Link>
+                  </article>
+                </li>
+              );
+            })}
           </ol>
         )}
       </section>

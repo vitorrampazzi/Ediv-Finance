@@ -74,7 +74,8 @@ export function LearningPractice() {
   }
   return (
     <section
-      className="border-y border-evo-border py-7"
+      id="laboratorio"
+      className="scroll-mt-24 border-y border-evo-border py-7"
       aria-labelledby="learning-lab-title"
     >
       <div className="flex items-center gap-2 text-evo-accent">
@@ -102,7 +103,7 @@ export function LearningPractice() {
             aria-pressed={mode === id}
             onClick={() => setMode(id)}
             className={
-              "min-h-11 border px-3 text-sm " +
+              "min-h-11 border px-3 text-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-evo-accent " +
               (mode === id
                 ? "border-evo-accent text-evo-accent"
                 : "border-evo-border text-evo-textSec")

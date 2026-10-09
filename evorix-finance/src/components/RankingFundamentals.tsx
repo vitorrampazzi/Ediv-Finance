@@ -38,11 +38,13 @@ export function RankingFundamentals({
   demo = false,
   revenueHistory,
   locked = false,
+  initiallyOpen = false,
 }: {
   data: RankingFundamentalData;
   demo?: boolean;
   revenueHistory?: { period: string; value: number }[];
   locked?: boolean;
+  initiallyOpen?: boolean;
 }) {
   const filled = modules.filter(([key]) => Boolean(data[key]?.trim())).length;
   const maxRevenue = Math.max(
@@ -98,7 +100,10 @@ export function RankingFundamentals({
   return (
     <details
       className="mt-4 rounded-lg border border-evo-border"
-      open={demo && Boolean(data.companyInformation?.includes("DEMO1"))}
+      open={
+        initiallyOpen ||
+        (demo && Boolean(data.companyInformation?.includes("DEMO1")))
+      }
     >
       <summary className="min-h-11 cursor-pointer p-3 text-sm font-semibold">
         {demo ? "Explorar a pesquisa de exemplo" : "Dados da empresa"} ·{" "}

@@ -33,6 +33,10 @@
       "destination": "/assessoria/index.html"
     },
     {
+      "source": "/metodologia",
+      "destination": "/metodologia/index.html"
+    },
+    {
       "source": "/privacidade",
       "destination": "/privacidade/index.html"
     },

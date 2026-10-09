@@ -10,6 +10,7 @@ import { Glossario } from "./pages/Glossario";
 import { RankingAccessLanding } from "./components/RankingAccessLanding";
 import { Assessoria } from "./pages/Assessoria";
 import { Privacidade, Suporte } from "./pages/Transparencia";
+import { Metodologia } from "./pages/Metodologia";
 import { qaEnvironment } from "./lib/features";
 
 // Static public content only: no sessions, database connections or external API calls.
@@ -23,6 +24,7 @@ export function render(path: string, learning: LearningData) {
     "/assessoria": <Assessoria />,
     "/privacidade": <Privacidade />,
     "/suporte": <Suporte />,
+    "/metodologia": <Metodologia />,
   };
   if (!pages[path]) throw new Error("Unknown public route");
   return renderToString(

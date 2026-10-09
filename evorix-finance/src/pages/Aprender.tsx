@@ -1,5 +1,5 @@
-import { useEffect, useState } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { useEffect, useRef, useState } from "react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import {
   BookOpen,
   CheckCircle2,
@@ -7,8 +7,11 @@ import {
   ArrowDown,
   ArrowRight,
   Clock3,
+  ArrowLeft,
+  RotateCcw,
 } from "lucide-react";
-import { apiRequest } from "../lib/api";
+import { ApiError, apiRequest } from "../lib/api";
+import { authLink } from "../lib/authDestination";
 import { useAuth } from "../context/authContext";
 import { AccountGate } from "../components/AccountGate";
 import { OrbitCoins } from "../components/OrbitCoins";
@@ -17,6 +20,8 @@ import { LearningVideo } from "../components/LearningVideo";
 import { LearningPractice } from "../components/LearningPractice";
 import { LearningPlaylist } from "../components/LearningPlaylist";
 import { LearningCourseCarousel } from "../components/LearningCourseCarousel";
+import { LearningJourney } from "../components/LearningJourney";
+import { LearningQuiz } from "../components/LearningQuiz";
 import {
   approvedVideoEmbed,
   learningChapters,
@@ -47,7 +52,11 @@ function readProgress(): string[] {
   try {
     const value = JSON.parse(localStorage.getItem("ediv-learning-v1") || "[]");
     return Array.isArray(value)
-      ? value.filter((x) => typeof x === "string" && lessonIds.includes(x))
+      ? [
+          ...new Set(
+            value.filter((x) => typeof x === "string" && lessonIds.includes(x)),
+          ),
+        ]
       : [];
   } catch {
     return [];
@@ -59,39 +68,101 @@ export function Aprender({
   initialContent?: LearningData;
 }) {
   const { user } = useAuth();
+  const location = useLocation();
+  const [sessionNotice, setSessionNotice] = useState("");
   return (
-    <LearningSession
-      key={user?.id || "visitor"}
-      initialContent={initialContent}
-    />
+    <>
+      {sessionNotice && !user && (
+        <aside
+          className="notice-error mx-auto mt-6 max-w-6xl px-5 py-4"
+          role="alert"
+        >
+          <p>{sessionNotice}</p>
+          <Link
+            className="mt-2 inline-flex min-h-11 items-center underline underline-offset-4"
+            to={authLink(
+              "entrar",
+              location.pathname + location.search + location.hash,
+            )}
+          >
+            Entrar novamente para continuar
+          </Link>
+        </aside>
+      )}
+      <LearningSession
+        key={user?.id || "visitor"}
+        initialContent={initialContent}
+        onSessionExpired={setSessionNotice}
+      />
+    </>
   );
 }
 function LearningSession({
   initialContent,
+  onSessionExpired,
 }: {
   initialContent?: LearningData;
+  onSessionExpired: (message: string) => void;
 }) {
   const { user, loading: authLoading, refreshSession } = useAuth();
   const userId = user?.id;
   const [content, setContent] = useState<LearningData | null>(
     initialContent ?? null,
   );
-  const [loadedFor, setLoadedFor] = useState<string | null>(null);
-  const requestKey = userId || "visitor";
-  const loading = !content && (loadedFor !== requestKey || authLoading);
+  const [revision, setRevision] = useState(0);
+  const [loadedRevision, setLoadedRevision] = useState<number | null>(null);
+  const loading = loadedRevision !== revision || authLoading;
   const [error, setError] = useState("");
+  const [progressError, setProgressError] = useState<{
+    lessonId?: string;
+    message: string;
+  } | null>(null);
   const [completed, setCompleted] = useState<string[]>(() =>
     user ? [] : readProgress().filter((id) => id === "ranking"),
   );
   const [progressBusy, setProgressBusy] = useState(false);
+  const [sessionExpired, setSessionExpired] = useState(false);
+  const [resetRequested, setResetRequested] = useState(false);
   const [answers, setAnswers] = useState<Record<string, number>>({});
   const [search, setSearch] = useState("");
   const location = useLocation();
-  const [selectedId, setSelectedId] = useState(() =>
-    lessonIds.includes(location.hash.slice(1))
-      ? location.hash.slice(1)
-      : "ranking",
-  );
+  const navigate = useNavigate();
+  const classroomRef = useRef<HTMLElement>(null);
+  const classroomTitleRef = useRef<HTMLHeadingElement>(null);
+  const selectionIntentRef = useRef<{
+    destination: string;
+    focusClassroom: boolean;
+  } | null>(null);
+  const handledLocationRef = useRef<string | null>(null);
+  const queryLesson = new URLSearchParams(location.search).get("aula");
+  const hashLesson = location.hash.slice(1).replace(/^leitura-/, "");
+  const selectedId =
+    queryLesson && lessonIds.includes(queryLesson)
+      ? queryLesson
+      : lessonIds.includes(hashLesson)
+        ? hashLesson
+        : lessonIds[0];
+
+  function selectLesson(id: string, focusClassroom = false) {
+    if (!lessonIds.includes(id)) return;
+    const params = new URLSearchParams(location.search);
+    params.set("aula", id);
+    selectionIntentRef.current = {
+      destination:
+        location.pathname + "?" + params.toString() + "#sala-de-aula",
+      focusClassroom,
+    };
+    navigate({
+      pathname: location.pathname,
+      search: params.toString(),
+      hash: "#sala-de-aula",
+    });
+  }
+
+  function retryContent() {
+    setError("");
+    setRevision((current) => current + 1);
+  }
   useEffect(() => {
     if (authLoading) return;
     const controller = new AbortController();
@@ -101,13 +172,14 @@ function LearningSession({
           setContent(data);
           setError("");
           if (userId)
-            setCompleted(data.completed.filter((id) => lessonIds.includes(id)));
+            setCompleted([
+              ...new Set(data.completed.filter((id) => lessonIds.includes(id))),
+            ]);
           if (userId && data.access === "preview") await refreshSession();
         }
       })
       .catch((reason) => {
         if (!controller.signal.aborted) {
-          setContent(null);
           setError(
             reason instanceof Error
               ? reason.message
@@ -116,16 +188,52 @@ function LearningSession({
         }
       })
       .finally(() => {
-        if (!controller.signal.aborted) setLoadedFor(requestKey);
+        if (!controller.signal.aborted) setLoadedRevision(revision);
       });
     return () => controller.abort();
-  }, [userId, authLoading, refreshSession, requestKey]);
+  }, [userId, authLoading, refreshSession, revision]);
   const lessons: Lesson[] = (content?.lessons || []).map((lesson, index) =>
     !user && index > 0
       ? { id: lesson.id, title: lesson.title, locked: true }
       : lesson,
   );
   const glossary = content?.glossary || [];
+  useEffect(() => {
+    if (
+      !content ||
+      !location.hash ||
+      handledLocationRef.current === location.key
+    )
+      return;
+    const frame = window.requestAnimationFrame(() => {
+      const destination = location.pathname + location.search + location.hash;
+      const intent =
+        selectionIntentRef.current?.destination === destination
+          ? selectionIntentRef.current
+          : null;
+      selectionIntentRef.current = null;
+      const hash = location.hash.slice(1);
+      const target = lessonIds.includes(hash)
+        ? classroomRef.current
+        : document.getElementById(hash);
+      handledLocationRef.current = location.key;
+      // Playlist selection keeps document scroll and keyboard focus in place.
+      // Direct links, history navigation and course CTAs still open the classroom.
+      if (!intent || intent.focusClassroom) {
+        target?.scrollIntoView({ block: "start", behavior: "instant" });
+      }
+      if (intent?.focusClassroom) {
+        classroomTitleRef.current?.focus({ preventScroll: true });
+      }
+    });
+    return () => window.cancelAnimationFrame(frame);
+  }, [
+    location.key,
+    location.pathname,
+    location.search,
+    location.hash,
+    content,
+  ]);
   useEffect(() => {
     if (user) return;
     try {
@@ -134,11 +242,28 @@ function LearningSession({
       /* Browser storage may be disabled. */
     }
   }, [completed, user]);
+  async function handleExpiredSession(message: string, lessonId?: string) {
+    setSessionExpired(true);
+    setProgressError({ lessonId, message });
+    onSessionExpired(message);
+    try {
+      await refreshSession();
+    } catch {
+      setProgressError({
+        lessonId,
+        message:
+          message +
+          " Não foi possível verificar a sessão. Atualize esta página antes de entrar novamente.",
+      });
+    }
+  }
   async function chooseAnswer(lesson: Lesson, answer: number) {
+    if (progressBusy || loading || sessionExpired || lesson.locked) return;
     setAnswers((current) => ({ ...current, [lesson.id]: answer }));
+    setProgressError(null);
     if (answer !== lesson.answer) return;
+    if (completed.includes(lesson.id)) return;
     setProgressBusy(true);
-    setError("");
     try {
       if (user)
         await apiRequest("/api/learning/progress/" + lesson.id, {
@@ -149,27 +274,45 @@ function LearningSession({
         current.includes(lesson.id) ? current : [...current, lesson.id],
       );
     } catch (err) {
-      setError(
-        err instanceof Error
-          ? err.message
-          : "Não foi possível salvar o progresso.",
-      );
+      if (err instanceof ApiError && err.status === 401) {
+        await handleExpiredSession(
+          "Sua sessão expirou. A conclusão deste exercício não foi salva. Entre novamente e responda para registrar o progresso.",
+          lesson.id,
+        );
+        return;
+      }
+      setProgressError({
+        lessonId: lesson.id,
+        message:
+          err instanceof Error
+            ? err.message
+            : "Não foi possível salvar o progresso.",
+      });
     } finally {
       setProgressBusy(false);
     }
   }
   async function resetProgress() {
+    if (progressBusy || loading || sessionExpired) return;
     setProgressBusy(true);
-    setError("");
+    setProgressError(null);
     try {
       if (user)
         await apiRequest("/api/learning/progress", { method: "DELETE" });
       setCompleted([]);
       setAnswers({});
+      setResetRequested(false);
     } catch (err) {
-      setError(
-        err instanceof Error ? err.message : "Não foi possível reiniciar.",
-      );
+      if (err instanceof ApiError && err.status === 401) {
+        await handleExpiredSession(
+          "Sua sessão expirou. O progresso não foi reiniciado. Entre novamente para gerenciar as conclusões.",
+        );
+        return;
+      }
+      setProgressError({
+        message:
+          err instanceof Error ? err.message : "Não foi possível reiniciar.",
+      });
     } finally {
       setProgressBusy(false);
     }
@@ -205,6 +348,17 @@ function LearningSession({
     (item) => item.id === selectedLesson?.id,
   );
   const nextLesson = playlistItems[selectedIndex + 1];
+  const previousLesson = playlistItems[selectedIndex - 1];
+  const completedInCourse = playlistItems.filter(
+    (item) => item.completed,
+  ).length;
+  const nextCourse =
+    learningCourses[
+      learningCourses.findIndex((course) => course.id === selectedCourse.id) + 1
+    ];
+  const nextCourseId =
+    nextCourse?.chapterIds.find((id) => !completed.includes(id)) ??
+    nextCourse?.chapterIds[0];
   const matchingTerms = glossary.filter(([term, text]) =>
     (term + " " + text)
       .toLocaleLowerCase("pt-BR")
@@ -239,7 +393,7 @@ function LearningSession({
         <div className="mt-6 flex flex-wrap items-center justify-between gap-4">
           <p className="text-sm text-evo-textSec">
             <strong className="text-evo-textMain">
-              {completed.length} de {lessonIds.length} aulas concluídas
+              {completed.length} de {lessonIds.length} exercícios concluídos
             </strong>{" "}
             ·{" "}
             {user
@@ -256,26 +410,53 @@ function LearningSession({
         <div
           className="mt-3 h-1 bg-evo-bgMain"
           role="progressbar"
-          aria-label="Progresso da trilha"
+          aria-label="Progresso dos exercícios da trilha"
           aria-valuenow={completed.length}
           aria-valuemin={0}
           aria-valuemax={lessonIds.length}
         >
           <div
-            className="h-full bg-evo-accent transition-[width]"
+            className="h-full bg-evo-accent transition-[width] motion-reduce:transition-none"
             style={{ width: (completed.length / lessonIds.length) * 100 + "%" }}
           />
         </div>
       </header>
-      {(loading || authLoading) && (
-        <p role="status" className="text-sm text-evo-textSec">
-          Carregando aulas…
-        </p>
+      {loading && (
+        <div
+          role="status"
+          className="space-y-3 border-l-2 border-evo-accent pl-4 text-sm text-evo-textSec"
+        >
+          <p>
+            {content
+              ? "Atualizando aulas e progresso…"
+              : "Carregando sua trilha de aprendizado…"}
+          </p>
+          {!content && (
+            <div
+              aria-hidden="true"
+              className="h-20 rounded-lg bg-evo-card/50"
+            />
+          )}
+        </div>
       )}
       {error && (
-        <p role="alert" className="notice-error">
-          {error}
-        </p>
+        <div className="notice-error space-y-3">
+          <p role="alert">{error}</p>
+          {content && (
+            <p className="text-sm">
+              O conteúdo já carregado continua disponível. Tente atualizar para
+              conferir seu progresso.
+            </p>
+          )}
+          <button
+            type="button"
+            className="action-secondary"
+            onClick={retryContent}
+            disabled={loading}
+          >
+            <RotateCcw size={15} aria-hidden="true" /> Tentar carregar novamente
+          </button>
+        </div>
       )}
       {!user && !loading && content && (
         <p className="text-sm text-evo-textSec">
@@ -283,15 +464,24 @@ function LearningSession({
           as outras aulas e salva seu progresso.
         </p>
       )}
+      {content && !authLoading && (
+        <LearningJourney
+          lessons={lessons}
+          completed={completed}
+          isAuthenticated={Boolean(user)}
+          onSelect={(id) => selectLesson(id, true)}
+        />
+      )}
       <LearningCourseCarousel
         courses={learningCourses}
         chapters={learningChapters}
         completed={completed}
         selectedCourseId={selectedCourse.id}
-        onSelect={setSelectedId}
+        onSelect={(id) => selectLesson(id, true)}
       />
       {selectedLesson && (
         <section
+          ref={classroomRef}
           id="sala-de-aula"
           className="scroll-mt-24 border-t border-evo-border pt-7"
           aria-labelledby="classroom-title"
@@ -300,12 +490,29 @@ function LearningSession({
             Sala de aula · {selectedCourse.title}
           </p>
           <h2
+            ref={classroomTitleRef}
+            tabIndex={-1}
             id="classroom-title"
             aria-live="polite"
-            className="mt-2 text-2xl font-semibold"
+            className="mt-2 text-2xl font-semibold focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-evo-accent"
           >
             {selectedLesson.title}
           </h2>
+          <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-evo-textSec">
+            <span>
+              Aula {selectedIndex + 1} de {playlistItems.length}
+            </span>
+            <span>
+              {completedInCourse} de {playlistItems.length} exercícios
+              concluídos neste curso
+            </span>
+            <a
+              className="inline-flex min-h-9 items-center gap-1 text-evo-accent underline underline-offset-4"
+              href="#cursos"
+            >
+              <ArrowLeft size={13} aria-hidden="true" /> Todos os minicursos
+            </a>
+          </div>
           <div className="mt-6 overflow-hidden rounded-2xl border border-evo-border bg-evo-bgMain">
             <div className="grid min-w-0 grid-cols-1 items-start lg:grid-cols-[minmax(0,1fr)_20rem]">
               <div className="min-w-0 p-4 sm:p-5">
@@ -313,7 +520,12 @@ function LearningSession({
                   <AccountGate
                     title="Entre para estudar esta aula"
                     description="Sua conta gratuita libera a leitura, o exercício e o acompanhamento do progresso."
-                    next={location.pathname + "#" + selectedLesson.id}
+                    next={
+                      location.pathname +
+                      location.search +
+                      "#" +
+                      selectedLesson.id
+                    }
                   />
                 ) : (
                   <LearningVideo
@@ -327,7 +539,7 @@ function LearningSession({
               <LearningPlaylist
                 items={playlistItems}
                 selectedId={selectedLesson.id}
-                onSelect={setSelectedId}
+                onSelect={selectLesson}
               />
             </div>
           </div>
@@ -342,7 +554,8 @@ function LearningSession({
                 </span>
                 {completed.includes(selectedLesson.id) && (
                   <span className="inline-flex items-center gap-1 text-evo-accent">
-                    <CheckCircle2 size={15} aria-hidden="true" /> Aula concluída
+                    <CheckCircle2 size={15} aria-hidden="true" /> Exercício
+                    concluído
                   </span>
                 )}
               </div>
@@ -398,49 +611,20 @@ function LearningSession({
                   </div>
                 )}
               </article>
-              <fieldset className="border-y border-evo-border px-0 py-5">
-                <legend className="pr-3 font-semibold">
-                  Confira o que aprendeu
-                </legend>
-                <p className="mb-4 text-sm leading-relaxed">
-                  {selectedLesson.question}
-                </p>
-                <div className="grid gap-2">
-                  {(selectedLesson.choices || []).map((choice, index) => (
-                    <button
-                      key={choice}
-                      type="button"
-                      disabled={progressBusy || loading}
-                      aria-pressed={answers[selectedLesson.id] === index}
-                      className={
-                        "min-h-11 border p-3 text-left text-sm " +
-                        (answers[selectedLesson.id] === index
-                          ? "border-evo-accent bg-evo-accent/10"
-                          : "border-evo-border hover:bg-white/5")
-                      }
-                      onClick={() => void chooseAnswer(selectedLesson, index)}
-                    >
-                      {choice}
-                    </button>
-                  ))}
-                </div>
-                {answers[selectedLesson.id] !== undefined && (
-                  <p
-                    role="status"
-                    className="mt-4 border-l-2 border-evo-accent pl-4 text-sm leading-relaxed"
-                  >
-                    {answers[selectedLesson.id] === selectedLesson.answer
-                      ? "Correto! "
-                      : "Vamos revisar: "}
-                    {selectedLesson.explanation}
-                  </p>
-                )}
-                {progressBusy && (
-                  <p role="status" className="mt-3 text-xs text-evo-textSec">
-                    Salvando progresso…
-                  </p>
-                )}
-              </fieldset>
+              <LearningQuiz
+                lesson={selectedLesson}
+                selectedAnswer={answers[selectedLesson.id]}
+                completed={completed.includes(selectedLesson.id)}
+                busy={progressBusy}
+                disabled={loading || sessionExpired}
+                authenticated={Boolean(user)}
+                error={
+                  progressError?.lessonId === selectedLesson.id
+                    ? progressError.message
+                    : undefined
+                }
+                onAnswer={(answer) => void chooseAnswer(selectedLesson, answer)}
+              />
               {assistantEnabled && (
                 <button
                   className="mt-4 inline-flex min-h-11 items-center gap-2 text-sm text-evo-accent"
@@ -458,18 +642,50 @@ function LearningSession({
                   explicação ao assistente
                 </button>
               )}
-              {nextLesson && (
-                <a
-                  className="mt-6 inline-flex min-h-11 items-center gap-2 text-sm font-semibold text-evo-accent"
-                  href="#sala-de-aula"
-                  onClick={() => setSelectedId(nextLesson.id)}
-                >
-                  Próxima aula: {nextLesson.title}
-                  <ArrowRight size={16} aria-hidden="true" />
-                </a>
-              )}
             </div>
           )}
+          <nav
+            aria-label="Continuar o aprendizado"
+            className="mt-6 flex flex-col gap-3 border-t border-evo-border pt-5 sm:flex-row sm:justify-between"
+          >
+            {previousLesson ? (
+              <button
+                type="button"
+                className="action-secondary justify-center"
+                onClick={() => selectLesson(previousLesson.id, true)}
+              >
+                <ArrowLeft size={15} aria-hidden="true" /> Aula anterior
+              </button>
+            ) : (
+              <a href="#cursos" className="action-secondary justify-center">
+                Escolher outro curso
+              </a>
+            )}
+            {nextLesson ? (
+              <button
+                type="button"
+                className="action justify-center"
+                onClick={() => selectLesson(nextLesson.id, true)}
+              >
+                Próxima aula: {nextLesson.title}{" "}
+                <ArrowRight size={15} aria-hidden="true" />
+              </button>
+            ) : nextCourseId ? (
+              <button
+                type="button"
+                className="action justify-center"
+                onClick={() => selectLesson(nextCourseId, true)}
+              >
+                Próximo curso: {nextCourse?.title}{" "}
+                <ArrowRight size={15} aria-hidden="true" />
+              </button>
+            ) : (
+              <a href="#laboratorio" className="action justify-center">
+                Praticar no laboratório{" "}
+                <ArrowRight size={15} aria-hidden="true" />
+              </a>
+            )}
+          </nav>
         </section>
       )}
       <LearningPractice />
@@ -511,18 +727,57 @@ function LearningSession({
         )}
       </section>
       <footer className="flex flex-wrap items-center justify-between gap-4 border-t border-evo-border pt-6">
-        <Link to="/ranking" className="action">
+        <Link to={user ? "/app/ranking" : "/ranking"} className="action">
           Aplicar a leitura no ranking{" "}
           <ArrowRight size={16} aria-hidden="true" />
         </Link>
         <button
           type="button"
           className="action-secondary"
-          disabled={progressBusy || loading}
-          onClick={() => void resetProgress()}
+          disabled={
+            progressBusy || loading || sessionExpired || completed.length === 0
+          }
+          onClick={() => setResetRequested(true)}
         >
           Reiniciar progresso
         </button>
+        {resetRequested && (
+          <section
+            className="w-full rounded-lg border border-evo-border p-4"
+            aria-labelledby="reset-progress-title"
+          >
+            <h3 id="reset-progress-title" className="font-semibold">
+              Reiniciar os exercícios concluídos?
+            </h3>
+            <p className="mt-2 text-sm text-evo-textSec">
+              As marcações de conclusão de todas as aulas serão removidas. Os
+              cursos continuam disponíveis para estudar novamente.
+            </p>
+            <div className="mt-3 flex flex-wrap gap-3">
+              <button
+                type="button"
+                className="action-secondary"
+                disabled={progressBusy}
+                onClick={() => setResetRequested(false)}
+              >
+                Manter progresso
+              </button>
+              <button
+                type="button"
+                className="action"
+                disabled={progressBusy || loading || sessionExpired}
+                onClick={() => void resetProgress()}
+              >
+                {progressBusy ? "Reiniciando…" : "Confirmar reinício"}
+              </button>
+            </div>
+          </section>
+        )}
+        {progressError && !progressError.lessonId && (
+          <p role="alert" className="notice-error w-full">
+            {progressError.message}
+          </p>
+        )}
         <p className="w-full text-xs leading-relaxed text-evo-textSec">
           Conteúdo educativo da Ediv. Os exemplos são fictícios e não indicam o
           que comprar ou vender. Consulte também o{" "}

@@ -237,13 +237,52 @@ export function LaunchReadiness() {
             )}
           </div>
           <div className="flex flex-wrap gap-3">
-            <Link className="action-secondary" to="/app/ranking">
+            <Link
+              className="action-secondary"
+              to="/app/ranking#publicar-pesquisa"
+            >
               Preparar pesquisa
             </Link>
             <Link className="action-secondary" to="/suporte">
               Conferir contato público
             </Link>
+            <Link className="action-secondary" to="/metodologia">
+              Conferir pesquisa e autoria
+            </Link>
           </div>
+          <details className="border-t border-evo-border pt-4">
+            <summary className="min-h-11 cursor-pointer text-sm font-semibold">
+              O que preencher quando o conteúdo chegar
+            </summary>
+            <ol className="mt-3 list-decimal space-y-3 pl-5 text-sm leading-6 text-evo-textSec">
+              <li>
+                Na pesquisa, informe título, autoria, categoria e registro;
+                revise tese, riscos, período e fontes de cada empresa antes da
+                publicação.
+              </li>
+              <li>
+                Para a identificação pública, configure{" "}
+                <code>PROFESSIONAL_NAME</code>,{" "}
+                <code>PROFESSIONAL_CATEGORY</code> e{" "}
+                <code>PROFESSIONAL_REGISTRATION</code> na Vercel.
+              </li>
+              <li>
+                Para o suporte, configure <code>SUPPORT_EMAIL</code> e{" "}
+                <code>SUPPORT_HOURS</code>. Esses campos são públicos; não são
+                credenciais.
+              </li>
+              <li>
+                Associe os links dos vídeos aos capítulos do curso. A leitura e
+                os exercícios continuam disponíveis enquanto os vídeos estão em
+                preparação.
+              </li>
+            </ol>
+            <p className="mt-3 text-xs leading-6 text-evo-textSec">
+              As variáveis de identificação e contato entram no próximo
+              deployment. Os dados da autoria de cada pesquisa ficam registrados
+              naquela publicação.
+            </p>
+          </details>
         </>
       )}
       {message && (

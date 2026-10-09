@@ -10,7 +10,7 @@
 `deployment-policy.mjs` mantém `assistantInQa=false` na main e `true` na QA.
 O build de Production e a API bloqueiam o assistente mesmo que essa configuração
 ou uma variável de IA seja ativada por engano. As aulas, glossário, ranking,
-carteira, favoritos e atendimento continuam disponíveis na produção.
+pesquisas de empresas, análises e atendimento continuam disponíveis na produção.
 
 O assistente é carregado em um módulo separado apenas no ambiente habilitado.
 As chamadas e botões relacionados a ele também são condicionais. QA exibe um

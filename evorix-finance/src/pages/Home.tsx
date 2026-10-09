@@ -1,13 +1,8 @@
-import {
-  ArrowRight,
-  BarChart3,
-  BookOpen,
-  CircleAlert,
-  Sparkles,
-} from "lucide-react";
+import { ArrowRight, BarChart3, BookOpen, Sparkles } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useMarketAssets } from "../hooks/useMarketAssets";
 import { MarketAssetList } from "../components/MarketAssetList";
+import { PageState } from "../components/PageState";
 import { RankingHighlights } from "../components/RankingHighlights";
 import { SiteFooter, SiteHeader } from "../components/SiteChrome";
 import { useAuth } from "../context/authContext";
@@ -20,7 +15,7 @@ export function Home() {
   const { user } = useAuth();
   const registration = useRegistrationAvailability();
   const awaitingRegistration = registration.current?.available === false;
-  const { assets, loading, error, requestedAt } = useMarketAssets({
+  const { assets, loading, error, requestedAt, retry } = useMarketAssets({
     search: "",
     type: "stock",
     sortBy: "volume",
@@ -113,8 +108,7 @@ export function Home() {
                   Ações mais negociadas
                 </h2>
                 <p className="mt-2 max-w-2xl text-sm leading-relaxed text-evo-textSec">
-                  Uma amostra das ações com maior volume disponível no
-                  provedor.
+                  Uma amostra das ações com maior volume disponível no provedor.
                 </p>
               </div>
               <Link
@@ -125,13 +119,15 @@ export function Home() {
               </Link>
             </div>
             {error && (
-              <p
-                role="alert"
-                className="mt-5 flex items-center gap-2 rounded-lg border border-evo-red/20 bg-evo-red/5 p-3 text-sm text-evo-red"
-              >
-                <CircleAlert size={17} />
-                {error}
-              </p>
+              <div className="mt-5">
+                <PageState
+                  kind="error"
+                  title="Os dados de mercado estão indisponíveis"
+                  description={error}
+                  actionLabel="Tentar novamente"
+                  onAction={retry}
+                />
+              </div>
             )}
             {loading && (
               <p role="status" className="mt-5 text-sm text-evo-textSec">
@@ -145,9 +141,13 @@ export function Home() {
                 headingLevel={3}
               />
               {!loading && assets.length === 0 && !error && (
-                <p className="py-8 text-sm text-evo-textSec">
-                  Nenhuma ação disponível no momento.
-                </p>
+                <PageState
+                  kind="empty"
+                  title="Nenhuma ação disponível no momento"
+                  description="Você pode carregar novamente ou explorar as aulas e a pesquisa da equipe."
+                  actionLabel="Carregar novamente"
+                  onAction={retry}
+                />
               )}
             </div>
             {requestedAt && (

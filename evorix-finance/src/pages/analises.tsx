@@ -3,19 +3,22 @@ import { ArrowLeft, ArrowRight, Search } from "lucide-react";
 import { MarketAssetList } from "../components/MarketAssetList";
 import { OrbitCoins } from "../components/OrbitCoins";
 import { useMarketAssets } from "../hooks/useMarketAssets";
+import { PageState } from "../components/PageState";
 
 export function Analises({ publicView = false }: { publicView?: boolean }) {
   const [search, setSearch] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
   const [sortBy, setSortBy] = useState("volume");
   const [page, setPage] = useState(1);
-  const { assets, total, requestedAt, loading, error } = useMarketAssets({
-    search: searchQuery,
-    type: "stock",
-    sortBy,
-    page,
-    limit: 24,
-  });
+  const { assets, total, requestedAt, loading, error, retry } = useMarketAssets(
+    {
+      search: searchQuery,
+      type: "stock",
+      sortBy,
+      page,
+      limit: 24,
+    },
+  );
   const pages = Math.max(1, Math.ceil(total / 24));
 
   useEffect(() => {
@@ -80,18 +83,21 @@ export function Analises({ publicView = false }: { publicView?: boolean }) {
       </div>
 
       {error && (
-        <p
-          role="alert"
-          className="rounded-lg border border-evo-red/20 bg-evo-red/5 p-3 text-sm text-evo-red"
-        >
-          {error}
-        </p>
+        <PageState
+          kind="error"
+          title="A lista de ações não pôde ser carregada"
+          description={error}
+          actionLabel="Tentar novamente"
+          onAction={retry}
+        />
       )}
       <div className="flex flex-wrap items-center justify-between gap-2 text-sm text-evo-textSec">
         <span role="status">
           {loading
             ? "Carregando ações…"
-            : `${total.toLocaleString("pt-BR")} ações encontradas`}
+            : error
+              ? "Resultados indisponíveis"
+              : `${total.toLocaleString("pt-BR")} ações encontradas`}
         </span>
         {requestedAt && (
           <span className="text-xs">
@@ -103,9 +109,29 @@ export function Analises({ publicView = false }: { publicView?: boolean }) {
 
       <MarketAssetList assets={assets} loading={loading} />
       {!loading && assets.length === 0 && !error && (
-        <p className="border-y border-evo-border py-10 text-sm text-evo-textSec">
-          Nenhuma ação corresponde à sua busca.
-        </p>
+        <PageState
+          kind="empty"
+          title={
+            searchQuery
+              ? "Nenhuma ação corresponde à busca"
+              : "O catálogo está indisponível no momento"
+          }
+          description={
+            searchQuery
+              ? "Experimente o código da ação ou parte do nome da empresa. Você também pode voltar ao catálogo completo."
+              : "Você pode tentar carregar novamente ou continuar estudando as pesquisas e aulas."
+          }
+          actionLabel={searchQuery ? "Limpar busca" : "Carregar novamente"}
+          onAction={
+            searchQuery
+              ? () => {
+                  setSearch("");
+                  setSearchQuery("");
+                  setPage(1);
+                }
+              : retry
+          }
+        />
       )}
 
       <div className="flex flex-wrap items-center justify-between gap-3 border-t border-evo-border pt-4">
@@ -119,18 +145,19 @@ export function Analises({ publicView = false }: { publicView?: boolean }) {
         >
           <button
             type="button"
-            disabled={page <= 1 || loading}
+            disabled={page <= 1 || loading || Boolean(error)}
             onClick={() => setPage((current) => Math.max(1, current - 1))}
             className="inline-flex min-h-10 items-center gap-1 rounded-lg border border-evo-border px-3 text-sm text-evo-textMain disabled:opacity-40"
           >
             <ArrowLeft size={15} aria-hidden="true" /> Anterior
           </button>
           <span className="text-xs text-evo-textSec">
-            Página {page} de {pages}
+            Página {page}
+            {!loading && !error ? ` de ${pages}` : ""}
           </span>
           <button
             type="button"
-            disabled={page >= pages || loading}
+            disabled={page >= pages || loading || Boolean(error)}
             onClick={() => setPage((current) => Math.min(pages, current + 1))}
             className="inline-flex min-h-10 items-center gap-1 rounded-lg border border-evo-border px-3 text-sm text-evo-textMain disabled:opacity-40"
           >

@@ -1,8 +1,10 @@
 # Ediv Finance
 
-Aplicação React/Vite com API Node.js/Express e persistência em MySQL. A página inicial é pública, com cotações consultadas da brapi.dev. A área `/app` exige conta e permite salvar operações manuais, favoritos e preferências.
+Aplicação React/Vite com API Node.js/Express e persistência em MySQL. A página inicial é pública, com análises de ações consultadas da brapi.dev. A área `/app` exige conta confirmada e concentra ranking de pesquisas, cadernos das empresas, aprendizado e atendimento.
 
 O nome Ediv é uma abreviação de Escola do Dividendo. A rota `/ranking` apresenta o acesso ao ranking; a lista exige conta confirmada. Analistas e Administradores criam pesquisas pelo editor ou importam CSV/Excel (.xlsx), revisam a prévia e publicam versões com histórico.
+
+Para apresentar a arquitetura e começar a colaborar no código, consulte o [guia do desenvolvedor](docs/GUIA-DESENVOLVEDOR.md). A página `/metodologia` explica a leitura e o fluxo das pesquisas; os dados profissionais continuam configuráveis.
 
 ## Educação, ranking e atualização
 
@@ -36,7 +38,7 @@ Veja [as mudanças e a ordem de publicação](docs/ATUALIZACAO-EDIV.md), [os per
    GRANT SELECT, INSERT, CREATE, REFERENCES ON evorix_finance.* TO 'evorix_migrator'@'127.0.0.1';
    ```
 
-   A API usa apenas leitura e gravação de dados. O usuário migrador cria tabelas; em produção, execute as migrações no deploy.
+   A API usa apenas leitura e gravação de dados. O usuário migrador cria tabelas; em produção, aplique as migrações antes de publicar o código que depende delas.
 
 3. Copie `.env.example` para `.env` e preencha `MYSQL_HOST`, `MYSQL_PORT`, `MYSQL_DATABASE`, `MYSQL_USER` e `MYSQL_PASSWORD` com os dados de `evorix_app`. Configure também `MYSQL_MIGRATION_USER` e `MYSQL_MIGRATION_PASSWORD` com os dados de `evorix_migrator`. O arquivo `.env` é ignorado pelo Git. Não envie credenciais pelo chat.
 
@@ -72,16 +74,16 @@ Para aplicar migrations na base gerenciada Aiven já configurada, use `npm run d
 - `POST /api/auth/login` — autentica e cria uma sessão no servidor.
 - `GET /api/auth/me` — retorna apenas os dados básicos da sessão atual.
 - `POST /api/auth/logout` — revoga a sessão no banco e limpa o cookie.
-- `GET /api/market/assets?type=stock&search=PETR&page=1` — lista ações, fundos, ETFs e BDRs com busca, filtros e paginação.
+- `GET /api/market/assets?type=stock&search=PETR&page=1` — lista ações ordinárias, preferenciais e units com busca e paginação.
 - `GET /api/market/quotes?symbols=PETR4,ITUB4` — devolve cotações da brapi.dev, com limite de oito ativos por chamada.
 - `GET /api/rankings` — lista as projeções importadas mais recentemente e informa se a sessão pode publicar.
 - `POST /api/rankings` — publica uma versão com CSV UTF-8 ou XLSX; requer sessão confirmada de Analista ou Administrador.
 - `GET /api/admin/summary`, `/api/admin/users`, `/api/admin/audit` — contagens, contas paginadas e histórico, somente Administrador.
 - `PATCH /api/admin/users/:id/access` — altera perfil/bloqueio e encerra sessões da conta, somente Administrador.
-- `GET /api/portfolio` — calcula posições e valores estimados usando cotações disponíveis, além do histórico recente.
+- `GET /api/portfolio` — endpoint legado que calcula posições; a carteira foi retirada da navegação do MVP.
 - `POST /api/portfolio/transactions` — registra compra/venda manual e rejeita vendas que deixem a posição negativa.
 - `GET/PUT /api/portfolio/preferences` — lê e salva preferência de risco, opções de notificação e o total investido informado pelo usuário.
-- `GET /api/favorites` e `PUT/DELETE /api/favorites/:ticker` — favoritos persistidos por conta.
+- `GET /api/favorites` e `PUT/DELETE /api/favorites/:ticker` — endpoints legados preservados; favoritos fora da navegação do MVP.
 - `GET /api/assistant/status` — informa se o assistente com IA está ligado, sem revelar a chave.
 - `POST /api/assistant/chat` — envia até dez mensagens recentes ao Gemini; limitado a oito chamadas por IP a cada 15 minutos.
 - `GET /api/health` — verifica a disponibilidade da API e do MySQL.

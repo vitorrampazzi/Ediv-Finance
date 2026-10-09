@@ -40,6 +40,11 @@ export const publicPages = {
     description:
       "Encontre respostas sobre pesquisas, dividendos, acesso à conta e ferramentas. Consulte a central de ajuda e converse com a equipe Ediv.",
   },
+  "/metodologia": {
+    title: "Pesquisa e metodologia | Ediv Finance",
+    description:
+      "Conheça como as pesquisas de ações são organizadas, confira autoria, fontes e versões e aprenda a ler os cenários com contexto.",
+  },
 };
 export const accountPaths = [
   "/entrar",
