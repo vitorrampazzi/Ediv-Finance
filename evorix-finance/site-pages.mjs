@@ -8,7 +8,7 @@ export const publicPages = {
   "/mercado": {
     title: "Mercado de ações | Ediv Finance",
     description:
-      "Explore ações, fundos e outros ativos. Consulte cotações, conheça empresas e aprenda a interpretar os dados do mercado.",
+      "Explore ações brasileiras. Consulte cotações, conheça empresas e aprenda a interpretar os dados do mercado.",
   },
   "/ranking": {
     title: "Ranking de ações | Ediv Finance",

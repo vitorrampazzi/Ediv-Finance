@@ -12,6 +12,15 @@ let assetCatalogCache = null;
 let assetCatalogInFlight = null;
 const CACHE_TTL_MS = 15 * 60 * 1000;
 const ASSET_CATALOG_TTL_MS = 15 * 60 * 1000;
+function isEquityAsset(asset) {
+  return (
+    asset?.type === "stock" &&
+    (asset.subType == null ||
+      asset.subType === "stock" ||
+      asset.subType === "unit")
+  );
+}
+
 const quoteLimiter = rateLimit({
   windowMs: 60_000,
   limit: 30,
@@ -221,7 +230,7 @@ export async function getMarketQuotes(symbols) {
 router.get("/assets", quoteLimiter, async (req, res) => {
   const schema = z.object({
     search: z.string().trim().max(80).optional().default(""),
-    type: z.enum(["all", "stock", "fund", "bdr"]).optional().default("stock"),
+    type: z.enum(["all", "stock"]).optional().default("stock"),
     sortBy: z
       .enum(["volume", "change", "market_cap", "name"])
       .optional()
@@ -234,12 +243,12 @@ router.get("/assets", quoteLimiter, async (req, res) => {
   if (!parsed.success)
     return res
       .status(400)
-      .json({ error: "Filtros inválidos para a lista de ativos." });
+      .json({ error: "Filtros inválidos para o catálogo de ações." });
   const filters = parsed.data;
   const catalog = await getAssetCatalog();
   const normalizedSearch = filters.search.toLocaleLowerCase("pt-BR");
   const filtered = catalog.stocks
-    .filter((asset) => filters.type === "all" || asset.type === filters.type)
+    .filter(isEquityAsset)
     .filter(
       (asset) =>
         !normalizedSearch ||

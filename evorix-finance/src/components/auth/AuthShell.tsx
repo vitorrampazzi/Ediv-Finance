@@ -19,7 +19,7 @@ export function AuthShell({
           className="mb-8 inline-flex items-center gap-2 text-sm text-evo-textSec hover:text-evo-textMain"
         >
           <img
-            src="/ediv-logo-transparent.png"
+            src="/ediv-logo-clean.png"
             alt=""
             aria-hidden="true"
             className="h-8 w-8 object-contain"

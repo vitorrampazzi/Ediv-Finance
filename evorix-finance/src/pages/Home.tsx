@@ -1,7 +1,5 @@
 import {
-  ArrowDown,
   ArrowRight,
-  ArrowUp,
   BarChart3,
   BookOpen,
   CircleAlert,
@@ -9,6 +7,7 @@ import {
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useMarketAssets } from "../hooks/useMarketAssets";
+import { MarketAssetList } from "../components/MarketAssetList";
 import { RankingHighlights } from "../components/RankingHighlights";
 import { SiteFooter, SiteHeader } from "../components/SiteChrome";
 import { useAuth } from "../context/authContext";
@@ -16,11 +15,6 @@ import { authLink } from "../lib/authDestination";
 import { RankingPreview } from "../components/RankingPreview";
 import { GettingStarted } from "../components/GettingStarted";
 import { useRegistrationAvailability } from "../hooks/useRegistrationAvailability";
-
-const currency = new Intl.NumberFormat("pt-BR", {
-  style: "currency",
-  currency: "BRL",
-});
 
 export function Home() {
   const { user } = useAuth();
@@ -119,7 +113,7 @@ export function Home() {
                   Ações mais negociadas
                 </h2>
                 <p className="mt-2 max-w-2xl text-sm leading-relaxed text-evo-textSec">
-                  Uma amostra dos ativos com maior volume disponível no
+                  Uma amostra das ações com maior volume disponível no
                   provedor.
                 </p>
               </div>
@@ -127,7 +121,7 @@ export function Home() {
                 to="/mercado"
                 className="inline-flex min-h-10 items-center gap-2 rounded-lg border border-evo-border px-3 text-sm text-evo-textMain hover:bg-evo-card"
               >
-                Explorar ativos <ArrowRight size={15} />
+                Explorar ações <ArrowRight size={15} />
               </Link>
             </div>
             {error && (
@@ -141,61 +135,20 @@ export function Home() {
             )}
             {loading && (
               <p role="status" className="mt-5 text-sm text-evo-textSec">
-                Carregando ativos do mercado…
+                Carregando ações do mercado…
               </p>
             )}
-            <div className="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-              {assets.map((asset) => {
-                const variation =
-                  asset.changePercent === null
-                    ? null
-                    : Number(asset.changePercent);
-                return (
-                  <article
-                    key={asset.symbol}
-                    className="rounded-xl border border-evo-border bg-evo-card p-5"
-                  >
-                    <div className="flex items-start justify-between gap-3">
-                      <div>
-                        <h3 className="font-bold">{asset.symbol}</h3>
-                        <p className="mt-1 line-clamp-1 text-xs text-evo-textSec">
-                          {asset.name}
-                        </p>
-                      </div>
-                      <span className="rounded bg-evo-bgMain px-2 py-1 text-[10px] text-evo-textSec">
-                        B3
-                      </span>
-                    </div>
-                    <p className="mt-5 font-numbers text-2xl font-semibold">
-                      {currency.format(Number(asset.price))}
-                    </p>
-                    <p
-                      className={`mt-1 flex items-center gap-1 text-sm font-medium ${variation === null ? "text-evo-textSec" : variation >= 0 ? "text-evo-green" : "text-evo-red"}`}
-                    >
-                      {variation === null ? (
-                        "Variação indisponível"
-                      ) : (
-                        <>
-                          {variation >= 0 ? (
-                            <ArrowUp size={14} />
-                          ) : (
-                            <ArrowDown size={14} />
-                          )}
-                          {variation > 0 ? "+" : ""}
-                          {variation.toLocaleString("pt-BR", {
-                            minimumFractionDigits: 2,
-                            maximumFractionDigits: 2,
-                          })}
-                          %
-                        </>
-                      )}
-                    </p>
-                    <p className="mt-4 border-t border-evo-border pt-3 text-[11px] text-evo-textSec">
-                      {asset.sector || "B3"}
-                    </p>
-                  </article>
-                );
-              })}
+            <div className="mt-6">
+              <MarketAssetList
+                assets={assets}
+                loading={loading}
+                headingLevel={3}
+              />
+              {!loading && assets.length === 0 && !error && (
+                <p className="py-8 text-sm text-evo-textSec">
+                  Nenhuma ação disponível no momento.
+                </p>
+              )}
             </div>
             {requestedAt && (
               <p className="mt-4 text-xs text-evo-textSec">

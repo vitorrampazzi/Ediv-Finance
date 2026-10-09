@@ -58,7 +58,7 @@ export function SiteHeader() {
             aria-label="Ediv Finance, página inicial"
           >
             <img
-              src="/ediv-logo-transparent.png"
+              src="/ediv-logo-clean.png"
               alt=""
               aria-hidden="true"
               className="h-10 w-10 object-contain"
@@ -174,7 +174,7 @@ export function SiteFooter() {
               aria-label="Ediv Finance, página inicial"
             >
               <img
-                src="/ediv-logo-transparent.png"
+                src="/ediv-logo-clean.png"
                 alt=""
                 aria-hidden="true"
                 className="h-9 w-9 object-contain"

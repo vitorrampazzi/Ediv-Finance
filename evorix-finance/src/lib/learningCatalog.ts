@@ -9,7 +9,8 @@ export type LearningChapter = {
 
 // Keep the existing lesson IDs so saved quiz progress remains compatible.
 // Publish an authorized YouTube privacy-enhanced or Vimeo embed URL here.
-// No video is published for this POC; the written lessons are fully usable.
+// Course videos will be supplied by the analyst and mapped to these chapters.
+// Keep URLs null until the selected videos are ready for publication.
 export const learningChapters: LearningChapter[] = [
   {
     id: "ranking",

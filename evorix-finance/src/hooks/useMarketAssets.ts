@@ -16,8 +16,8 @@ export type MarketAsset = {
 };
 type Result = { assets: MarketAsset[]; total: number; page: number; pageSize: number; requestedAt: string; availableSectors: string[] };
 
-export function useMarketAssets(filters: { search: string; type: string; sortBy: string; page: number; limit: number }) {
-  const params = new URLSearchParams({ search: filters.search, type: filters.type, sortBy: filters.sortBy, sortOrder: filters.sortBy === 'name' ? 'asc' : 'desc', page: String(filters.page), limit: String(filters.limit) });
+export function useMarketAssets(filters: { search: string; type?: string; sortBy: string; page: number; limit: number }) {
+  const params = new URLSearchParams({ search: filters.search, type: 'stock', sortBy: filters.sortBy, sortOrder: filters.sortBy === 'name' ? 'asc' : 'desc', page: String(filters.page), limit: String(filters.limit) });
   const key = params.toString();
   const [state, setState] = useState<{ key: string; result: Result | null; error: string }>({ key: '', result: null, error: '' });
 
@@ -25,7 +25,7 @@ export function useMarketAssets(filters: { search: string; type: string; sortBy:
     let active = true;
     apiRequest<Result>(`/api/market/assets?${key}`)
       .then(result => { if (active) setState({ key, result, error: '' }); })
-      .catch(reason => { if (active) setState({ key, result: null, error: reason instanceof Error ? reason.message : 'Não foi possível carregar os ativos.' }); });
+      .catch(reason => { if (active) setState({ key, result: null, error: reason instanceof Error ? reason.message : 'Não foi possível carregar as ações.' }); });
     return () => { active = false; };
   }, [key]);
 

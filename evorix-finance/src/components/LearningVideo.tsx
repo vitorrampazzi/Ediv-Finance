@@ -48,12 +48,12 @@ export function LearningVideo({
               />
             )}
             <p className="mt-4 font-semibold">
-              {approvedUrl ? title : "Vídeo ainda não publicado"}
+              {approvedUrl ? title : "Aulas em vídeo em preparação"}
             </p>
             <p className="mt-2 text-sm leading-relaxed text-evo-textSec">
               {approvedUrl
                 ? "Carregue o player para assistir. O provedor de vídeo receberá sua conexão somente ao clicar."
-                : "A gravação do corretor será adicionada aqui. Você já pode estudar o material e responder ao exercício desta aula."}
+                : "Os vídeos do curso selecionados para esta trilha serão publicados aqui. Enquanto isso, estude o material e pratique com o exercício da aula."}
             </p>
             {approvedUrl ? (
               <button
