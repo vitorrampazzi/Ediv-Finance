@@ -4,7 +4,6 @@ import {
   BookOpen,
   CheckCircle2,
   MessageCircle,
-  LockKeyhole,
   ArrowDown,
   ArrowRight,
   Clock3,
@@ -16,7 +15,13 @@ import { OrbitCoins } from "../components/OrbitCoins";
 import { assistantEnabled } from "../lib/features";
 import { LearningVideo } from "../components/LearningVideo";
 import { LearningPractice } from "../components/LearningPractice";
-import { learningChapters, learningCourses } from "../lib/learningCatalog";
+import { LearningPlaylist } from "../components/LearningPlaylist";
+import { LearningCourseCarousel } from "../components/LearningCourseCarousel";
+import {
+  approvedVideoEmbed,
+  learningChapters,
+  learningCourses,
+} from "../lib/learningCatalog";
 
 type Lesson = {
   id: string;
@@ -37,7 +42,7 @@ export type LearningData = {
   access: "preview" | "full";
   completed: string[];
 };
-const lessonIds = ["ranking", "risco", "dividendos", "carteira"];
+const lessonIds: string[] = learningChapters.map((chapter) => chapter.id);
 function readProgress(): string[] {
   try {
     const value = JSON.parse(localStorage.getItem("ediv-learning-v1") || "[]");
@@ -172,16 +177,34 @@ function LearningSession({
   const selectedLesson =
     lessons.find((lesson) => lesson.id === selectedId) ?? lessons[0];
   const selectedChapter =
-    learningChapters.find((chapter) => chapter.id === selectedId) ??
+    learningChapters.find((chapter) => chapter.id === selectedLesson?.id) ??
     learningChapters[0];
   const selectedCourse =
     learningCourses.find((course) =>
-      course.chapterIds.some((id) => id === selectedId),
+      course.chapterIds.some((id) => id === selectedLesson?.id),
     ) ?? learningCourses[0];
-  const selectedIndex = lessons.findIndex(
-    (lesson) => lesson.id === selectedLesson?.id,
+  const playlistItems = selectedCourse.chapterIds.flatMap((id) => {
+    const lesson = lessons.find((item) => item.id === id);
+    const chapter = learningChapters.find((item) => item.id === id);
+    if (!lesson || !chapter) return [];
+    return [
+      {
+        id,
+        title: lesson.title,
+        subtitle: chapter.subtitle,
+        courseTitle: selectedCourse.title,
+        readingMinutes: chapter.readingMinutes,
+        videoAvailable:
+          !lesson.locked && Boolean(approvedVideoEmbed(chapter.videoEmbedUrl)),
+        locked: Boolean(lesson.locked),
+        completed: completed.includes(id),
+      },
+    ];
+  });
+  const selectedIndex = playlistItems.findIndex(
+    (item) => item.id === selectedLesson?.id,
   );
-  const nextLesson = lessons[selectedIndex + 1];
+  const nextLesson = playlistItems[selectedIndex + 1];
   const matchingTerms = glossary.filter(([term, text]) =>
     (term + " " + text)
       .toLocaleLowerCase("pt-BR")
@@ -260,58 +283,13 @@ function LearningSession({
           as outras aulas e salva seu progresso.
         </p>
       )}
-      <section
-        id="cursos"
-        aria-labelledby="courses-title"
-        className="scroll-mt-24"
-      >
-        <div className="flex flex-wrap items-end justify-between gap-3">
-          <h2 id="courses-title" className="text-2xl font-semibold">
-            Trilhas para estudar
-          </h2>
-          <p className="text-xs text-evo-textSec">
-            Leituras disponíveis · vídeos em preparação
-          </p>
-        </div>
-        <div className="mt-5 grid gap-6 md:grid-cols-2">
-          {learningCourses.map((course) => {
-            const count = course.chapterIds.filter((id) =>
-              completed.includes(id),
-            ).length;
-            const minutes = learningChapters
-              .filter((chapter) => course.chapterIds.includes(chapter.id))
-              .reduce((sum, chapter) => sum + chapter.readingMinutes, 0);
-            return (
-              <article
-                key={course.id}
-                className="flex flex-col border-t-2 border-evo-accent/50 bg-evo-card/25 px-5 py-6 sm:px-6"
-              >
-                <p className="text-xs uppercase tracking-[0.12em] text-evo-accent">
-                  {course.eyebrow}
-                </p>
-                <h3 className="mt-3 text-xl font-semibold">{course.title}</h3>
-                <p className="mt-3 flex-1 text-sm leading-relaxed text-evo-textSec">
-                  {course.description}
-                </p>
-                <div className="mt-5 flex flex-wrap items-center gap-4 text-xs text-evo-textSec">
-                  <span>{course.chapterIds.length} aulas</span>
-                  <span>{minutes} min de leitura estimada</span>
-                  <span>
-                    {count}/{course.chapterIds.length} concluídas
-                  </span>
-                </div>
-                <a
-                  href="#sala-de-aula"
-                  onClick={() => setSelectedId(course.chapterIds[0])}
-                  className="mt-5 inline-flex min-h-11 items-center gap-2 self-start text-sm font-semibold text-evo-accent"
-                >
-                  Abrir curso <ArrowRight size={16} aria-hidden="true" />
-                </a>
-              </article>
-            );
-          })}
-        </div>
-      </section>
+      <LearningCourseCarousel
+        courses={learningCourses}
+        chapters={learningChapters}
+        completed={completed}
+        selectedCourseId={selectedCourse.id}
+        onSelect={setSelectedId}
+      />
       {selectedLesson && (
         <section
           id="sala-de-aula"
@@ -328,240 +306,170 @@ function LearningSession({
           >
             {selectedLesson.title}
           </h2>
-          <div className="mt-6 grid grid-cols-1 items-start gap-7 lg:grid-cols-[minmax(0,1fr)_17rem]">
-            <div className="order-last min-w-0 lg:order-first">
-              {selectedLesson.locked ? (
-                <AccountGate
-                  title="Entre para estudar esta aula"
-                  description="Sua conta gratuita libera a leitura, o exercício e o acompanhamento do progresso."
-                  next={location.pathname + "#" + selectedLesson.id}
-                />
-              ) : (
-                <>
+          <div className="mt-6 overflow-hidden rounded-2xl border border-evo-border bg-evo-bgMain">
+            <div className="grid min-w-0 grid-cols-1 items-start lg:grid-cols-[minmax(0,1fr)_20rem]">
+              <div className="min-w-0 p-4 sm:p-5">
+                {selectedLesson.locked ? (
+                  <AccountGate
+                    title="Entre para estudar esta aula"
+                    description="Sua conta gratuita libera a leitura, o exercício e o acompanhamento do progresso."
+                    next={location.pathname + "#" + selectedLesson.id}
+                  />
+                ) : (
                   <LearningVideo
                     key={selectedLesson.id}
                     title={selectedLesson.title}
                     embedUrl={selectedChapter.videoEmbedUrl}
                     readingTarget={"#leitura-" + selectedLesson.id}
                   />
-                  <div className="mt-4 flex flex-wrap items-center gap-3 text-xs text-evo-textSec">
-                    <BookOpen size={15} aria-hidden="true" />
-                    <span>Material de leitura disponível</span>
-                    <Clock3 size={15} aria-hidden="true" />
-                    <span>
-                      {selectedChapter.readingMinutes} min de leitura estimada
-                    </span>
-                    {completed.includes(selectedLesson.id) && (
-                      <span className="inline-flex items-center gap-1 text-evo-accent">
-                        <CheckCircle2 size={15} aria-hidden="true" /> Aula
-                        concluída
-                      </span>
-                    )}
-                  </div>
-                  <article
-                    id={"leitura-" + selectedLesson.id}
-                    className="scroll-mt-24 py-7"
-                    aria-labelledby="reading-title"
-                  >
-                    <h3 id="reading-title" className="text-lg font-semibold">
-                      Para entender esta aula
-                    </h3>
-                    <p className="mt-4 text-sm leading-7 text-evo-textSec">
-                      {selectedLesson.text}
+                )}
+              </div>
+              <LearningPlaylist
+                items={playlistItems}
+                selectedId={selectedLesson.id}
+                onSelect={setSelectedId}
+              />
+            </div>
+          </div>
+          {!selectedLesson.locked && (
+            <div className="mt-5 min-w-0 max-w-4xl">
+              <div className="mt-4 flex flex-wrap items-center gap-3 text-xs text-evo-textSec">
+                <BookOpen size={15} aria-hidden="true" />
+                <span>Material de leitura disponível</span>
+                <Clock3 size={15} aria-hidden="true" />
+                <span>
+                  {selectedChapter.readingMinutes} min de leitura estimada
+                </span>
+                {completed.includes(selectedLesson.id) && (
+                  <span className="inline-flex items-center gap-1 text-evo-accent">
+                    <CheckCircle2 size={15} aria-hidden="true" /> Aula concluída
+                  </span>
+                )}
+              </div>
+              <article
+                id={"leitura-" + selectedLesson.id}
+                className="scroll-mt-24 py-7"
+                aria-labelledby="reading-title"
+              >
+                <h3 id="reading-title" className="text-lg font-semibold">
+                  Para entender esta aula
+                </h3>
+                <p className="mt-4 text-sm leading-7 text-evo-textSec">
+                  {selectedLesson.text}
+                </p>
+                {selectedLesson.sections?.map((part) => (
+                  <section key={part.title} className="mt-6">
+                    <h4 className="font-semibold">{part.title}</h4>
+                    <p className="mt-2 text-sm leading-7 text-evo-textSec">
+                      {part.text}
                     </p>
-                    {selectedLesson.sections?.map((part) => (
-                      <section key={part.title} className="mt-6">
-                        <h4 className="font-semibold">{part.title}</h4>
-                        <p className="mt-2 text-sm leading-7 text-evo-textSec">
-                          {part.text}
-                        </p>
-                      </section>
-                    ))}
-                    {!!selectedLesson.takeaways?.length && (
-                      <aside className="mt-7 border-l-2 border-evo-accent pl-5">
-                        <h4 className="font-semibold">
-                          Leve estes pontos com você
-                        </h4>
-                        <ul className="mt-3 list-disc space-y-2 pl-4 text-sm leading-relaxed text-evo-textSec">
-                          {selectedLesson.takeaways.map((takeaway) => (
-                            <li key={takeaway}>{takeaway}</li>
-                          ))}
-                        </ul>
-                      </aside>
-                    )}
-                    {!!selectedLesson.sources?.length && (
-                      <div className="mt-6 text-xs leading-relaxed text-evo-textSec">
-                        <p className="font-semibold">
-                          Para aprofundar nas fontes
-                        </p>
-                        <ul className="mt-2 space-y-2">
-                          {selectedLesson.sources.map((source) => (
-                            <li key={source.url}>
-                              <a
-                                className="underline underline-offset-4"
-                                href={source.url}
-                                target="_blank"
-                                rel="noreferrer"
-                              >
-                                {source.title}{" "}
-                                <span className="sr-only">
-                                  (abre em nova guia)
-                                </span>
-                              </a>
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-                    )}
-                  </article>
-                  <fieldset className="border-y border-evo-border px-0 py-5">
-                    <legend className="pr-3 font-semibold">
-                      Confira o que aprendeu
-                    </legend>
-                    <p className="mb-4 text-sm leading-relaxed">
-                      {selectedLesson.question}
-                    </p>
-                    <div className="grid gap-2">
-                      {(selectedLesson.choices || []).map((choice, index) => (
-                        <button
-                          key={choice}
-                          type="button"
-                          disabled={progressBusy || loading}
-                          aria-pressed={answers[selectedLesson.id] === index}
-                          className={
-                            "min-h-11 border p-3 text-left text-sm " +
-                            (answers[selectedLesson.id] === index
-                              ? "border-evo-accent bg-evo-accent/10"
-                              : "border-evo-border hover:bg-white/5")
-                          }
-                          onClick={() =>
-                            void chooseAnswer(selectedLesson, index)
-                          }
-                        >
-                          {choice}
-                        </button>
+                  </section>
+                ))}
+                {!!selectedLesson.takeaways?.length && (
+                  <aside className="mt-7 border-l-2 border-evo-accent pl-5">
+                    <h4 className="font-semibold">
+                      Leve estes pontos com você
+                    </h4>
+                    <ul className="mt-3 list-disc space-y-2 pl-4 text-sm leading-relaxed text-evo-textSec">
+                      {selectedLesson.takeaways.map((takeaway) => (
+                        <li key={takeaway}>{takeaway}</li>
                       ))}
-                    </div>
-                    {answers[selectedLesson.id] !== undefined && (
-                      <p
-                        role="status"
-                        className="mt-4 border-l-2 border-evo-accent pl-4 text-sm leading-relaxed"
-                      >
-                        {answers[selectedLesson.id] === selectedLesson.answer
-                          ? "Correto! "
-                          : "Vamos revisar: "}
-                        {selectedLesson.explanation}
-                      </p>
-                    )}
-                    {progressBusy && (
-                      <p
-                        role="status"
-                        className="mt-3 text-xs text-evo-textSec"
-                      >
-                        Salvando progresso…
-                      </p>
-                    )}
-                  </fieldset>
-                  {assistantEnabled && (
+                    </ul>
+                  </aside>
+                )}
+                {!!selectedLesson.sources?.length && (
+                  <div className="mt-6 text-xs leading-relaxed text-evo-textSec">
+                    <p className="font-semibold">Para aprofundar nas fontes</p>
+                    <ul className="mt-2 space-y-2">
+                      {selectedLesson.sources.map((source) => (
+                        <li key={source.url}>
+                          <a
+                            className="underline underline-offset-4"
+                            href={source.url}
+                            target="_blank"
+                            rel="noreferrer"
+                          >
+                            {source.title}{" "}
+                            <span className="sr-only">(abre em nova guia)</span>
+                          </a>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+              </article>
+              <fieldset className="border-y border-evo-border px-0 py-5">
+                <legend className="pr-3 font-semibold">
+                  Confira o que aprendeu
+                </legend>
+                <p className="mb-4 text-sm leading-relaxed">
+                  {selectedLesson.question}
+                </p>
+                <div className="grid gap-2">
+                  {(selectedLesson.choices || []).map((choice, index) => (
                     <button
-                      className="mt-4 inline-flex min-h-11 items-center gap-2 text-sm text-evo-accent"
-                      onClick={() =>
-                        window.dispatchEvent(
-                          new CustomEvent("ediv-assistant-question", {
-                            detail:
-                              "Explique de forma educativa: " +
-                              selectedLesson.title,
-                          }),
-                        )
+                      key={choice}
+                      type="button"
+                      disabled={progressBusy || loading}
+                      aria-pressed={answers[selectedLesson.id] === index}
+                      className={
+                        "min-h-11 border p-3 text-left text-sm " +
+                        (answers[selectedLesson.id] === index
+                          ? "border-evo-accent bg-evo-accent/10"
+                          : "border-evo-border hover:bg-white/5")
                       }
+                      onClick={() => void chooseAnswer(selectedLesson, index)}
                     >
-                      <MessageCircle size={16} aria-hidden="true" /> Pedir uma
-                      explicação ao assistente
+                      {choice}
                     </button>
-                  )}
-                  {nextLesson && (
-                    <a
-                      className="mt-6 inline-flex min-h-11 items-center gap-2 text-sm font-semibold text-evo-accent"
-                      href="#sala-de-aula"
-                      onClick={() => setSelectedId(nextLesson.id)}
-                    >
-                      Próxima aula: {nextLesson.title}
-                      <ArrowRight size={16} aria-hidden="true" />
-                    </a>
-                  )}
-                </>
+                  ))}
+                </div>
+                {answers[selectedLesson.id] !== undefined && (
+                  <p
+                    role="status"
+                    className="mt-4 border-l-2 border-evo-accent pl-4 text-sm leading-relaxed"
+                  >
+                    {answers[selectedLesson.id] === selectedLesson.answer
+                      ? "Correto! "
+                      : "Vamos revisar: "}
+                    {selectedLesson.explanation}
+                  </p>
+                )}
+                {progressBusy && (
+                  <p role="status" className="mt-3 text-xs text-evo-textSec">
+                    Salvando progresso…
+                  </p>
+                )}
+              </fieldset>
+              {assistantEnabled && (
+                <button
+                  className="mt-4 inline-flex min-h-11 items-center gap-2 text-sm text-evo-accent"
+                  onClick={() =>
+                    window.dispatchEvent(
+                      new CustomEvent("ediv-assistant-question", {
+                        detail:
+                          "Explique de forma educativa: " +
+                          selectedLesson.title,
+                      }),
+                    )
+                  }
+                >
+                  <MessageCircle size={16} aria-hidden="true" /> Pedir uma
+                  explicação ao assistente
+                </button>
+              )}
+              {nextLesson && (
+                <a
+                  className="mt-6 inline-flex min-h-11 items-center gap-2 text-sm font-semibold text-evo-accent"
+                  href="#sala-de-aula"
+                  onClick={() => setSelectedId(nextLesson.id)}
+                >
+                  Próxima aula: {nextLesson.title}
+                  <ArrowRight size={16} aria-hidden="true" />
+                </a>
               )}
             </div>
-            <nav
-              aria-label="Aulas e capítulos do curso"
-              className="order-first border-t border-evo-border pt-4 lg:order-last lg:border-t-0 lg:border-l lg:pl-5 lg:pt-0"
-            >
-              <h3 className="text-sm font-semibold">Seu roteiro de estudo</h3>
-              {learningCourses.map((course) => (
-                <div key={course.id} className="mt-5">
-                  <p className="mb-2 text-xs uppercase tracking-[0.08em] text-evo-textSec">
-                    {course.id === "pesquisa"
-                      ? "01 · Pesquisa de ações"
-                      : "02 · Dividendos"}
-                  </p>
-                  <ol className="space-y-1">
-                    {course.chapterIds.map((id) => {
-                      const lesson = lessons.find((item) => item.id === id);
-                      const chapter = learningChapters.find(
-                        (item) => item.id === id,
-                      );
-                      if (!lesson || !chapter) return null;
-                      return (
-                        <li key={id}>
-                          <button
-                            id={id}
-                            type="button"
-                            aria-current={
-                              selectedId === id ? "step" : undefined
-                            }
-                            onClick={() => setSelectedId(id)}
-                            className={
-                              "flex min-h-14 w-full items-start justify-between gap-3 border-l-2 px-3 py-3 text-left " +
-                              (selectedId === id
-                                ? "border-evo-accent bg-evo-accent/5"
-                                : "border-transparent hover:bg-white/5")
-                            }
-                          >
-                            <span className="min-w-0">
-                              <span className="block text-sm font-medium">
-                                {lesson.title}
-                              </span>
-                              <span className="mt-1 block text-xs leading-relaxed text-evo-textSec">
-                                {chapter.subtitle}
-                              </span>
-                            </span>
-                            {lesson.locked ? (
-                              <LockKeyhole
-                                size={16}
-                                className="mt-1 shrink-0 text-evo-textSec"
-                                aria-label="Requer conta"
-                              />
-                            ) : completed.includes(id) ? (
-                              <CheckCircle2
-                                size={16}
-                                className="mt-1 shrink-0 text-evo-accent"
-                                aria-label="Concluída"
-                              />
-                            ) : null}
-                          </button>
-                        </li>
-                      );
-                    })}
-                  </ol>
-                </div>
-              ))}
-              <p className="mt-6 text-xs leading-relaxed text-evo-textSec">
-                As gravações serão publicadas após a preparação e revisão do
-                corretor. O progresso é registrado pelos exercícios de cada
-                aula.
-              </p>
-            </nav>
-          </div>
+          )}
         </section>
       )}
       <LearningPractice />

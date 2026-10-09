@@ -17,10 +17,10 @@ export function LearningVideo({
     <section className="min-w-0" aria-label={"Vídeo da aula: " + title}>
       <div
         className={
-          "relative flex w-full min-w-0 items-center justify-center overflow-hidden border border-evo-border bg-evo-bgMain " +
+          "relative flex aspect-video w-full min-w-0 items-center justify-center overflow-hidden rounded-xl border border-evo-border bg-evo-bgMain " +
           (approvedUrl && loadPlayer
             ? "aspect-video"
-            : "min-h-52 p-6 sm:min-h-64")
+            : "min-h-60 p-5 sm:min-h-72 sm:p-6")
         }
       >
         {approvedUrl && loadPlayer ? (
