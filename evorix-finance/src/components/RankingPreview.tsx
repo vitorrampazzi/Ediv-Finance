@@ -28,10 +28,10 @@ const features = [
 export function RankingPreview() {
   return (
     <aside
-      className="border-y border-evo-border"
+      className="border-y border-evo-border bg-evo-bgInset/50 px-5"
       aria-labelledby="ranking-preview-title"
     >
-      <div className="flex items-center justify-between gap-4 py-5">
+      <div className="flex items-center justify-between gap-4 py-4">
         <div className="min-w-0">
           <p className="text-xs font-semibold uppercase tracking-widest text-evo-accent">
             Ranking de previsões
@@ -49,7 +49,7 @@ export function RankingPreview() {
       </div>
       <dl className="divide-y divide-evo-border border-t border-evo-border">
         {features.map(({ Icon, title, text }) => (
-          <div key={title} className="flex items-start gap-3 py-4">
+          <div key={title} className="flex items-start gap-3 py-3">
             <Icon
               size={18}
               className="mt-0.5 shrink-0 text-evo-accent"
@@ -57,14 +57,14 @@ export function RankingPreview() {
             />
             <div className="min-w-0">
               <dt className="text-sm font-semibold">{title}</dt>
-              <dd className="mt-1 text-xs leading-relaxed text-evo-textSec">
+              <dd className="mt-1 text-sm leading-relaxed text-evo-textSec">
                 {text}
               </dd>
             </div>
           </div>
         ))}
       </dl>
-      <div className="pb-4">
+      <div className="pb-3">
         <Link
           to="/metodologia"
           className="inline-flex min-h-11 items-center gap-2 text-sm text-evo-textSec underline decoration-evo-border underline-offset-4 hover:text-evo-accent"

@@ -197,7 +197,7 @@ function MemberStockResearch() {
           opinião do corretor nem uma recomendação sobre uma empresa real.
         </p>
       )}
-      <header className="py-7 sm:py-10">
+      <header className="page-intro my-7 sm:my-10">
         <div className="flex flex-wrap items-center gap-3 text-xs font-semibold uppercase tracking-widest text-evo-textSec">
           <span className="text-evo-accent">
             {demo ? "Pesquisa de exemplo" : "Pesquisa publicada"}

@@ -30,7 +30,7 @@ export function Analises({ publicView = false }: { publicView?: boolean }) {
     <section
       className={`mx-auto max-w-7xl space-y-6 ${publicView ? "px-5 py-6 md:px-8 md:py-10" : ""}`}
     >
-      <div className="relative flex flex-col items-start justify-between gap-5 border-b border-evo-border pb-8 sm:flex-row sm:pb-10">
+      <div className="page-intro relative flex flex-col items-start justify-between gap-5 sm:flex-row">
         <div className="relative z-10 min-w-0">
           <p className="text-xs font-semibold uppercase tracking-[.18em] text-evo-accent">
             Caderno de mercado / B3

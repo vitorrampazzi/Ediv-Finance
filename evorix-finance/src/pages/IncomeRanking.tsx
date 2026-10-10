@@ -237,7 +237,7 @@ function MemberIncomeRanking() {
       id="pagina-conteudo"
       className="mx-auto max-w-7xl space-y-6 px-4 py-6 sm:px-6 md:py-10"
     >
-      <section className="border-b border-evo-border pb-6 sm:pb-8">
+      <section className="page-intro">
         <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
           <div className="min-w-0 flex-1">
             <p className="text-xs font-semibold uppercase tracking-widest text-evo-accent">

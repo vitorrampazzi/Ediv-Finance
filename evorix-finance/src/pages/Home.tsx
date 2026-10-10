@@ -18,12 +18,12 @@ export function Home() {
       <SiteHeader />
 
       <main id="conteudo">
-        <section className="home-editorial mx-auto grid max-w-7xl items-center gap-9 px-5 py-10 md:grid-cols-[1.2fr_.8fr] md:gap-12 md:px-8 md:py-16">
+        <section className="home-editorial mx-auto grid max-w-7xl items-center gap-7 px-5 py-8 md:grid-cols-[1.2fr_.8fr] md:gap-10 md:px-8 md:py-10">
           <div>
             <span className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[.18em] text-evo-accent">
               <Sparkles size={14} aria-hidden="true" /> Escola do dividendo
             </span>
-            <h1 className="mt-7 max-w-2xl text-4xl font-bold leading-[1.07] tracking-[-.045em] sm:text-5xl lg:text-6xl">
+            <h1 className="mt-5 max-w-2xl text-4xl font-bold leading-[1.07] tracking-[-.045em] sm:text-5xl lg:text-6xl">
               Aprenda sobre ações e dividendos.
               <span className="block mt-2 font-normal text-evo-textSec">
                 Entenda cada cenário.
@@ -34,7 +34,7 @@ export function Home() {
                 ? "Explore as ações e a primeira aula enquanto preparamos a abertura dos cadastros."
                 : "Pesquisas de ações, contexto das empresas e aulas para entender o mercado de dividendos."}
             </p>
-            <div className="mt-8 flex flex-wrap gap-3">
+            <div className="mt-6 flex flex-wrap gap-3">
               <Link
                 to={
                   user
@@ -60,12 +60,12 @@ export function Home() {
               </Link>
             </div>
             {!user && !awaitingRegistration && (
-              <p className="mt-4 text-xs text-evo-textSec">
+              <p className="mt-3 text-sm leading-relaxed text-evo-textSec">
                 Conta gratuita para acessar as pesquisas. Primeira aula aberta.
               </p>
             )}
             {awaitingRegistration && !user && (
-              <p className="mt-3 text-xs text-evo-textSec">
+              <p className="mt-3 text-sm leading-relaxed text-evo-textSec">
                 Novos cadastros em preparação. Já tem conta confirmada?{" "}
                 <Link className="text-evo-accent underline" to="/entrar">
                   Entrar
@@ -79,7 +79,7 @@ export function Home() {
         <RankingHighlights />
         <section
           id="mercado"
-          className="scroll-mt-6 border-y border-evo-border bg-evo-bgSec/70"
+          className="scroll-mt-24 border-y border-evo-border bg-evo-bgSec"
         >
           <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-5 px-5 py-7 md:px-8 md:py-8">
             <div className="flex min-w-0 items-start gap-4">

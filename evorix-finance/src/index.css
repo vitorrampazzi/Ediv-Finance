@@ -19,12 +19,16 @@ body {
   min-width: 320px;
   min-height: 100vh;
   margin: 0;
-  background-color: #363c47;
-  color: #f2f4f7;
+  background-color: #292d34;
+  color: #f6f7f9;
 }
 
 .home-editorial {
-  background-image: radial-gradient(ellipse at 10% 5%, rgb(36 152 155 / 7%), transparent 58%);
+  background-image: radial-gradient(
+    ellipse at 90% 35%,
+    rgb(169 217 209 / 9%),
+    transparent 65%
+  );
 }
 
 .portfolio-value {
@@ -34,7 +38,11 @@ body {
 }
 
 .portfolio-empty {
-  background-image: radial-gradient(ellipse at 0 0, rgb(36 152 155 / 6%), transparent 68%);
+  background-image: radial-gradient(
+    ellipse at 0 0,
+    rgb(36 152 155 / 6%),
+    transparent 68%
+  );
 }
 
 button,
@@ -45,6 +53,9 @@ textarea {
 }
 
 @layer components {
+  .page-intro {
+    @apply border-l-2 border-evo-accent/60 bg-evo-bgSec p-5 sm:p-6;
+  }
   .field {
     @apply min-h-11 w-full rounded-lg border border-evo-border bg-evo-bgMain px-3 text-base sm:text-sm text-evo-textMain;
   }
@@ -93,12 +104,12 @@ button:disabled {
 }
 
 ::-webkit-scrollbar-track {
-  background: #363c47;
+  background: #20252c;
 }
 
 ::-webkit-scrollbar-thumb {
   border-radius: 999px;
-  background: #535b67;
+  background: #647080;
 }
 
 ::-webkit-scrollbar-thumb:hover {
@@ -114,7 +125,7 @@ button:disabled {
   width: 104px;
   height: 96px;
   pointer-events: none;
-  color: #b2cec6;
+  color: #a9d9d1;
 }
 
 .research-visual--hero {
@@ -127,8 +138,8 @@ button:disabled {
   position: absolute;
   inset: 9% 4% 3% 2%;
   background-image:
-    linear-gradient(rgb(178 206 198 / 12%) 1px, transparent 1px),
-    linear-gradient(90deg, rgb(178 206 198 / 12%) 1px, transparent 1px);
+    linear-gradient(rgb(169 217 209 / 22%) 1px, transparent 1px),
+    linear-gradient(90deg, rgb(169 217 209 / 22%) 1px, transparent 1px);
   background-size: 18% 20%;
   mask-image: radial-gradient(ellipse, #000 20%, transparent 74%);
 }
@@ -151,9 +162,9 @@ button:disabled {
   right: 0;
   width: 47%;
   padding: 10% 6% 8%;
-  border: 1px solid rgb(178 206 198 / 48%);
-  background: #424c55;
-  box-shadow: -4px 7px 15px rgb(18 25 31 / 18%);
+  border: 1px solid rgb(169 217 209 / 75%);
+  background: #263c3e;
+  box-shadow: -4px 7px 15px rgb(12 17 22 / 30%);
   transform: rotate(7deg);
   animation: researchSheetFloat 6s ease-in-out infinite;
   animation-delay: -0.8s;
@@ -172,7 +183,7 @@ button:disabled {
 }
 
 .research-visual-sheet-heading span {
-  color: #d7e5e0;
+  color: #e1f2ed;
   font-size: 4px;
   font-weight: 600;
   letter-spacing: 0.12em;
@@ -216,7 +227,7 @@ button:disabled {
   width: 22%;
   padding: 5%;
   border-left: 1px solid currentColor;
-  background: #424c55;
+  background: #263c3e;
   transform: rotate(-7deg);
   animation: researchNoteFloat 7.5s ease-in-out infinite;
   animation-delay: -3s;

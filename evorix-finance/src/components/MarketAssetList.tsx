@@ -53,7 +53,7 @@ export function MarketAssetList({
                 >
                   {asset.name}
                 </p>
-                <p className="mt-1 hidden text-[11px] text-evo-textSec/75 md:block">
+                <p className="mt-1 hidden text-xs text-evo-textSec md:block">
                   {asset.sector || asset.subType || "B3"}
                 </p>
               </div>

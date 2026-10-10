@@ -127,7 +127,7 @@ export function SupportHelpCenter({
 
   return (
     <section aria-labelledby={headingId} className="min-w-0 space-y-7">
-      <div className="grid min-w-0 grid-cols-1 gap-6 border-b border-evo-border pb-6 md:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)] md:items-end">
+      <div className="page-intro grid min-w-0 grid-cols-1 gap-6 md:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)] md:items-end">
         <div className="min-w-0">
           <div className="mb-3 flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.14em] text-evo-accent">
             <CircleHelp size={16} aria-hidden="true" /> Respostas e caminhos

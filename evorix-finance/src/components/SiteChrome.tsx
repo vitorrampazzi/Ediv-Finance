@@ -50,7 +50,7 @@ export function SiteHeader() {
       >
         Pular para o conteúdo
       </a>
-      <header className="sticky top-0 z-40 border-b border-evo-border bg-evo-bgMain/95 backdrop-blur">
+      <header className="sticky top-0 z-40 border-b border-evo-border bg-evo-bgInset">
         <div className="relative mx-auto flex min-h-16 max-w-7xl items-center justify-between gap-3 px-4 py-3 sm:px-5 md:min-h-20 md:px-8">
           <Link
             to="/"
@@ -168,7 +168,7 @@ export function SiteFooter({
   const { user } = useAuth();
 
   return (
-    <footer className="border-t border-evo-border bg-evo-bgSec/70">
+    <footer className="border-t border-evo-border bg-evo-bgInset">
       <div className="mx-auto max-w-7xl px-5 py-9 md:px-8 md:py-12">
         <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-[1.5fr_1fr_1fr]">
           <div>
@@ -264,12 +264,12 @@ export function SiteFooter({
         </div>
 
         <div className="mt-8 border-t border-evo-border pt-5">
-          <p className="text-xs leading-relaxed text-evo-textSec">
+          <p className="max-w-5xl text-sm leading-6 text-evo-textSec">
             A Ediv Finance não é corretora, não executa ordens e não movimenta
             dinheiro. As informações são educativas e não constituem
             recomendação de investimento. Projeções não garantem retorno.
           </p>
-          <p className="mt-4 text-xs text-evo-textSec">
+          <p className="mt-4 text-sm text-evo-textSec">
             © {new Date().getFullYear()} Ediv Finance. · Versão beta
           </p>
         </div>

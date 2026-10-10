@@ -59,13 +59,13 @@ export function OrbitCoins({
       <div className="research-visual-grid" />
       <div className="research-visual-plot">
         <svg viewBox="0 0 160 128" fill="none" focusable="false">
-          <path d="M14 14V111H149" stroke="currentColor" strokeOpacity=".24" />
+          <path d="M14 14V111H149" stroke="currentColor" strokeOpacity=".5" />
           {[24, 47, 70, 93].map((x, index) => (
             <g key={x}>
               <path
                 d={`M${x + 6} ${[53, 33, 48, 19][index]}V${[95, 84, 99, 72][index]}`}
                 stroke="currentColor"
-                strokeOpacity=".65"
+                strokeOpacity=".85"
               />
               <rect
                 x={x}
@@ -74,7 +74,7 @@ export function OrbitCoins({
                 height={[20, 26, 25, 26][index]}
                 rx="1"
                 fill="currentColor"
-                opacity={[0.45, 0.62, 0.4, 0.75][index]}
+                opacity={[0.7, 0.85, 0.65, 0.95][index]}
               />
             </g>
           ))}

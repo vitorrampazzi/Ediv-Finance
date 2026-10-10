@@ -563,7 +563,7 @@ function EdivAssistantSession() {
                 placeholder="Escreva sua dúvida…"
                 autoComplete="off"
                 disabled={busy || (generative && statusLoading)}
-                className="min-h-10 min-w-0 flex-1 bg-transparent text-base sm:text-sm text-evo-textMain outline-none placeholder:text-evo-textSec/70"
+                className="min-h-10 min-w-0 flex-1 bg-transparent text-base sm:text-sm text-evo-textMain outline-none placeholder:text-evo-textSec"
               />
               <button
                 type="submit"
