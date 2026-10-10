@@ -27,6 +27,7 @@ const Glossario = lazy(() =>
   import("./pages/Glossario").then((module) => ({ default: module.Glossario })),
 );
 import { AuthProvider } from "./context/AuthProvider";
+import { useAuth } from "./context/authContext";
 import { RequireAuth } from "./components/RequireAuth";
 import { RequirePermission } from "./components/RequirePermission";
 const AdminPage = lazy(() =>
@@ -59,6 +60,11 @@ const ResetPasswordPage = lazy(() =>
 );
 const Home = lazy(() =>
   import("./pages/Home").then((module) => ({ default: module.Home })),
+);
+const MemberHome = lazy(() =>
+  import("./pages/MemberHome").then((module) => ({
+    default: module.MemberHome,
+  })),
 );
 import { PublicLayout } from "./components/SiteChrome";
 const IncomeRanking = lazy(() =>
@@ -204,10 +210,7 @@ function App() {
               <Route path="/verificar" element={<VerifyEmailPage />} />
               <Route element={<RequireAuth />}>
                 <Route path="/app" element={<DashboardLayout />}>
-                  <Route
-                    index
-                    element={<Navigate to="/app/ranking" replace />}
-                  />
+                  <Route index element={<MemberHome />} />
                   <Route path="aprender" element={<Aprender />} />
                   <Route path="conversas" element={<Conversas />} />
                   <Route
@@ -257,6 +260,7 @@ function App() {
 }
 
 function NotFound() {
+  const { user } = useAuth();
   return (
     <section className="mx-auto flex min-h-[50vh] max-w-xl flex-col items-center justify-center gap-4 text-center">
       <p className="font-numbers text-sm text-evo-accent">404</p>
@@ -265,7 +269,7 @@ function NotFound() {
         O endereço pode estar incorreto ou a página pode ter sido removida.
       </p>
       <Link
-        to="/"
+        to={user ? "/app" : "/"}
         className="inline-flex min-h-11 items-center rounded-lg bg-evo-primary px-4 font-semibold text-white hover:bg-evo-primaryHover focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-evo-accent"
       >
         Voltar ao início

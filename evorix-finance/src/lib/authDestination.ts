@@ -28,7 +28,8 @@ export function safeAuthDestination(value: unknown): string {
       )
     )
       return "/app";
-    return url.pathname + url.search + url.hash;
+    const pathname = url.pathname === "/" ? "/app" : url.pathname;
+    return pathname + url.search + url.hash;
   } catch {
     return "/app";
   }

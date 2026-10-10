@@ -59,7 +59,11 @@ export function normalizedPath(path) {
 export function pageMetadata(path, qa = false) {
   const metadata = publicPages[normalizedPath(path)];
   return {
-    title: metadata?.title || "Ediv Finance",
+    title:
+      metadata?.title ||
+      (normalizedPath(path) === "/app"
+        ? "Início | Ediv Finance"
+        : "Ediv Finance"),
     description: metadata?.description || "Acesse sua conta na Ediv Finance.",
     canonical: metadata ? siteOrigin + normalizedPath(path) : null,
     noindex: qa || !metadata,

@@ -51,7 +51,7 @@ export function GettingStarted({ compact = false }: GettingStartedProps) {
           </h2>
           <Link
             className="inline-flex min-h-11 items-center gap-2 text-sm font-semibold text-evo-textSec transition-colors hover:text-evo-accent focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-evo-accent"
-            to="/suporte"
+            to={user ? "/app/conversas" : "/suporte"}
           >
             Dúvidas? Central de ajuda
             <ArrowRight size={16} aria-hidden="true" />

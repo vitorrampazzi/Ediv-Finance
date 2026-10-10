@@ -10,6 +10,7 @@ import {
   Headset,
   Settings,
   ShieldCheck,
+  House,
 } from "lucide-react";
 import {
   Link,
@@ -23,6 +24,13 @@ import { roleLabels, userCan } from "../lib/permissions";
 import { NotificationsMenu } from "../components/NotificationsMenu";
 
 const navigation = [
+  {
+    to: "/app",
+    label: "Início",
+    shortLabel: "Início",
+    icon: House,
+    end: true,
+  },
   {
     to: "/app/ranking",
     label: "Ranking de previsões",
@@ -47,7 +55,7 @@ const navigation = [
 ];
 
 const pageTitles: Record<string, string> = {
-  "/app": "Ranking de previsões",
+  "/app": "Início",
   "/app/analises": "Análises",
   "/app/ranking": "Ranking de previsões",
   "/app/aprender": "Aprender",
@@ -198,11 +206,11 @@ function ProfileMenu({
               {userCan(user, "support:manage") ? "Atendimentos" : "Conversas"}
             </Link>
             <Link
-              to="/aprender"
+              to="/app"
               onClick={() => setOpen(false)}
               className="flex min-h-11 items-center gap-3 rounded-lg px-3 text-sm text-evo-textSec"
             >
-              Sobre a escola
+              Início da Ediv
             </Link>
             <Link
               to="/app/config"
@@ -259,7 +267,7 @@ export const DashboardLayout = () => {
       <aside
         className={`hidden shrink-0 border-r border-evo-border/70 bg-evo-bgInset transition-[width] duration-200 motion-reduce:transition-none lg:sticky lg:top-0 lg:flex lg:h-screen lg:min-h-0 lg:flex-col ${collapsed ? "w-20" : "w-60"}`}
       >
-        <div className="flex min-h-20 shrink-0 items-center px-3">
+        <div className="flex min-h-20 shrink-0 items-center justify-center px-3">
           <button
             type="button"
             onClick={() => setCollapsed((value) => !value)}
@@ -288,6 +296,10 @@ export const DashboardLayout = () => {
             </span>
           </button>
         </div>
+        <div
+          aria-hidden="true"
+          className="mx-4 mb-4 shrink-0 border-b border-evo-border/50"
+        />
         <nav
           id="account-sidebar-navigation"
           aria-label="Navegação principal"
@@ -401,7 +413,7 @@ export const DashboardLayout = () => {
 
       <nav
         aria-label="Navegação móvel"
-        className="fixed inset-x-0 bottom-0 z-30 grid grid-cols-3 border-t border-evo-border bg-evo-bgInset px-1 pb-[env(safe-area-inset-bottom)] pt-1 lg:hidden"
+        className="fixed inset-x-0 bottom-0 z-30 grid grid-cols-4 border-t border-evo-border bg-evo-bgInset px-1 pb-[env(safe-area-inset-bottom)] pt-1 lg:hidden"
       >
         {navigation.map(({ to, shortLabel, icon: Icon, end }) => (
           <NavLink

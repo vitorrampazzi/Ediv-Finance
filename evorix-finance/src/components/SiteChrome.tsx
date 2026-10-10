@@ -53,7 +53,7 @@ export function SiteHeader() {
       <header className="sticky top-0 z-40 border-b border-evo-border bg-evo-bgInset">
         <div className="relative mx-auto flex min-h-16 max-w-7xl items-center justify-between gap-3 px-4 py-3 sm:px-5 md:min-h-20 md:px-8">
           <Link
-            to="/"
+            to={user ? "/app" : "/"}
             className="flex shrink-0 items-center gap-3"
             aria-label="Ediv Finance, página inicial"
           >
@@ -84,7 +84,7 @@ export function SiteHeader() {
               </NavLink>
             ))}
             {user ? (
-              <Link to="/app/ranking" className="action">
+              <Link to="/app" className="action">
                 Minha conta
               </Link>
             ) : (
@@ -103,7 +103,7 @@ export function SiteHeader() {
           </nav>
           <div className="flex items-center gap-2 lg:hidden">
             <Link
-              to={user ? "/app/ranking" : "/cadastro"}
+              to={user ? "/app" : "/cadastro"}
               className="inline-flex min-h-11 items-center gap-1 rounded-lg bg-evo-primary px-3 text-xs font-semibold text-white"
             >
               {user ? "Minha conta" : "Criar conta"}
@@ -173,7 +173,7 @@ export function SiteFooter({
         <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-[1.5fr_1fr_1fr]">
           <div>
             <Link
-              to="/"
+              to={user ? "/app" : "/"}
               className="inline-flex items-center gap-3"
               aria-label="Ediv Finance, página inicial"
             >
@@ -198,7 +198,10 @@ export function SiteFooter({
             </h2>
             <ul className="mt-3 space-y-2 text-sm text-evo-textSec">
               <li>
-                <Link className="hover:text-evo-textMain" to="/">
+                <Link
+                  className="hover:text-evo-textMain"
+                  to={user ? "/app" : "/"}
+                >
                   Início
                 </Link>
               </li>

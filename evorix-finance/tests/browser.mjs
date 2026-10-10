@@ -561,9 +561,11 @@ try {
       .fill(fixture.accounts.a.email);
     await page.getByLabel("Senha", { exact: true }).fill(fixture.password);
     await page.getByRole("button", { name: "Entrar", exact: true }).click();
-    await page.waitForURL("**/app/ranking");
+    await page.waitForURL("**/app");
     await expect(
-      page.getByRole("heading", { name: /Ranking de previsões/i }).first(),
+      page
+        .getByRole("heading", { name: /Sua escola de ações e dividendos/i })
+        .first(),
     ).toBeVisible();
   });
   await check("Usuário não acessa Administração nem Atendimentos", async () => {

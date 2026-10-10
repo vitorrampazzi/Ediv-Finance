@@ -37,6 +37,60 @@ body {
   overflow-wrap: anywhere;
 }
 
+.journey-preview {
+  background:
+    radial-gradient(ellipse at 50% 30%, rgb(169 217 209 / 7%), transparent 70%),
+    #20252c;
+}
+
+.journey-scene {
+  background-image: radial-gradient(
+    rgb(169 217 209 / 12%) 1px,
+    transparent 1px
+  );
+  background-size: 18px 18px;
+}
+
+.journey-signal {
+  animation: journeySignal 5s linear infinite;
+}
+
+.journey-node {
+  animation: journeyFloat 5s ease-in-out infinite;
+  box-shadow: 0 8px 22px rgb(0 0 0 / 15%);
+}
+
+.journey-scene > div:nth-of-type(2) .journey-node {
+  animation-delay: -1.6s;
+}
+
+.journey-scene > div:nth-of-type(3) .journey-node {
+  animation-delay: -3.2s;
+}
+
+@keyframes journeySignal {
+  to {
+    stroke-dashoffset: -88;
+  }
+}
+
+@keyframes journeyFloat {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-5px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .journey-signal,
+  .journey-node {
+    animation: none;
+  }
+}
+
 .portfolio-empty {
   background-image: radial-gradient(
     ellipse at 0 0,

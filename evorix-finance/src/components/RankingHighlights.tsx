@@ -80,7 +80,7 @@ function MemberRankingHighlights() {
         </div>
         <Link
           className="action"
-          to={showingDemo ? "/ranking?visual=demo" : "/ranking"}
+          to={showingDemo ? "/app/ranking?visual=demo" : "/app/ranking"}
         >
           {showingDemo ? "Explorar demonstração" : "Abrir ranking completo"}
         </Link>
@@ -90,7 +90,7 @@ function MemberRankingHighlights() {
           {error}
           <Link
             className="ml-2 inline-flex min-h-11 items-center text-evo-accent underline"
-            to="/ranking?visual=demo"
+            to="/app/ranking?visual=demo"
           >
             Ver exemplo com dados fictícios
           </Link>

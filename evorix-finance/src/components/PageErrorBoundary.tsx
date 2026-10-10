@@ -1,10 +1,13 @@
 import { Component } from "react";
-import type { ReactNode } from "react";
+import type { ContextType, ReactNode } from "react";
+import { AuthContext } from "../context/authContext";
 
 export class PageErrorBoundary extends Component<
   { children: ReactNode },
   { failed: boolean }
 > {
+  static contextType = AuthContext;
+  declare context: ContextType<typeof AuthContext>;
   state = { failed: false };
   static getDerivedStateFromError() {
     return { failed: true };
@@ -23,7 +26,10 @@ export class PageErrorBoundary extends Component<
           <button className="action" onClick={() => window.location.reload()}>
             Recarregar
           </button>
-          <a href="/" className="ml-4 text-sm underline">
+          <a
+            href={this.context?.user ? "/app" : "/"}
+            className="ml-4 text-sm underline"
+          >
             Voltar ao início
           </a>
         </main>
