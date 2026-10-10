@@ -6,6 +6,7 @@ import { useAuth } from "../context/authContext";
 import { authLink } from "../lib/authDestination";
 import { RankingPreview } from "../components/RankingPreview";
 import { GettingStarted } from "../components/GettingStarted";
+import { HomeMarketHighlights } from "../components/HomeMarketHighlights";
 import { useRegistrationAvailability } from "../hooks/useRegistrationAvailability";
 
 export function Home() {
@@ -81,28 +82,34 @@ export function Home() {
           id="mercado"
           className="scroll-mt-24 border-y border-evo-border bg-evo-bgSec"
         >
-          <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-5 px-5 py-7 md:px-8 md:py-8">
-            <div className="flex min-w-0 items-start gap-4">
-              <BarChart3
-                size={23}
-                className="mt-1 shrink-0 text-evo-accent"
-                aria-hidden="true"
-              />
-              <div className="min-w-0">
-                <h2 className="text-xl font-semibold">
-                  Conheça as ações do mercado
-                </h2>
-                <p className="mt-2 text-sm text-evo-textSec">
-                  Consulte cotações e indicadores na área de análises.
-                </p>
+          <div className="mx-auto max-w-7xl px-5 py-7 md:px-8 md:py-8">
+            <div className="flex flex-wrap items-center justify-between gap-5">
+              <div className="flex min-w-0 items-start gap-4">
+                <BarChart3
+                  size={23}
+                  className="mt-1 shrink-0 text-evo-accent"
+                  aria-hidden="true"
+                />
+                <div className="min-w-0">
+                  <h2 className="text-xl font-semibold">
+                    Conheça as ações do mercado
+                  </h2>
+                  <p className="mt-2 text-sm text-evo-textSec">
+                    Maiores altas percentuais da sessão disponível.
+                  </p>
+                </div>
               </div>
+              <Link
+                to={user ? "/app/analises" : "/mercado"}
+                className="inline-flex min-h-11 shrink-0 items-center gap-2 rounded-lg border border-evo-border px-4 text-sm font-medium text-evo-textMain hover:bg-evo-card"
+              >
+                Explorar análises <ArrowRight size={15} aria-hidden="true" />
+              </Link>
             </div>
-            <Link
-              to={user ? "/app/analises" : "/mercado"}
-              className="inline-flex min-h-11 shrink-0 items-center gap-2 rounded-lg border border-evo-border px-4 text-sm font-medium text-evo-textMain hover:bg-evo-card"
-            >
-              Explorar análises <ArrowRight size={15} aria-hidden="true" />
-            </Link>
+            <HomeMarketHighlights />
+            <p className="mt-4 text-xs text-evo-textSec">
+              Fonte: brapi.dev · Ações brasileiras.
+            </p>
           </div>
         </section>
         <GettingStarted compact />

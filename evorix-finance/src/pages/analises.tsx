@@ -4,10 +4,13 @@ import { MarketAssetList } from "../components/MarketAssetList";
 import { OrbitCoins } from "../components/OrbitCoins";
 import { useMarketAssets } from "../hooks/useMarketAssets";
 import { PageState } from "../components/PageState";
+import { useSearchParams } from "react-router-dom";
 
 export function Analises({ publicView = false }: { publicView?: boolean }) {
-  const [search, setSearch] = useState("");
-  const [searchQuery, setSearchQuery] = useState("");
+  const [params] = useSearchParams();
+  const initialSearch = (params.get("busca") ?? "").slice(0, 80);
+  const [search, setSearch] = useState(initialSearch);
+  const [searchQuery, setSearchQuery] = useState(initialSearch);
   const [sortBy, setSortBy] = useState("volume");
   const [page, setPage] = useState(1);
   const { assets, total, requestedAt, loading, error, retry } = useMarketAssets(

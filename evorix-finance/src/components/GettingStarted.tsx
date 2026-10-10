@@ -57,27 +57,35 @@ export function GettingStarted({ compact = false }: GettingStartedProps) {
             <ArrowRight size={16} aria-hidden="true" />
           </Link>
         </div>
+        <p className="mt-3 max-w-3xl text-sm leading-relaxed text-evo-textSec">
+          Combine a pesquisa das empresas com os fundamentos dos dividendos.
+          Siga este percurso para comparar cenários e entender os números com
+          mais contexto.
+        </p>
         <ol className="mt-5 grid gap-5 border-t border-evo-border pt-5 md:grid-cols-3 md:gap-8">
           {[
             {
               Icon: ChartNoAxesCombined,
               title: "Explore a pesquisa",
-              text: "Compare cenários e entenda a tese de cada empresa.",
+              text: "Leia a tese, o preço-alvo e o horizonte de cada cenário. Abra a empresa para conferir as premissas e os riscos da pesquisa.",
+              action: "Conhecer o ranking",
               to: user ? "/app/ranking" : "/ranking",
             },
             {
               Icon: Building2,
               title: "Conheça as empresas",
-              text: "Consulte as ações e seus indicadores.",
+              text: "Compare cotações e indicadores e relacione os números ao setor e ao negócio da empresa. Vá além da variação de preço da sessão.",
+              action: "Explorar as ações",
               to: user ? "/app/analises" : "/mercado",
             },
             {
               Icon: BookOpen,
               title: "Aprenda sobre dividendos",
-              text: "Avance pelas aulas e pratique com exercícios.",
+              text: "Comece pelos fundamentos dos dividendos. Use as aulas, o glossário e os exercícios para interpretar os termos que aparecem nas análises.",
+              action: "Começar a aprender",
               to: user ? "/app/aprender" : "/aprender",
             },
-          ].map(({ Icon, title, text, to }, index) => (
+          ].map(({ Icon, title, text, action, to }, index) => (
             <li key={title}>
               <Link
                 className="group flex gap-3 rounded-md focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-evo-accent"
@@ -90,15 +98,13 @@ export function GettingStarted({ compact = false }: GettingStartedProps) {
                   <h3 className="flex items-center gap-2 text-sm font-semibold transition-colors group-hover:text-evo-accent">
                     <span className="text-evo-textSec">{index + 1}.</span>
                     {title}
-                    <ArrowRight
-                      className="shrink-0 text-evo-textSec transition-colors group-hover:text-evo-accent"
-                      size={14}
-                      aria-hidden="true"
-                    />
                   </h3>
                   <p className="mt-1 text-sm leading-relaxed text-evo-textSec">
                     {text}
                   </p>
+                  <span className="mt-3 inline-flex min-h-9 items-center gap-2 text-sm font-medium text-evo-accent">
+                    {action} <ArrowRight size={14} aria-hidden="true" />
+                  </span>
                 </div>
               </Link>
             </li>
