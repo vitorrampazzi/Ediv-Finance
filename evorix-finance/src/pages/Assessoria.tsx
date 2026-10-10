@@ -75,9 +75,9 @@ export const Assessoria = () => (
             <Clock3 size={14} aria-hidden="true" /> Pré-lançamento · R$
             29,90/mês
           </span>
-          <h2 className="mt-4 text-3xl font-bold tracking-tight text-evo-textMain md:text-4xl">
+          <h1 className="mt-4 text-3xl font-bold tracking-tight text-evo-textMain md:text-4xl">
             Acompanhamento financeiro com conversa humana
-          </h2>
+          </h1>
           <p className="mt-4 max-w-2xl leading-relaxed text-evo-textSec">
             A proposta é combinar orientação acessível, acompanhamento da
             carteira e respostas claras para suas dúvidas. Você pode enviar uma

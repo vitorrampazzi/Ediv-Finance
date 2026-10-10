@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { spawn } from "node:child_process";
-import { mkdir, writeFile } from "node:fs/promises";
+import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { pathToFileURL } from "node:url";
 import { createFixture } from "./fixture.mjs";
 const runtime = process.env.EDIV_PLAYWRIGHT_PATH;
@@ -131,6 +131,359 @@ try {
       fullPage: true,
     });
   });
+  const journeyEmail = `journey-${Date.now()}@ediv.test`;
+  let journeyPassword = fixture.password;
+  let verificationLink;
+  let journeyId;
+  async function loginJourney(password = journeyPassword) {
+    await page.goto(root + "/entrar?next=%2Fapp%2Faprender");
+    await page.getByLabel("E-mail", { exact: true }).fill(journeyEmail);
+    await page.getByLabel("Senha", { exact: true }).fill(password);
+    await page.getByRole("button", { name: "Entrar", exact: true }).click();
+  }
+  await check(
+    "Cadastro: campos obrigatórios e e-mail inválido não enviam dados",
+    async () => {
+      await page.goto(root + "/cadastro?next=%2Fapp%2Faprender");
+      await expect(page.locator("#register-name")).toBeVisible();
+      await page
+        .getByRole("button", { name: "Criar conta grátis", exact: true })
+        .click();
+      await expect(page.locator("#register-name:invalid")).toBeVisible();
+      await page.getByLabel("Nome", { exact: true }).fill("Usuário temporário");
+      await page.getByLabel("E-mail", { exact: true }).fill("invalido");
+      await page.getByLabel("Senha", { exact: true }).fill(journeyPassword);
+      await page
+        .getByRole("button", { name: "Criar conta grátis", exact: true })
+        .click();
+      await expect(page.locator("#register-email:invalid")).toBeVisible();
+      const [users] = await fixture.pool.execute(
+        "SELECT id FROM users WHERE email=?",
+        [journeyEmail],
+      );
+      assert.equal(users.length, 0);
+    },
+  );
+  await check(
+    "Cadastro pelo formulário cria conta pendente e oferece confirmação",
+    async () => {
+      await page.getByLabel("E-mail", { exact: true }).fill(journeyEmail);
+      const responsePromise = page.waitForResponse(
+        (response) =>
+          response.url().endsWith("/api/auth/register") &&
+          response.request().method() === "POST",
+      );
+      await page
+        .getByRole("button", { name: "Criar conta grátis", exact: true })
+        .click();
+      assert.equal((await responsePromise).status(), 202);
+      await expect(
+        page.getByRole("heading", {
+          name: "Próximo passo: confirmar seu e-mail",
+        }),
+      ).toBeVisible();
+      verificationLink = await page
+        .getByRole("link", {
+          name: "Confirmar e-mail (ambiente de desenvolvimento)",
+          exact: true,
+        })
+        .getAttribute("href");
+      const [users] = await fixture.pool.execute(
+        "SELECT id,email_verified_at FROM users WHERE email=?",
+        [journeyEmail],
+      );
+      assert.equal(users.length, 1);
+      assert.equal(users[0].email_verified_at, null);
+      journeyId = users[0].id;
+    },
+  );
+  await check(
+    "Reenvio de confirmação gera novo link e bloqueia clique duplicado",
+    async () => {
+      const previousLink = verificationLink;
+      await page
+        .getByRole("button", { name: "Reenviar confirmação", exact: true })
+        .click();
+      await expect(
+        page.getByRole("button", { name: /Reenviar em \d+s/ }),
+      ).toBeDisabled();
+      verificationLink = await page
+        .getByRole("link", {
+          name: "Confirmar e-mail (ambiente de desenvolvimento)",
+          exact: true,
+        })
+        .getAttribute("href");
+      assert.notEqual(verificationLink, previousLink);
+    },
+  );
+  await check("Login da conta pendente é recusado", async () => {
+    await loginJourney();
+    await expect(page.getByRole("alert")).toContainText(/confirmad/i);
+    assert.match(page.url(), /\/entrar/);
+  });
+  await check(
+    "Link de confirmação valida a conta sem autenticar automaticamente",
+    async () => {
+      let verificationRequests = 0;
+      const countVerification = (request) => {
+        if (
+          request.url().endsWith("/api/auth/verify-email") &&
+          request.method() === "POST"
+        )
+          verificationRequests++;
+      };
+      page.on("request", countVerification);
+      await page.goto(verificationLink);
+      await expect(
+        page.getByText(
+          "E-mail confirmado. Agora você pode entrar na sua conta.",
+          { exact: true },
+        ),
+      ).toBeVisible();
+      page.off("request", countVerification);
+      assert.equal(
+        verificationRequests,
+        1,
+        "A confirmação deve consumir o token somente uma vez",
+      );
+      const [users] = await fixture.pool.execute(
+        "SELECT email_verified_at FROM users WHERE id=?",
+        [journeyId],
+      );
+      assert.ok(users[0].email_verified_at);
+      assert.equal(
+        (await page.request.get(root + "/api/auth/me")).status(),
+        401,
+      );
+    },
+  );
+  await check(
+    "Senha errada mostra erro e login correto preserva destino",
+    async () => {
+      await fixture.clearLimits();
+      await loginJourney("Senha-incorreta-temporaria!");
+      await expect(page.getByRole("alert")).toBeVisible();
+      await page.getByLabel("Senha", { exact: true }).fill(journeyPassword);
+      await page.getByRole("button", { name: "Entrar", exact: true }).click();
+      await page.waitForURL("**/app/aprender");
+      await expect(
+        page.getByRole("progressbar", {
+          name: "Progresso dos exercícios da trilha",
+          exact: true,
+        }),
+      ).toHaveAttribute("aria-valuenow", "0");
+      await page.goto(root + "/app/perfil");
+      await expect(page.locator("body")).toContainText(journeyEmail);
+      await expect(page.locator("body")).toContainText("Confirmado");
+    },
+  );
+  await check(
+    "Exportação pela tela contém somente a conta e não expõe hashes",
+    async () => {
+      await page.goto(root + "/app/config");
+      const downloaded = page.waitForEvent("download");
+      await page
+        .getByRole("link", { name: "Baixar meus dados (JSON)", exact: true })
+        .click();
+      const download = await downloaded;
+      const text = await readFile(await download.path(), "utf8");
+      const data = JSON.parse(text);
+      assert.equal(data.profile.email, journeyEmail);
+      assert.equal(data.profile.id, journeyId);
+      assert.ok(Array.isArray(data.learningProgress));
+      assert.ok(
+        !text.includes("password_hash") && !text.includes("token_hash"),
+      );
+      assert.ok(!text.includes(fixture.accounts.admin.email));
+    },
+  );
+  await check(
+    "Logout encerra a sessão e restringe a área da conta",
+    async () => {
+      await page
+        .getByRole("button", { name: /^Abrir menu da conta de/ })
+        .click();
+      await page
+        .getByRole("button", { name: "Sair da conta", exact: true })
+        .click();
+      await page.waitForURL("**/entrar");
+      assert.equal(
+        (await page.request.get(root + "/api/auth/me")).status(),
+        401,
+      );
+      await page.goto(root + "/app/config");
+      await page.waitForURL((url) => url.pathname === "/entrar");
+    },
+  );
+  let resetLink;
+  await check(
+    "Esqueci minha senha oferece link de teste para a conta confirmada",
+    async () => {
+      await page.goto(root + "/recuperar-senha");
+      await page.getByLabel("E-mail", { exact: true }).fill(journeyEmail);
+      await page
+        .getByRole("button", { name: "Enviar link", exact: true })
+        .click();
+      await expect(page.getByRole("status")).toContainText(
+        /link|enviamos|enviado/i,
+      );
+      resetLink = await page
+        .getByRole("link", {
+          name: "Link local de desenvolvimento",
+          exact: true,
+        })
+        .getAttribute("href");
+      assert.ok(resetLink);
+    },
+  );
+  await check(
+    "Redefinição rejeita senhas diferentes e aceita senha válida",
+    async () => {
+      await page.goto(resetLink);
+      journeyPassword = fixture.password + "-reset";
+      await page
+        .getByLabel("Nova senha", { exact: true })
+        .fill(journeyPassword);
+      await page
+        .getByLabel("Repita a senha", { exact: true })
+        .fill(journeyPassword + "-different");
+      await page
+        .getByRole("button", { name: "Alterar senha", exact: true })
+        .click();
+      await expect(page.getByRole("alert")).toContainText(
+        "As senhas precisam ser iguais",
+      );
+      await page
+        .getByLabel("Repita a senha", { exact: true })
+        .fill(journeyPassword);
+      await page
+        .getByRole("button", { name: "Alterar senha", exact: true })
+        .click();
+      await expect(page.locator("body")).toContainText(
+        "Senha alterada. Todas as sessões foram encerradas.",
+      );
+      await loginJourney();
+      await page.waitForURL("**/app/aprender");
+    },
+  );
+  await check(
+    "Troca de senha exige a atual e encerra a sessão após sucesso",
+    async () => {
+      await page.goto(root + "/app/config");
+      const changedPassword = fixture.password + "-changed";
+      await page
+        .locator("#settings-current-password")
+        .fill("Senha-atual-incorreta!");
+      await page
+        .getByLabel("Nova senha", { exact: true })
+        .fill(changedPassword);
+      await page
+        .getByLabel("Repita a nova senha", { exact: true })
+        .fill(changedPassword);
+      await page
+        .getByRole("button", { name: "Salvar e entrar novamente", exact: true })
+        .click();
+      await expect(page.getByRole("alert")).toContainText(
+        "Senha atual incorreta",
+      );
+      await page.locator("#settings-current-password").fill(journeyPassword);
+      await page
+        .getByRole("button", { name: "Salvar e entrar novamente", exact: true })
+        .click();
+      await page.waitForURL("**/entrar");
+      journeyPassword = changedPassword;
+      assert.equal(
+        (await page.request.get(root + "/api/auth/me")).status(),
+        401,
+      );
+      await loginJourney();
+      await page.waitForURL("**/app/aprender");
+    },
+  );
+  await check(
+    "Encerrar todas as sessões invalida também uma segunda janela",
+    async () => {
+      const other = await context(null);
+      await other.addCookies(await guest.cookies());
+      const otherPage = await other.newPage();
+      assert.equal(
+        (await otherPage.request.get(root + "/api/auth/me")).status(),
+        200,
+      );
+      await page.goto(root + "/app/config");
+      await page
+        .getByRole("button", { name: "Encerrar todas as sessões", exact: true })
+        .click();
+      await page.waitForURL("**/entrar");
+      assert.equal(
+        (await otherPage.request.get(root + "/api/auth/me")).status(),
+        401,
+      );
+      await other.close();
+      await fixture.clearLimits();
+      await loginJourney();
+      await page.waitForURL("**/app/aprender");
+    },
+  );
+  await check(
+    "Excluir conta exige EXCLUIR, permite cancelar e rejeita senha errada",
+    async () => {
+      await page.goto(root + "/app/config");
+      await page
+        .getByRole("button", { name: "Solicitar exclusão", exact: true })
+        .click();
+      await expect(
+        page.getByRole("button", {
+          name: "Excluir permanentemente",
+          exact: true,
+        }),
+      ).toBeDisabled();
+      await page.getByRole("button", { name: "Cancelar", exact: true }).click();
+      await expect(page.locator("#delete-account-password")).toHaveCount(0);
+      await page
+        .getByRole("button", { name: "Solicitar exclusão", exact: true })
+        .click();
+      await page
+        .locator("#delete-account-password")
+        .fill("Senha-errada-temporaria!");
+      await page.getByLabel("Digite EXCLUIR", { exact: true }).fill("EXCLUIR");
+      await page
+        .getByRole("button", { name: "Excluir permanentemente", exact: true })
+        .click();
+      await expect(page.getByRole("alert")).toBeVisible();
+      const [users] = await fixture.pool.execute(
+        "SELECT id FROM users WHERE id=?",
+        [journeyId],
+      );
+      assert.equal(users.length, 1);
+    },
+  );
+  await check(
+    "Exclusão pelo formulário apaga conta e impede novo login",
+    async () => {
+      await page.locator("#delete-account-password").fill(journeyPassword);
+      await page
+        .getByRole("button", { name: "Excluir permanentemente", exact: true })
+        .click();
+      await page.waitForURL(root + "/");
+      const [users] = await fixture.pool.execute(
+        "SELECT id FROM users WHERE id=?",
+        [journeyId],
+      );
+      assert.equal(users.length, 0);
+      const [sessions] = await fixture.pool.execute(
+        "SELECT id FROM user_sessions WHERE user_id=?",
+        [journeyId],
+      );
+      assert.equal(sessions.length, 0);
+      assert.equal(
+        (await page.request.get(root + "/api/auth/me")).status(),
+        401,
+      );
+      await loginJourney();
+      await expect(page.getByRole("alert")).toBeVisible();
+    },
+  );
   await publish(csv);
   const second = await publish(csv.replace(";20;12;", ";30;13;"));
   await check(
@@ -168,6 +521,10 @@ try {
           "/aprender",
           "/mercado",
           "/assessoria",
+          "/metodologia",
+          "/suporte",
+          "/glossario",
+          "/privacidade",
         ]) {
           await page.goto(root + path);
           await expect(page.locator("h1,h2").first()).toBeVisible();
@@ -288,23 +645,29 @@ try {
           exact: true,
         })
         .click();
-      await expect(page.getByRole("progressbar")).toHaveAttribute(
-        "aria-valuenow",
-        "1",
-      );
+      await expect(
+        page.getByRole("progressbar", {
+          name: "Progresso dos exercícios da trilha",
+          exact: true,
+        }),
+      ).toHaveAttribute("aria-valuenow", "1");
       await page.reload();
-      await expect(page.getByRole("progressbar")).toHaveAttribute(
-        "aria-valuenow",
-        "1",
-      );
+      await expect(
+        page.getByRole("progressbar", {
+          name: "Progresso dos exercícios da trilha",
+          exact: true,
+        }),
+      ).toHaveAttribute("aria-valuenow", "1");
       const other = await context(null);
       await other.addCookies(await guest.cookies());
       const otherPage = await other.newPage();
       await otherPage.goto(root + "/app/aprender#risco");
-      await expect(otherPage.getByRole("progressbar")).toHaveAttribute(
-        "aria-valuenow",
-        "1",
-      );
+      await expect(
+        otherPage.getByRole("progressbar", {
+          name: "Progresso dos exercícios da trilha",
+          exact: true,
+        }),
+      ).toHaveAttribute("aria-valuenow", "1");
       await other.close();
     },
   );
@@ -368,7 +731,7 @@ try {
       .getByText("Área da equipe · preparar nova publicação", { exact: true })
       .click();
     await analystPage
-      .getByText("Criar pesquisa pelo site", { exact: true })
+      .getByText("Criar pesquisa pelo site · editor guiado", { exact: true })
       .click();
   }
   await check(
@@ -383,18 +746,22 @@ try {
       await analystPage
         .getByLabel("Empresa *", { exact: true })
         .fill("Empresa do rascunho");
+      await analystPage.getByRole("button", { name: /2\.\s*Cenário/ }).click();
       await analystPage
         .getByLabel("Potencial (%) *", { exact: true })
         .fill("25");
       await analystPage
         .getByRole("button", {
-          name: "Adicionar ativo ao rascunho",
+          name: "Adicionar empresa à lista",
           exact: true,
         })
         .click();
       await analystPage.getByLabel("Ticker *", { exact: true }).fill("ITUB4");
       await analystPage
-        .getByRole("button", { name: "Salvar novo rascunho", exact: true })
+        .getByRole("button", {
+          name: "Salvar novo rascunho na conta",
+          exact: true,
+        })
         .click();
       await expect(
         analystPage.getByRole("status").filter({ hasText: "Rascunho salvo" }),
@@ -415,14 +782,24 @@ try {
         analystPage.getByLabel("Título da publicação", { exact: true }),
       ).toHaveValue("Pesquisa salva pelo navegador");
       await expect(
-        analystPage.getByText("Rascunho · 1 ativo(s)", { exact: true }),
+        analystPage.getByRole("heading", {
+          name: "Lista da pesquisa · 1 / 300 ações",
+          exact: true,
+        }),
       ).toBeVisible();
     },
   );
   await check("Editor passa pela prévia e publicação explícita", async () => {
     await analystPage
+      .getByRole("button", { name: "Cancelar preenchimento", exact: true })
+      .click();
+    await analystPage
+      .getByRole("dialog")
+      .getByRole("button", { name: "Descartar campos", exact: true })
+      .click();
+    await analystPage
       .getByRole("button", {
-        name: "Usar rascunho para preparar prévia",
+        name: "Preparar lista para validar e ver prévia",
         exact: true,
       })
       .click();
@@ -431,7 +808,7 @@ try {
       .click();
     await expect(
       analystPage.getByRole("heading", {
-        name: "Prévia · 1 ativos",
+        name: "Prévia · 1 ações",
         exact: true,
       }),
     ).toBeVisible();

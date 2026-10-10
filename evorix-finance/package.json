@@ -18,7 +18,8 @@
     "lint": "eslint .",
     "test": "node --test tests/unit.test.mjs tests/site.test.mjs tests/portfolio-insights.test.mjs",
     "test:integration:aiven": "node --env-file=.env.aiven tests/integration.test.mjs",
-    "test:browser:aiven": "node --env-file=.env.aiven tests/browser.mjs",
+    "test:browser:aiven": "node --env-file=.env.aiven tests/run-browser.mjs",
+    "test:production": "node tests/production-smoke.mjs",
     "test:backup:aiven": "node --env-file=.env.aiven tests/backup.mjs",
     "preview": "vite preview",
     "db:backup:aiven": "node --env-file=.env.aiven.runtime --env-file=.env.backup server/backup.js backup",
@@ -26,7 +27,7 @@
     "access:preserve-team:aiven": "node --env-file=.env.aiven.runtime server/setup-access.js legacy",
     "access:grant-admin:aiven": "node --env-file=.env.aiven.runtime server/setup-access.js admin",
     "test:integration": "node tests/integration.test.mjs",
-    "test:browser": "node tests/browser.mjs",
+    "test:browser": "node tests/run-browser.mjs",
     "test:backup": "node tests/backup.mjs",
     "export:source": "node scripts/export-source.mjs"
   },

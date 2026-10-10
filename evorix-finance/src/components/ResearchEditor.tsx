@@ -309,6 +309,8 @@ export function ResearchEditor({
                   {maximum >= 2000 ? (
                     <textarea
                       id={`${fieldPrefix}-${key}`}
+                      aria-label={label + (required ? " *" : " (opcional)")}
+                      aria-describedby={`${fieldPrefix}-${key}-count`}
                       className={input + " min-h-32"}
                       maxLength={maximum}
                       value={draft[key]}
@@ -318,6 +320,8 @@ export function ResearchEditor({
                   ) : (
                     <input
                       id={`${fieldPrefix}-${key}`}
+                      aria-label={label + (required ? " *" : " (opcional)")}
+                      aria-describedby={`${fieldPrefix}-${key}-count`}
                       className={input}
                       required={required}
                       maxLength={maximum}
@@ -335,7 +339,10 @@ export function ResearchEditor({
                       onChange={(event) => updateField(key, event.target.value)}
                     />
                   )}
-                  <span className="mt-1 block text-xs text-evo-textSec">
+                  <span
+                    id={`${fieldPrefix}-${key}-count`}
+                    className="mt-1 block text-xs text-evo-textSec"
+                  >
                     {draft[key].length.toLocaleString("pt-BR")} /{" "}
                     {maximum.toLocaleString("pt-BR")} caracteres
                   </span>

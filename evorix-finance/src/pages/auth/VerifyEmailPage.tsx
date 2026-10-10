@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { Link, useLocation } from "react-router-dom";
 import { ArrowLeft, CheckCircle2 } from "lucide-react";
@@ -12,6 +12,7 @@ export function VerifyEmailPage() {
     new URLSearchParams(location.search).get("next"),
   );
   const [token] = useState(() => window.location.hash.slice(1));
+  const verification = useRef<Promise<string> | null>(null);
   const [state, setState] = useState<{
     loading: boolean;
     error: string;
@@ -30,31 +31,39 @@ export function VerifyEmailPage() {
     );
     if (!token) return;
 
-    const controller = new AbortController();
-    fetch("/api/auth/verify-email", {
-      method: "POST",
-      credentials: "same-origin",
-      headers: {
-        Accept: "application/json",
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ token }),
-      signal: controller.signal,
-    })
-      .then(async (response) => {
+    let active = true;
+    // Reuse this one-time mutation when StrictMode replays the effect.
+    // Aborting a request does not undo a token already consumed by the server.
+    if (!verification.current) {
+      verification.current = fetch("/api/auth/verify-email", {
+        method: "POST",
+        credentials: "same-origin",
+        signal: AbortSignal.timeout(45_000),
+        headers: {
+          Accept: "application/json",
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ token }),
+      }).then(async (response) => {
         const result = await response.json().catch(() => ({}));
         if (!response.ok)
           throw new Error(
             result.error || "Não foi possível confirmar o e-mail.",
           );
+        return result.message || "E-mail confirmado.";
+      });
+    }
+    verification.current
+      .then((message) => {
+        if (!active) return;
         setState({
           loading: false,
           error: "",
-          message: result.message || "E-mail confirmado.",
+          message,
         });
       })
       .catch((reason) => {
-        if (reason instanceof Error && reason.name === "AbortError") return;
+        if (!active) return;
         setState({
           loading: false,
           error:
@@ -64,7 +73,9 @@ export function VerifyEmailPage() {
           message: "",
         });
       });
-    return () => controller.abort();
+    return () => {
+      active = false;
+    };
   }, [token]);
 
   return (
