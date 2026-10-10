@@ -1,5 +1,29 @@
-import { BookOpen, LockKeyhole } from "lucide-react";
+import {
+  ArrowUpRight,
+  ChartNoAxesCombined,
+  Files,
+  ShieldCheck,
+} from "lucide-react";
 import { Link } from "react-router-dom";
+import { OrbitCoins } from "./OrbitCoins";
+
+const features = [
+  {
+    Icon: ChartNoAxesCombined,
+    title: "Cenários",
+    text: "Potencial, preço-alvo e horizonte.",
+  },
+  {
+    Icon: ShieldCheck,
+    title: "Tese e riscos",
+    text: "Premissas e contrapontos da análise.",
+  },
+  {
+    Icon: Files,
+    title: "Dados e fontes",
+    text: "Empresa, autoria e versões da pesquisa.",
+  },
+];
 
 export function RankingPreview() {
   return (
@@ -7,47 +31,45 @@ export function RankingPreview() {
       className="border-y border-evo-border"
       aria-labelledby="ranking-preview-title"
     >
-      <div className="border-b border-evo-border py-6">
-        <p className="text-xs font-semibold uppercase tracking-widest text-evo-accent">
-          Pesquisa com contexto
-        </p>
-        <h2 id="ranking-preview-title" className="mt-3 text-xl font-semibold">
-          O que você encontra no ranking
-        </h2>
-        <p className="mt-2 text-sm leading-relaxed text-evo-textSec">
-          Entenda a empresa, a tese e os riscos antes de interpretar uma
-          previsão.
-        </p>
+      <div className="flex items-center justify-between gap-4 py-5">
+        <div className="min-w-0">
+          <p className="text-xs font-semibold uppercase tracking-widest text-evo-accent">
+            Ranking de previsões
+          </p>
+          <h2
+            id="ranking-preview-title"
+            className="mt-3 max-w-xs text-xl font-semibold"
+          >
+            O cenário por trás de cada ação
+          </h2>
+        </div>
+        <div className="shrink-0">
+          <OrbitCoins variant="ranking" size="sm" />
+        </div>
       </div>
-      <div className="py-6">
-        <p className="mb-3 text-xs font-medium text-evo-textSec">
-          Exemplo ilustrativo do formato · sem dados de pesquisa
-        </p>
-        <ol className="divide-y divide-evo-border">
-          {[
-            "Empresa e posição na lista",
-            "Cenário, horizonte e premissas",
-            "Fontes, autoria e riscos",
-          ].map((label, index) => (
-            <li key={label} className="flex items-center gap-4 py-5">
-              <span className="font-numbers text-lg text-evo-accent">
-                0{index + 1}
-              </span>
-              <span className="text-sm">{label}</span>
-            </li>
-          ))}
-        </ol>
-        <p className="mt-4 flex items-start gap-2 text-xs leading-relaxed text-evo-textSec">
-          <LockKeyhole size={16} className="shrink-0" aria-hidden="true" /> O
-          ranking é acessado após entrar na conta. Projeções não garantem
-          retorno.
-        </p>
+      <dl className="divide-y divide-evo-border border-t border-evo-border">
+        {features.map(({ Icon, title, text }) => (
+          <div key={title} className="flex items-start gap-3 py-4">
+            <Icon
+              size={18}
+              className="mt-0.5 shrink-0 text-evo-accent"
+              aria-hidden="true"
+            />
+            <div className="min-w-0">
+              <dt className="text-sm font-semibold">{title}</dt>
+              <dd className="mt-1 text-xs leading-relaxed text-evo-textSec">
+                {text}
+              </dd>
+            </div>
+          </div>
+        ))}
+      </dl>
+      <div className="pb-4">
         <Link
-          to="/aprender#ranking"
-          className="mt-5 inline-flex min-h-11 items-center gap-2 text-sm text-evo-accent underline"
+          to="/metodologia"
+          className="inline-flex min-h-11 items-center gap-2 text-sm text-evo-textSec underline decoration-evo-border underline-offset-4 hover:text-evo-accent"
         >
-          <BookOpen size={16} aria-hidden="true" /> Como interpretar uma
-          previsão
+          Como funciona a pesquisa <ArrowUpRight size={15} aria-hidden="true" />
         </Link>
       </div>
     </aside>

@@ -3,7 +3,6 @@ import { Link } from "react-router-dom";
 import { apiRequest, ApiError } from "../lib/api";
 import { rankingDemoEntries } from "../lib/rankingDemo";
 import { useAuth } from "../context/authContext";
-import { RankingAccessLanding } from "./RankingAccessLanding";
 
 type Publication = {
   id: string | null;
@@ -19,20 +18,7 @@ type Publication = {
 
 export function RankingHighlights() {
   const { user, loading } = useAuth();
-  if (loading)
-    return (
-      <section className="mx-auto max-w-7xl px-5 pb-14 md:px-8">
-        <p role="status" className="text-sm text-evo-textSec">
-          Verificando acesso ao ranking…
-        </p>
-      </section>
-    );
-  if (!user)
-    return (
-      <section className="mx-auto max-w-7xl px-5 pb-14 md:px-8">
-        <RankingAccessLanding compact />
-      </section>
-    );
+  if (loading || !user) return null;
   return <MemberRankingHighlights key={user.id} />;
 }
 

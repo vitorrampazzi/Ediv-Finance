@@ -160,7 +160,11 @@ export function SiteHeader() {
     </>
   );
 }
-export function SiteFooter() {
+export function SiteFooter({
+  showRegistrationLink = true,
+}: {
+  showRegistrationLink?: boolean;
+}) {
   const { user } = useAuth();
 
   return (
@@ -248,7 +252,7 @@ export function SiteFooter() {
                   Dúvidas e suporte
                 </Link>
               </li>
-              {!user && (
+              {!user && showRegistrationLink && (
                 <li>
                   <Link className="hover:text-evo-textMain" to="/cadastro">
                     Criar conta
@@ -263,7 +267,7 @@ export function SiteFooter() {
           <p className="text-xs leading-relaxed text-evo-textSec">
             A Ediv Finance não é corretora, não executa ordens e não movimenta
             dinheiro. As informações são educativas e não constituem
-            recomendação de investimento.
+            recomendação de investimento. Projeções não garantem retorno.
           </p>
           <p className="mt-4 text-xs text-evo-textSec">
             © {new Date().getFullYear()} Ediv Finance. · Versão beta

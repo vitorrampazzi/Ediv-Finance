@@ -31,8 +31,83 @@ const questions = [
   ],
 ];
 
-export function GettingStarted() {
+type GettingStartedProps = {
+  compact?: boolean;
+};
+
+export function GettingStarted({ compact = false }: GettingStartedProps) {
   const { user } = useAuth();
+
+  if (compact) {
+    return (
+      <section
+        id="como-funciona"
+        aria-labelledby="getting-started-heading"
+        className="mx-auto max-w-7xl px-5 py-8 md:px-8 md:py-10"
+      >
+        <div className="flex flex-wrap items-center justify-between gap-x-6 gap-y-2">
+          <h2 id="getting-started-heading" className="text-xl font-bold">
+            Como aproveitar a Ediv
+          </h2>
+          <Link
+            className="inline-flex min-h-11 items-center gap-2 text-sm font-semibold text-evo-textSec transition-colors hover:text-evo-accent focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-evo-accent"
+            to="/suporte"
+          >
+            Dúvidas? Central de ajuda
+            <ArrowRight size={16} aria-hidden="true" />
+          </Link>
+        </div>
+        <ol className="mt-5 grid gap-5 border-t border-evo-border pt-5 md:grid-cols-3 md:gap-8">
+          {[
+            {
+              Icon: ChartNoAxesCombined,
+              title: "Explore a pesquisa",
+              text: "Compare cenários e entenda a tese de cada empresa.",
+              to: user ? "/app/ranking" : "/ranking",
+            },
+            {
+              Icon: Building2,
+              title: "Conheça as empresas",
+              text: "Consulte as ações e seus indicadores.",
+              to: user ? "/app/analises" : "/mercado",
+            },
+            {
+              Icon: BookOpen,
+              title: "Aprenda sobre dividendos",
+              text: "Avance pelas aulas e pratique com exercícios.",
+              to: user ? "/app/aprender" : "/aprender",
+            },
+          ].map(({ Icon, title, text, to }, index) => (
+            <li key={title}>
+              <Link
+                className="group flex gap-3 rounded-md focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-evo-accent"
+                to={to}
+              >
+                <span className="flex size-10 shrink-0 items-center justify-center rounded-full border border-evo-border text-evo-accent">
+                  <Icon size={19} aria-hidden="true" />
+                </span>
+                <div className="min-w-0">
+                  <h3 className="flex items-center gap-2 text-sm font-semibold transition-colors group-hover:text-evo-accent">
+                    <span className="text-evo-textSec">{index + 1}.</span>
+                    {title}
+                    <ArrowRight
+                      className="shrink-0 text-evo-textSec transition-colors group-hover:text-evo-accent"
+                      size={14}
+                      aria-hidden="true"
+                    />
+                  </h3>
+                  <p className="mt-1 text-sm leading-relaxed text-evo-textSec">
+                    {text}
+                  </p>
+                </div>
+              </Link>
+            </li>
+          ))}
+        </ol>
+      </section>
+    );
+  }
+
   return (
     <section
       id="como-funciona"
