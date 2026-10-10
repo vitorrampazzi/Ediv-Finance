@@ -1,6 +1,6 @@
 # Pesquisa, aprendizado e testes
 
-Resultado da rodada executada: [RELATORIO-TESTES.md](RELATORIO-TESTES.md).
+Resultado da rodada atual do MVP: [RELATORIO-TESTES-MVP.md](RELATORIO-TESTES-MVP.md). Histórico da rodada anterior: [RELATORIO-TESTES.md](RELATORIO-TESTES.md).
 
 ## Recursos novos
 
