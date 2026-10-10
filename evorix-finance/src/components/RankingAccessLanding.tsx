@@ -97,10 +97,6 @@ export function RankingAccessLanding({
             <BookOpen size={16} aria-hidden="true" /> Como interpretar uma
             previsão
           </Link>
-          <p className="max-w-xl text-xs leading-relaxed text-evo-textSec">
-            Previsões dependem de premissas e não garantem retorno. A ordem do
-            ranking não representa probabilidade de lucro.
-          </p>
         </div>
       )}
     </section>

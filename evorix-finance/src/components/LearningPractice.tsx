@@ -12,7 +12,7 @@ const exercises = {
     secondValue: "40",
     formula: "(Proventos por ação ÷ preço de referência) × 100",
     resultLabel: "DY do exemplo",
-    note: "Período do exemplo: 12 meses. Um DY histórico não promete o mesmo pagamento no futuro.",
+    note: "Período do exemplo: 12 meses.",
   },
   payout: {
     title: "Payout",
@@ -35,7 +35,7 @@ const exercises = {
     secondValue: "100",
     formula: "(Preço no cenário ÷ preço de referência − 1) × 100",
     resultLabel: "Variação hipotética",
-    note: "Não inclui dividendos, custos ou impostos e não estima a probabilidade de o cenário acontecer.",
+    note: "Diferença percentual entre o preço do cenário e o preço de referência.",
   },
 };
 type ExerciseId = keyof typeof exercises;
@@ -88,8 +88,8 @@ export function LearningPractice() {
         Aprenda mudando os números
       </h2>
       <p className="mt-2 max-w-2xl text-sm leading-relaxed text-evo-textSec">
-        Experimente fórmulas com valores fictícios. Esta atividade não consulta
-        cotações nem faz uma previsão de investimento.
+        Experimente as fórmulas com valores fictícios e observe como o resultado
+        muda.
       </p>
       <div
         className="mt-5 flex flex-wrap gap-2"

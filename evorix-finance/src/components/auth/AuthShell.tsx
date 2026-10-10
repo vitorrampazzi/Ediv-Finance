@@ -37,11 +37,6 @@ export function AuthShell({
         >
           <ArrowLeft size={16} /> Voltar ao site
         </Link>
-        <p className="mt-6 border-t border-evo-border pt-4 text-xs leading-relaxed text-evo-textSec">
-          Uma plataforma de pesquisa e educação sobre ações e dividendos. Não
-          conecta corretoras nem movimenta dinheiro. Nunca use a senha de outro
-          serviço.
-        </p>
       </section>
     </main>
   );

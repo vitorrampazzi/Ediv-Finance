@@ -10,8 +10,7 @@ export function ResearchCoverage({ entry }: { entry: Entry }) {
         Conteúdo disponível · {coverage.filled}/{coverage.total}
       </summary>
       <p className="mt-1 text-xs leading-5 text-evo-textSec">
-        Campos preenchidos nesta versão. Esta contagem não representa qualidade
-        da pesquisa, segurança ou potencial de retorno.
+        Veja os campos preenchidos nesta versão.
       </p>
       <ul className="mt-4 space-y-3">
         {coverage.fields.map((field) => (

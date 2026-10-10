@@ -209,20 +209,5 @@ export const Assessoria = () => (
         </ul>
       </Card>
     </section>
-
-    <section className="rounded-xl border border-evo-border bg-evo-bgSec p-5 md:p-6">
-      <h3 className="font-semibold text-evo-textMain">
-        Como funcionam recomendações personalizadas?
-      </h3>
-      <p className="mt-2 text-sm leading-relaxed text-evo-textSec">
-        Recomendações individualizadas sobre valores mobiliários dependem do
-        enquadramento e das autorizações aplicáveis à atividade. Registro como
-        assessor vinculado a uma instituição não é automaticamente o mesmo que
-        autorização para consultoria independente. A identificação, as
-        credenciais, o vínculo e os limites de atuação serão apresentados antes
-        da contratação. A Ediv Finance não envia ordens nem movimenta
-        investimentos.
-      </p>
-    </section>
   </section>
 );

@@ -241,12 +241,14 @@ function MemberIncomeRanking() {
         <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
           <div className="min-w-0 flex-1">
             <p className="text-xs font-semibold uppercase tracking-widest text-evo-accent">
-              Estudar cenários · entender riscos
+              {showingDemo
+                ? "Demonstração · dados fictícios"
+                : "Pesquisa de ações"}
             </p>
             <h1 className="mt-3 text-3xl font-bold">Ranking de previsões</h1>
             <p className="mt-3 max-w-3xl leading-relaxed text-evo-textSec">
               {showingDemo ? (
-                "Conheça o formato da pesquisa: cenários, números e módulos de análise reunidos em uma demonstração com dados fictícios."
+                "Explore os cenários, os indicadores e os módulos de análise por empresa."
               ) : (
                 <>
                   Explore as teses publicadas pela equipe, entenda os fatores
@@ -274,9 +276,6 @@ function MemberIncomeRanking() {
               >
                 Como funciona a pesquisa
               </Link>
-              <span className="self-center text-xs text-evo-textSec">
-                A ordem da lista não representa uma probabilidade de lucro.
-              </span>
             </div>
           </div>
           <div className="shrink-0 self-end sm:self-center">
@@ -319,41 +318,6 @@ function MemberIncomeRanking() {
           </div>
         ))}
       </section>
-      {showingDemo && (
-        <section
-          className="overflow-hidden rounded-2xl border border-evo-accent/30 bg-evo-card"
-          aria-label="Demonstração com dados fictícios"
-        >
-          <div className="border-b border-evo-border bg-evo-accent/5 p-5 sm:p-6">
-            <span className="inline-flex rounded-full border border-evo-accent/30 px-3 py-1 text-xs font-semibold text-evo-accent">
-              Demonstração · dados fictícios
-            </span>
-            <h2 className="mt-3 text-xl font-semibold">
-              Uma prévia da sua próxima pesquisa
-            </h2>
-            <p className="mt-2 max-w-3xl text-sm leading-relaxed text-evo-textSec">
-              Explore empresas inventadas, cenários e indicadores de exemplo.
-              Todos os preços, percentuais e gráficos desta demonstração são
-              simulados; não representam a pesquisa do corretor nem ativos
-              negociáveis.
-            </p>
-          </div>
-          <dl className="grid divide-y divide-evo-border sm:grid-cols-3 sm:divide-x sm:divide-y-0">
-            {[
-              ["06", "Empresas de exemplo"],
-              ["06", "Módulos por empresa"],
-              ["03", "Trimestres ilustrativos"],
-            ].map(([value, label]) => (
-              <div key={label} className="p-5 sm:px-6">
-                <dt className="text-xs text-evo-textSec">{label}</dt>
-                <dd className="mt-2 font-numbers text-3xl font-semibold">
-                  {value}
-                </dd>
-              </div>
-            ))}
-          </dl>
-        </section>
-      )}
       {error && (
         <div className="notice-error">
           <p role="alert">{error}</p>
@@ -397,8 +361,7 @@ function MemberIncomeRanking() {
             informações da empresa, dívida líquida e estatísticas. Preencha cada
             módulo como texto, com os valores, unidades e datas que deseja
             exibir. Período e fonte também são opcionais. Campos vazios aparecem
-            como não informados. A lista de ações para pesquisa, sozinha, não é
-            uma previsão.
+            como não informados.
           </p>
           <div className="mt-4 grid gap-3 sm:grid-cols-2">
             {(
@@ -560,17 +523,17 @@ function MemberIncomeRanking() {
                   ? ranking.title
                   : "Pesquisa selecionada"}
             </h2>
-            <p className="mt-1 text-xs text-evo-textSec">
-              {showingDemo
-                ? "Ordem ilustrativa para apresentação da interface"
-                : !current
+            {!showingDemo && (
+              <p className="mt-1 text-xs text-evo-textSec">
+                {!current
                   ? loading
                     ? "Carregando a versão selecionada…"
                     : "Pesquisa indisponível"
                   : ranking.updatedAt
                     ? "Publicado em " + date(ranking.updatedAt)
                     : "Aguardando a primeira publicação"}
-            </p>
+              </p>
+            )}
           </div>
           {!showingDemo && (
             <label className="text-xs text-evo-textSec">
@@ -682,8 +645,8 @@ function MemberIncomeRanking() {
             {loading && !showingDemo
               ? ""
               : showingDemo
-                ? "empresas fictícias · valores simulados para apresentação."
-                : "ações · valores informados pelo autor, sem garantia de retorno."}
+                ? "empresas de exemplo"
+                : "ações"}
           </p>
           {(hasFilters || sort !== "rank") && (
             <button
@@ -865,21 +828,11 @@ function MemberIncomeRanking() {
           </ol>
         )}
       </section>
-      <aside className="rounded-xl border border-evo-border bg-evo-card p-4 text-xs leading-relaxed text-evo-textSec">
-        {showingDemo ? (
-          "Demonstração da interface: empresas, ordem, preços, percentuais, indicadores e argumentos são fictícios. Não são recomendações nem dados de mercado. As publicações reais ficam disponíveis em uma visualização separada."
-        ) : (
-          <>
-            Previsões são cenários, não garantias. A lista reproduz a análise
-            enviada pelo responsável. Dados, premissas e preços podem estar
-            desatualizados; nenhuma classificação determina se um investimento é
-            adequado para você.
-          </>
-        )}
-        {!showingDemo && current && ranking.sourceFileName && (
-          <span className="mt-2 block">Origem: {ranking.sourceFileName}</span>
-        )}
-      </aside>
+      {!showingDemo && current && ranking.sourceFileName && (
+        <p className="text-xs text-evo-textSec">
+          Origem: {ranking.sourceFileName}
+        </p>
+      )}
     </section>
   );
 }

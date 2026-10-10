@@ -43,8 +43,7 @@ export function Analises({ publicView = false }: { publicView?: boolean }) {
           </h1>
           <p className="mt-3 max-w-2xl text-sm leading-relaxed text-evo-textSec">
             Pesquise ações ordinárias, preferenciais e units de empresas
-            brasileiras. Os preços são informativos e não representam execução
-            de ordens nem recomendação de investimento.
+            brasileiras e compare suas cotações e indicadores.
           </p>
         </div>
         <div className="relative z-10 shrink-0 self-end sm:self-start">
@@ -139,8 +138,7 @@ export function Analises({ publicView = false }: { publicView?: boolean }) {
 
       <div className="flex flex-wrap items-center justify-between gap-3 border-t border-evo-border pt-4">
         <p className="max-w-3xl text-xs leading-relaxed text-evo-textSec">
-          Fonte: brapi.dev. “Consulta ao provedor” indica quando a lista foi
-          consultada; não garante o horário exato da negociação.
+          Fonte: brapi.dev.
         </p>
         <nav
           aria-label="Paginação das ações"

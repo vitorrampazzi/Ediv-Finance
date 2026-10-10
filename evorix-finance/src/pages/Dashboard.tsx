@@ -243,9 +243,7 @@ export function Dashboard() {
           </table>
         </div>
         <p className="mt-3 text-xs leading-relaxed text-evo-textSec">
-          Quantidade registrada × preço recebido. Os horários e a
-          disponibilidade seguem o provedor; não é saldo de corretora nem
-          recomendação de investimento.
+          Valor das posições: quantidade registrada × cotação informada.
         </p>
       </section>
       <div className="flex flex-wrap gap-4 text-sm">

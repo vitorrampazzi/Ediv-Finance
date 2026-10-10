@@ -68,7 +68,7 @@ function MemberRankingHighlights() {
           </h2>
           <p className="mt-2 max-w-2xl text-sm text-evo-textSec">
             {showingDemo ? (
-              "Conheça o formato da pesquisa com empresas e números fictícios. A primeira análise real da equipe ainda está em preparação."
+              "Explore cenários e módulos de pesquisa com empresas de exemplo."
             ) : (
               <>
                 O ranking reúne os cenários publicados pela equipe. Leia os
@@ -102,9 +102,7 @@ function MemberRankingHighlights() {
       ) : (
         <>
           <p className="mt-5 text-xs text-evo-textSec">
-            {showingDemo
-              ? "Demonstração · empresas, preços e cenários fictícios"
-              : publication.title}{" "}
+            {showingDemo ? "Demonstração · dados fictícios" : publication.title}{" "}
             {!showingDemo &&
               publication.updatedAt &&
               "· " +
@@ -129,11 +127,6 @@ function MemberRankingHighlights() {
                 className="rounded-xl border border-evo-border bg-evo-card p-5 hover:border-evo-accent/40"
               >
                 <h3 className="font-bold">{entry.ticker}</h3>
-                {showingDemo && (
-                  <span className="mt-2 inline-block rounded-md bg-evo-accent/10 px-2 py-1 text-[11px] font-semibold text-evo-accent">
-                    Empresa fictícia
-                  </span>
-                )}
                 <p className="mt-1 text-xs text-evo-textSec">
                   {entry.companyName}
                 </p>
@@ -148,8 +141,7 @@ function MemberRankingHighlights() {
                 <p className="mt-2 text-xs text-evo-textSec">
                   {entry.horizonMonths
                     ? entry.horizonMonths + " meses"
-                    : "Prazo não informado"}{" "}
-                  · {showingDemo ? "exemplo visual" : "cenário sem garantia"}
+                    : "Prazo não informado"}
                 </p>
                 <span className="mt-4 block text-xs text-evo-accent">
                   {showingDemo

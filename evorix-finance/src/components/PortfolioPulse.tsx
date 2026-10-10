@@ -81,8 +81,7 @@ export function PortfolioPulse({
         </h2>
         <p className="mt-4 max-w-xl text-sm leading-relaxed text-evo-textSec">
           Informe uma compra ou importe seus registros para acompanhar custo,
-          variação e concentração. Não conectamos sua corretora nem movimentamos
-          dinheiro.
+          variação e concentração.
         </p>
         <div className="mt-7 flex flex-wrap gap-3">
           <Link className="action" to="/app/carteira#operation-form">

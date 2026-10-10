@@ -56,7 +56,7 @@ export const supportAnswers: SupportAnswer[] = [
     question: "Por onde começo a leitura do ranking?",
     paragraphs: [
       "Comece pela data e pela versão da pesquisa. Depois, compare o preço de referência, o cenário projetado e o horizonte de análise. Use os filtros para encontrar empresas de um setor ou período específico.",
-      "Clique em uma empresa para abrir seu caderno: ali você encontra a tese, os riscos e os indicadores disponíveis. Uma posição no ranking organiza a pesquisa; ela não representa uma ordem de compra.",
+      "Clique em uma empresa para abrir seu caderno: ali você encontra a tese, os riscos e os indicadores disponíveis. A posição no ranking ajuda a organizar a leitura da pesquisa.",
     ],
     link: { label: "Explorar o ranking", to: "/app/ranking" },
   },
@@ -66,7 +66,7 @@ export const supportAnswers: SupportAnswer[] = [
     question: "O potencial de valorização é um ganho garantido?",
     paragraphs: [
       "Não. O potencial compara um preço projetado com o preço de referência usado na pesquisa. Ele descreve um cenário, que pode não acontecer ou precisar de revisão.",
-      "Leia as premissas, os riscos e o horizonte antes de interpretar esse número. O potencial projetado também não equivale ao retorno já realizado por um investimento.",
+      "Relacione esse número às premissas, aos riscos e ao horizonte informados na pesquisa.",
     ],
     link: {
       label: "Rever os conceitos nas aulas",
@@ -98,7 +98,7 @@ export const supportAnswers: SupportAnswer[] = [
     question: "Um dividend yield alto significa uma empresa melhor?",
     paragraphs: [
       "O dividend yield relaciona os proventos considerados com um preço de referência. Um preço menor pode elevar esse indicador sem que a empresa tenha aumentado sua distribuição.",
-      "Compare também a geração de caixa, o lucro, o endividamento e a recorrência dos pagamentos. Proventos passados não garantem pagamentos futuros.",
+      "Compare também a geração de caixa, o lucro, o endividamento e a recorrência dos pagamentos.",
     ],
     link: { label: "Estudar dividendos", to: "/app/aprender#dividendos" },
   },

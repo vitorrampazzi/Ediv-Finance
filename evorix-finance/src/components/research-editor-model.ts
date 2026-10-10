@@ -33,8 +33,7 @@ export const researchSections: {
   },
   {
     title: "Cenário",
-    description:
-      "Registre a projeção, o prazo e o raciocínio da pesquisa. Potencial é um cenário, não uma garantia de retorno.",
+    description: "Registre a projeção, o prazo e o raciocínio da pesquisa.",
     fields: [
       "potencial_percentual",
       "preco_alvo",

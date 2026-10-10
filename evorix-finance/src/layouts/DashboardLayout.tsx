@@ -390,8 +390,7 @@ export const DashboardLayout = () => {
         >
           <Outlet />
           <footer className="mx-auto mt-10 max-w-7xl border-t border-evo-border bg-evo-bgInset p-5 text-sm leading-relaxed text-evo-textSec">
-            Pesquisa e educação sobre ações e dividendos. Previsões dependem de
-            premissas e não garantem retorno.{" "}
+            Ediv Finance · Ações e dividendos.{" "}
             <Link to="/privacidade" className="ml-2 underline">
               Privacidade
             </Link>{" "}

@@ -228,11 +228,6 @@ export function RankingFundamentals({
             </section>
           ))}
         </div>
-        <p className="text-xs leading-relaxed text-evo-textSec">
-          {demo
-            ? "Dados fictícios para visualizar o formato da pesquisa. Os valores não pertencem a empresas reais."
-            : "Conteúdo informado pela equipe na planilha. Os módulos não são atualizados automaticamente pelas cotações."}
-        </p>
       </div>
     </details>
   );

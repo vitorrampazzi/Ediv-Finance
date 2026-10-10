@@ -12,18 +12,18 @@ const readingSteps = [
   ],
   [
     "02",
-    "Leia o cenário e seus limites",
-    "Confira a tese, o preço-alvo, o potencial informado e o horizonte. A publicação precisa dar contexto às premissas; os números não indicam a probabilidade de o cenário acontecer.",
+    "Leia o cenário e suas premissas",
+    "Confira a tese, o preço-alvo, o potencial informado e o horizonte. Relacione esses números às premissas da publicação.",
   ],
   [
     "03",
     "Investigue os riscos",
-    "Leia o que pode contrariar a tese. Um campo não preenchido representa informação pendente, nunca ausência de risco.",
+    "Identifique os fatores que podem contrariar a tese e quais informações ainda precisam ser preenchidas.",
   ],
   [
     "04",
     "Confira período, fontes e versão",
-    "Use as datas e fontes informadas na pesquisa. O histórico preserva publicações anteriores e a comparação mostra mudanças de conteúdo; não é uma medição de rentabilidade realizada.",
+    "Consulte as datas e fontes da pesquisa. Use o histórico para acompanhar publicações anteriores e comparar as mudanças de conteúdo.",
   ],
 ];
 
@@ -111,15 +111,9 @@ export function Metodologia() {
         </h2>
         <p className="mt-4 max-w-3xl text-sm leading-7 text-evo-textSec">
           O ranking exibe os cenários e a ordem informados pelo responsável pela
-          publicação. Os métodos de cálculo, as premissas e as fontes
-          específicas devem ser descritos na pesquisa correspondente. As
-          cotações consultadas pelo site vêm da brapi; elas não geram
-          automaticamente as previsões do corretor.
-        </p>
-        <p className="mt-4 max-w-3xl border-l-2 border-evo-accent pl-4 text-sm leading-7 text-evo-textSec">
-          Os conteúdos de demonstração usam empresas e números fictícios,
-          identificados no ranking e no caderno de cada empresa. Eles apresentam
-          as ferramentas enquanto a equipe prepara a pesquisa real.
+          publicação. Consulte os métodos de cálculo, as premissas e as fontes
+          na pesquisa correspondente. As cotações da brapi complementam a
+          consulta aos dados de mercado.
         </p>
         {loading ? (
           <p role="status" className="mt-5 text-sm text-evo-textSec">

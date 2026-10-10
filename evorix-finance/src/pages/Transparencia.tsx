@@ -147,7 +147,7 @@ export function Privacidade() {
       {[
         [
           "O que a Ediv oferece",
-          "A Ediv Finance oferece pesquisas de ações e educação sobre dividendos. Você pode ler cenários por empresa, estudar indicadores e acompanhar sua formação. Projeções dependem de premissas e podem falhar. O site não é corretora, não executa ordens e não movimenta dinheiro. Cotações dependem da disponibilidade do provedor.",
+          "A Ediv Finance oferece pesquisas de ações e educação sobre dividendos. Você pode ler cenários por empresa, estudar indicadores, consultar cotações e acompanhar sua formação.",
         ],
         [
           "Dados da sua conta",

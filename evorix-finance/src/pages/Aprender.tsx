@@ -779,8 +779,7 @@ function LearningSession({
           </p>
         )}
         <p className="w-full text-xs leading-relaxed text-evo-textSec">
-          Conteúdo educativo da Ediv. Os exemplos são fictícios e não indicam o
-          que comprar ou vender. Consulte também o{" "}
+          Aprofunde seus estudos no{" "}
           <a
             href="https://www.gov.br/investidor/pt-br"
             target="_blank"
@@ -789,7 +788,7 @@ function LearningSession({
           >
             Portal do Investidor — CVM
           </a>{" "}
-          e as fontes oficiais indicadas em cada aula.
+          e nas fontes oficiais indicadas em cada aula.
         </p>
       </footer>
     </section>

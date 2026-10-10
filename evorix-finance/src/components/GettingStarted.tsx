@@ -15,11 +15,11 @@ const questions = [
   ],
   [
     "O ranking já tem a pesquisa do corretor?",
-    "Enquanto a primeira pesquisa não for publicada, o ranking apresenta uma demonstração com empresas e valores fictícios. A situação aparece na página; exemplos não devem orientar decisões de investimento.",
+    "As pesquisas publicadas ficam disponíveis no ranking. A versão de demonstração apresenta empresas e valores fictícios para explorar as ferramentas.",
   ],
   [
-    "A Ediv conecta minha corretora ou movimenta meu dinheiro?",
-    "Não. A Ediv é uma plataforma de pesquisa e educação. Você estuda empresas, cenários e dividendos; não executamos ordens nem acessamos sua conta na corretora.",
+    "O que encontro na Ediv?",
+    "Pesquisas de ações, cenários por empresa e conteúdo para aprender sobre dividendos. Explore o ranking, as análises e os minicursos.",
   ],
   [
     "Por que preciso confirmar meu e-mail?",

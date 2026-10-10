@@ -94,7 +94,7 @@ export const Carteira = () => {
             {editingId ? "Corrigir operação" : "Registrar operação"}
           </h2>
           <p className="mt-1 text-sm text-evo-textSec">
-            Os valores são anotações pessoais; não enviamos ordens à corretora.
+            Registre os valores e as datas das suas operações.
           </p>
         </div>
         <form

@@ -188,19 +188,10 @@ function MemberStockResearch() {
   return (
     <article id="pagina-conteudo" className={page}>
       {backLink}
-      {demo && (
-        <p className="mt-5 border-l-2 border-evo-accent bg-evo-accent/5 px-4 py-3 text-xs leading-relaxed text-evo-textSec">
-          <strong className="text-evo-accent">
-            Pesquisa ilustrativa · empresa fictícia.
-          </strong>{" "}
-          História, argumentos e números de exemplo. Este conteúdo não é uma
-          opinião do corretor nem uma recomendação sobre uma empresa real.
-        </p>
-      )}
       <header className="page-intro my-7 sm:my-10">
         <div className="flex flex-wrap items-center gap-3 text-xs font-semibold uppercase tracking-widest text-evo-textSec">
           <span className="text-evo-accent">
-            {demo ? "Pesquisa de exemplo" : "Pesquisa publicada"}
+            {demo ? "Demonstração · empresa fictícia" : "Pesquisa publicada"}
           </span>
           <span aria-hidden="true">/</span>
           <span>{entry.sector || "Setor não informado"}</span>
@@ -215,8 +206,7 @@ function MemberStockResearch() {
           </span>
         </p>
         <p className="mt-5 max-w-3xl text-sm leading-relaxed text-evo-textSec">
-          Conheça a tese, os riscos e os dados que dão contexto ao cenário. A
-          posição no ranking não indica probabilidade de lucro.
+          Conheça a tese, os riscos e os dados que dão contexto ao cenário.
         </p>
         <dl className="mt-7 grid grid-cols-2 gap-x-5 gap-y-6 border-y border-evo-border py-5 sm:grid-cols-3">
           <div>
@@ -461,7 +451,7 @@ function MemberStockResearch() {
                 <dt className="text-xs text-evo-textSec">Data da publicação</dt>
                 <dd className="mt-2">
                   {demo
-                    ? "Exemplo ilustrativo; sem publicação real"
+                    ? "Demonstração"
                     : ranking.updatedAt
                       ? publicationDate(ranking.updatedAt)
                       : "Não informada"}
@@ -472,10 +462,6 @@ function MemberStockResearch() {
               Materiais informados pela equipe
             </h3>
             <ResearchSources text={entry.dataSource} />
-            <p className="mt-4 text-xs leading-6 text-evo-textSec">
-              Estes fundamentos pertencem à versão selecionada; eles não
-              acompanham automaticamente as mudanças das cotações.
-            </p>
             <Link
               to="/metodologia"
               className="mt-3 inline-flex min-h-11 items-center gap-2 text-sm text-evo-accent underline"
@@ -507,7 +493,7 @@ function MemberStockResearch() {
                 <dt className="text-evo-textSec">Responsável</dt>
                 <dd className="mt-2 break-words">
                   {demo
-                    ? "Conteúdo ilustrativo; sem autoria do corretor"
+                    ? "Conteúdo demonstrativo da Ediv"
                     : ranking.authorName || "Ainda não informado"}
                 </dd>
               </div>
@@ -613,11 +599,6 @@ function MemberStockResearch() {
           </Link>
         )}
       </nav>
-      <footer className="border-t border-evo-border pt-5 text-xs leading-6 text-evo-textSec">
-        {demo
-          ? "Empresas e conteúdos desta demonstração são fictícios. Nenhum exemplo representa uma previsão real da equipe."
-          : "Previsões dependem de premissas e não garantem retorno. Este conteúdo não define se um investimento é adequado ao seu perfil."}
-      </footer>
     </article>
   );
 }

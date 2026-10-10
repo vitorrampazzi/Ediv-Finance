@@ -125,8 +125,7 @@ export const Favoritos = () => {
                   })}
                   %
                 </span>{" "}
-                na última variação informada. Isso descreve o preço do ativo;
-                não é o retorno da sua carteira.
+                na última variação de preço informada.
               </p>
             )}
             {!loading && dailyMoves.length < favoritos.length && (

@@ -33,11 +33,10 @@ const labels: Record<string, string> = {
 };
 const explanations: Record<string, string> = {
   expectedReturnPercent:
-    "Compara o preço-alvo com um preço de referência: (alvo / referência − 1) × 100. Não é a probabilidade de lucro e não inclui automaticamente custos ou proventos.",
+    "Compara o preço-alvo com um preço de referência: (alvo / referência − 1) × 100.",
   targetPrice:
-    "É uma estimativa construída com premissas sobre a empresa e o mercado. Pode mudar e o preço pode nunca atingir esse valor.",
-  horizonMonths:
-    "É o prazo considerado para o cenário. Não é uma data garantida de valorização.",
+    "É uma estimativa construída com premissas sobre a empresa e o mercado.",
+  horizonMonths: "É o prazo considerado para o cenário da pesquisa.",
   balanceSheet:
     "Apresenta ativos, obrigações e patrimônio líquido da empresa em uma data. Confira o período e as unidades da pesquisa.",
   incomeStatement:
@@ -102,9 +101,7 @@ export function CompanyComparison({
       <p className="mt-2 text-xs text-evo-textSec">
         {demo
           ? "Dados fictícios da demonstração."
-          : "Dados da publicação selecionada."}{" "}
-        A comparação apresenta a pesquisa; não define qual ativo é adequado para
-        você.
+          : "Dados da publicação selecionada."}
       </p>
       <div className="mt-4 grid gap-3 sm:grid-cols-2">
         {([left, right] as const).map((value, index) => (

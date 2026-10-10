@@ -264,12 +264,7 @@ export function SiteFooter({
         </div>
 
         <div className="mt-8 border-t border-evo-border pt-5">
-          <p className="max-w-5xl text-sm leading-6 text-evo-textSec">
-            A Ediv Finance não é corretora, não executa ordens e não movimenta
-            dinheiro. As informações são educativas e não constituem
-            recomendação de investimento. Projeções não garantem retorno.
-          </p>
-          <p className="mt-4 text-sm text-evo-textSec">
+          <p className="text-sm text-evo-textSec">
             © {new Date().getFullYear()} Ediv Finance. · Versão beta
           </p>
         </div>
