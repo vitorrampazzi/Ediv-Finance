@@ -54,7 +54,7 @@ textarea {
 
 @layer components {
   .page-intro {
-    @apply border-l-2 border-evo-accent/60 bg-evo-bgSec p-5 sm:p-6;
+    @apply border-l-2 border-evo-accent/60 p-5 sm:p-6;
   }
   .field {
     @apply min-h-11 w-full rounded-lg border border-evo-border bg-evo-bgMain px-3 text-base sm:text-sm text-evo-textMain;
