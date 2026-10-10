@@ -6,10 +6,10 @@ export default {
       colors: {
         evo: {
           bgMain: "#292D34",
-          bgSec: "#353D49",
+          bgSec: "#25292F",
           bgInset: "#20252C",
-          card: "#404751",
-          border: "#647080",
+          card: "#2D3138",
+          border: "#4F5967",
           green: "#95CCB4",
           red: "#F298A0",
           accent: "#A9D9D1",
