@@ -246,7 +246,7 @@ export const DashboardLayout = () => {
   const [collapsed, setCollapsed] = useState(false);
   const title = location.pathname.startsWith("/app/ranking/acao/")
     ? "Caderno da empresa"
-    : (pageTitles[location.pathname] ?? "Ediv Finance");
+    : (pageTitles[location.pathname] ?? "");
 
   return (
     <div className="account-workspace flex min-h-screen bg-evo-bgMain font-sans text-evo-textMain">
@@ -259,38 +259,37 @@ export const DashboardLayout = () => {
       <aside
         className={`hidden shrink-0 border-r border-evo-border/70 bg-evo-bgInset transition-[width] duration-200 motion-reduce:transition-none lg:sticky lg:top-0 lg:flex lg:h-screen lg:min-h-0 lg:flex-col ${collapsed ? "w-20" : "w-60"}`}
       >
-        <Link
-          to="/app/ranking"
-          aria-label="Ediv Finance, ranking de previsões"
-          className={`flex min-h-24 items-center px-5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-inset focus-visible:outline-evo-accent ${collapsed ? "justify-center" : ""}`}
-        >
-          <img
-            src="/ediv-logo-clean.png"
-            alt=""
-            aria-hidden="true"
-            className="h-10 w-10 shrink-0 object-contain"
-          />
-          {!collapsed && (
-            <span className="ml-3 text-base font-semibold tracking-tight">
-              Ediv Finance
+        <div className="flex min-h-20 shrink-0 items-center px-3">
+          <button
+            type="button"
+            onClick={() => setCollapsed((value) => !value)}
+            aria-label={
+              collapsed ? "Expandir menu lateral" : "Recolher menu lateral"
+            }
+            aria-expanded={!collapsed}
+            aria-controls="account-sidebar-navigation"
+            className="group relative flex h-14 w-14 items-center justify-center rounded-xl transition-colors hover:bg-evo-card focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-evo-accent"
+          >
+            <img
+              src="/ediv-logo-clean.png"
+              alt=""
+              aria-hidden="true"
+              className="h-10 w-10 object-contain"
+            />
+            <span
+              aria-hidden="true"
+              className="pointer-events-none absolute -right-1 bottom-0 flex size-6 items-center justify-center rounded-full border border-evo-border bg-evo-bgInset text-evo-accent opacity-0 transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100 motion-reduce:transition-none [@media(hover:none)]:opacity-100"
+            >
+              {collapsed ? (
+                <ChevronRight size={15} />
+              ) : (
+                <ChevronLeft size={15} />
+              )}
             </span>
-          )}
-        </Link>
-        <button
-          type="button"
-          onClick={() => setCollapsed((value) => !value)}
-          aria-label={collapsed ? "Expandir navegação" : "Recolher navegação"}
-          className="mx-4 mb-5 flex min-h-10 items-center justify-center gap-2 border-y border-evo-border/60 text-xs text-evo-textSec transition hover:bg-white/[0.03] hover:text-evo-textMain focus-visible:outline focus-visible:outline-2 focus-visible:outline-evo-accent"
-        >
-          {collapsed ? (
-            <ChevronRight size={16} aria-hidden="true" />
-          ) : (
-            <>
-              <ChevronLeft size={16} aria-hidden="true" /> Recolher
-            </>
-          )}
-        </button>
+          </button>
+        </div>
         <nav
+          id="account-sidebar-navigation"
           aria-label="Navegação principal"
           className="min-h-0 flex-1 space-y-7 overflow-y-auto px-4 pb-5"
         >
@@ -356,14 +355,13 @@ export const DashboardLayout = () => {
               aria-hidden="true"
               className="h-8 w-8 shrink-0 object-contain lg:hidden"
             />
-            <div className="min-w-0">
-              <p className="hidden text-xs uppercase tracking-[.16em] text-evo-textSec sm:block">
-                Seu espaço Ediv
-              </p>
-              <p className="truncate text-sm font-medium text-evo-textMain sm:mt-1 md:text-base">
-                {title}
-              </p>
-            </div>
+            {title && (
+              <div className="min-w-0">
+                <p className="truncate text-sm font-medium text-evo-textMain md:text-base">
+                  {title}
+                </p>
+              </div>
+            )}
           </div>
           <div className="flex shrink-0 items-center gap-2 md:gap-4">
             <Link
