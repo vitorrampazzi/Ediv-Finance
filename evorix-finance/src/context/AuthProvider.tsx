@@ -29,7 +29,10 @@ async function apiRequest(
     response = await fetch(path, {
       ...init,
       credentials: "same-origin",
-      signal: AbortSignal.timeout(30000),
+      cache: "no-store",
+      signal: init.signal
+        ? AbortSignal.any([init.signal, AbortSignal.timeout(30000)])
+        : AbortSignal.timeout(30000),
       headers: {
         Accept: "application/json",
         ...(init.body ? { "Content-Type": "application/json" } : {}),
@@ -60,65 +63,197 @@ export function AuthProvider({
 }) {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [loading, setLoading] = useState(initialLoading);
+  const [sessionError, setSessionError] = useState("");
   const sessionRevision = useRef(0);
-  const refreshSession = useCallback(async () => {
-    const revision = sessionRevision.current;
+  const mounted = useRef(false);
+  const userRef = useRef<AuthUser | null>(null);
+  const sessionErrorRef = useRef("");
+  const pendingMutation = useRef(false);
+  const pendingRefresh = useRef<{
+    revision: number;
+    promise: Promise<void>;
+    controller: AbortController;
+  } | null>(null);
+  const lastRefreshAt = useRef(0);
+  const sessionChannel = useRef<BroadcastChannel | null>(null);
+
+  const applyUser = useCallback((next: AuthUser | null) => {
+    userRef.current = next;
+    setUser(next);
+  }, []);
+  const applySessionError = useCallback((message: string) => {
+    sessionErrorRef.current = message;
+    setSessionError(message);
+  }, []);
+  const notifySessionChanged = useCallback(() => {
     try {
-      const result = await apiRequest("/api/auth/me");
-      if (revision === sessionRevision.current) setUser(result.user ?? null);
-    } catch (error) {
-      if (error instanceof ApiError && error.status === 401) {
-        if (revision === sessionRevision.current) {
-          sessionRevision.current += 1;
-          setUser(null);
-        }
-      } else throw error;
+      sessionChannel.current?.postMessage({ type: "session-changed" });
+    } catch {
+      // Other tabs also reconcile their session when they become visible.
     }
   }, []);
+  const invalidateRefresh = useCallback(() => {
+    sessionRevision.current += 1;
+    pendingRefresh.current?.controller.abort();
+    pendingRefresh.current = null;
+  }, []);
 
-  useEffect(() => {
-    let active = true;
+  const refreshSession = useCallback((): Promise<void> => {
+    if (pendingMutation.current) return Promise.resolve();
     const revision = sessionRevision.current;
-    apiRequest("/api/auth/me")
+    if (pendingRefresh.current?.revision === revision)
+      return pendingRefresh.current.promise;
+    lastRefreshAt.current = Date.now();
+    const controller = new AbortController();
+    const promise: Promise<void> = apiRequest("/api/auth/me", {
+      signal: controller.signal,
+    })
       .then((result) => {
-        if (active && revision === sessionRevision.current)
-          setUser(result.user ?? null);
+        if (!result.user)
+          throw new Error(
+            "Não foi possível validar sua sessão. Tente novamente.",
+          );
+        if (mounted.current && revision === sessionRevision.current) {
+          applyUser(result.user);
+          applySessionError("");
+          setLoading(false);
+        }
       })
-      .catch(() => {
-        if (active && revision === sessionRevision.current) setUser(null);
+      .catch((error: unknown) => {
+        if (mounted.current && revision === sessionRevision.current) {
+          if (error instanceof ApiError && error.status === 401) {
+            applyUser(null);
+            applySessionError("");
+          } else {
+            applySessionError(
+              "Não foi possível verificar sua sessão agora. Sua conta não foi desconectada. Confira sua conexão e tente novamente.",
+            );
+          }
+          setLoading(false);
+        }
+        if (!(error instanceof ApiError && error.status === 401)) throw error;
       })
       .finally(() => {
-        if (active) setLoading(false);
+        if (pendingRefresh.current?.promise === promise)
+          pendingRefresh.current = null;
       });
-    return () => {
-      active = false;
-    };
-  }, []);
+    pendingRefresh.current = { revision, promise, controller };
+    return promise;
+  }, [applyUser, applySessionError]);
 
-  const login = useCallback(async (email: string, password: string) => {
-    const result = await apiRequest("/api/auth/login", {
-      method: "POST",
-      body: JSON.stringify({ email, password }),
-    });
-    if (!result.user) throw new Error("Não foi possível iniciar a sessão.");
-    sessionRevision.current += 1;
-    setUser(result.user);
-  }, []);
+  const retrySession = useCallback(async () => {
+    if (!userRef.current) setLoading(true);
+    await refreshSession().catch(() => {});
+  }, [refreshSession]);
+
+  useEffect(() => {
+    mounted.current = true;
+    void refreshSession().catch(() => {});
+    const reconcile = (force = false) => {
+      if (document.visibilityState === "hidden" || pendingMutation.current)
+        return;
+      const interval = sessionErrorRef.current ? 5000 : 60000;
+      if (!force && Date.now() - lastRefreshAt.current < interval) return;
+      void refreshSession().catch(() => {});
+    };
+    const onFocus = () => reconcile();
+    const onVisibility = () => reconcile();
+    const onOnline = () => reconcile(true);
+    let channel: BroadcastChannel | null = null;
+    try {
+      if (typeof BroadcastChannel !== "undefined") {
+        channel = new BroadcastChannel("ediv-account-session");
+        sessionChannel.current = channel;
+        channel.onmessage = (event: MessageEvent<unknown>) => {
+          if (
+            !event.data ||
+            typeof event.data !== "object" ||
+            !("type" in event.data) ||
+            event.data.type !== "session-changed" ||
+            pendingMutation.current
+          )
+            return;
+          invalidateRefresh();
+          // The shared cookie may now belong to a different account.
+          applyUser(null);
+          applySessionError("");
+          setLoading(true);
+          void refreshSession().catch(() => {});
+        };
+      }
+    } catch {
+      sessionChannel.current = null;
+    }
+    window.addEventListener("focus", onFocus);
+    window.addEventListener("online", onOnline);
+    document.addEventListener("visibilitychange", onVisibility);
+    return () => {
+      mounted.current = false;
+      window.removeEventListener("focus", onFocus);
+      window.removeEventListener("online", onOnline);
+      document.removeEventListener("visibilitychange", onVisibility);
+      channel?.close();
+      if (sessionChannel.current === channel) sessionChannel.current = null;
+    };
+  }, [refreshSession, applyUser, applySessionError, invalidateRefresh]);
+
+  const login = useCallback(
+    async (email: string, password: string) => {
+      invalidateRefresh();
+      pendingMutation.current = true;
+      try {
+        const result = await apiRequest("/api/auth/login", {
+          method: "POST",
+          body: JSON.stringify({ email, password }),
+        });
+        if (!result.user) throw new Error("Não foi possível iniciar a sessão.");
+        sessionRevision.current += 1;
+        applyUser(result.user);
+        applySessionError("");
+        setLoading(false);
+        notifySessionChanged();
+      } finally {
+        pendingMutation.current = false;
+      }
+    },
+    [applyUser, applySessionError, notifySessionChanged, invalidateRefresh],
+  );
 
   const logout = useCallback(async () => {
-    await apiRequest("/api/auth/logout", { method: "POST" });
-    sessionRevision.current += 1;
-    setUser(null);
-  }, []);
+    invalidateRefresh();
+    pendingMutation.current = true;
+    try {
+      await apiRequest("/api/auth/logout", { method: "POST" });
+      sessionRevision.current += 1;
+      applyUser(null);
+      applySessionError("");
+      setLoading(false);
+      notifySessionChanged();
+    } finally {
+      pendingMutation.current = false;
+    }
+  }, [applyUser, applySessionError, notifySessionChanged, invalidateRefresh]);
 
-  const deleteAccount = useCallback(async (password: string) => {
-    await apiRequest("/api/auth/me", {
-      method: "DELETE",
-      body: JSON.stringify({ password, confirmation: "EXCLUIR" }),
-    });
-    sessionRevision.current += 1;
-    setUser(null);
-  }, []);
+  const deleteAccount = useCallback(
+    async (password: string) => {
+      invalidateRefresh();
+      pendingMutation.current = true;
+      try {
+        await apiRequest("/api/auth/me", {
+          method: "DELETE",
+          body: JSON.stringify({ password, confirmation: "EXCLUIR" }),
+        });
+        sessionRevision.current += 1;
+        applyUser(null);
+        applySessionError("");
+        setLoading(false);
+        notifySessionChanged();
+      } finally {
+        pendingMutation.current = false;
+      }
+    },
+    [applyUser, applySessionError, notifySessionChanged, invalidateRefresh],
+  );
 
   const register = useCallback(
     (name: string, email: string, password: string, next?: string) =>
@@ -142,7 +277,9 @@ export function AuthProvider({
     () => ({
       user,
       loading,
+      sessionError,
       refreshSession,
+      retrySession,
       login,
       logout,
       deleteAccount,
@@ -152,7 +289,9 @@ export function AuthProvider({
     [
       user,
       loading,
+      sessionError,
       refreshSession,
+      retrySession,
       login,
       logout,
       deleteAccount,

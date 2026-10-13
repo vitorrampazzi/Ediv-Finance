@@ -171,7 +171,7 @@ export function Privacidade() {
         ],
         [
           "Controle dos dados",
-          "Nas configurações você pode exportar seus registros, alterar a senha, encerrar sessões e excluir a conta. O cookie de sessão é necessário para login. O progresso das aulas fica na sua conta após o login; o progresso de visitante fica neste navegador. Você pode reiniciá-lo na página Aprender. Não é usado para publicidade.",
+          "Nas configurações você pode exportar seus registros, alterar a senha, encerrar sessões e excluir a conta. O cookie de sessão mantém o login neste navegador por até 90 dias, com expiração no servidor após 30 dias sem uso. Você pode sair pelo menu da conta a qualquer momento. O progresso das aulas fica na sua conta após o login; o progresso de visitante fica neste navegador. Você pode reiniciá-lo na página Aprender. Não é usado para publicidade.",
         ],
         [
           "Retenção e operação",

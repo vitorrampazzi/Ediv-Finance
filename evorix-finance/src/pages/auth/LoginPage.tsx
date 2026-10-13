@@ -8,8 +8,9 @@ import { authLink, safeAuthDestination } from "../../lib/authDestination";
 import { PasswordInput } from "../../components/PasswordInput";
 
 import { AuthShell, ErrorMessage } from "../../components/auth/AuthShell";
+import { SessionStatus } from "../../components/SessionStatus";
 export function LoginPage() {
-  const { user, login, resendVerification } = useAuth();
+  const { user, loading, sessionError, login, resendVerification } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
@@ -66,6 +67,8 @@ export function LoginPage() {
       setResending(false);
     }
   };
+
+  if (loading || (!user && sessionError)) return <SessionStatus />;
 
   return (
     <AuthShell

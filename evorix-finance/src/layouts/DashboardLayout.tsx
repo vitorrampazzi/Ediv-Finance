@@ -114,6 +114,7 @@ function ProfileMenu({
 }) {
   const [open, setOpen] = useState(false);
   const [logoutError, setLogoutError] = useState("");
+  const [loggingOut, setLoggingOut] = useState(false);
   const { user } = useAuth();
   const ref = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
@@ -226,8 +227,11 @@ function ProfileMenu({
             )}
             <button
               type="button"
+              disabled={loggingOut}
               onClick={async () => {
+                if (loggingOut) return;
                 setLogoutError("");
+                setLoggingOut(true);
                 try {
                   await onLogout();
                   navigate("/entrar", { replace: true });
@@ -235,11 +239,13 @@ function ProfileMenu({
                   setLogoutError(
                     "Não foi possível encerrar a sessão. Verifique sua conexão e tente novamente.",
                   );
+                  setLoggingOut(false);
                 }
               }}
-              className="flex min-h-10 w-full items-center gap-3 rounded-lg px-3 text-sm text-evo-red hover:bg-evo-red/5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-evo-red"
+              className="flex min-h-10 w-full items-center gap-3 rounded-lg px-3 text-sm text-evo-red hover:bg-evo-red/5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-evo-red disabled:cursor-wait disabled:opacity-60"
             >
-              <LogOut size={16} aria-hidden="true" /> Sair da conta
+              <LogOut size={16} aria-hidden="true" />
+              {loggingOut ? "Saindo…" : "Sair da conta"}
             </button>
           </div>
         </div>

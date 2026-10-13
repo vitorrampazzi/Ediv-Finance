@@ -10,9 +10,10 @@ import { useRegistrationAvailability } from "../../hooks/useRegistrationAvailabi
 
 import { AuthShell, ErrorMessage } from "../../components/auth/AuthShell";
 import { ConfirmationHelp } from "../../components/auth/ConfirmationHelp";
+import { SessionStatus } from "../../components/SessionStatus";
 export function RegisterPage() {
   const availability = useRegistrationAvailability();
-  const { user, register } = useAuth();
+  const { user, loading, sessionError, register } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const destination = safeAuthDestination(
@@ -53,6 +54,8 @@ export function RegisterPage() {
       setBusy(false);
     }
   };
+
+  if (loading || (!user && sessionError)) return <SessionStatus />;
 
   return (
     <AuthShell

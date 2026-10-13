@@ -528,7 +528,28 @@ try {
         ]) {
           await page.goto(root + path);
           await expect(page.locator("h1,h2").first()).toBeVisible();
-          await noOverflow(page);
+          try {
+            await noOverflow(page);
+          } catch (error) {
+            console.error("Falha de layout:", { width, path });
+            console.error(
+              await page.evaluate(() =>
+                Array.from(document.querySelectorAll("body *"))
+                  .filter(
+                    (element) =>
+                      element.getBoundingClientRect().right >
+                      window.innerWidth + 2,
+                  )
+                  .slice(-12)
+                  .map((element) => ({
+                    tag: element.tagName,
+                    classes: element.className,
+                    text: element.textContent?.slice(0, 80),
+                  })),
+              ),
+            );
+            throw error;
+          }
         }
         if (width === 360) {
           await page.goto(root);

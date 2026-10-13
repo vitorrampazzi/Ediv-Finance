@@ -176,7 +176,7 @@ export function LearningPlaylist({
                 data-playlist-item={item.id}
                 aria-current={isSelected ? "true" : undefined}
                 onClick={() => onSelect(item.id)}
-                className={`flex h-full w-full items-start gap-3 rounded-xl border p-3 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-evo-accent motion-reduce:transition-none ${
+                className={`relative flex h-full w-full items-start gap-3 rounded-xl border p-3 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-evo-accent motion-reduce:transition-none ${
                   isSelected
                     ? "border-evo-accent/65 bg-evo-accent/10"
                     : "border-transparent bg-evo-bgMain/40 hover:border-evo-border hover:bg-evo-bgMain/75"
@@ -213,6 +213,7 @@ export function LearningPlaylist({
                   <span className="mt-1 line-clamp-2 text-xs leading-5 text-evo-textSec">
                     {item.subtitle}
                   </span>
+                  {/* The positioned button contains this absolute screen-reader label. */}
                   <span className="sr-only">
                     {item.courseTitle}
                   </span>

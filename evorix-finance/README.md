@@ -90,6 +90,12 @@ Para aplicar migrations na base gerenciada Aiven já configurada, use `npm run d
 
 As senhas são armazenadas com Argon2id. Os tokens de confirmação e de sessão são aleatórios; somente seus hashes são persistidos. A sessão usa cookie `HttpOnly`, `SameSite=Strict` e, em produção, `Secure`. Requisições que alteram dados verificam a origem. Não há tokens de autenticação no `localStorage`.
 
+O login é lembrado no mesmo navegador por até 30 dias sem uso. A atividade renova esse prazo, com nova autenticação após no máximo 90 dias desde o login. Abrir o endereço inicial com uma sessão válida leva à home da conta. “Sair da conta” no avatar revoga a sessão no servidor e permite entrar com outra conta. Apagar os cookies, usar outro navegador ou encerrar todas as sessões exige novo login. Falhas temporárias de conexão exibem uma opção de tentar novamente, sem tratar a sessão como encerrada. O `BroadcastChannel` sincroniza as mudanças de sessão entre abas, sem compartilhar senhas ou tokens.
+
+O cookie tem expiração fixa de 90 dias; o banco aplica o limite de inatividade de 30 dias. Leituras da sessão não escrevem nem limpam o cookie, evitando que uma resposta antiga substitua o cookie de uma conta recém-conectada. Sessões da versão anterior podem exigir um login após a atualização para gravar o cookie persistente.
+
+`npm run test:session` verifica a política, a API com MySQL e o fluxo de navegador. Os testes que usam MySQL exigem `TARGET_MYSQL_*`; para uma instância local descartável, configure também `EDIV_TEST_MYSQL_DISPOSABLE=true`. Esses testes criam e removem somente seu próprio schema `ediv_test_*`.
+
 ## Assistente com IA (experimental)
 
 O chat continua funcionando com respostas locais quando a integração estiver desligada. Para experimentar Gemini no plano gratuito, crie uma chave no Google AI Studio e configure `AI_ASSISTANT_ENABLED=true` e `GEMINI_API_KEY` no `.env` local; `GEMINI_MODEL` é opcional e usa `gemini-3.8-flash` por padrão. A chave fica somente no servidor e não deve ser enviada pelo chat nem colocada em variáveis `VITE_*`.

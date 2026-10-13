@@ -122,5 +122,4 @@ export const config = Object.freeze({
     .map((value) => value.trim().toLowerCase())
     .filter(Boolean),
   sessionCookieName: isProduction ? "__Host-evorix_session" : "evorix_session",
-  sessionHours: 8,
 });

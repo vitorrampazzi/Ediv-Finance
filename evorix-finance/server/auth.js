@@ -4,6 +4,12 @@ import { Router } from "express";
 import { rateLimit } from "express-rate-limit";
 import { z } from "zod";
 import { config } from "./config.js";
+import {
+  sessionPolicy,
+  sessionExpiresAt,
+  sessionCookieExpiresAt,
+  sessionRenewalExpiry,
+} from "./session-policy.js";
 import { pool } from "./database.js";
 import { MysqlLimitStore } from "./limit-store.js";
 import { smtp, accountEmail, registrationAvailability } from "./mail.js";
@@ -208,12 +214,13 @@ function clearSessionCookie(res) {
   });
 }
 
-function setSessionCookie(res, token) {
+function setSessionCookie(res, token, expiresAt) {
   res.cookie(config.sessionCookieName, token, {
     httpOnly: true,
     secure: config.isProduction,
     sameSite: "strict",
     path: "/",
+    maxAge: Math.max(0, expiresAt.getTime() - Date.now()),
   });
 }
 
@@ -229,18 +236,44 @@ const publicUser = (row) => ({
 
 export async function currentUser(req) {
   const token = getCookie(req, config.sessionCookieName);
-  if (!token || !SESSION_TOKEN_PATTERN.test(token)) return null;
+  if (!token || !SESSION_TOKEN_PATTERN.test(token)) {
+    return null;
+  }
 
   const [rows] = await pool.execute(
-    `SELECT u.id, u.name, u.email, u.email_verified_at, u.created_at, COALESCE(a.role,'USER') AS role
+    `SELECT u.id, u.name, u.email, u.email_verified_at, u.created_at, COALESCE(a.role,'USER') AS role,
+     s.id AS session_id, s.created_at AS session_created_at, s.expires_at AS session_expires_at
      FROM user_sessions s
      INNER JOIN users u ON u.id = s.user_id
      LEFT JOIN user_access a ON a.user_id=u.id
-     WHERE s.token_hash = ? AND s.expires_at > UTC_TIMESTAMP(3) AND u.email_verified_at IS NOT NULL AND a.blocked_at IS NULL
+     WHERE s.token_hash = ? AND s.expires_at > UTC_TIMESTAMP(3)
+       AND DATE_ADD(s.created_at, INTERVAL ? DAY) > UTC_TIMESTAMP(3)
+       AND u.email_verified_at IS NOT NULL AND a.blocked_at IS NULL
      LIMIT 1`,
-    [digest(token)],
+    [digest(token), sessionPolicy.maximumDays],
   );
-  return rows[0] ? publicUser(rows[0]) : null;
+  const session = rows[0];
+  if (!session) return null;
+  const renewedExpiry = sessionRenewalExpiry(session);
+  if (renewedExpiry) {
+    const [renewal] = await pool.execute(
+      `UPDATE user_sessions
+         SET expires_at = LEAST(DATE_ADD(UTC_TIMESTAMP(3), INTERVAL ? DAY), DATE_ADD(created_at, INTERVAL ? DAY))
+         WHERE id = ? AND token_hash = ? AND expires_at > UTC_TIMESTAMP(3)
+           AND DATE_ADD(created_at, INTERVAL ? DAY) > UTC_TIMESTAMP(3)`,
+      [
+        sessionPolicy.idleDays,
+        sessionPolicy.maximumDays,
+        session.session_id,
+        digest(token),
+        sessionPolicy.maximumDays,
+      ],
+    );
+    if (!renewal.affectedRows) {
+      return null;
+    }
+  }
+  return publicUser(session);
 }
 
 export async function requireAuthenticatedUser(req, res, next) {
@@ -404,7 +437,7 @@ router.post("/login", loginLimiter, async (req, res) => {
   }
 
   const rawSession = makeOpaqueToken();
-  const expiresAt = new Date(Date.now() + config.sessionHours * 60 * 60 * 1000);
+  const expiresAt = sessionExpiresAt();
   const connection = await pool.getConnection();
   try {
     await connection.beginTransaction();
@@ -434,7 +467,9 @@ router.post("/login", loginLimiter, async (req, res) => {
   } finally {
     connection.release();
   }
-  setSessionCookie(res, rawSession);
+  // Only login writes the persistent token. Session reads renew the database
+  // expiry, so a late response cannot overwrite a newer account's cookie.
+  setSessionCookie(res, rawSession, sessionCookieExpiresAt());
   return res.status(200).json({ user: publicUser(user) });
 });
 

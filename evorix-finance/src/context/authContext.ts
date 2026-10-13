@@ -5,7 +5,9 @@ export const AuthContext = createContext<
   | {
       user: AuthUser | null;
       loading: boolean;
+      sessionError: string;
       refreshSession: () => Promise<void>;
+      retrySession: () => Promise<void>;
       login: (email: string, password: string) => Promise<void>;
       logout: () => Promise<void>;
       deleteAccount: (password: string) => Promise<void>;

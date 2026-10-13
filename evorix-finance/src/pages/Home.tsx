@@ -1,5 +1,5 @@
 import { ArrowRight, BarChart3, BookOpen, Sparkles } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, Navigate } from "react-router-dom";
 import { RankingHighlights } from "../components/RankingHighlights";
 import { SiteFooter, SiteHeader } from "../components/SiteChrome";
 import { useAuth } from "../context/authContext";
@@ -8,10 +8,14 @@ import { RankingPreview } from "../components/RankingPreview";
 import { GettingStarted } from "../components/GettingStarted";
 import { HomeMarketHighlights } from "../components/HomeMarketHighlights";
 import { useRegistrationAvailability } from "../hooks/useRegistrationAvailability";
+import { SessionStatus } from "../components/SessionStatus";
 
 export function Home() {
+  const { user, loading, sessionError } = useAuth();
   const registration = useRegistrationAvailability();
   const awaitingRegistration = registration.current?.available === false;
+  if (loading || (!user && sessionError)) return <SessionStatus />;
+  if (user) return <Navigate to="/app" replace />;
   return (
     <div className="min-h-screen bg-evo-bgMain text-evo-textMain">
       <SiteHeader />

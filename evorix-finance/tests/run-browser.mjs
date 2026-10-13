@@ -3,7 +3,14 @@ import { fileURLToPath } from "node:url";
 
 // Separate processes give each suite its own database pool and disposable schema.
 // Run sequentially because the browser suites share the same local Vite port.
-for (const suite of ["browser.mjs", "browser-experience.mjs"]) {
+const suites = [
+  "browser.mjs",
+  "browser-experience.mjs",
+  ...(process.env.EDIV_TEST_MYSQL_DISPOSABLE === "true"
+    ? ["session.browser.mjs"]
+    : []),
+];
+for (const suite of suites) {
   const code = await new Promise((resolve, reject) => {
     const child = spawn(
       process.execPath,
