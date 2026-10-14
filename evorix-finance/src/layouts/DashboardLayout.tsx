@@ -22,6 +22,7 @@ import {
 import { useAuth } from "../context/authContext";
 import { roleLabels, userCan } from "../lib/permissions";
 import { NotificationsMenu } from "../components/NotificationsMenu";
+import { PageContent } from "../components/PageContent";
 
 const navigation = [
   {
@@ -404,7 +405,7 @@ export const DashboardLayout = () => {
           id="conteudo"
           className="w-full min-w-0 flex-1 px-4 pt-4 pb-[calc(5rem+env(safe-area-inset-bottom))] md:px-8 md:pt-10 lg:pb-8"
         >
-          <Outlet />
+          <PageContent key={user?.id}><Outlet /></PageContent>
           <footer className="mx-auto mt-10 max-w-7xl border-t border-evo-border bg-evo-bgInset p-5 text-sm leading-relaxed text-evo-textSec">
             Ediv Finance · Ações e dividendos.{" "}
             <Link to="/privacidade" className="ml-2 underline">

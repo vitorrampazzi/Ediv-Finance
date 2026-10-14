@@ -36,11 +36,7 @@ export function render(path: string, learning: LearningData) {
       )}
       <AuthProvider initialLoading={false}>
         <FavoritesProvider>
-          {path === "/" ? (
-            pages[path]
-          ) : (
-            <PublicLayout>{pages[path]}</PublicLayout>
-          )}
+          <PublicLayout>{pages[path]}</PublicLayout>
         </FavoritesProvider>
       </AuthProvider>
     </StaticRouter>,

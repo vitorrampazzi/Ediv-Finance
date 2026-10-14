@@ -1,7 +1,6 @@
 import { ArrowRight, BarChart3, BookOpen, Sparkles } from "lucide-react";
 import { Link, Navigate } from "react-router-dom";
 import { RankingHighlights } from "../components/RankingHighlights";
-import { SiteFooter, SiteHeader } from "../components/SiteChrome";
 import { useAuth } from "../context/authContext";
 import { authLink } from "../lib/authDestination";
 import { RankingPreview } from "../components/RankingPreview";
@@ -14,17 +13,9 @@ export function Home() {
   const { user, loading, sessionError } = useAuth();
   const registration = useRegistrationAvailability();
   const awaitingRegistration = registration.current?.available === false;
-  if (loading || (!user && sessionError)) return <SessionStatus />;
+  if (loading || (!user && sessionError)) return <SessionStatus embedded />;
   if (user) return <Navigate to="/app" replace />;
-  return (
-    <div className="min-h-screen bg-evo-bgMain text-evo-textMain">
-      <SiteHeader showRegistrationAction={false} />
-      <main id="conteudo">
-        <HomeContent awaitingRegistration={awaitingRegistration} />
-      </main>
-      <SiteFooter showRegistrationLink={false} />
-    </div>
-  );
+  return <HomeContent awaitingRegistration={awaitingRegistration} />;
 }
 
 export function HomeContent({

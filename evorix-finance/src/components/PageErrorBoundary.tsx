@@ -3,7 +3,7 @@ import type { ContextType, ReactNode } from "react";
 import { AuthContext } from "../context/authContext";
 
 export class PageErrorBoundary extends Component<
-  { children: ReactNode },
+  { children: ReactNode; embedded?: boolean },
   { failed: boolean }
 > {
   static contextType = AuthContext;
@@ -13,9 +13,10 @@ export class PageErrorBoundary extends Component<
     return { failed: true };
   }
   render() {
+    const Container = this.props.embedded ? "section" : "main";
     if (this.state.failed)
       return (
-        <main className="mx-auto max-w-lg space-y-4 px-5 py-16">
+        <Container className="mx-auto max-w-lg space-y-4 px-5 py-16">
           <h1 className="text-2xl font-bold">
             Não foi possível abrir esta página
           </h1>
@@ -32,7 +33,7 @@ export class PageErrorBoundary extends Component<
           >
             Voltar ao início
           </a>
-        </main>
+        </Container>
       );
     return this.props.children;
   }

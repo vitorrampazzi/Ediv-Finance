@@ -1,9 +1,12 @@
 import { useAuth } from "../context/authContext";
 
-export function SessionStatus() {
+export function SessionStatus({ embedded = false }: { embedded?: boolean }) {
   const { loading, sessionError, retrySession } = useAuth();
+  const Container = embedded ? "section" : "main";
   return (
-    <main className="flex min-h-screen items-center justify-center px-5 text-center">
+    <Container
+      className={`flex items-center justify-center px-5 text-center ${embedded ? "min-h-[50vh]" : "min-h-screen"}`}
+    >
       <div className="max-w-md space-y-4 text-sm text-evo-textSec">
         {loading ? (
           <p role="status">Verificando sua sessão…</p>
@@ -20,6 +23,6 @@ export function SessionStatus() {
           </>
         )}
       </div>
-    </main>
+    </Container>
   );
 }

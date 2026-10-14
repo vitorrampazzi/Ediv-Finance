@@ -8,8 +8,9 @@ import {
 } from "lucide-react";
 import type { ReactNode } from "react";
 import { useEffect, useRef, useState } from "react";
-import { Link, NavLink } from "react-router-dom";
+import { Link, NavLink, Outlet, useLocation } from "react-router-dom";
 import { useAuth } from "../context/authContext";
+import { PageContent } from "./PageContent";
 
 export function SiteHeader({ showRegistrationAction = true }: { showRegistrationAction?: boolean }) {
   const { user } = useAuth();
@@ -39,8 +40,19 @@ export function SiteHeader({ showRegistrationAction = true }: { showRegistration
         menuButton.current?.focus();
       }
     };
+    const closeOnNavigation = (event: MouseEvent) => {
+      if (event.target instanceof Element && event.target.closest("a"))
+        setMobileMenuOpen(false);
+    };
+    const closeOnBack = () => setMobileMenuOpen(false);
     document.addEventListener("keydown", close);
-    return () => document.removeEventListener("keydown", close);
+    document.addEventListener("click", closeOnNavigation);
+    window.addEventListener("popstate", closeOnBack);
+    return () => {
+      document.removeEventListener("keydown", close);
+      document.removeEventListener("click", closeOnNavigation);
+      window.removeEventListener("popstate", closeOnBack);
+    };
   }, []);
   return (
     <>
@@ -275,14 +287,16 @@ export function SiteFooter({
   );
 }
 
-export function PublicLayout({ children }: { children: ReactNode }) {
+export function PublicLayout({ children }: { children?: ReactNode }) {
+  const { pathname } = useLocation();
+  const isHome = pathname === "/";
   return (
     <div className="flex min-h-screen flex-col bg-evo-bgMain text-evo-textMain">
-      <SiteHeader />
-      <main id="conteudo" className="flex-1">
-        {children}
+      <SiteHeader showRegistrationAction={!isHome} />
+      <main id="conteudo" className="min-w-0 flex-1">
+        <PageContent>{children ?? <Outlet />}</PageContent>
       </main>
-      <SiteFooter />
+      <SiteFooter showRegistrationLink={!isHome} />
     </div>
   );
 }

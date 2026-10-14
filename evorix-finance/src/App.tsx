@@ -1,79 +1,89 @@
-import { lazy, Suspense, useLayoutEffect, useRef } from "react";
-import { BrowserRouter, Routes, Route, Link, Navigate, useLocation } from "react-router-dom";
+import { lazy, Suspense } from "react";
+import {
+  BrowserRouter,
+  Routes,
+  Route,
+  Link,
+  Navigate,
+  Outlet,
+} from "react-router-dom";
+import { PageContent, PageLoading } from "./components/PageContent";
+import { NavigationIntent } from "./components/NavigationIntent";
+import { pageImports } from "./lib/pageImports";
 const DashboardLayout = lazy(() =>
-  import("./layouts/DashboardLayout").then((module) => ({
+  pageImports.dashboard().then((module) => ({
     default: module.DashboardLayout,
   })),
 );
 const Analises = lazy(() =>
-  import("./pages/analises").then((module) => ({ default: module.Analises })),
+  pageImports.analises().then((module) => ({ default: module.Analises })),
 );
 const Assessoria = lazy(() =>
-  import("./pages/Assessoria").then((module) => ({
+  pageImports.assessoria().then((module) => ({
     default: module.Assessoria,
   })),
 );
 const Perfil = lazy(() =>
-  import("./pages/Perfil").then((module) => ({ default: module.Perfil })),
+  pageImports.perfil().then((module) => ({ default: module.Perfil })),
 );
 const Configuracoes = lazy(() =>
-  import("./pages/Configuracoes").then((module) => ({
+  pageImports.configuracoes().then((module) => ({
     default: module.Configuracoes,
   })),
 );
 import { PageErrorBoundary } from "./components/PageErrorBoundary";
 import { PageMetadata } from "./components/PageMetadata";
 const Glossario = lazy(() =>
-  import("./pages/Glossario").then((module) => ({ default: module.Glossario })),
+  pageImports.glossario().then((module) => ({ default: module.Glossario })),
 );
 import { AuthProvider } from "./context/AuthProvider";
 import { useAuth } from "./context/authContext";
 import { RequireAuth } from "./components/RequireAuth";
 import { RequirePermission } from "./components/RequirePermission";
 const AdminPage = lazy(() =>
-  import("./pages/Admin").then((module) => ({ default: module.AdminPage })),
+  pageImports.admin().then((module) => ({ default: module.AdminPage })),
 );
 const LoginPage = lazy(() =>
-  import("./pages/auth/LoginPage").then((module) => ({
+  pageImports.login().then((module) => ({
     default: module.LoginPage,
   })),
 );
 const RegisterPage = lazy(() =>
-  import("./pages/auth/RegisterPage").then((module) => ({
+  pageImports.register().then((module) => ({
     default: module.RegisterPage,
   })),
 );
 const VerifyEmailPage = lazy(() =>
-  import("./pages/auth/VerifyEmailPage").then((module) => ({
+  pageImports.verify().then((module) => ({
     default: module.VerifyEmailPage,
   })),
 );
 const ForgotPasswordPage = lazy(() =>
-  import("./pages/auth/ForgotPasswordPage").then((module) => ({
+  pageImports.forgot().then((module) => ({
     default: module.ForgotPasswordPage,
   })),
 );
 const ResetPasswordPage = lazy(() =>
-  import("./pages/auth/ResetPasswordPage").then((module) => ({
+  pageImports.reset().then((module) => ({
     default: module.ResetPasswordPage,
   })),
 );
 const Home = lazy(() =>
-  import("./pages/Home").then((module) => ({ default: module.Home })),
+  pageImports.home().then((module) => ({ default: module.Home })),
 );
 const MemberHome = lazy(() =>
-  import("./pages/MemberHome").then((module) => ({
+  pageImports.memberHome().then((module) => ({
     default: module.MemberHome,
   })),
 );
 import { PublicLayout } from "./components/SiteChrome";
 const IncomeRanking = lazy(() =>
-  import("./pages/IncomeRanking").then((module) => ({
+  pageImports.ranking().then((module) => ({
     default: module.IncomeRanking,
   })),
 );
 const StockResearch = lazy(() =>
-  import("./pages/StockResearch").then((module) => ({
+  pageImports.stockResearch().then((module) => ({
     default: module.StockResearch,
   })),
 );
@@ -87,42 +97,31 @@ const EdivAssistant = assistantEnabled
   : null;
 
 const Aprender = lazy(() =>
-  import("./pages/Aprender").then((module) => ({ default: module.Aprender })),
+  pageImports.aprender().then((module) => ({ default: module.Aprender })),
 );
 const Conversas = lazy(() =>
-  import("./pages/Conversas").then((module) => ({ default: module.Conversas })),
+  pageImports.conversas().then((module) => ({ default: module.Conversas })),
 );
 const Privacidade = lazy(() =>
-  import("./pages/Transparencia").then((module) => ({
+  pageImports.privacidade().then((module) => ({
     default: module.Privacidade,
   })),
 );
 const Suporte = lazy(() =>
-  import("./pages/Transparencia").then((module) => ({
+  pageImports.suporte().then((module) => ({
     default: module.Suporte,
   })),
 );
 const Metodologia = lazy(() =>
-  import("./pages/Metodologia").then((module) => ({
+  pageImports.metodologia().then((module) => ({
     default: module.Metodologia,
   })),
 );
-function RouteStart() {
-  const { pathname, hash } = useLocation();
-  const previousPath = useRef(pathname);
-  useLayoutEffect(() => {
-    if (previousPath.current === pathname) return;
-    previousPath.current = pathname;
-    // Filters and lesson anchors keep their own position within the page.
-    if (!hash) window.scrollTo({ top: 0, left: 0, behavior: "instant" });
-  }, [pathname, hash]);
-  return null;
-}
-
 function App() {
   return (
     <BrowserRouter>
       <PageMetadata />
+      <NavigationIntent />
       {qaEnvironment && (
         <aside className="border-b border-evo-accent/30 bg-evo-card px-4 py-3 text-center text-xs text-evo-textMain">
           <strong>POC · Ambiente QA</strong> · Pesquisa de ações e escola de
@@ -131,96 +130,42 @@ function App() {
       )}
       <AuthProvider>
         <PageErrorBoundary>
-          <Suspense
-            fallback={
-              <p
-                role="status"
-                className="p-10 text-center text-sm text-evo-textSec"
-              >
-                Carregando página…
-              </p>
-            }
-          >
-            <RouteStart />
+          <Suspense fallback={<PageLoading />}>
             <Routes>
-              <Route path="/" element={<Home />} />
+              <Route element={<PublicLayout />}>
+                <Route path="/" element={<Home />} />
+                <Route path="/glossario" element={<Glossario />} />
+                <Route path="/mercado" element={<Analises publicView />} />
+                <Route path="/ranking" element={<IncomeRanking />} />
+                <Route
+                  path="/ranking/acao/:ticker"
+                  element={<StockResearch />}
+                />
+                <Route path="/assessoria" element={<Assessoria />} />
+                <Route path="/aprender" element={<Aprender />} />
+                <Route path="/metodologia" element={<Metodologia />} />
+                <Route path="/privacidade" element={<Privacidade />} />
+                <Route path="/suporte" element={<Suporte />} />
+              </Route>
               <Route
-                path="/glossario"
                 element={
-                  <PublicLayout>
-                    <Glossario />
-                  </PublicLayout>
+                  <PageContent>
+                    <Outlet />
+                  </PageContent>
                 }
-              />
-              <Route
-                path="/mercado"
-                element={
-                  <PublicLayout>
-                    <Analises publicView />
-                  </PublicLayout>
-                }
-              />
-              <Route
-                path="/ranking"
-                element={
-                  <PublicLayout>
-                    <IncomeRanking />
-                  </PublicLayout>
-                }
-              />
-              <Route
-                path="/ranking/acao/:ticker"
-                element={
-                  <PublicLayout>
-                    <StockResearch />
-                  </PublicLayout>
-                }
-              />
-              <Route
-                path="/assessoria"
-                element={
-                  <PublicLayout>
-                    <Assessoria />
-                  </PublicLayout>
-                }
-              />
-              <Route
-                path="/aprender"
-                element={
-                  <PublicLayout>
-                    <Aprender />
-                  </PublicLayout>
-                }
-              />
-              <Route
-                path="/metodologia"
-                element={
-                  <PublicLayout>
-                    <Metodologia />
-                  </PublicLayout>
-                }
-              />
-              <Route
-                path="/privacidade"
-                element={
-                  <PublicLayout>
-                    <Privacidade />
-                  </PublicLayout>
-                }
-              />
-              <Route
-                path="/suporte"
-                element={
-                  <PublicLayout>
-                    <Suporte />
-                  </PublicLayout>
-                }
-              />
-              <Route path="/recuperar-senha" element={<ForgotPasswordPage />} />
-              <Route path="/redefinir-senha" element={<ResetPasswordPage />} />
-              <Route path="/entrar" element={<LoginPage />} />
-              <Route path="/cadastro" element={<RegisterPage />} />
-              <Route path="/verificar" element={<VerifyEmailPage />} />
+              >
+                <Route
+                  path="/recuperar-senha"
+                  element={<ForgotPasswordPage />}
+                />
+                <Route
+                  path="/redefinir-senha"
+                  element={<ResetPasswordPage />}
+                />
+                <Route path="/entrar" element={<LoginPage />} />
+                <Route path="/cadastro" element={<RegisterPage />} />
+                <Route path="/verificar" element={<VerifyEmailPage />} />
+              </Route>
               <Route element={<RequireAuth />}>
                 <Route path="/app" element={<DashboardLayout />}>
                   <Route index element={<MemberHome />} />
