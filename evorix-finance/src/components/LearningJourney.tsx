@@ -13,10 +13,13 @@ export function LearningJourney({
   isAuthenticated: boolean;
   onSelect: (id: string) => void;
 }) {
-  const finished = lessons.filter((lesson) => completed.includes(lesson.id)).length;
+  const finished = lessons.filter((lesson) =>
+    completed.includes(lesson.id),
+  ).length;
   const nextLesson =
-    lessons.find((lesson) => !lesson.locked && !completed.includes(lesson.id)) ??
-    lessons.find((lesson) => !completed.includes(lesson.id));
+    lessons.find(
+      (lesson) => !lesson.locked && !completed.includes(lesson.id),
+    ) ?? lessons.find((lesson) => !completed.includes(lesson.id));
   const allFinished = lessons.length > 0 && finished === lessons.length;
   const destination = nextLesson ?? lessons[0];
   if (!destination) return null;
@@ -28,10 +31,17 @@ export function LearningJourney({
     >
       <div>
         <p className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.14em] text-evo-accent">
-          {allFinished ? <CheckCircle2 size={16} aria-hidden="true" /> : <BookOpen size={16} aria-hidden="true" />}
-          Seu percurso
+          {allFinished ? (
+            <CheckCircle2 size={16} aria-hidden="true" />
+          ) : (
+            <BookOpen size={16} aria-hidden="true" />
+          )}
+          {allFinished ? "Revisão das aulas" : "Próxima aula"}
         </p>
-        <h2 id="learning-journey-title" className="mt-2 text-lg font-semibold sm:mt-3 sm:text-xl">
+        <h2
+          id="learning-journey-title"
+          className="mt-2 text-lg font-semibold sm:mt-3 sm:text-xl"
+        >
           {allFinished
             ? "Fundamentos concluídos. Continue revisando."
             : finished > 0
@@ -44,10 +54,12 @@ export function LearningJourney({
             : `Próxima etapa: ${destination.title}.`}
         </p>
         <p className="mt-3 text-xs leading-5 text-evo-textSec">
-          {finished} de {lessons.length} exercícios concluídos · {isAuthenticated ? "salvos na sua conta" : "salvos neste navegador"}
+          {finished} de {lessons.length} exercícios concluídos ·{" "}
+          {isAuthenticated ? "salvos na sua conta" : "salvos neste navegador"}
           {destination.locked && !allFinished && (
             <span className="ml-2 inline-flex items-center gap-1">
-              <LockKeyhole size={12} aria-hidden="true" /> Próxima aula com conta gratuita
+              <LockKeyhole size={12} aria-hidden="true" /> Próxima aula com
+              conta gratuita
             </span>
           )}
         </p>
@@ -57,7 +69,11 @@ export function LearningJourney({
         onClick={() => onSelect(destination.id)}
         className="action justify-center md:max-w-56"
       >
-        {allFinished ? "Revisar a trilha" : finished > 0 ? "Continuar estudando" : "Começar primeira aula"}
+        {allFinished
+          ? "Revisar a trilha"
+          : finished > 0
+            ? "Continuar estudando"
+            : "Começar primeira aula"}
         <ArrowRight size={17} aria-hidden="true" />
       </button>
     </section>

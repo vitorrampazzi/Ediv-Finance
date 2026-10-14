@@ -14,7 +14,6 @@ import { ApiError, apiRequest } from "../lib/api";
 import { authLink } from "../lib/authDestination";
 import { useAuth } from "../context/authContext";
 import { AccountGate } from "../components/AccountGate";
-import { OrbitCoins } from "../components/OrbitCoins";
 import { MobileDisclosure } from "../components/MobileDisclosure";
 import { assistantEnabled } from "../lib/features";
 import { LearningVideo } from "../components/LearningVideo";
@@ -370,22 +369,25 @@ function LearningSession({
       id="pagina-conteudo"
       className="mx-auto max-w-6xl space-y-6 px-4 py-5 sm:space-y-9 sm:px-6 sm:py-8"
     >
-      <header className="page-intro">
-        <div className="mobile-page-heading flex items-start justify-between gap-3 sm:gap-4">
+      <header className="section-masthead">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between sm:gap-6">
           <div className="min-w-0 flex-1">
-            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-evo-accent">
-              Escola do Dividendo · Aprender
-            </p>
-            <h1 className="mt-3 max-w-3xl text-2xl font-semibold tracking-tight sm:text-4xl">
-              Aprenda sobre dividendos.
+            <p className="edition-label">Escola do Dividendo / Aprender</p>
+            <h1 className="display-title mt-3 max-w-3xl text-3xl sm:text-5xl">
+              O que sustenta um dividendo?
             </h1>
             <p className="mt-3 max-w-2xl text-sm leading-6 text-evo-textSec">
-              Minicursos e exercícios para entender as empresas e seus dividendos.
+              Aulas sobre análise de empresas e a distribuição de lucros.
             </p>
           </div>
-          <div className="shrink-0 self-start sm:self-center">
-            <OrbitCoins variant="learning" size="hero" />
-          </div>
+          <p className="inline-flex shrink-0 items-center gap-2 self-start text-xs font-medium text-evo-textSec sm:mt-1">
+            <BookOpen
+              size={16}
+              className="text-evo-accent"
+              aria-hidden="true"
+            />
+            Aulas e exercícios
+          </p>
         </div>
         <div className="mt-3 flex flex-wrap items-center justify-between gap-4 sm:mt-6">
           <p className="hidden text-sm text-evo-textSec sm:block">
@@ -401,13 +403,13 @@ function LearningSession({
             className="inline-flex min-h-11 items-center gap-2 text-sm text-evo-accent"
             href="#cursos"
           >
-            Conhecer os cursos <ArrowDown size={16} aria-hidden="true" />
+            Ver minicursos <ArrowDown size={16} aria-hidden="true" />
           </a>
         </div>
         <div
           className="mt-3 h-1 bg-evo-bgMain"
           role="progressbar"
-          aria-label="Progresso dos exercícios da trilha"
+          aria-label="Progresso dos exercícios"
           aria-valuenow={completed.length}
           aria-valuemin={0}
           aria-valuemax={lessonIds.length}
@@ -424,9 +426,7 @@ function LearningSession({
           className="space-y-3 border-l-2 border-evo-accent pl-4 text-sm text-evo-textSec"
         >
           <p>
-            {content
-              ? "Atualizando aulas e progresso…"
-              : "Carregando sua trilha de aprendizado…"}
+            {content ? "Atualizando aulas e progresso…" : "Carregando aulas…"}
           </p>
           {!content && (
             <div
@@ -441,8 +441,8 @@ function LearningSession({
           <p role="alert">{error}</p>
           {content && (
             <p className="text-sm">
-              O conteúdo já carregado continua disponível. Tente atualizar para
-              conferir seu progresso.
+              As aulas carregadas continuam disponíveis. Tente novamente para
+              atualizar o progresso.
             </p>
           )}
           <button
@@ -451,14 +451,14 @@ function LearningSession({
             onClick={retryContent}
             disabled={loading}
           >
-            <RotateCcw size={15} aria-hidden="true" /> Tentar carregar novamente
+            <RotateCcw size={15} aria-hidden="true" /> Tentar novamente
           </button>
         </div>
       )}
       {!user && !loading && content && (
         <p className="text-sm text-evo-textSec">
-          A primeira aula e o glossário são abertos. Sua conta gratuita libera
-          as outras aulas e salva seu progresso.
+          A primeira aula e o glossário são abertos. A conta gratuita dá acesso
+          às demais aulas e salva seu progresso.
         </p>
       )}
       {content && !authLoading && (
@@ -516,7 +516,7 @@ function LearningSession({
                 {selectedLesson.locked ? (
                   <AccountGate
                     title="Entre para estudar esta aula"
-                    description="Sua conta gratuita libera a leitura, o exercício e o acompanhamento do progresso."
+                    description="A conta gratuita dá acesso à aula completa e salva seu progresso."
                     next={
                       location.pathname +
                       location.search +
@@ -544,7 +544,7 @@ function LearningSession({
             <div className="mt-5 min-w-0 max-w-4xl">
               <div className="mt-4 flex flex-wrap items-center gap-3 text-xs text-evo-textSec">
                 <BookOpen size={15} aria-hidden="true" />
-                <span>Material de leitura disponível</span>
+                <span>Leitura</span>
                 <Clock3 size={15} aria-hidden="true" />
                 <span>
                   {selectedChapter.readingMinutes} min de leitura estimada
@@ -562,7 +562,7 @@ function LearningSession({
                 aria-labelledby="reading-title"
               >
                 <h3 id="reading-title" className="text-lg font-semibold">
-                  Para entender esta aula
+                  Texto da aula
                 </h3>
                 <p className="mt-4 text-sm leading-7 text-evo-textSec">
                   {selectedLesson.text}
@@ -577,9 +577,7 @@ function LearningSession({
                 ))}
                 {!!selectedLesson.takeaways?.length && (
                   <aside className="mt-7 border-l-2 border-evo-accent pl-5">
-                    <h4 className="font-semibold">
-                      Leve estes pontos com você
-                    </h4>
+                    <h4 className="font-semibold">Pontos principais</h4>
                     <ul className="mt-3 list-disc space-y-2 pl-4 text-sm leading-relaxed text-evo-textSec">
                       {selectedLesson.takeaways.map((takeaway) => (
                         <li key={takeaway}>{takeaway}</li>
@@ -589,7 +587,7 @@ function LearningSession({
                 )}
                 {!!selectedLesson.sources?.length && (
                   <div className="mt-6 text-xs leading-relaxed text-evo-textSec">
-                    <p className="font-semibold">Para aprofundar nas fontes</p>
+                    <p className="font-semibold">Fontes da aula</p>
                     <ul className="mt-2 space-y-2">
                       {selectedLesson.sources.map((source) => (
                         <li key={source.url}>
@@ -635,8 +633,8 @@ function LearningSession({
                     )
                   }
                 >
-                  <MessageCircle size={16} aria-hidden="true" /> Pedir uma
-                  explicação ao assistente
+                  <MessageCircle size={16} aria-hidden="true" /> Tirar uma
+                  dúvida com o assistente
                 </button>
               )}
             </div>
@@ -689,7 +687,7 @@ function LearningSession({
       <section aria-labelledby="learning-glossary-title">
         <div className="flex flex-wrap items-end justify-between gap-3">
           <h2 id="learning-glossary-title" className="text-2xl font-semibold">
-            Um conceito por vez
+            Termos das aulas
           </h2>
           <Link
             to="/glossario"
@@ -698,37 +696,39 @@ function LearningSession({
             Abrir glossário completo <ArrowRight size={15} aria-hidden="true" />
           </Link>
         </div>
-        <MobileDisclosure title="Buscar conceitos no glossário" className="mt-4">
-        <label className="block">
-          <span className="sr-only">Buscar um conceito</span>
-          <input
-            className="field"
-            placeholder="Buscar dividendo, payout, data-ex…"
-            value={search}
-            onChange={(event) => setSearch(event.target.value)}
-          />
-        </label>
-        <dl className="mt-3 grid gap-x-6 sm:grid-cols-2">
-          {matchingTerms.map(([term, text]) => (
-            <div key={term} className="border-b border-evo-border py-4">
-              <dt className="font-semibold">{term}</dt>
-              <dd className="mt-2 text-sm leading-relaxed text-evo-textSec">
-                {text}
-              </dd>
-            </div>
-          ))}
-        </dl>
-        {glossary.length > 0 && matchingTerms.length === 0 && (
-          <p role="status" className="mt-4 text-sm text-evo-textSec">
-            Nenhum conceito encontrado. Tente outro termo.
-          </p>
-        )}
+        <MobileDisclosure
+          title="Buscar conceitos no glossário"
+          className="mt-4"
+        >
+          <label className="block">
+            <span className="sr-only">Buscar um conceito</span>
+            <input
+              className="field"
+              placeholder="Buscar dividendo, payout, data-ex…"
+              value={search}
+              onChange={(event) => setSearch(event.target.value)}
+            />
+          </label>
+          <dl className="mt-3 grid gap-x-6 sm:grid-cols-2">
+            {matchingTerms.map(([term, text]) => (
+              <div key={term} className="border-b border-evo-border py-4">
+                <dt className="font-semibold">{term}</dt>
+                <dd className="mt-2 text-sm leading-relaxed text-evo-textSec">
+                  {text}
+                </dd>
+              </div>
+            ))}
+          </dl>
+          {glossary.length > 0 && matchingTerms.length === 0 && (
+            <p role="status" className="mt-4 text-sm text-evo-textSec">
+              Nenhum conceito encontrado. Tente outro termo.
+            </p>
+          )}
         </MobileDisclosure>
       </section>
       <footer className="flex flex-wrap items-center justify-between gap-4 border-t border-evo-border pt-6">
         <Link to={user ? "/app/ranking" : "/ranking"} className="action">
-          Aplicar a leitura no ranking{" "}
-          <ArrowRight size={16} aria-hidden="true" />
+          Abrir pesquisas do ranking <ArrowRight size={16} aria-hidden="true" />
         </Link>
         <button
           type="button"
@@ -749,8 +749,8 @@ function LearningSession({
               Reiniciar os exercícios concluídos?
             </h3>
             <p className="mt-2 text-sm text-evo-textSec">
-              As marcações de conclusão de todas as aulas serão removidas. Os
-              cursos continuam disponíveis para estudar novamente.
+              Isso remove as conclusões dos exercícios. As aulas continuam
+              disponíveis.
             </p>
             <div className="mt-3 flex flex-wrap gap-3">
               <button

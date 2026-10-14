@@ -75,13 +75,16 @@ export function HomeMarketHighlights() {
   return (
     <ul
       aria-label="Ações com maiores altas disponíveis"
-      className="mt-3 grid gap-2 sm:mt-6 sm:grid-cols-3 sm:gap-4"
+      className="mt-4 grid border-t border-evo-border sm:mt-6 sm:grid-cols-3"
     >
       {gainers.map((asset) => (
-        <li key={asset.symbol} className="min-w-0">
+        <li
+          key={asset.symbol}
+          className="min-w-0 border-b border-evo-border sm:border-b-0 sm:border-r sm:last:border-r-0"
+        >
           <Link
             to={`${user ? "/app/analises" : "/mercado"}?busca=${encodeURIComponent(asset.symbol)}`}
-            className="group relative grid h-full grid-cols-[minmax(0,1fr)_auto] items-center gap-x-3 rounded-xl border border-evo-border bg-evo-card p-4 transition-colors hover:border-evo-accent focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-evo-accent sm:flex sm:flex-col sm:items-stretch sm:p-5"
+            className="group relative grid h-full grid-cols-[minmax(0,1fr)_auto] items-center gap-x-3 py-4 transition-colors hover:bg-evo-card focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-evo-accent sm:flex sm:flex-col sm:items-stretch sm:p-5"
             aria-label={`Ver análise de ${asset.symbol}, ${asset.name}`}
           >
             <div className="col-start-1 row-start-1 flex items-center justify-between gap-3">
@@ -101,7 +104,9 @@ export function HomeMarketHighlights() {
               {asset.name}
             </p>
             <div className="col-start-2 row-span-2 row-start-1 text-right sm:mt-auto sm:pt-5 sm:text-left">
-              <p className="sr-only text-xs text-evo-textSec sm:not-sr-only">Variação da sessão</p>
+              <p className="sr-only text-xs text-evo-textSec sm:not-sr-only">
+                Variação da sessão
+              </p>
               <p className="font-numbers text-lg font-medium text-evo-green sm:mt-1 sm:text-3xl">
                 {percentage.format(Number(asset.changePercent))}%
               </p>

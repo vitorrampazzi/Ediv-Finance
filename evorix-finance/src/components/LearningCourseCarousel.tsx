@@ -18,7 +18,11 @@ type Course = {
 
 type LearningCourseCarouselProps = {
   courses: Course[];
-  chapters: { id: string; readingMinutes: number; videoEmbedUrl: string | null }[];
+  chapters: {
+    id: string;
+    readingMinutes: number;
+    videoEmbedUrl: string | null;
+  }[];
   completed: string[];
   selectedCourseId: string;
   onSelect: (chapterId: string) => void;
@@ -73,14 +77,20 @@ export function LearningCourseCarousel({
 
   useEffect(() => {
     const viewport = viewportRef.current;
-    const selected = trackRef.current?.querySelector<HTMLElement>("[data-selected-course='true']");
+    const selected = trackRef.current?.querySelector<HTMLElement>(
+      "[data-selected-course='true']",
+    );
     if (!viewport || !selected) return;
     const bounds = viewport.getBoundingClientRect();
     const card = selected.getBoundingClientRect();
-    const adjustment = card.left < bounds.left
-      ? card.left - bounds.left
-      : card.right > bounds.right ? card.right - bounds.right : 0;
-    if (adjustment) viewport.scrollBy({ left: adjustment, behavior: "instant" });
+    const adjustment =
+      card.left < bounds.left
+        ? card.left - bounds.left
+        : card.right > bounds.right
+          ? card.right - bounds.right
+          : 0;
+    if (adjustment)
+      viewport.scrollBy({ left: adjustment, behavior: "instant" });
   }, [selectedCourseId]);
 
   function scrollCourses(direction: -1 | 1) {
@@ -111,7 +121,7 @@ export function LearningCourseCarousel({
             Minicursos
           </h2>
           <p className="mt-2 text-xs leading-relaxed text-evo-textSec">
-            Escolha um curso, acompanhe seu percurso e continue pela próxima aula.
+            Abra um curso para ver as aulas.
           </p>
         </div>
         <div
@@ -158,9 +168,16 @@ export function LearningCourseCarousel({
             const minutes = chapters
               .filter((chapter) => course.chapterIds.includes(chapter.id))
               .reduce((sum, chapter) => sum + chapter.readingMinutes, 0);
-            const firstChapterId = course.chapterIds.find((id) => !completed.includes(id)) ?? course.chapterIds[0];
-            const courseFinished = count === course.chapterIds.length && count > 0;
-            const availableVideos = chapters.filter((chapter) => course.chapterIds.includes(chapter.id) && approvedVideoEmbed(chapter.videoEmbedUrl)).length;
+            const firstChapterId =
+              course.chapterIds.find((id) => !completed.includes(id)) ??
+              course.chapterIds[0];
+            const courseFinished =
+              count === course.chapterIds.length && count > 0;
+            const availableVideos = chapters.filter(
+              (chapter) =>
+                course.chapterIds.includes(chapter.id) &&
+                approvedVideoEmbed(chapter.videoEmbedUrl),
+            ).length;
             return (
               <li
                 key={course.id}
@@ -213,20 +230,38 @@ export function LearningCourseCarousel({
                     aria-valuemax={course.chapterIds.length}
                     aria-valuenow={count}
                   >
-                    <div className="h-full bg-evo-accent transition-[width] motion-reduce:transition-none" style={{ width: `${course.chapterIds.length ? (count / course.chapterIds.length) * 100 : 0}%` }} />
+                    <div
+                      className="h-full bg-evo-accent transition-[width] motion-reduce:transition-none"
+                      style={{
+                        width: `${course.chapterIds.length ? (count / course.chapterIds.length) * 100 : 0}%`,
+                      }}
+                    />
                   </div>
                   <p className="mt-3 hidden text-xs leading-5 text-evo-textSec sm:block">
-                    {availableVideos ? `${availableVideos} ${availableVideos === 1 ? "vídeo disponível" : "vídeos disponíveis"}` : "Vídeos em preparação"} · Leituras e exercícios disponíveis
+                    {availableVideos
+                      ? `${availableVideos} ${availableVideos === 1 ? "vídeo disponível" : "vídeos disponíveis"}`
+                      : "Vídeos em preparação"}{" "}
+                    · Leituras e exercícios disponíveis
                   </p>
                   {firstChapterId && (
                     <button
                       type="button"
                       onClick={() => onSelect(firstChapterId)}
                       aria-current={selected ? "true" : undefined}
-                      aria-label={(courseFinished ? "Revisar minicurso: " : count > 0 ? "Continuar minicurso: " : "Abrir minicurso: ") + course.title}
+                      aria-label={
+                        (courseFinished
+                          ? "Revisar minicurso: "
+                          : count > 0
+                            ? "Continuar minicurso: "
+                            : "Abrir minicurso: ") + course.title
+                      }
                       className="mt-5 inline-flex min-h-11 items-center justify-between gap-3 border-t border-evo-border pt-4 text-sm font-semibold text-evo-accent focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-evo-accent"
                     >
-                      {courseFinished ? "Revisar minicurso" : count > 0 ? "Continuar minicurso" : "Começar minicurso"}
+                      {courseFinished
+                        ? "Revisar minicurso"
+                        : count > 0
+                          ? "Continuar minicurso"
+                          : "Começar minicurso"}
                       <ArrowRight size={16} aria-hidden="true" />
                     </button>
                   )}

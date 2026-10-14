@@ -1,9 +1,4 @@
-import {
-  BookOpen,
-  Building2,
-  ChartNoAxesCombined,
-  FileText,
-} from "lucide-react";
+import { BookOpen } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import { AccountGate } from "./AccountGate";
 import { OrbitCoins } from "./OrbitCoins";
@@ -26,65 +21,35 @@ export function RankingAccessLanding({
           : "mx-auto max-w-6xl space-y-6 px-4 py-8 sm:px-6 md:py-12"
       }
     >
-      <div className="rounded-2xl border border-evo-border bg-evo-card p-4 sm:p-8">
-        <div className="mobile-page-heading flex items-start justify-between gap-3 sm:gap-4 sm:items-center">
+      <header className="section-masthead">
+        <div className="flex items-start justify-between gap-4 sm:items-center">
           <div className="min-w-0 flex-1">
-            <p className="text-xs font-semibold uppercase tracking-widest text-evo-accent">
-              Pesquisa para contas gratuitas
-            </p>
+            <p className="edition-label">Pesquisa de ações</p>
             {compact ? (
-              <h2 className="mt-3 text-2xl font-bold">
-                Uma pesquisa mais completa começa aqui
+              <h2 className="display-title mt-3 text-2xl sm:text-3xl">
+                A pesquisa por empresa
               </h2>
             ) : (
-              <h1 className="mt-3 text-2xl font-bold sm:text-4xl">
+              <h1 className="display-title mt-3 text-3xl sm:text-4xl">
                 Ranking de previsões
               </h1>
             )}
-            <p className="mt-3 max-w-3xl text-sm leading-relaxed text-evo-textSec">
-              Previsões, teses e dados das empresas, disponíveis com sua conta gratuita.
+            <p className="mt-3 max-w-2xl text-sm leading-6 text-evo-textSec">
+              Compare os cenários e abra uma empresa para ler a tese, os riscos
+              e os dados que sustentam a previsão.
             </p>
             <ResearchAvailability />
           </div>
           <div className="shrink-0 self-start sm:self-center">
-            <OrbitCoins variant="ranking" size={compact ? "sm" : "hero"} />
+            <OrbitCoins variant="ranking" size="sm" />
           </div>
         </div>
-        <div className="mt-6 grid gap-3 sm:grid-cols-3">
-          {[
-            {
-              Icon: ChartNoAxesCombined,
-              title: "Cenários e previsões",
-              text: "Potencial informado, preço-alvo, horizonte, tese e riscos reunidos em cada análise.",
-            },
-            {
-              Icon: Building2,
-              title: "Dados da empresa",
-              text: "Balanço, DRE, fluxo de caixa, informações da empresa, dívida líquida e estatísticas.",
-            },
-            {
-              Icon: FileText,
-              title: "Contexto da pesquisa",
-              text: "Consulte fontes, datas e versões anteriores quando a equipe publicar suas análises.",
-            },
-          ].map(({ Icon, title, text }) => (
-            <div
-              key={title}
-              className="grid grid-cols-[auto_1fr] items-center gap-x-3 rounded-xl border border-evo-border bg-evo-bgMain p-3 sm:block sm:p-4"
-            >
-              <Icon size={21} className="text-evo-accent" aria-hidden="true" />
-              <h3 className="text-sm font-semibold sm:mt-3">{title}</h3>
-              <p className="mt-2 hidden text-xs leading-relaxed text-evo-textSec sm:block">
-                {text}
-              </p>
-            </div>
-          ))}
-        </div>
-      </div>
+      </header>
       <AccountGate
-        title="Libere o ranking com sua conta gratuita"
-        description="Crie a conta e confirme seu e-mail para começar."
+        title="Entre para consultar as pesquisas"
+        description="Use sua conta ou crie uma. O acesso é liberado depois de confirmar seu e-mail."
         next={destination}
+        compact
       />
       {!compact && (
         <div className="flex flex-wrap items-center justify-between gap-3 text-sm">

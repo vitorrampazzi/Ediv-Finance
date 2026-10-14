@@ -197,7 +197,7 @@ function MemberStockResearch() {
           <span aria-hidden="true">/</span>
           <span>{entry.sector || "Setor não informado"}</span>
         </div>
-        <h1 className="mt-4 break-words text-3xl font-semibold tracking-tight sm:text-5xl">
+        <h1 className="display-title mt-4 break-words text-3xl sm:text-5xl">
           {entry.companyName}
         </h1>
         <p className="mt-3 font-numbers text-xl text-evo-textSec">
@@ -238,7 +238,11 @@ function MemberStockResearch() {
           </div>
         </dl>
       </header>
-      <MobileDisclosure title="Guia de leitura da empresa" className="mb-4 sm:mb-6" contentClassName="space-y-4 border-l-2 border-evo-accent bg-evo-accent/5 p-4 text-sm sm:grid sm:grid-cols-3 sm:gap-4 sm:space-y-0 sm:p-5 sm:text-xs">
+      <MobileDisclosure
+        title="Guia de leitura da empresa"
+        className="mb-4 sm:mb-6"
+        contentClassName="space-y-4 border-l-2 border-evo-accent bg-evo-accent/5 p-4 text-sm sm:grid sm:grid-cols-3 sm:gap-4 sm:space-y-0 sm:p-5 sm:text-xs"
+      >
         <div>
           <h2 className="font-semibold">Comece pela tese</h2>
           <p className="mt-2 leading-5 text-evo-textSec">
@@ -285,13 +289,8 @@ function MemberStockResearch() {
       <div className="grid gap-x-10 lg:grid-cols-[minmax(0,1fr)_15rem]">
         <div className="min-w-0">
           <section id="tese" className={section + " border-t-0"}>
-            <p className="text-xs font-semibold uppercase tracking-widest text-evo-accent">
-              01 / Leitura da pesquisa
-            </p>
-            <h2 className="mt-3 text-2xl font-semibold">
-              {demo
-                ? "Como seria a opinião nesta pesquisa"
-                : "Opinião do responsável e tese do cenário"}
+            <h2 className="display-title text-2xl sm:text-3xl">
+              {demo ? "Tese do exemplo" : "Tese da pesquisa"}
             </h2>
             <p className="mt-5 whitespace-pre-wrap break-words text-base leading-8 text-evo-textSec">
               {entry.thesis?.trim() ||
@@ -312,10 +311,9 @@ function MemberStockResearch() {
             </p>
           </section>
           <section id="historia" className={section}>
-            <p className="text-xs font-semibold uppercase tracking-widest text-evo-accent">
-              02 / Contexto do negócio
-            </p>
-            <h2 className="mt-3 text-2xl font-semibold">História da empresa</h2>
+            <h2 className="display-title text-2xl sm:text-3xl">
+              História da empresa
+            </h2>
             {story ? (
               <>
                 <p className="mt-5 text-sm leading-7 text-evo-textSec">
@@ -370,10 +368,7 @@ function MemberStockResearch() {
             )}
           </section>
           <section id="estatisticas" className={section}>
-            <p className="text-xs font-semibold uppercase tracking-widest text-evo-accent">
-              03 / Números com contexto
-            </p>
-            <h2 className="mt-3 text-2xl font-semibold">
+            <h2 className="display-title text-2xl sm:text-3xl">
               Estatísticas da empresa
             </h2>
             <p className="mt-3 text-xs leading-relaxed text-evo-textSec">

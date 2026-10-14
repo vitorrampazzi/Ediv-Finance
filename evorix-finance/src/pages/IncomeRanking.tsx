@@ -238,22 +238,22 @@ function MemberIncomeRanking() {
       id="pagina-conteudo"
       className="mx-auto max-w-7xl space-y-6 px-4 py-6 sm:px-6 md:py-10"
     >
-      <section className="page-intro">
+      <section className="section-masthead">
         <div className="mobile-page-heading flex items-start justify-between gap-3 sm:gap-4 sm:items-center">
           <div className="min-w-0 flex-1">
-            <p className="text-xs font-semibold uppercase tracking-widest text-evo-accent">
+            <p className="edition-label">
               {showingDemo
                 ? "Demonstração · dados fictícios"
                 : "Pesquisa de ações"}
             </p>
-            <h1 className="mt-3 text-2xl font-bold sm:text-3xl">
+            <h1 className="display-title mt-3 text-3xl sm:text-5xl">
               Ranking de previsões
             </h1>
             <p className="mt-3 max-w-3xl text-sm leading-relaxed text-evo-textSec sm:text-base">
               {showingDemo ? (
-                "Explore os cenários, os indicadores e os módulos de análise por empresa."
+                "Abra uma empresa de exemplo para ler a tese e os números."
               ) : (
-                <>Compare cenários e abra uma empresa para ler a pesquisa.</>
+                <>Leia as previsões e o que sustenta cada cenário.</>
               )}
             </p>
             <div className="mt-5 flex flex-wrap gap-3">
@@ -281,7 +281,7 @@ function MemberIncomeRanking() {
             </div>
           </div>
           <div className="shrink-0 self-start sm:self-center">
-            <OrbitCoins variant="ranking" size="hero" />
+            <OrbitCoins variant="ranking" size="sm" />
           </div>
         </div>
       </section>

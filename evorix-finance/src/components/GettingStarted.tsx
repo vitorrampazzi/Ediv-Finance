@@ -11,19 +11,19 @@ import { authLink } from "../lib/authDestination";
 const questions = [
   [
     "Preciso pagar para começar?",
-    "Não. A conta gratuita libera o ranking, os cadernos de pesquisa e a trilha educativa nesta versão. A assessoria é um serviço separado, ainda em preparação.",
+    "Não. A conta gratuita dá acesso às pesquisas e às aulas. A assessoria será um serviço separado e ainda está em preparação.",
   ],
   [
     "O ranking já tem a pesquisa do corretor?",
-    "As pesquisas publicadas ficam disponíveis no ranking. A versão de demonstração apresenta empresas e valores fictícios para explorar as ferramentas.",
+    "As pesquisas publicadas aparecem no ranking. Quando a lista está em demonstração, as empresas e os valores são fictícios.",
   ],
   [
     "O que encontro na Ediv?",
-    "Pesquisas de ações, cenários por empresa e conteúdo para aprender sobre dividendos. Explore o ranking, as análises e os minicursos.",
+    "Pesquisas por empresa, dados de ações e aulas sobre dividendos. No ranking, abra uma empresa para ler os detalhes da pesquisa.",
   ],
   [
     "Por que preciso confirmar meu e-mail?",
-    "A confirmação protege o acesso à conta e permite recuperar sua senha. Depois do cadastro, confira a caixa de entrada e o spam. Você pode reenviar o link se precisar.",
+    "Você precisa confirmar o endereço antes de entrar. Procure o link na caixa de entrada ou no spam. Se ele não chegar, solicite o reenvio na tela de acesso.",
   ],
   [
     "Posso excluir minha conta e meus dados?",
@@ -45,63 +45,75 @@ export function GettingStarted({ compact = false }: GettingStartedProps) {
         aria-labelledby="getting-started-heading"
         className="mx-auto max-w-7xl px-4 py-6 sm:px-5 md:px-8 md:py-10"
       >
-        <div className="flex flex-wrap items-center justify-between gap-x-6 gap-y-2">
-          <h2 id="getting-started-heading" className="text-xl font-bold">
-            Como aproveitar a Ediv
-          </h2>
+        <div className="flex flex-wrap items-end justify-between gap-x-6 gap-y-2">
+          <div>
+            <p className="edition-label">Na Ediv</p>
+            <h2
+              id="getting-started-heading"
+              className="mt-2 text-xl font-semibold sm:text-2xl"
+            >
+              Por onde começar
+            </h2>
+          </div>
           <Link
             className="inline-flex min-h-11 items-center gap-2 text-sm font-semibold text-evo-textSec transition-colors hover:text-evo-accent focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-evo-accent"
             to={user ? "/app/conversas" : "/suporte"}
           >
-            Dúvidas? Central de ajuda
+            Central de ajuda
             <ArrowRight size={16} aria-hidden="true" />
           </Link>
         </div>
-        <ol className="mt-3 grid gap-4 border-t border-evo-border pt-4 md:mt-5 md:grid-cols-3 md:gap-8 md:pt-5">
+        <ol className="mt-5 space-y-1 border-t border-evo-border pt-3 sm:mt-6">
           {[
             {
-              Icon: ChartNoAxesCombined,
-              title: "Explore a pesquisa",
-              text: "Abra uma empresa para conhecer a tese, os números e os riscos.",
-              action: "Conhecer o ranking",
+              title: "Leia a pesquisa",
+              text: "No ranking, abra a empresa para ler as premissas e os riscos do cenário.",
+              action: "Ranking de previsões",
               to: user ? "/app/ranking" : "/ranking",
             },
             {
-              Icon: Building2,
-              title: "Conheça as empresas",
-              text: "Compare cotações e entenda o negócio por trás de cada ação.",
-              action: "Explorar as ações",
+              title: "Compare as ações",
+              text: "Consulte as cotações e os indicadores disponíveis nas análises.",
+              action: "Análises de ações",
               to: user ? "/app/analises" : "/mercado",
             },
             {
-              Icon: BookOpen,
-              title: "Aprenda sobre dividendos",
-              text: "Avance pelos minicursos, exercícios e conceitos do glossário.",
-              action: "Começar a aprender",
+              title: "Estude dividendos",
+              text: "Escolha uma aula e responda ao exercício para registrar sua conclusão.",
+              action: "Aulas e exercícios",
               to: user ? "/app/aprender" : "/aprender",
             },
-          ].map(({ Icon, title, text, action, to }, index) => (
+          ].map(({ title, text, action, to }, index) => (
             <li key={title}>
               <Link
-                className="group flex min-h-11 gap-3 rounded-md py-1 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-evo-accent"
+                className="group grid min-h-11 grid-cols-[2rem_minmax(0,1fr)_1rem] items-start gap-x-3 py-4 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-evo-accent sm:grid-cols-[3rem_minmax(0,.75fr)_minmax(0,1fr)_1rem] sm:items-center sm:gap-x-6"
                 to={to}
               >
-                <span className="flex size-10 shrink-0 items-center justify-center rounded-full border border-evo-border text-evo-accent">
-                  <Icon size={19} aria-hidden="true" />
+                <span
+                  className="pt-0.5 font-mono text-xs text-evo-accent"
+                  aria-hidden="true"
+                >
+                  {String(index + 1).padStart(2, "0")}
                 </span>
                 <div className="min-w-0">
-                  <h3 className="flex items-center gap-2 text-sm font-semibold transition-colors group-hover:text-evo-accent">
-                    <span className="text-evo-textSec">{index + 1}.</span>
+                  <h3 className="text-base font-semibold transition-colors group-hover:text-evo-accent sm:text-lg">
                     {title}
                   </h3>
-                  <p className="mt-1 text-sm leading-relaxed text-evo-textSec">
+                  <p className="mt-1 text-xs text-evo-textSec sm:text-sm">
+                    {action}
+                  </p>
+                  <p className="mt-2 text-sm leading-relaxed text-evo-textSec sm:hidden">
                     {text}
                   </p>
-                  <span className="mt-3 hidden min-h-11 items-center gap-2 text-sm font-medium text-evo-accent sm:inline-flex">
-                    {action} <ArrowRight size={14} aria-hidden="true" />
-                  </span>
                 </div>
-                <ArrowRight size={17} aria-hidden="true" className="mt-3 ml-auto shrink-0 text-evo-accent sm:hidden" />
+                <p className="hidden text-sm leading-relaxed text-evo-textSec sm:block">
+                  {text}
+                </p>
+                <ArrowRight
+                  size={16}
+                  aria-hidden="true"
+                  className="mt-1 text-evo-accent sm:mt-0"
+                />
               </Link>
             </li>
           ))}
@@ -117,33 +129,32 @@ export function GettingStarted({ compact = false }: GettingStartedProps) {
     >
       <div>
         <p className="text-xs font-semibold uppercase tracking-widest text-evo-accent">
-          Seu primeiro passo
+          Na Ediv
         </p>
-        <h2 className="mt-2 text-2xl font-bold">Comece pelo conhecimento</h2>
+        <h2 className="mt-2 text-2xl font-semibold">Por onde começar</h2>
         <p className="mt-3 max-w-2xl text-sm leading-relaxed text-evo-textSec">
-          Explore no seu ritmo. Entenda os conceitos, conheça o formato da
-          pesquisa e conheça o negócio por trás de cada ação.
+          Comece pela pesquisa de uma empresa ou por uma aula sobre dividendos.
         </p>
         <div className="mt-6 grid gap-4 md:grid-cols-3">
           {[
             {
               Icon: ChartNoAxesCombined,
-              title: "1. Explore as previsões",
-              text: "Leia os cenários do ranking, o horizonte e as premissas. Abra uma empresa para entender a tese da pesquisa.",
+              title: "1. Leia a pesquisa",
+              text: "No ranking, abra uma empresa para consultar o cenário e as premissas da pesquisa.",
               to: user ? "/app/ranking" : authLink("cadastro", "/app/ranking"),
               action: user ? "Abrir ranking" : "Criar conta grátis",
             },
             {
               Icon: Building2,
-              title: "2. Conheça as empresas",
-              text: "Explore as cotações e indicadores disponíveis. Relacione os números à história, ao setor e aos riscos do negócio.",
+              title: "2. Compare as ações",
+              text: "Consulte as cotações e os indicadores disponíveis nas análises.",
               to: user ? "/app/analises" : "/mercado",
               action: "Explorar análises",
             },
             {
               Icon: BookOpen,
-              title: "3. Entenda os dividendos",
-              text: "Estude como empresas geram caixa, distribuem resultados e sustentam seus pagamentos. Continue pelas aulas e exercícios.",
+              title: "3. Estude dividendos",
+              text: "Leia uma aula sobre a distribuição de lucros e responda ao exercício para registrar sua conclusão.",
               to: user ? "/app/aprender" : "/aprender",
               action: "Entrar na escola",
             },
@@ -172,8 +183,8 @@ export function GettingStarted({ compact = false }: GettingStartedProps) {
         <div>
           <h2 className="text-2xl font-bold">Antes de começar</h2>
           <p className="mt-3 text-sm leading-relaxed text-evo-textSec">
-            Estamos em versão beta. Sua experiência e suas dúvidas ajudam a
-            equipe a melhorar a plataforma.
+            Encontrou um erro ou não conseguiu acessar a conta? Escreva para a
+            equipe pela central de ajuda.
           </p>
           <Link
             className="mt-3 inline-flex min-h-11 items-center gap-2 text-sm text-evo-accent underline"

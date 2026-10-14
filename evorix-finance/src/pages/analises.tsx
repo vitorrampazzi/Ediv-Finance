@@ -33,16 +33,14 @@ export function Analises({ publicView = false }: { publicView?: boolean }) {
     <section
       className={`mx-auto max-w-7xl space-y-6 ${publicView ? "px-5 py-6 md:px-8 md:py-10" : ""}`}
     >
-      <div className="page-intro relative flex items-start justify-between gap-3 sm:gap-5">
+      <div className="section-masthead relative flex items-start justify-between gap-3 sm:gap-5">
         <div className="relative z-10 min-w-0">
-          <p className="text-xs font-semibold uppercase tracking-[.18em] text-evo-accent">
-            Caderno de mercado / B3
-          </p>
-          <h1 className="mt-3 text-2xl font-semibold leading-tight tracking-[-.04em] text-evo-textMain sm:text-5xl">
-            Análises de ações.
+          <p className="edition-label">Mercado · B3</p>
+          <h1 className="display-title mt-3 text-3xl text-evo-textMain sm:text-5xl">
+            Análises de ações
           </h1>
           <p className="mt-3 max-w-2xl text-sm leading-relaxed text-evo-textSec">
-            Busque empresas e compare cotações de ações brasileiras.
+            Busque uma empresa pelo nome ou pelo código da ação.
           </p>
         </div>
         <div className="relative z-10 shrink-0 self-start">
@@ -101,8 +99,15 @@ export function Analises({ publicView = false }: { publicView?: boolean }) {
               : `${total.toLocaleString("pt-BR")} ações encontradas`}
         </span>
         {requestedAt && (
-          <span className="text-xs" title={new Date(requestedAt).toLocaleString("pt-BR")}>
-            Consulta: {new Date(requestedAt).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}
+          <span
+            className="text-xs"
+            title={new Date(requestedAt).toLocaleString("pt-BR")}
+          >
+            Consulta:{" "}
+            {new Date(requestedAt).toLocaleTimeString("pt-BR", {
+              hour: "2-digit",
+              minute: "2-digit",
+            })}
           </span>
         )}
       </div>

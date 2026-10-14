@@ -13,7 +13,7 @@ export function AuthShell({
 }) {
   return (
     <main className="flex min-h-screen items-center justify-center px-4 py-10">
-      <section className="w-full max-w-md rounded-2xl border border-evo-border bg-evo-card p-6 shadow-2xl sm:p-8">
+      <section className="w-full max-w-md border-t-2 border-evo-accent pt-6 sm:bg-evo-bgSec sm:p-8">
         <Link
           to="/"
           className="mb-8 inline-flex items-center gap-2 text-sm text-evo-textSec hover:text-evo-textMain"
@@ -26,7 +26,7 @@ export function AuthShell({
           />
           Ediv Finance
         </Link>
-        <h1 className="text-2xl font-bold tracking-tight">{title}</h1>
+        <h1 className="display-title text-3xl">{title}</h1>
         <p className="mt-2 text-sm leading-relaxed text-evo-textSec">
           {description}
         </p>

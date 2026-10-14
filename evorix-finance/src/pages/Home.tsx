@@ -1,4 +1,4 @@
-import { ArrowRight, BarChart3, BookOpen, Sparkles } from "lucide-react";
+import { ArrowRight, BookOpen } from "lucide-react";
 import { Link, Navigate } from "react-router-dom";
 import { RankingHighlights } from "../components/RankingHighlights";
 import { useAuth } from "../context/authContext";
@@ -30,33 +30,27 @@ export function HomeContent({
   return (
     <>
       <section
-        className={`home-editorial mx-auto grid max-w-7xl items-center gap-5 md:grid-cols-[1.2fr_.8fr] md:gap-10 ${member ? "py-2 md:py-8" : "px-4 py-6 sm:px-5 md:px-8 md:py-10"}`}
+        className={`home-editorial mx-auto grid max-w-7xl items-center gap-7 md:grid-cols-[1.15fr_.85fr] md:gap-12 ${member ? "py-3 md:py-8" : "px-4 py-7 sm:px-5 md:px-8 md:py-12"}`}
       >
         <div>
-          <span className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[.18em] text-evo-accent">
-            <Sparkles size={14} aria-hidden="true" />{" "}
-            {member && firstName
-              ? `Olá, ${firstName}`
-              : "Escola do dividendo"}
+          <span className="edition-label">
+            {member && firstName ? `Olá, ${firstName}` : "Escola do dividendo"}
           </span>
           <h1
-            className={`mt-3 max-w-2xl font-bold leading-[1.12] tracking-[-.035em] sm:mt-5 sm:leading-[1.07] ${member ? "text-[1.75rem] sm:text-4xl xl:text-5xl" : "text-[2rem] sm:text-5xl lg:text-6xl"}`}
+            className={`display-title mt-4 max-w-2xl ${member ? "text-[2.4rem] sm:text-5xl xl:text-6xl" : "text-[clamp(2.15rem,10.2vw,2.5rem)] sm:text-5xl lg:text-[4.5rem]"}`}
           >
             {member
-              ? "Sua escola de ações e dividendos."
-              : "Aprenda sobre ações e dividendos."}
-            <span className="mt-2 hidden font-normal text-evo-textSec sm:block">
-              {member ? "Pesquise. Compare. Aprenda." : "Entenda cada cenário."}
-            </span>
+              ? "Sua mesa de pesquisa."
+              : "Entenda de onde vêm os dividendos."}
           </h1>
           <p className="mt-3 max-w-xl text-sm leading-6 text-evo-textSec sm:mt-5 sm:text-base">
             {awaitingRegistration && !user
               ? "Explore as ações e a primeira aula enquanto preparamos a abertura dos cadastros."
               : member
-                ? "Pesquise empresas, compare cenários e avance nas aulas sobre dividendos."
-                : "Pesquisas de ações, contexto das empresas e aulas para entender o mercado de dividendos."}
+                ? "Abra a pesquisa de uma empresa ou continue suas aulas."
+                : "Na Ediv, você lê pesquisas de ações e estuda as empresas que distribuem lucros."}
           </p>
-          <div className="mt-5 grid gap-1 sm:mt-6 sm:flex sm:flex-wrap sm:gap-3">
+          <div className="mt-5 flex flex-wrap items-center gap-2 sm:mt-6 sm:gap-3">
             <Link
               to={
                 user
@@ -67,11 +61,11 @@ export function HomeContent({
                     ? "/aprender"
                     : authLink("cadastro", "/app")
               }
-              className="inline-flex min-h-12 items-center justify-center gap-2 rounded-lg bg-evo-primary px-5 text-sm font-semibold text-white hover:bg-evo-primaryHover sm:text-base"
+              className="inline-flex min-h-12 items-center justify-center gap-2 rounded-lg bg-evo-primary px-4 text-sm font-semibold text-white hover:bg-evo-primaryHover sm:px-5 sm:text-base"
             >
               {user
                 ? member
-                  ? "Explorar o ranking"
+                  ? "Abrir pesquisas"
                   : "Ir para meu início"
                 : awaitingRegistration
                   ? "Começar pela primeira aula"
@@ -80,7 +74,7 @@ export function HomeContent({
             </Link>
             <Link
               to={user ? "/app/aprender" : "/aprender"}
-              className="inline-flex min-h-11 items-center justify-center gap-2 px-3 text-sm font-medium text-evo-textSec hover:text-evo-textMain"
+              className="inline-flex min-h-11 items-center justify-center gap-2 px-2 text-sm font-medium text-evo-textSec hover:text-evo-textMain sm:px-3"
             >
               <BookOpen size={17} aria-hidden="true" /> Conhecer as aulas
             </Link>
@@ -112,13 +106,9 @@ export function HomeContent({
         >
           <div className="flex flex-wrap items-center justify-between gap-2 sm:gap-5">
             <div className="flex min-w-0 items-start gap-4">
-              <BarChart3
-                size={23}
-                className="mt-1 hidden shrink-0 text-evo-accent sm:block"
-                aria-hidden="true"
-              />
               <div className="min-w-0">
-                <h2 className="text-xl font-semibold">
+                <p className="edition-label mb-2">Mercado</p>
+                <h2 className="display-title text-2xl sm:text-3xl">
                   Ações em destaque
                 </h2>
                 <p className="mt-1 text-sm text-evo-textSec">

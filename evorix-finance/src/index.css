@@ -24,11 +24,57 @@ body {
 }
 
 .home-editorial {
-  background-image: radial-gradient(
-    ellipse at 90% 35%,
-    rgb(169 217 209 / 9%),
-    transparent 65%
-  );
+  background: transparent;
+}
+
+.display-title {
+  font-family: Georgia, "Times New Roman", serif;
+  font-weight: 400;
+  line-height: 1.09;
+  letter-spacing: -0.035em;
+  text-wrap: balance;
+}
+
+.edition-label {
+  font-size: 0.8125rem;
+  font-weight: 500;
+  letter-spacing: 0.025em;
+  color: #a9d9d1;
+}
+
+.section-masthead {
+  padding-block: 0.75rem 1.25rem;
+  border-bottom: 1px solid #4f5967;
+}
+
+.dividend-note {
+  position: relative;
+  min-width: 0;
+  padding: 1.25rem;
+  border-top: 3px solid #a9d9d1;
+  background: #20252c;
+}
+
+.dividend-note::after {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  width: 18px;
+  height: 18px;
+  background: linear-gradient(135deg, #4f5967 50%, #292d34 51%);
+  content: "";
+  pointer-events: none;
+}
+
+.dividend-slider:focus-visible {
+  outline: 2px solid #a9d9d1;
+  outline-offset: 2px;
+}
+
+@media (min-width: 640px) {
+  .dividend-note {
+    padding: 1.75rem;
+  }
 }
 
 .page-enter {
@@ -56,60 +102,6 @@ body {
   font-size: clamp(1.35rem, 3.6vw, 3.25rem);
   line-height: 1.25;
   overflow-wrap: anywhere;
-}
-
-.journey-preview {
-  background:
-    radial-gradient(ellipse at 50% 30%, rgb(169 217 209 / 7%), transparent 70%),
-    #20252c;
-}
-
-.journey-scene {
-  background-image: radial-gradient(
-    rgb(169 217 209 / 12%) 1px,
-    transparent 1px
-  );
-  background-size: 18px 18px;
-}
-
-.journey-signal {
-  animation: journeySignal 5s linear infinite;
-}
-
-.journey-node {
-  animation: journeyFloat 5s ease-in-out infinite;
-  box-shadow: 0 8px 22px rgb(0 0 0 / 15%);
-}
-
-.journey-scene > div:nth-of-type(2) .journey-node {
-  animation-delay: -1.6s;
-}
-
-.journey-scene > div:nth-of-type(3) .journey-node {
-  animation-delay: -3.2s;
-}
-
-@keyframes journeySignal {
-  to {
-    stroke-dashoffset: -88;
-  }
-}
-
-@keyframes journeyFloat {
-  0%,
-  100% {
-    transform: translateY(0);
-  }
-  50% {
-    transform: translateY(-5px);
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .journey-signal,
-  .journey-node {
-    animation: none;
-  }
 }
 
 .portfolio-empty {
@@ -159,7 +151,9 @@ textarea {
     min-width: 0;
   }
 
-  input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="file"]),
+  input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not(
+      [type="file"]
+    ),
   select,
   textarea {
     font-size: 16px;

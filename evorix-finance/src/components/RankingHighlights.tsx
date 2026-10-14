@@ -60,24 +60,20 @@ function MemberRankingHighlights() {
     <section className="mx-auto max-w-7xl py-5 sm:px-5 sm:pb-10 md:px-8">
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-widest text-evo-accent">
-            Nossa sala de estudos
-          </p>
-          <h2 className="mt-2 text-xl font-bold sm:text-2xl">
-            Sua próxima pesquisa
+          <p className="edition-label">Pesquisa de empresas</p>
+          <h2 className="display-title mt-2 text-2xl sm:text-3xl">
+            {showingDemo ? "Caderno de exemplo" : "Publicação mais recente"}
           </h2>
           <p className="mt-2 max-w-2xl text-sm text-evo-textSec">
             {showingDemo ? (
-              "Explore cenários e módulos de pesquisa com empresas de exemplo."
+              "Abra uma empresa de exemplo para conhecer o formato da pesquisa."
             ) : (
-              <>
-                Conheça os cenários da publicação mais recente.
-              </>
+              <>Leia a tese e confira o prazo de cada cenário.</>
             )}
           </p>
         </div>
         <Link
-          className="action"
+          className="inline-flex min-h-11 items-center text-sm text-evo-accent underline underline-offset-4"
           to={showingDemo ? "/app/ranking?visual=demo" : "/app/ranking"}
         >
           {showingDemo ? "Explorar demonstração" : "Abrir ranking completo"}
@@ -109,8 +105,8 @@ function MemberRankingHighlights() {
                     (publication.updatedAt.endsWith("Z") ? "" : "Z"),
                 ).toLocaleDateString("pt-BR")}
           </p>
-          <div className="mt-3 grid gap-2 sm:grid-cols-3 sm:gap-4">
-            {entries.slice(0, 3).map((entry) => (
+          <div className="mt-3 border-t border-evo-border">
+            {entries.slice(0, 3).map((entry, index) => (
               <Link
                 key={entry.ticker}
                 to={
@@ -122,29 +118,33 @@ function MemberRankingHighlights() {
                     ? "&publication=" + encodeURIComponent(publication.id)
                     : "")
                 }
-                className="grid min-w-0 grid-cols-[minmax(0,1fr)_auto] gap-x-3 rounded-xl border border-evo-border bg-evo-card p-4 hover:border-evo-accent/40 sm:block sm:p-5"
+                className="group grid min-w-0 grid-cols-[1.5rem_minmax(0,1fr)_auto] items-center gap-x-3 border-b border-evo-border py-4 transition-colors hover:bg-evo-bgSec focus-visible:outline focus-visible:outline-2 focus-visible:outline-evo-accent sm:grid-cols-[2rem_minmax(0,1fr)_auto_auto] sm:gap-x-6 sm:py-5"
               >
-                <h3 className="col-start-1 row-start-1 font-bold">{entry.ticker}</h3>
-                <p className="col-start-1 row-start-2 mt-1 truncate text-xs text-evo-textSec sm:whitespace-normal">
+                <span
+                  aria-hidden="true"
+                  className="col-start-1 row-span-2 row-start-1 font-numbers text-xs text-evo-accent"
+                >
+                  {String(index + 1).padStart(2, "0")}
+                </span>
+                <h3 className="col-start-2 row-start-1 font-semibold group-hover:text-evo-accent">
+                  {entry.ticker}
+                </h3>
+                <p className="col-start-2 row-start-2 mt-1 truncate text-xs text-evo-textSec">
                   {entry.companyName}
                 </p>
-                <p className="col-span-2 mt-3 text-xs text-evo-textSec sm:mt-5">
-                  {showingDemo
-                    ? "Potencial simulado para demonstração"
-                    : "Potencial informado pelo autor"}
-                </p>
-                <p className="col-start-2 row-start-1 text-right font-numbers text-xl sm:mt-1 sm:text-left">
+                <p className="col-start-3 row-start-1 text-right font-numbers text-xl">
+                  <span className="mb-1 block font-sans text-xs text-evo-textSec">
+                    {showingDemo ? "Potencial simulado" : "Potencial informado"}
+                  </span>
                   {Number(entry.expectedReturnPercent).toLocaleString("pt-BR")}%
                 </p>
-                <p className="col-start-2 row-start-2 mt-1 text-right text-xs text-evo-textSec sm:mt-2 sm:text-left">
+                <p className="col-start-3 row-start-2 mt-1 text-right text-xs text-evo-textSec">
                   {entry.horizonMonths
                     ? entry.horizonMonths + " meses"
                     : "Prazo não informado"}
                 </p>
-                <span className="col-span-2 mt-3 block text-sm text-evo-accent sm:mt-4">
-                  {showingDemo
-                    ? "Conhecer os módulos da pesquisa →"
-                    : "Ler tese e riscos →"}
+                <span className="col-start-2 col-end-4 mt-2 text-xs text-evo-accent sm:col-start-4 sm:col-end-5 sm:row-span-2 sm:row-start-1 sm:mt-0 sm:text-sm">
+                  {showingDemo ? "Abrir exemplo" : "Ler pesquisa"}
                 </span>
               </Link>
             ))}
