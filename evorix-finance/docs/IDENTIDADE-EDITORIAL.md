@@ -1,6 +1,6 @@
 # Interface da Ediv
 
-A interface acompanha a leitura de uma pesquisa: títulos, resumos de empresas, dados com rótulos e o texto da tese. A home apresenta o produto e uma atividade curta sobre dividendos.
+A interface acompanha a leitura de uma pesquisa: títulos, resumos de empresas, dados com rótulos e o texto da tese. A home apresenta o produto e os temas Empresa, Pesquisa e Dividendos.
 
 ## Texto
 
@@ -12,8 +12,8 @@ As orientações de [Humanizer](https://github.com/blader/humanizer/blob/main/SK
 
 As pesquisas da home aparecem em linhas com empresa, potencial e prazo. A lista de mercado usa colunas no computador e linhas no celular. Informações adicionais ficam na página da empresa.
 
-## Exemplo de dividendos
+## Painel da home
 
-`RankingPreview.tsx` contém uma atividade local com lucro de R$ 100 milhões e 50 milhões de ações. A pessoa ajusta a distribuição entre 10% e 90%. O valor por ação é o total distribuído dividido pela quantidade de ações. O exemplo é simplificado, identificado como didático e não usa dados da conta ou do mercado. O controle tem rótulo e aceita teclado. Ele não grava dados nem faz chamadas à API.
+`RankingPreview.tsx` permite alternar entre Empresa, Pesquisa e Dividendos. Cada tema apresenta um fluxo animado e um link para a página correspondente, usando o endereço da área logada quando houver uma sessão. O painel aceita teclado e respeita a preferência por movimento reduzido. Ele não grava dados nem faz chamadas à API.
 
 Autenticação, permissões, publicações, vídeos e progresso das aulas seguem os fluxos existentes.
