@@ -186,6 +186,12 @@ body {
   }
 }
 
+@media (min-width: 768px) and (min-height: 640px) {
+  .research-insight-visual {
+    top: calc(9.625rem + env(safe-area-inset-top));
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .research-insight-reveal,
   .research-insight-endpoint,

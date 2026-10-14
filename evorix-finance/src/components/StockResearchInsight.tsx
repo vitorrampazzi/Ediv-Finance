@@ -197,7 +197,9 @@ export function StockResearchInsight({
             className="research-insight-summary flex min-h-7 items-baseline justify-between gap-3"
           >
             <p className="text-xs text-evo-textSec">{summary.label}</p>
-            <strong className={`font-numbers text-xl font-medium ${tone}`}>
+            <strong
+              className={`min-w-0 text-right font-numbers text-xl font-medium [overflow-wrap:anywhere] ${tone}`}
+            >
               {summary.value}
             </strong>
           </div>
