@@ -50,6 +50,7 @@ async function apiRequest(
     throw new ApiError(
       body.error || "Não foi possível concluir a solicitação. Tente novamente.",
       response.status,
+      typeof body.code === "string" ? body.code : undefined,
     );
   return body;
 }

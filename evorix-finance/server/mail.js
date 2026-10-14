@@ -42,9 +42,7 @@ export function emailConfiguration() {
 export function registrationAvailability() {
   const email = emailConfiguration();
   const available =
-    !config.isProduction ||
-    config.isQaDeployment ||
-    (email.configured && !email.testOnly);
+    config.allowDevelopmentEmailLinks || (email.configured && !email.testOnly);
   return {
     available,
     message: available

@@ -9,6 +9,8 @@ import { PasswordInput } from "../../components/PasswordInput";
 
 import { AuthShell, ErrorMessage } from "../../components/auth/AuthShell";
 import { SessionStatus } from "../../components/SessionStatus";
+import { ConfirmationHelp } from "../../components/auth/ConfirmationHelp";
+import { ApiError } from "../../lib/api";
 export function LoginPage() {
   const { user, loading, sessionError, login, resendVerification } = useAuth();
   const location = useLocation();
@@ -20,6 +22,7 @@ export function LoginPage() {
   const [resendUrl, setResendUrl] = useState("");
   const [busy, setBusy] = useState(false);
   const [resending, setResending] = useState(false);
+  const [verificationEmail, setVerificationEmail] = useState("");
   const destination = safeAuthDestination(
     new URLSearchParams(location.search).get("next") ||
       (location.state as { from?: string } | null)?.from,
@@ -33,11 +36,17 @@ export function LoginPage() {
     event.preventDefault();
     setError("");
     setMessage("");
+    setVerificationEmail("");
+    setResendUrl("");
     setBusy(true);
     try {
       await login(email, password);
       navigate(destination, { replace: true });
     } catch (reason) {
+      if (reason instanceof ApiError && reason.code === "EMAIL_NOT_VERIFIED") {
+        setVerificationEmail(email.trim());
+        setPassword("");
+      }
       setError(
         reason instanceof Error
           ? reason.message
@@ -90,7 +99,13 @@ export function LoginPage() {
             required
             maxLength={254}
             value={email}
-            onChange={(event) => setEmail(event.target.value)}
+            onChange={(event) => {
+              setEmail(event.target.value);
+              setVerificationEmail("");
+              setMessage("");
+              setResendUrl("");
+              setError("");
+            }}
             className="min-h-11 w-full rounded-lg border border-evo-border bg-evo-bgMain px-3 text-evo-textMain"
           />
         </div>
@@ -137,20 +152,29 @@ export function LoginPage() {
           {busy ? "Entrando…" : "Entrar"}
         </button>
       </form>
+      {verificationEmail && (
+        <ConfirmationHelp
+          key={verificationEmail}
+          email={verificationEmail}
+          destination={destination}
+        />
+      )}
       <Link
         to="/recuperar-senha"
         className="mt-3 inline-flex min-h-11 items-center text-sm text-evo-accent underline"
       >
         Esqueci minha senha
       </Link>
-      <button
-        type="button"
-        disabled={resending || !email}
-        onClick={resend}
-        className="mt-3 min-h-10 text-left text-xs text-evo-textSec underline decoration-evo-border underline-offset-4 hover:text-evo-textMain disabled:opacity-50"
-      >
-        {resending ? "Enviando…" : "Reenviar confirmação de e-mail"}
-      </button>
+      {!verificationEmail && (
+        <button
+          type="button"
+          disabled={resending || !email}
+          onClick={resend}
+          className="mt-3 min-h-10 text-left text-xs text-evo-textSec underline decoration-evo-border underline-offset-4 hover:text-evo-textMain disabled:opacity-50"
+        >
+          {resending ? "Enviando…" : "Reenviar confirmação de e-mail"}
+        </button>
+      )}
       <p className="mt-5 text-center text-sm text-evo-textSec">
         Ainda não tem conta?{" "}
         <Link

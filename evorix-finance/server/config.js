@@ -68,6 +68,12 @@ if (isProduction) {
 export const config = Object.freeze({
   isProduction,
   isQaDeployment,
+  // Direct confirmation/recovery links are for a local developer only.
+  allowDevelopmentEmailLinks:
+    !isProduction &&
+    !process.env.VERCEL &&
+    !process.env.VERCEL_ENV &&
+    ["localhost", "127.0.0.1", "[::1]"].includes(parsedAppUrl.hostname),
   port: Number(process.env.PORT || 3001),
   host: process.env.HOST?.trim() || (isProduction ? "0.0.0.0" : "127.0.0.1"),
   appBaseUrl,

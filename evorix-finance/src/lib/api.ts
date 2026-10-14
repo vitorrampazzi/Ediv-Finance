@@ -1,9 +1,11 @@
 export class ApiError extends Error {
   readonly status: number;
-  constructor(message: string, status: number) {
+  readonly code?: string;
+  constructor(message: string, status: number, code?: string) {
     super(message);
     this.name = "ApiError";
     this.status = status;
+    this.code = code;
   }
 }
 
@@ -36,6 +38,7 @@ export async function apiRequest<T>(
     throw new ApiError(
       body.error || "Não foi possível concluir a solicitação. Tente novamente.",
       response.status,
+      typeof body.code === "string" ? body.code : undefined,
     );
   return body as T;
 }

@@ -54,7 +54,7 @@ Veja [as mudanças e a ordem de publicação](docs/ATUALIZACAO-EDIV.md), [os per
 
    A lista pública de ativos e cotações da B3 funciona sem token. Configure `BRAPI_API_KEY` no `.env` local apenas se precisar de dados adicionais do provedor; a chave é usada só pelo servidor e nunca deve ser incluída no frontend.
 
-   A interface usa o proxy local do Vite para encaminhar `/api` à API em `127.0.0.1:3001`. Em desenvolvimento, sem SMTP configurado, a API devolve um link temporário de confirmação para facilitar o primeiro cadastro. Esse link só é exposto fora de produção.
+   A interface usa o proxy local do Vite para encaminhar `/api` à API em `127.0.0.1:3001`. Somente em desenvolvimento local, sem SMTP e com `APP_BASE_URL` em localhost, a API devolve links temporários de confirmação e recuperação. Ambientes publicados, incluindo QA, exigem SMTP e remetente válido para cadastro e reenvio e não devolvem esses links na resposta. O cadastro não cria uma sessão: login e APIs privadas exigem `email_verified_at` preenchido após a confirmação.
 
 5. Configure o primeiro Administrador pelo comando descrito em [PERMISSOES.md](docs/PERMISSOES.md). Depois, conceda o perfil Analista às contas confirmadas da equipe em `/app/admin`. Novos usuários recebem apenas Usuário. As permissões ficam no banco e são verificadas pela API.
 

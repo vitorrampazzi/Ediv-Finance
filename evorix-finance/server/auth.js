@@ -179,7 +179,12 @@ async function makeVerificationToken(userId) {
 
 async function sendVerification(email, name, token, next) {
   const link = verificationUrl(token, next);
-  if (!smtp) return { developmentUrl: link };
+  if (!smtp) {
+    if (config.allowDevelopmentEmailLinks) return { developmentUrl: link };
+    throw Object.assign(new Error("Verification email is not configured"), {
+      code: "EMAIL_UNCONFIGURED",
+    });
+  }
 
   await smtp.sendMail({
     from: config.mailFrom,
@@ -340,6 +345,9 @@ router.post("/register", registrationLimiter, async (req, res) => {
 });
 
 router.post("/verification/resend", verificationLimiter, async (req, res) => {
+  const availability = registrationAvailability();
+  if (!availability.available)
+    return res.status(503).json({ error: availability.message });
   const parsed = parseBody(emailOnlySchema, req.body);
   if (parsed.error) return res.status(400).json(parsed);
 
@@ -430,9 +438,17 @@ router.post("/login", loginLimiter, async (req, res) => {
   const storedHash = user ? user.password_hash : await dummyPasswordHash;
   const isValidPassword = await argon2.verify(storedHash, password);
 
-  if (!user || !isValidPassword || !user.email_verified_at || user.blocked_at) {
+  if (!user || !isValidPassword || user.blocked_at) {
     return res.status(401).json({
-      error: "E-mail ou senha incorretos, ou e-mail ainda não confirmado.",
+      error: "E-mail ou senha incorretos.",
+    });
+  }
+  // Only disclose the pending confirmation after checking the password.
+  if (!user.email_verified_at) {
+    return res.status(401).json({
+      code: "EMAIL_NOT_VERIFIED",
+      error:
+        "Confirme seu e-mail antes de entrar. Abra o link enviado para o endereço informado no cadastro.",
     });
   }
 
@@ -442,12 +458,13 @@ router.post("/login", loginLimiter, async (req, res) => {
   try {
     await connection.beginTransaction();
     const [locked] = await connection.execute(
-      "SELECT u.password_hash, COALESCE(a.role,'USER') AS role, a.blocked_at FROM users u LEFT JOIN user_access a ON a.user_id=u.id WHERE u.id = ? FOR UPDATE",
+      "SELECT u.password_hash, u.email_verified_at, COALESCE(a.role,'USER') AS role, a.blocked_at FROM users u LEFT JOIN user_access a ON a.user_id=u.id WHERE u.id = ? FOR UPDATE",
       [user.id],
     );
     if (
       !locked[0] ||
       locked[0].password_hash !== storedHash ||
+      !locked[0].email_verified_at ||
       locked[0].blocked_at
     ) {
       await connection.rollback();
@@ -628,8 +645,7 @@ router.post("/password/forgot", recoveryLimiter, async (req, res) => {
           error.code || "transport error",
         );
       }
-    } else if (!config.isProduction || config.isQaDeployment)
-      developmentUrl = String(url);
+    } else if (config.allowDevelopmentEmailLinks) developmentUrl = String(url);
   }
   return res.status(202).json({
     message:
