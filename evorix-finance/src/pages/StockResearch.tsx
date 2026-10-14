@@ -19,6 +19,7 @@ import { IndicatorHelp } from "../components/ResearchTools";
 import { ResearchCoverage } from "../components/ResearchCoverage";
 import { ResearchSources } from "../components/ResearchSources";
 import { MobileDisclosure } from "../components/MobileDisclosure";
+import { StockResearchInsight } from "../components/StockResearchInsight";
 import { useAuth } from "../context/authContext";
 import { useRankingPublication } from "../hooks/useRankingPublication";
 import { rankingDemoEntries } from "../lib/rankingDemo";
@@ -95,6 +96,27 @@ function MemberStockResearch() {
   const entry = entries.find(
     (item) => item.ticker.toUpperCase() === ticker.toUpperCase(),
   );
+  const entryTicker = entry?.ticker;
+  useLayoutEffect(() => {
+    const anchor = location.hash.slice(1);
+    if (
+      (loading && !demo) ||
+      !entryTicker ||
+      ![
+        "insight",
+        "tese",
+        "riscos",
+        "historia",
+        "estatisticas",
+        "fundamentos",
+        "fontes",
+      ].includes(anchor)
+    )
+      return;
+    document
+      .getElementById(anchor)
+      ?.scrollIntoView({ block: "start", behavior: "instant" });
+  }, [entryTicker, location.hash, loading, demo]);
   const backParams = new URLSearchParams(params);
   backParams.set("visual", demo ? "demo" : "real");
   if (!demo && ranking.id) backParams.set("publication", ranking.id);
@@ -270,6 +292,7 @@ function MemberStockResearch() {
         className="sticky top-[calc(4rem+env(safe-area-inset-top))] z-10 -mx-4 flex gap-2 overflow-x-auto overscroll-x-contain border-y border-evo-border bg-evo-bgMain px-4 py-1 text-sm sm:mx-0 sm:gap-4 sm:py-2 md:top-20"
       >
         {[
+          ["insight", "Gráfico do cenário"],
           ["tese", "Opinião e cenário"],
           ["riscos", "Riscos"],
           ["historia", "A empresa"],
@@ -286,6 +309,7 @@ function MemberStockResearch() {
           </a>
         ))}
       </nav>
+      <StockResearchInsight key={entry.ticker} entry={entry} demo={demo} />
       <div className="grid gap-x-10 lg:grid-cols-[minmax(0,1fr)_15rem]">
         <div className="min-w-0">
           <section id="tese" className={section + " border-t-0"}>

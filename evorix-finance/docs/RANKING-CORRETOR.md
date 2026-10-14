@@ -47,6 +47,20 @@ abre os exemplos depois de entrar na conta. Visitantes veem a apresentação e o
 simulados, e uma falha de API continua sendo identificada. Na home, os destaques de contas autenticadas
 mostram exemplos identificados quando a API confirma que ainda não há publicação.
 
+## Insight visual dentro de cada pesquisa
+
+`StockResearchInsight.tsx` apresenta três etapas: base, potencial e contexto.
+A rolagem seleciona a etapa com `IntersectionObserver`; botões permitem a mesma
+seleção com toque ou teclado. O gráfico permanece visível em telas com altura
+suficiente e respeita a preferência por movimento reduzido.
+
+A comparação tem dois pontos: índice base 100 e `100 + potencial_percentual`.
+Ela usa o percentual daquela publicação, inclusive quando negativo ou zero.
+Não representa uma série histórica, uma trajetória prevista ou cotações atuais.
+Preço-alvo e prazo são os informados pela equipe; campos ausentes não recebem
+valores inventados. Os exemplos locais continuam identificados como fictícios.
+Essa visualização não faz novas consultas à API nem exige alteração no MySQL.
+
 ## Ações recebidas para pesquisa
 
 VALE3, ELET3, CXSE3, ITSA4, CMIG4, CLSC4, IRBR3, BBSE3, ODPV3, WIZC3,
