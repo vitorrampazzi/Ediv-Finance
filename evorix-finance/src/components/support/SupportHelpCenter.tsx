@@ -127,7 +127,7 @@ export function SupportHelpCenter({
 
   return (
     <section aria-labelledby={headingId} className="min-w-0 space-y-7">
-      <div className="page-intro grid min-w-0 grid-cols-1 gap-6 md:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)] md:items-end">
+      <div className="page-intro grid min-w-0 grid-cols-1 gap-4 md:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)] md:items-end">
         <div className="min-w-0">
           <div className="mb-3 flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.14em] text-evo-accent">
             <CircleHelp size={16} aria-hidden="true" /> Respostas e caminhos
@@ -136,8 +136,7 @@ export function SupportHelpCenter({
             Como podemos ajudar?
           </h2>
           <p className="mt-2 max-w-lg text-sm leading-relaxed text-evo-textSec">
-            Encontre uma explicação, vá direto à ferramenta ou leve sua dúvida à
-            equipe.
+            Busque uma resposta ou fale com a equipe.
           </p>
         </div>
         <div className="min-w-0">
@@ -174,7 +173,7 @@ export function SupportHelpCenter({
       </div>
 
       <div
-        className="grid min-w-0 grid-cols-1 gap-2 sm:grid-cols-2 xl:grid-cols-5"
+        className="flex min-w-0 gap-2 overflow-x-auto overscroll-x-contain pb-2 sm:grid sm:grid-cols-2 sm:overflow-visible sm:pb-0 xl:grid-cols-5"
         aria-label="Categorias de ajuda"
       >
         {helpTopics.map((topic) => {
@@ -186,17 +185,17 @@ export function SupportHelpCenter({
               type="button"
               aria-pressed={active}
               onClick={() => setActiveTopic(active ? "" : topic.id)}
-              className={`group min-w-0 rounded-xl border p-4 text-left transition-colors ${active ? "border-evo-accent/60 bg-evo-primary/20" : "border-evo-border bg-evo-bgSec/40 hover:border-evo-accent/40 hover:bg-evo-bgSec"}`}
+              className={`group flex min-h-11 shrink-0 items-center gap-2 rounded-xl border px-3 py-2 text-left transition-colors sm:block sm:min-w-0 sm:shrink sm:p-4 ${active ? "border-evo-accent/60 bg-evo-primary/20" : "border-evo-border bg-evo-bgSec/40 hover:border-evo-accent/40 hover:bg-evo-bgSec"}`}
             >
               <Icon
                 size={20}
-                className="mb-3 text-evo-accent"
+                className="shrink-0 text-evo-accent sm:mb-3"
                 aria-hidden="true"
               />
-              <span className="block text-sm font-semibold leading-snug">
+              <span className="block whitespace-nowrap text-sm font-semibold leading-snug sm:whitespace-normal">
                 {topic.title}
               </span>
-              <span className="mt-2 block text-xs leading-relaxed text-evo-textSec">
+              <span className="mt-2 hidden text-xs leading-relaxed text-evo-textSec sm:block">
                 {topic.description}
               </span>
             </button>

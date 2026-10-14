@@ -18,7 +18,7 @@ export function Home() {
   if (user) return <Navigate to="/app" replace />;
   return (
     <div className="min-h-screen bg-evo-bgMain text-evo-textMain">
-      <SiteHeader />
+      <SiteHeader showRegistrationAction={false} />
       <main id="conteudo">
         <HomeContent awaitingRegistration={awaitingRegistration} />
       </main>
@@ -39,33 +39,33 @@ export function HomeContent({
   return (
     <>
       <section
-        className={`home-editorial mx-auto grid max-w-7xl items-center gap-7 md:grid-cols-[1.2fr_.8fr] md:gap-10 ${member ? "py-6 md:py-8" : "px-5 py-8 md:px-8 md:py-10"}`}
+        className={`home-editorial mx-auto grid max-w-7xl items-center gap-5 md:grid-cols-[1.2fr_.8fr] md:gap-10 ${member ? "py-2 md:py-8" : "px-4 py-6 sm:px-5 md:px-8 md:py-10"}`}
       >
         <div>
           <span className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[.18em] text-evo-accent">
             <Sparkles size={14} aria-hidden="true" />{" "}
             {member && firstName
-              ? `Olá, ${firstName} · Sua escola de dividendos`
+              ? `Olá, ${firstName}`
               : "Escola do dividendo"}
           </span>
           <h1
-            className={`mt-5 max-w-2xl font-bold leading-[1.07] tracking-[-.045em] ${member ? "text-3xl sm:text-4xl xl:text-5xl" : "text-4xl sm:text-5xl lg:text-6xl"}`}
+            className={`mt-3 max-w-2xl font-bold leading-[1.12] tracking-[-.035em] sm:mt-5 sm:leading-[1.07] ${member ? "text-[1.75rem] sm:text-4xl xl:text-5xl" : "text-[2rem] sm:text-5xl lg:text-6xl"}`}
           >
             {member
               ? "Sua escola de ações e dividendos."
               : "Aprenda sobre ações e dividendos."}
-            <span className="block mt-2 font-normal text-evo-textSec">
+            <span className="mt-2 hidden font-normal text-evo-textSec sm:block">
               {member ? "Pesquise. Compare. Aprenda." : "Entenda cada cenário."}
             </span>
           </h1>
-          <p className="mt-5 max-w-xl text-base leading-relaxed text-evo-textSec">
+          <p className="mt-3 max-w-xl text-sm leading-6 text-evo-textSec sm:mt-5 sm:text-base">
             {awaitingRegistration && !user
               ? "Explore as ações e a primeira aula enquanto preparamos a abertura dos cadastros."
               : member
-                ? "A Ediv Finance aproxima a pesquisa de empresas da educação sobre dividendos. Aqui você conhece o negócio por trás de cada ação, interpreta os cenários da equipe e aprende no seu ritmo."
+                ? "Pesquise empresas, compare cenários e avance nas aulas sobre dividendos."
                 : "Pesquisas de ações, contexto das empresas e aulas para entender o mercado de dividendos."}
           </p>
-          <div className="mt-6 flex flex-wrap gap-3">
+          <div className="mt-5 grid gap-1 sm:mt-6 sm:flex sm:flex-wrap sm:gap-3">
             <Link
               to={
                 user
@@ -76,7 +76,7 @@ export function HomeContent({
                     ? "/aprender"
                     : authLink("cadastro", "/app")
               }
-              className="inline-flex min-h-12 items-center gap-2 rounded-lg bg-evo-primary px-5 font-semibold text-white hover:bg-evo-primaryHover"
+              className="inline-flex min-h-12 items-center justify-center gap-2 rounded-lg bg-evo-primary px-5 text-sm font-semibold text-white hover:bg-evo-primaryHover sm:text-base"
             >
               {user
                 ? member
@@ -89,14 +89,14 @@ export function HomeContent({
             </Link>
             <Link
               to={user ? "/app/aprender" : "/aprender"}
-              className="inline-flex min-h-12 items-center gap-2 px-3 text-sm font-medium text-evo-textSec hover:text-evo-textMain"
+              className="inline-flex min-h-11 items-center justify-center gap-2 px-3 text-sm font-medium text-evo-textSec hover:text-evo-textMain"
             >
               <BookOpen size={17} aria-hidden="true" /> Conhecer as aulas
             </Link>
           </div>
           {!user && !awaitingRegistration && (
             <p className="mt-3 text-sm leading-relaxed text-evo-textSec">
-              Conta gratuita para acessar as pesquisas. Primeira aula aberta.
+              Conta gratuita · Primeira aula aberta.
             </p>
           )}
           {awaitingRegistration && !user && (
@@ -117,27 +117,27 @@ export function HomeContent({
         className="scroll-mt-24 border-y border-evo-border bg-evo-bgSec"
       >
         <div
-          className={`mx-auto max-w-7xl py-7 md:py-8 ${member ? "px-4 md:px-6" : "px-5 md:px-8"}`}
+          className={`mx-auto max-w-7xl py-6 md:py-8 ${member ? "px-4 md:px-6" : "px-4 sm:px-5 md:px-8"}`}
         >
-          <div className="flex flex-wrap items-center justify-between gap-5">
+          <div className="flex flex-wrap items-center justify-between gap-2 sm:gap-5">
             <div className="flex min-w-0 items-start gap-4">
               <BarChart3
                 size={23}
-                className="mt-1 shrink-0 text-evo-accent"
+                className="mt-1 hidden shrink-0 text-evo-accent sm:block"
                 aria-hidden="true"
               />
               <div className="min-w-0">
                 <h2 className="text-xl font-semibold">
-                  Conheça as ações do mercado
+                  Ações em destaque
                 </h2>
-                <p className="mt-2 text-sm text-evo-textSec">
+                <p className="mt-1 text-sm text-evo-textSec">
                   Maiores altas percentuais da sessão disponível.
                 </p>
               </div>
             </div>
             <Link
               to={user ? "/app/analises" : "/mercado"}
-              className="inline-flex min-h-11 shrink-0 items-center gap-2 rounded-lg border border-evo-border px-4 text-sm font-medium text-evo-textMain hover:bg-evo-card"
+              className="inline-flex min-h-11 shrink-0 items-center gap-2 text-sm font-medium text-evo-accent sm:rounded-lg sm:border sm:border-evo-border sm:px-4 sm:text-evo-textMain sm:hover:bg-evo-card"
             >
               Explorar análises <ArrowRight size={15} aria-hidden="true" />
             </Link>

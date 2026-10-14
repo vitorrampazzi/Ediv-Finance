@@ -15,7 +15,7 @@ export function Suporte() {
     navigate(user ? destination : authLink("entrar", destination));
   };
   return (
-    <section className="mx-auto max-w-6xl space-y-10 px-4 py-9 sm:px-6 sm:py-12">
+    <section className="mx-auto max-w-6xl space-y-6 px-4 py-6 sm:space-y-10 sm:px-6 sm:py-12">
       <header className="border-b border-evo-border pb-7">
         <p className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[.16em] text-evo-accent">
           <Headphones size={16} aria-hidden="true" />
@@ -25,8 +25,7 @@ export function Suporte() {
           Dúvidas e suporte
         </h1>
         <p className="mt-3 max-w-2xl text-sm leading-7 text-evo-textSec">
-          Do primeiro acesso à leitura de uma pesquisa: encontre uma explicação,
-          retome seus estudos ou leve sua dúvida à equipe.
+          Encontre respostas e converse com a equipe.
         </p>
         <div className="mt-5 flex flex-wrap gap-3">
           <button className="action" type="button" onClick={() => contact()}>

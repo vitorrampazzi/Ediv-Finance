@@ -15,6 +15,7 @@ import { authLink } from "../lib/authDestination";
 import { useAuth } from "../context/authContext";
 import { AccountGate } from "../components/AccountGate";
 import { OrbitCoins } from "../components/OrbitCoins";
+import { MobileDisclosure } from "../components/MobileDisclosure";
 import { assistantEnabled } from "../lib/features";
 import { LearningVideo } from "../components/LearningVideo";
 import { LearningPractice } from "../components/LearningPractice";
@@ -367,31 +368,27 @@ function LearningSession({
   return (
     <section
       id="pagina-conteudo"
-      className="mx-auto max-w-6xl space-y-9 px-4 py-8 sm:px-6"
+      className="mx-auto max-w-6xl space-y-6 px-4 py-5 sm:space-y-9 sm:px-6 sm:py-8"
     >
       <header className="page-intro">
-        <div className="flex flex-col items-start justify-between gap-4 sm:flex-row">
+        <div className="mobile-page-heading flex items-start justify-between gap-3 sm:gap-4">
           <div className="min-w-0 flex-1">
             <p className="text-xs font-semibold uppercase tracking-[0.18em] text-evo-accent">
               Escola do Dividendo · Aprender
             </p>
-            <h1 className="mt-3 max-w-3xl text-3xl font-semibold tracking-tight sm:text-4xl">
-              Entenda o negócio.
-              <br />
-              Entenda o dividendo.
+            <h1 className="mt-3 max-w-3xl text-2xl font-semibold tracking-tight sm:text-4xl">
+              Aprenda sobre dividendos.
             </h1>
-            <p className="mt-4 max-w-2xl text-sm leading-7 text-evo-textSec">
-              Cursos, leituras e exercícios para interpretar a pesquisa do
-              corretor e entender como as empresas geram e distribuem
-              resultados. Comece pelos fundamentos e avance no seu ritmo.
+            <p className="mt-3 max-w-2xl text-sm leading-6 text-evo-textSec">
+              Minicursos e exercícios para entender as empresas e seus dividendos.
             </p>
           </div>
-          <div className="shrink-0 self-end sm:self-center">
+          <div className="shrink-0 self-start sm:self-center">
             <OrbitCoins variant="learning" size="hero" />
           </div>
         </div>
-        <div className="mt-6 flex flex-wrap items-center justify-between gap-4">
-          <p className="text-sm text-evo-textSec">
+        <div className="mt-3 flex flex-wrap items-center justify-between gap-4 sm:mt-6">
+          <p className="hidden text-sm text-evo-textSec sm:block">
             <strong className="text-evo-textMain">
               {completed.length} de {lessonIds.length} exercícios concluídos
             </strong>{" "}
@@ -701,7 +698,8 @@ function LearningSession({
             Abrir glossário completo <ArrowRight size={15} aria-hidden="true" />
           </Link>
         </div>
-        <label className="mt-4 block">
+        <MobileDisclosure title="Buscar conceitos no glossário" className="mt-4">
+        <label className="block">
           <span className="sr-only">Buscar um conceito</span>
           <input
             className="field"
@@ -725,6 +723,7 @@ function LearningSession({
             Nenhum conceito encontrado. Tente outro termo.
           </p>
         )}
+        </MobileDisclosure>
       </section>
       <footer className="flex flex-wrap items-center justify-between gap-4 border-t border-evo-border pt-6">
         <Link to={user ? "/app/ranking" : "/ranking"} className="action">

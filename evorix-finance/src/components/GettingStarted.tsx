@@ -43,7 +43,7 @@ export function GettingStarted({ compact = false }: GettingStartedProps) {
       <section
         id="como-funciona"
         aria-labelledby="getting-started-heading"
-        className="mx-auto max-w-7xl px-5 py-8 md:px-8 md:py-10"
+        className="mx-auto max-w-7xl px-4 py-6 sm:px-5 md:px-8 md:py-10"
       >
         <div className="flex flex-wrap items-center justify-between gap-x-6 gap-y-2">
           <h2 id="getting-started-heading" className="text-xl font-bold">
@@ -57,38 +57,33 @@ export function GettingStarted({ compact = false }: GettingStartedProps) {
             <ArrowRight size={16} aria-hidden="true" />
           </Link>
         </div>
-        <p className="mt-3 max-w-3xl text-sm leading-relaxed text-evo-textSec">
-          Combine a pesquisa das empresas com os fundamentos dos dividendos.
-          Siga este percurso para comparar cenários e entender os números com
-          mais contexto.
-        </p>
-        <ol className="mt-5 grid gap-5 border-t border-evo-border pt-5 md:grid-cols-3 md:gap-8">
+        <ol className="mt-3 grid gap-4 border-t border-evo-border pt-4 md:mt-5 md:grid-cols-3 md:gap-8 md:pt-5">
           {[
             {
               Icon: ChartNoAxesCombined,
               title: "Explore a pesquisa",
-              text: "Leia a tese, o preço-alvo e o horizonte de cada cenário. Abra a empresa para conferir as premissas e os riscos da pesquisa.",
+              text: "Abra uma empresa para conhecer a tese, os números e os riscos.",
               action: "Conhecer o ranking",
               to: user ? "/app/ranking" : "/ranking",
             },
             {
               Icon: Building2,
               title: "Conheça as empresas",
-              text: "Compare cotações e indicadores e relacione os números ao setor e ao negócio da empresa. Vá além da variação de preço da sessão.",
+              text: "Compare cotações e entenda o negócio por trás de cada ação.",
               action: "Explorar as ações",
               to: user ? "/app/analises" : "/mercado",
             },
             {
               Icon: BookOpen,
               title: "Aprenda sobre dividendos",
-              text: "Comece pelos fundamentos dos dividendos. Use as aulas, o glossário e os exercícios para interpretar os termos que aparecem nas análises.",
+              text: "Avance pelos minicursos, exercícios e conceitos do glossário.",
               action: "Começar a aprender",
               to: user ? "/app/aprender" : "/aprender",
             },
           ].map(({ Icon, title, text, action, to }, index) => (
             <li key={title}>
               <Link
-                className="group flex gap-3 rounded-md focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-evo-accent"
+                className="group flex min-h-11 gap-3 rounded-md py-1 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-evo-accent"
                 to={to}
               >
                 <span className="flex size-10 shrink-0 items-center justify-center rounded-full border border-evo-border text-evo-accent">
@@ -102,10 +97,11 @@ export function GettingStarted({ compact = false }: GettingStartedProps) {
                   <p className="mt-1 text-sm leading-relaxed text-evo-textSec">
                     {text}
                   </p>
-                  <span className="mt-3 inline-flex min-h-9 items-center gap-2 text-sm font-medium text-evo-accent">
+                  <span className="mt-3 hidden min-h-11 items-center gap-2 text-sm font-medium text-evo-accent sm:inline-flex">
                     {action} <ArrowRight size={14} aria-hidden="true" />
                   </span>
                 </div>
+                <ArrowRight size={17} aria-hidden="true" className="mt-3 ml-auto shrink-0 text-evo-accent sm:hidden" />
               </Link>
             </li>
           ))}

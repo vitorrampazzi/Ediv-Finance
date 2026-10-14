@@ -35,12 +35,12 @@ export function AccountGate({
           </p>
         </div>
       </div>
-      <div className="mt-4 flex flex-wrap items-center gap-3">
+      <div className="mt-4 grid gap-2 sm:flex sm:flex-wrap sm:items-center sm:gap-3">
         <Link className="action" to={authLink("cadastro", destination)}>
           Criar conta grátis <ArrowRight size={16} aria-hidden="true" />
         </Link>
         <Link
-          className="inline-flex min-h-11 items-center text-sm text-evo-accent underline"
+          className="inline-flex min-h-11 items-center justify-center text-sm text-evo-accent underline"
           to={authLink("entrar", destination)}
         >
           Já tenho conta

@@ -11,7 +11,7 @@ import { useEffect, useRef, useState } from "react";
 import { Link, NavLink } from "react-router-dom";
 import { useAuth } from "../context/authContext";
 
-export function SiteHeader() {
+export function SiteHeader({ showRegistrationAction = true }: { showRegistrationAction?: boolean }) {
   const { user } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const menuButton = useRef<HTMLButtonElement>(null);
@@ -50,7 +50,7 @@ export function SiteHeader() {
       >
         Pular para o conteúdo
       </a>
-      <header className="sticky top-0 z-40 border-b border-evo-border bg-evo-bgInset">
+      <header className="sticky top-0 z-40 border-b border-evo-border bg-evo-bgInset pt-[env(safe-area-inset-top)]">
         <div className="relative mx-auto flex min-h-16 max-w-7xl items-center justify-between gap-3 px-4 py-3 sm:px-5 md:min-h-20 md:px-8">
           <Link
             to={user ? "/app" : "/"}
@@ -95,19 +95,19 @@ export function SiteHeader() {
                 >
                   Entrar
                 </Link>
-                <Link to="/cadastro" className="action">
+                {showRegistrationAction && <Link to="/cadastro" className="action">
                   Criar conta <ArrowRight size={15} />
-                </Link>
+                </Link>}
               </>
             )}
           </nav>
           <div className="flex items-center gap-2 lg:hidden">
             <Link
-              to={user ? "/app" : "/cadastro"}
-              className="inline-flex min-h-11 items-center gap-1 rounded-lg bg-evo-primary px-3 text-xs font-semibold text-white"
+              to={user ? "/app" : showRegistrationAction ? "/cadastro" : "/entrar"}
+              className={`inline-flex min-h-11 items-center gap-1 rounded-lg px-3 text-sm font-semibold ${user || showRegistrationAction ? "bg-evo-primary text-white" : "text-evo-textMain"}`}
             >
-              {user ? "Minha conta" : "Criar conta"}
-              <ArrowRight size={14} aria-hidden="true" />
+              {user ? "Minha conta" : showRegistrationAction ? "Criar conta" : "Entrar"}
+              {(user || showRegistrationAction) && <ArrowRight size={14} aria-hidden="true" />}
             </Link>
             <button
               ref={menuButton}
@@ -168,10 +168,10 @@ export function SiteFooter({
   const { user } = useAuth();
 
   return (
-    <footer className="border-t border-evo-border bg-evo-bgInset">
-      <div className="mx-auto max-w-7xl px-5 py-9 md:px-8 md:py-12">
-        <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-[1.5fr_1fr_1fr]">
-          <div>
+    <footer className="site-footer border-t border-evo-border bg-evo-bgInset">
+      <div className="mx-auto max-w-7xl px-4 py-6 sm:px-5 md:px-8 md:py-12">
+        <div className="grid grid-cols-2 gap-x-5 gap-y-5 sm:gap-8 lg:grid-cols-[1.5fr_1fr_1fr]">
+          <div className="col-span-2 lg:col-span-1">
             <Link
               to={user ? "/app" : "/"}
               className="inline-flex items-center gap-3"
@@ -188,15 +188,14 @@ export function SiteFooter({
               </span>
             </Link>
             <p className="mt-3 max-w-sm text-sm leading-relaxed text-evo-textSec">
-              Educação financeira para entender previsões, avaliar riscos e
-              conhecer as empresas e seus dividendos com clareza.
+              Pesquisa de ações e educação sobre dividendos.
             </p>
           </div>
           <div>
             <h2 className="text-sm font-semibold text-evo-textMain">
               Explorar
             </h2>
-            <ul className="mt-3 space-y-2 text-sm text-evo-textSec">
+            <ul className="mt-2 text-sm text-evo-textSec sm:mt-3 sm:space-y-2">
               <li>
                 <Link
                   className="hover:text-evo-textMain"
@@ -229,9 +228,9 @@ export function SiteFooter({
           </div>
           <div>
             <h2 className="text-sm font-semibold text-evo-textMain">
-              Conta e transparência
+              Conta e ajuda
             </h2>
-            <ul className="mt-3 space-y-2 text-sm text-evo-textSec">
+            <ul className="mt-2 text-sm text-evo-textSec sm:mt-3 sm:space-y-2">
               <li>
                 <Link
                   className="hover:text-evo-textMain"

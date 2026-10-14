@@ -96,7 +96,7 @@ export function NotificationsMenu() {
       {open && (
         <section
           id="ediv-notifications"
-          className="absolute right-0 z-50 mt-2 w-[min(22rem,calc(100vw-2rem))] space-y-3 rounded-xl border border-evo-border bg-evo-card p-4 shadow-xl"
+          className="fixed inset-x-4 top-[calc(4.5rem+env(safe-area-inset-top))] z-50 max-h-[calc(100dvh-10rem-env(safe-area-inset-bottom))] overflow-y-auto space-y-3 rounded-xl border border-evo-border bg-evo-card p-4 shadow-xl md:absolute md:inset-x-auto md:right-0 md:top-auto md:mt-2 md:w-[22rem]"
         >
           <h2 className="font-semibold">Notificações de pesquisas</h2>
           <p className="text-xs text-evo-textSec">

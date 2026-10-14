@@ -24,10 +24,12 @@ export function LearningVideo({
     <section className="min-w-0" aria-label={"Vídeo da aula: " + title}>
       <div
         className={
-          "relative flex aspect-video w-full min-w-0 items-center justify-center overflow-hidden rounded-xl border border-evo-border bg-evo-bgMain " +
+          "relative flex w-full min-w-0 items-center justify-center overflow-hidden rounded-xl border border-evo-border bg-evo-bgMain " +
           (approvedUrl && loadPlayer
             ? "aspect-video"
-            : "min-h-60 p-5 sm:min-h-72 sm:p-6")
+            : approvedUrl
+              ? "aspect-video min-h-60 p-5 sm:min-h-72 sm:p-6"
+              : "min-h-40 p-4 sm:aspect-video sm:min-h-72 sm:p-6")
         }
       >
         {approvedUrl && loadPlayer ? (
@@ -49,7 +51,7 @@ export function LearningVideo({
             {approvedUrl ? (
               <CirclePlay
                 size={42}
-                className="mx-auto text-evo-accent"
+                className="mx-auto size-7 text-evo-accent sm:size-9"
                 aria-hidden="true"
               />
             ) : (
@@ -60,12 +62,12 @@ export function LearningVideo({
               />
             )}
             <p className="mt-4 font-semibold">
-              {approvedUrl ? title : "Aulas em vídeo em preparação"}
+              {approvedUrl ? title : "Vídeos em preparação"}
             </p>
             <p className="mt-2 text-sm leading-relaxed text-evo-textSec">
               {approvedUrl
                 ? "Carregue o player para assistir. O provedor de vídeo receberá sua conexão somente ao clicar."
-                : "Os vídeos do curso selecionados para esta trilha serão publicados aqui. Enquanto isso, estude o material e pratique com o exercício da aula."}
+                : "Enquanto isso, estude pela leitura e pratique com os exercícios."}
             </p>
             {approvedUrl ? (
               <button

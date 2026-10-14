@@ -53,17 +53,17 @@ export function RankingPreview() {
   const topic = topics[selected];
   return (
     <aside
-      className="journey-preview border-y border-evo-border px-5 py-5"
+      className="journey-preview rounded-xl border border-evo-border px-4 py-4 sm:rounded-none sm:border-x-0 sm:px-5 sm:py-5"
       aria-labelledby={`${panelId}-title`}
     >
       <p className="text-xs font-semibold uppercase tracking-widest text-evo-accent">
         Por trás de uma ação
       </p>
-      <h2 id={`${panelId}-title`} className="mt-2 text-xl font-semibold">
+      <h2 id={`${panelId}-title`} className="mt-2 hidden text-xl font-semibold sm:block">
         Descubra por onde começar.
       </h2>
       <div
-        className="mt-5 grid grid-cols-3 gap-1"
+        className="mt-2 grid grid-cols-3 gap-1 sm:mt-5"
         role="group"
         aria-label="Escolha um tema para explorar"
       >
@@ -81,7 +81,7 @@ export function RankingPreview() {
         ))}
       </div>
       <div
-        className="journey-scene relative mt-5 grid grid-cols-3 gap-2 pt-8 pb-4"
+        className="journey-scene relative mt-2 grid grid-cols-3 gap-2 pt-3 pb-2 sm:mt-5 sm:pt-8 sm:pb-4"
         aria-hidden="true"
         key={topic.label}
       >
@@ -118,10 +118,10 @@ export function RankingPreview() {
           return (
             <div
               key={step}
-              className="relative z-10 flex min-w-0 flex-col items-center gap-4"
+              className="relative z-10 flex min-w-0 flex-col items-center gap-2 sm:gap-4"
             >
               <span
-                className={`journey-node flex size-14 items-center justify-center rounded-2xl border bg-evo-bgInset ${index === 1 ? "border-evo-accent/60 text-evo-accent" : "border-evo-border text-evo-textSec"}`}
+                className={`journey-node flex size-10 items-center justify-center rounded-xl border bg-evo-bgInset sm:size-14 sm:rounded-2xl ${index === 1 ? "border-evo-accent/60 text-evo-accent" : "border-evo-border text-evo-textSec"}`}
               >
                 <Icon size={25} strokeWidth={1.5} />
               </span>
@@ -134,17 +134,17 @@ export function RankingPreview() {
       </div>
       <div
         id={`${panelId}-content`}
-        className="mt-3 min-h-36 border-t border-evo-border pt-4"
+        className="mt-2 border-t border-evo-border sm:mt-3 sm:min-h-36 sm:pt-4"
         aria-live="polite"
         aria-atomic="true"
       >
-        <h3 className="text-base font-semibold">{topic.title}</h3>
-        <p className="mt-2 text-sm leading-relaxed text-evo-textSec">
+        <h3 className="hidden text-base font-semibold sm:block">{topic.title}</h3>
+        <p className="mt-2 hidden text-sm leading-relaxed text-evo-textSec sm:block">
           {topic.text}
         </p>
         <Link
           to={user ? topic.memberPath : topic.publicPath}
-          className="mt-3 inline-flex min-h-11 items-center gap-2 text-sm font-medium text-evo-accent hover:underline"
+          className="inline-flex min-h-11 items-center gap-2 text-sm font-medium text-evo-accent hover:underline sm:mt-3"
         >
           {topic.action} <ArrowUpRight size={15} aria-hidden="true" />
         </Link>

@@ -57,23 +57,21 @@ function MemberRankingHighlights() {
   }, [refreshSession]);
 
   return (
-    <section className="mx-auto max-w-7xl px-5 pb-14 md:px-8">
+    <section className="mx-auto max-w-7xl py-5 sm:px-5 sm:pb-10 md:px-8">
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
           <p className="text-xs font-semibold uppercase tracking-widest text-evo-accent">
             Nossa sala de estudos
           </p>
-          <h2 className="mt-2 text-2xl font-bold">
-            Previsões para você compreender
+          <h2 className="mt-2 text-xl font-bold sm:text-2xl">
+            Sua próxima pesquisa
           </h2>
           <p className="mt-2 max-w-2xl text-sm text-evo-textSec">
             {showingDemo ? (
               "Explore cenários e módulos de pesquisa com empresas de exemplo."
             ) : (
               <>
-                O ranking reúne os cenários publicados pela equipe. Leia os
-                argumentos e os riscos de cada análise antes de interpretar os
-                números.
+                Conheça os cenários da publicação mais recente.
               </>
             )}
           </p>
@@ -111,7 +109,7 @@ function MemberRankingHighlights() {
                     (publication.updatedAt.endsWith("Z") ? "" : "Z"),
                 ).toLocaleDateString("pt-BR")}
           </p>
-          <div className="mt-3 grid gap-4 sm:grid-cols-3">
+          <div className="mt-3 grid gap-2 sm:grid-cols-3 sm:gap-4">
             {entries.slice(0, 3).map((entry) => (
               <Link
                 key={entry.ticker}
@@ -124,26 +122,26 @@ function MemberRankingHighlights() {
                     ? "&publication=" + encodeURIComponent(publication.id)
                     : "")
                 }
-                className="rounded-xl border border-evo-border bg-evo-card p-5 hover:border-evo-accent/40"
+                className="grid min-w-0 grid-cols-[minmax(0,1fr)_auto] gap-x-3 rounded-xl border border-evo-border bg-evo-card p-4 hover:border-evo-accent/40 sm:block sm:p-5"
               >
-                <h3 className="font-bold">{entry.ticker}</h3>
-                <p className="mt-1 text-xs text-evo-textSec">
+                <h3 className="col-start-1 row-start-1 font-bold">{entry.ticker}</h3>
+                <p className="col-start-1 row-start-2 mt-1 truncate text-xs text-evo-textSec sm:whitespace-normal">
                   {entry.companyName}
                 </p>
-                <p className="mt-5 text-xs text-evo-textSec">
+                <p className="col-span-2 mt-3 text-xs text-evo-textSec sm:mt-5">
                   {showingDemo
                     ? "Potencial simulado para demonstração"
                     : "Potencial informado pelo autor"}
                 </p>
-                <p className="mt-1 font-numbers text-xl">
+                <p className="col-start-2 row-start-1 text-right font-numbers text-xl sm:mt-1 sm:text-left">
                   {Number(entry.expectedReturnPercent).toLocaleString("pt-BR")}%
                 </p>
-                <p className="mt-2 text-xs text-evo-textSec">
+                <p className="col-start-2 row-start-2 mt-1 text-right text-xs text-evo-textSec sm:mt-2 sm:text-left">
                   {entry.horizonMonths
                     ? entry.horizonMonths + " meses"
                     : "Prazo não informado"}
                 </p>
-                <span className="mt-4 block text-xs text-evo-accent">
+                <span className="col-span-2 mt-3 block text-sm text-evo-accent sm:mt-4">
                   {showingDemo
                     ? "Conhecer os módulos da pesquisa →"
                     : "Ler tese e riscos →"}

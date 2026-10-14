@@ -1,5 +1,5 @@
-import { lazy, Suspense } from "react";
-import { BrowserRouter, Routes, Route, Link, Navigate } from "react-router-dom";
+import { lazy, Suspense, useLayoutEffect, useRef } from "react";
+import { BrowserRouter, Routes, Route, Link, Navigate, useLocation } from "react-router-dom";
 const DashboardLayout = lazy(() =>
   import("./layouts/DashboardLayout").then((module) => ({
     default: module.DashboardLayout,
@@ -107,6 +107,18 @@ const Metodologia = lazy(() =>
     default: module.Metodologia,
   })),
 );
+function RouteStart() {
+  const { pathname, hash } = useLocation();
+  const previousPath = useRef(pathname);
+  useLayoutEffect(() => {
+    if (previousPath.current === pathname) return;
+    previousPath.current = pathname;
+    // Filters and lesson anchors keep their own position within the page.
+    if (!hash) window.scrollTo({ top: 0, left: 0, behavior: "instant" });
+  }, [pathname, hash]);
+  return null;
+}
+
 function App() {
   return (
     <BrowserRouter>
@@ -129,6 +141,7 @@ function App() {
               </p>
             }
           >
+            <RouteStart />
             <Routes>
               <Route path="/" element={<Home />} />
               <Route

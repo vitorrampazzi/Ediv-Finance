@@ -33,20 +33,19 @@ export function Analises({ publicView = false }: { publicView?: boolean }) {
     <section
       className={`mx-auto max-w-7xl space-y-6 ${publicView ? "px-5 py-6 md:px-8 md:py-10" : ""}`}
     >
-      <div className="page-intro relative flex flex-col items-start justify-between gap-5 sm:flex-row">
+      <div className="page-intro relative flex items-start justify-between gap-3 sm:gap-5">
         <div className="relative z-10 min-w-0">
           <p className="text-xs font-semibold uppercase tracking-[.18em] text-evo-accent">
             Caderno de mercado / B3
           </p>
-          <h1 className="mt-3 text-3xl font-semibold leading-tight tracking-[-.04em] text-evo-textMain sm:text-5xl">
-            O mercado, em perspectiva.
+          <h1 className="mt-3 text-2xl font-semibold leading-tight tracking-[-.04em] text-evo-textMain sm:text-5xl">
+            Análises de ações.
           </h1>
           <p className="mt-3 max-w-2xl text-sm leading-relaxed text-evo-textSec">
-            Pesquise ações ordinárias, preferenciais e units de empresas
-            brasileiras e compare suas cotações e indicadores.
+            Busque empresas e compare cotações de ações brasileiras.
           </p>
         </div>
-        <div className="relative z-10 shrink-0 self-end sm:self-start">
+        <div className="relative z-10 shrink-0 self-start">
           <OrbitCoins variant="real" size="sm" />
         </div>
       </div>
@@ -102,9 +101,8 @@ export function Analises({ publicView = false }: { publicView?: boolean }) {
               : `${total.toLocaleString("pt-BR")} ações encontradas`}
         </span>
         {requestedAt && (
-          <span className="text-xs">
-            Consulta ao provedor:{" "}
-            {new Date(requestedAt).toLocaleString("pt-BR")}
+          <span className="text-xs" title={new Date(requestedAt).toLocaleString("pt-BR")}>
+            Consulta: {new Date(requestedAt).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}
           </span>
         )}
       </div>
@@ -142,13 +140,13 @@ export function Analises({ publicView = false }: { publicView?: boolean }) {
         </p>
         <nav
           aria-label="Paginação das ações"
-          className="flex items-center gap-2"
+          className="flex w-full items-center justify-between gap-2 sm:w-auto"
         >
           <button
             type="button"
             disabled={page <= 1 || loading || Boolean(error)}
             onClick={() => setPage((current) => Math.max(1, current - 1))}
-            className="inline-flex min-h-10 items-center gap-1 rounded-lg border border-evo-border px-3 text-sm text-evo-textMain disabled:opacity-40"
+            className="inline-flex min-h-11 items-center gap-1 rounded-lg border border-evo-border px-3 text-sm text-evo-textMain disabled:opacity-40"
           >
             <ArrowLeft size={15} aria-hidden="true" /> Anterior
           </button>
@@ -160,7 +158,7 @@ export function Analises({ publicView = false }: { publicView?: boolean }) {
             type="button"
             disabled={page >= pages || loading || Boolean(error)}
             onClick={() => setPage((current) => Math.min(pages, current + 1))}
-            className="inline-flex min-h-10 items-center gap-1 rounded-lg border border-evo-border px-3 text-sm text-evo-textMain disabled:opacity-40"
+            className="inline-flex min-h-11 items-center gap-1 rounded-lg border border-evo-border px-3 text-sm text-evo-textMain disabled:opacity-40"
           >
             Próxima <ArrowRight size={15} aria-hidden="true" />
           </button>

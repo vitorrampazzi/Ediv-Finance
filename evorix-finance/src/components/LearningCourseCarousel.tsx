@@ -165,11 +165,11 @@ export function LearningCourseCarousel({
               <li
                 key={course.id}
                 data-selected-course={selected ? "true" : undefined}
-                className="flex w-[min(85vw,22rem)] shrink-0 snap-start sm:w-[clamp(18rem,calc((100%_-_1.25rem)/2),34rem)]"
+                className="flex w-[min(78vw,22rem)] shrink-0 snap-start sm:w-[clamp(18rem,calc((100%_-_1.25rem)/2),34rem)]"
               >
                 <article
                   className={
-                    "flex w-full flex-col border px-5 py-6 transition-colors sm:px-6 motion-reduce:transition-none " +
+                    "flex w-full flex-col rounded-xl border px-4 py-4 transition-colors sm:px-6 sm:py-6 motion-reduce:transition-none " +
                     (selected
                       ? "border-evo-accent/60 bg-evo-accent/5"
                       : "border-evo-border bg-evo-card/25")
@@ -185,20 +185,20 @@ export function LearningCourseCarousel({
                       </span>
                     )}
                   </div>
-                  <p className="mt-5 text-xs uppercase leading-relaxed tracking-[0.12em] text-evo-accent">
+                  <p className="mt-3 text-xs uppercase leading-relaxed tracking-[0.12em] text-evo-accent sm:mt-5">
                     {course.eyebrow}
                   </p>
                   <h3 className="mt-3 text-xl font-semibold leading-tight">
                     {course.title}
                   </h3>
-                  <p className="mt-3 flex-1 text-sm leading-relaxed text-evo-textSec">
+                  <p className="mt-3 hidden flex-1 text-sm leading-relaxed text-evo-textSec sm:block">
                     {course.description}
                   </p>
                   <div className="mt-5 flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-evo-textSec">
                     <span>{course.chapterIds.length} aulas</span>
                     <span className="inline-flex items-center gap-1.5">
                       <Clock3 size={14} aria-hidden="true" />
-                      {minutes} min de leitura estimada
+                      {minutes} min de leitura
                     </span>
                     <span className="inline-flex items-center gap-1.5">
                       <CheckCircle2 size={14} aria-hidden="true" />
@@ -215,7 +215,7 @@ export function LearningCourseCarousel({
                   >
                     <div className="h-full bg-evo-accent transition-[width] motion-reduce:transition-none" style={{ width: `${course.chapterIds.length ? (count / course.chapterIds.length) * 100 : 0}%` }} />
                   </div>
-                  <p className="mt-3 text-xs leading-5 text-evo-textSec">
+                  <p className="mt-3 hidden text-xs leading-5 text-evo-textSec sm:block">
                     {availableVideos ? `${availableVideos} ${availableVideos === 1 ? "vídeo disponível" : "vídeos disponíveis"}` : "Vídeos em preparação"} · Leituras e exercícios disponíveis
                   </p>
                   {firstChapterId && (

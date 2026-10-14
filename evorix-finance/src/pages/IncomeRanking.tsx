@@ -17,6 +17,7 @@ import { useAuth } from "../context/authContext";
 import { rankingDemoEntries } from "../lib/rankingDemo";
 import { RankingAccessLanding } from "../components/RankingAccessLanding";
 import { OrbitCoins } from "../components/OrbitCoins";
+import { MobileDisclosure } from "../components/MobileDisclosure";
 import { ResearchEditor } from "../components/ResearchEditor";
 import { PublicationReview } from "../components/PublicationReview";
 import { getResearchCoverage } from "../lib/researchCoverage";
@@ -238,27 +239,28 @@ function MemberIncomeRanking() {
       className="mx-auto max-w-7xl space-y-6 px-4 py-6 sm:px-6 md:py-10"
     >
       <section className="page-intro">
-        <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
+        <div className="mobile-page-heading flex items-start justify-between gap-3 sm:gap-4 sm:items-center">
           <div className="min-w-0 flex-1">
             <p className="text-xs font-semibold uppercase tracking-widest text-evo-accent">
               {showingDemo
                 ? "Demonstração · dados fictícios"
                 : "Pesquisa de ações"}
             </p>
-            <h1 className="mt-3 text-3xl font-bold">Ranking de previsões</h1>
-            <p className="mt-3 max-w-3xl leading-relaxed text-evo-textSec">
+            <h1 className="mt-3 text-2xl font-bold sm:text-3xl">
+              Ranking de previsões
+            </h1>
+            <p className="mt-3 max-w-3xl text-sm leading-relaxed text-evo-textSec sm:text-base">
               {showingDemo ? (
                 "Explore os cenários, os indicadores e os módulos de análise por empresa."
               ) : (
-                <>
-                  Explore as teses publicadas pela equipe, entenda os fatores
-                  que podem favorecer ou contrariar cada cenário e acompanhe as
-                  revisões ao longo do tempo.
-                </>
+                <>Compare cenários e abra uma empresa para ler a pesquisa.</>
               )}
             </p>
             <div className="mt-5 flex flex-wrap gap-3">
-              <Link to={learningPath + "#ranking"} className={button}>
+              <Link
+                to={learningPath + "#ranking"}
+                className="inline-flex min-h-11 items-center gap-2 text-sm font-medium text-evo-accent"
+              >
                 <BookOpen size={17} /> Como interpretar o ranking
               </Link>
               <button
@@ -278,14 +280,14 @@ function MemberIncomeRanking() {
               </Link>
             </div>
           </div>
-          <div className="shrink-0 self-end sm:self-center">
+          <div className="shrink-0 self-start sm:self-center">
             <OrbitCoins variant="ranking" size="hero" />
           </div>
         </div>
       </section>
-      <section
-        aria-label="Guia de leitura do ranking"
-        className="grid gap-4 border-b border-evo-border pb-6 sm:grid-cols-3"
+      <MobileDisclosure
+        title="Como ler o ranking"
+        contentClassName="sm:grid sm:grid-cols-3 sm:gap-4"
       >
         {[
           [
@@ -304,7 +306,7 @@ function MemberIncomeRanking() {
             "Use o prazo, a data e as fontes da publicação para dar contexto aos números.",
           ],
         ].map(([number, title, text]) => (
-          <div key={number} className="flex items-start gap-3">
+          <div key={number} className="mb-3 flex items-start gap-3 sm:mb-0">
             <span
               className="pt-0.5 font-numbers text-sm text-evo-accent"
               aria-hidden="true"
@@ -317,7 +319,7 @@ function MemberIncomeRanking() {
             </div>
           </div>
         ))}
-      </section>
+      </MobileDisclosure>
       {error && (
         <div className="notice-error">
           <p role="alert">{error}</p>
@@ -563,7 +565,10 @@ function MemberIncomeRanking() {
           )}
         </div>
         {!showingDemo && current && (
-          <div className="grid gap-3 rounded-xl border border-evo-border bg-evo-card p-4 text-sm sm:grid-cols-3">
+          <MobileDisclosure
+            title="Responsável pela publicação"
+            contentClassName="grid gap-3 rounded-xl border border-evo-border bg-evo-card p-4 text-sm sm:grid-cols-3"
+          >
             <p>
               Responsável
               <br />
@@ -581,10 +586,10 @@ function MemberIncomeRanking() {
                 {ranking.professionalRegistration || "Não informado"}
               </strong>
             </p>
-          </div>
+          </MobileDisclosure>
         )}
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-          <label className="flex items-center gap-2 rounded-lg border border-evo-border bg-evo-bgMain px-3">
+        <div className="grid min-w-0 gap-3 lg:grid-cols-[minmax(0,1fr)_3fr]">
+          <label className="relative flex min-w-0 items-center gap-2 rounded-lg border border-evo-border bg-evo-bgMain px-3">
             <Search size={17} />
             <span className="sr-only">Buscar empresa ou ticker</span>
             <input
@@ -594,44 +599,49 @@ function MemberIncomeRanking() {
               className="min-h-11 min-w-0 w-full bg-transparent text-sm outline-none"
             />
           </label>
-          <select
-            aria-label="Filtrar setor"
-            className={input}
-            value={sector}
-            onChange={(e) => setSector(e.target.value)}
+          <MobileDisclosure
+            title={`Filtros e ordenação${sector || horizon || sort !== "rank" ? " · ativos" : ""}`}
+            contentClassName="grid min-w-0 gap-3 sm:grid-cols-3"
           >
-            <option value="">Todos os setores</option>
-            {sectors.map((s) => (
-              <option key={s}>{s}</option>
-            ))}
-          </select>
-          <select
-            aria-label="Filtrar horizonte"
-            className={input}
-            value={horizon}
-            onChange={(e) => setHorizon(e.target.value)}
-          >
-            <option value="">Todos os prazos</option>
-            <option value="6">Até 6 meses</option>
-            <option value="12">Até 12 meses</option>
-            <option value="24">Até 24 meses</option>
-          </select>
-          <select
-            aria-label="Ordenar ranking"
-            className={input}
-            value={sort}
-            onChange={(e) => setSort(e.target.value)}
-          >
-            <option value="rank">
-              {showingDemo ? "Ordem da demonstração" : "Ordem da publicação"}
-            </option>
-            <option value="potential">
-              {showingDemo
-                ? "Maior potencial simulado"
-                : "Maior potencial informado"}
-            </option>
-            <option value="name">Nome da empresa</option>
-          </select>
+            <select
+              aria-label="Filtrar setor"
+              className={input}
+              value={sector}
+              onChange={(e) => setSector(e.target.value)}
+            >
+              <option value="">Todos os setores</option>
+              {sectors.map((s) => (
+                <option key={s}>{s}</option>
+              ))}
+            </select>
+            <select
+              aria-label="Filtrar horizonte"
+              className={input}
+              value={horizon}
+              onChange={(e) => setHorizon(e.target.value)}
+            >
+              <option value="">Todos os prazos</option>
+              <option value="6">Até 6 meses</option>
+              <option value="12">Até 12 meses</option>
+              <option value="24">Até 24 meses</option>
+            </select>
+            <select
+              aria-label="Ordenar ranking"
+              className={input}
+              value={sort}
+              onChange={(e) => setSort(e.target.value)}
+            >
+              <option value="rank">
+                {showingDemo ? "Ordem da demonstração" : "Ordem da publicação"}
+              </option>
+              <option value="potential">
+                {showingDemo
+                  ? "Maior potencial simulado"
+                  : "Maior potencial informado"}
+              </option>
+              <option value="name">Nome da empresa</option>
+            </select>
+          </MobileDisclosure>
         </div>
         <div className="flex flex-wrap items-center justify-between gap-2">
           <p
@@ -766,7 +776,7 @@ function MemberIncomeRanking() {
                           aria-hidden="true"
                         />
                       </div>
-                      <div className="ml-10 mt-4 sm:ml-12">
+                      <div className="mt-4 sm:ml-12">
                         <dl className="grid grid-cols-2 gap-x-4 gap-y-3 sm:grid-cols-3">
                           <div>
                             <dt className="text-xs text-evo-textSec">
@@ -804,11 +814,11 @@ function MemberIncomeRanking() {
                             </dd>
                           </div>
                         </dl>
-                        <p className="mt-4 line-clamp-2 whitespace-pre-wrap break-words text-sm leading-relaxed text-evo-textSec">
+                        <p className="mt-4 hidden whitespace-pre-wrap break-words text-sm leading-relaxed text-evo-textSec sm:line-clamp-2">
                           {entry.thesis ||
                             "A justificativa ainda não foi informada pelo autor."}
                         </p>
-                        <p className="mt-3 text-xs text-evo-textSec">
+                        <p className="mt-3 hidden text-xs text-evo-textSec sm:block">
                           {coverage.filled}/{coverage.total} campos de leitura
                           preenchidos
                           {entry.referencePeriod

@@ -40,13 +40,13 @@ export function HomeMarketHighlights() {
           {[0, 1, 2].map((item) => (
             <div
               key={item}
-              className="rounded-xl border border-evo-border bg-evo-card p-5"
+              className="rounded-xl border border-evo-border bg-evo-card p-4 sm:p-5"
             >
-              <div className="space-y-4 animate-pulse motion-reduce:animate-none">
+              <div className="space-y-3 animate-pulse motion-reduce:animate-none">
                 <div className="h-4 w-20 rounded bg-evo-border/40" />
                 <div className="h-3 w-3/4 rounded bg-evo-border/30" />
-                <div className="h-8 w-28 rounded bg-evo-border/40" />
-                <div className="h-4 w-24 rounded bg-evo-border/30" />
+                <div className="hidden h-8 w-28 rounded bg-evo-border/40 sm:block" />
+                <div className="hidden h-4 w-24 rounded bg-evo-border/30 sm:block" />
               </div>
             </div>
           ))}
@@ -75,42 +75,42 @@ export function HomeMarketHighlights() {
   return (
     <ul
       aria-label="Ações com maiores altas disponíveis"
-      className="mt-6 grid gap-4 sm:grid-cols-3"
+      className="mt-3 grid gap-2 sm:mt-6 sm:grid-cols-3 sm:gap-4"
     >
       {gainers.map((asset) => (
         <li key={asset.symbol} className="min-w-0">
           <Link
             to={`${user ? "/app/analises" : "/mercado"}?busca=${encodeURIComponent(asset.symbol)}`}
-            className="group flex h-full flex-col rounded-xl border border-evo-border bg-evo-card p-5 transition-colors hover:border-evo-accent focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-evo-accent"
+            className="group relative grid h-full grid-cols-[minmax(0,1fr)_auto] items-center gap-x-3 rounded-xl border border-evo-border bg-evo-card p-4 transition-colors hover:border-evo-accent focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-evo-accent sm:flex sm:flex-col sm:items-stretch sm:p-5"
             aria-label={`Ver análise de ${asset.symbol}, ${asset.name}`}
           >
-            <div className="flex items-center justify-between gap-3">
+            <div className="col-start-1 row-start-1 flex items-center justify-between gap-3">
               <h3 className="text-lg font-semibold tracking-tight">
                 {asset.symbol}
               </h3>
               <ArrowUpRight
                 size={19}
-                className="shrink-0 text-evo-green"
+                className="hidden shrink-0 text-evo-green sm:block"
                 aria-hidden="true"
               />
             </div>
             <p
-              className="mt-1 line-clamp-2 text-sm text-evo-textSec"
+              className="col-start-1 row-start-2 mt-1 truncate text-xs text-evo-textSec sm:line-clamp-2 sm:whitespace-normal sm:text-sm"
               title={asset.name}
             >
               {asset.name}
             </p>
-            <div className="mt-auto pt-5">
-              <p className="text-xs text-evo-textSec">Variação da sessão</p>
-              <p className="mt-1 font-numbers text-3xl font-medium text-evo-green">
+            <div className="col-start-2 row-span-2 row-start-1 text-right sm:mt-auto sm:pt-5 sm:text-left">
+              <p className="sr-only text-xs text-evo-textSec sm:not-sr-only">Variação da sessão</p>
+              <p className="font-numbers text-lg font-medium text-evo-green sm:mt-1 sm:text-3xl">
                 {percentage.format(Number(asset.changePercent))}%
               </p>
-              <div className="mt-4 flex flex-wrap items-center justify-between gap-2 border-t border-evo-border pt-3">
-                <p className="font-numbers text-sm text-evo-textMain">
+              <div className="mt-1 flex flex-wrap items-center justify-end gap-2 sm:mt-4 sm:justify-between sm:border-t sm:border-evo-border sm:pt-3">
+                <p className="font-numbers text-xs text-evo-textMain sm:text-sm">
                   <span className="sr-only">Cotação informada: </span>
                   {money.format(Number(asset.price))}
                 </p>
-                <span className="inline-flex items-center gap-1 text-xs text-evo-textSec group-hover:text-evo-accent">
+                <span className="hidden items-center gap-1 text-xs text-evo-textSec group-hover:text-evo-accent sm:inline-flex">
                   Ver ação <ArrowRight size={14} aria-hidden="true" />
                 </span>
               </div>

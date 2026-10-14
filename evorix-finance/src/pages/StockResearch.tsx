@@ -18,6 +18,7 @@ import { RankingFundamentals } from "../components/RankingFundamentals";
 import { IndicatorHelp } from "../components/ResearchTools";
 import { ResearchCoverage } from "../components/ResearchCoverage";
 import { ResearchSources } from "../components/ResearchSources";
+import { MobileDisclosure } from "../components/MobileDisclosure";
 import { useAuth } from "../context/authContext";
 import { useRankingPublication } from "../hooks/useRankingPublication";
 import { rankingDemoEntries } from "../lib/rankingDemo";
@@ -188,7 +189,7 @@ function MemberStockResearch() {
   return (
     <article id="pagina-conteudo" className={page}>
       {backLink}
-      <header className="page-intro my-7 sm:my-10">
+      <header className="page-intro my-4 sm:my-10">
         <div className="flex flex-wrap items-center gap-3 text-xs font-semibold uppercase tracking-widest text-evo-textSec">
           <span className="text-evo-accent">
             {demo ? "Demonstração · empresa fictícia" : "Pesquisa publicada"}
@@ -205,10 +206,7 @@ function MemberStockResearch() {
             Posição {entry.rank} na {demo ? "demonstração" : "publicação"}
           </span>
         </p>
-        <p className="mt-5 max-w-3xl text-sm leading-relaxed text-evo-textSec">
-          Conheça a tese, os riscos e os dados que dão contexto ao cenário.
-        </p>
-        <dl className="mt-7 grid grid-cols-2 gap-x-5 gap-y-6 border-y border-evo-border py-5 sm:grid-cols-3">
+        <dl className="mt-4 grid grid-cols-2 gap-x-3 gap-y-4 border-y border-evo-border py-4 sm:mt-7 sm:grid-cols-3 sm:gap-x-5 sm:gap-y-6 sm:py-5">
           <div>
             <dt className="text-xs text-evo-textSec">
               {demo ? "Potencial simulado" : "Potencial informado"}
@@ -222,7 +220,7 @@ function MemberStockResearch() {
             <dt className="text-xs text-evo-textSec">
               {demo ? "Preço-alvo simulado" : "Preço-alvo informado"}
             </dt>
-            <dd className="mt-2 font-numbers text-2xl">
+            <dd className="mt-2 break-words font-numbers text-xl sm:text-2xl">
               {entry.targetPrice
                 ? money.format(Number(entry.targetPrice))
                 : "Não informado"}
@@ -231,7 +229,7 @@ function MemberStockResearch() {
           </div>
           <div>
             <dt className="text-xs text-evo-textSec">Horizonte do cenário</dt>
-            <dd className="mt-2 font-numbers text-2xl">
+            <dd className="mt-2 break-words font-numbers text-xl sm:text-2xl">
               {entry.horizonMonths
                 ? entry.horizonMonths + " meses"
                 : "Não informado"}
@@ -240,10 +238,7 @@ function MemberStockResearch() {
           </div>
         </dl>
       </header>
-      <section
-        aria-label="Como ler este caderno"
-        className="mb-6 grid gap-4 border-l-2 border-evo-accent bg-evo-accent/5 p-4 text-xs sm:grid-cols-3 sm:p-5"
-      >
+      <MobileDisclosure title="Guia de leitura da empresa" className="mb-4 sm:mb-6" contentClassName="space-y-4 border-l-2 border-evo-accent bg-evo-accent/5 p-4 text-sm sm:grid sm:grid-cols-3 sm:gap-4 sm:space-y-0 sm:p-5 sm:text-xs">
         <div>
           <h2 className="font-semibold">Comece pela tese</h2>
           <p className="mt-2 leading-5 text-evo-textSec">
@@ -265,10 +260,10 @@ function MemberStockResearch() {
             fonte.
           </p>
         </div>
-      </section>
+      </MobileDisclosure>
       <nav
         aria-label="Seções da pesquisa"
-        className="sticky top-16 z-10 -mx-4 flex gap-2 overflow-x-auto border-y border-evo-border bg-evo-bgMain/95 px-4 py-2 text-sm backdrop-blur sm:mx-0 sm:gap-4 md:top-20"
+        className="sticky top-[calc(4rem+env(safe-area-inset-top))] z-10 -mx-4 flex gap-2 overflow-x-auto overscroll-x-contain border-y border-evo-border bg-evo-bgMain px-4 py-1 text-sm sm:mx-0 sm:gap-4 sm:py-2 md:top-20"
       >
         {[
           ["tese", "Opinião e cenário"],

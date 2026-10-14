@@ -108,7 +108,7 @@ textarea {
 
 @layer components {
   .page-intro {
-    @apply border-l-2 border-evo-accent/60 p-5 sm:p-6;
+    @apply border-l-2 border-evo-accent/60 p-3 sm:p-6;
   }
   .field {
     @apply min-h-11 w-full rounded-lg border border-evo-border bg-evo-bgMain px-3 text-base sm:text-sm text-evo-textMain;
@@ -124,6 +124,37 @@ textarea {
   }
   .notice-success {
     @apply rounded-lg border border-evo-accent/30 bg-evo-accent/10 p-3 text-sm text-evo-textMain;
+  }
+}
+
+@media (max-width: 639px) {
+  /* Nested account pages share the shell's gutters on phones. */
+  .account-workspace #pagina-conteudo {
+    padding-inline: 0;
+    padding-top: 0;
+  }
+
+  .mobile-page-heading > :first-child {
+    min-width: 0;
+  }
+
+  input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="file"]),
+  select,
+  textarea {
+    font-size: 16px;
+  }
+
+  select,
+  textarea {
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  .site-footer li a,
+  .account-workspace footer a {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
   }
 }
 
@@ -413,5 +444,13 @@ button:disabled {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
+  }
+}
+
+@media (max-width: 639px) {
+  .research-visual,
+  .research-visual--hero {
+    width: 72px;
+    height: 68px;
   }
 }

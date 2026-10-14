@@ -24,14 +24,14 @@ export function LearningJourney({
   return (
     <section
       aria-labelledby="learning-journey-title"
-      className="grid gap-5 border-y border-evo-border bg-evo-card/30 px-5 py-6 sm:px-6 md:grid-cols-[minmax(0,1fr)_auto] md:items-center"
+      className="grid gap-3 border-y border-evo-border bg-evo-card/30 px-4 py-4 sm:gap-5 sm:px-6 sm:py-6 md:grid-cols-[minmax(0,1fr)_auto] md:items-center"
     >
       <div>
         <p className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.14em] text-evo-accent">
           {allFinished ? <CheckCircle2 size={16} aria-hidden="true" /> : <BookOpen size={16} aria-hidden="true" />}
           Seu percurso
         </p>
-        <h2 id="learning-journey-title" className="mt-3 text-xl font-semibold">
+        <h2 id="learning-journey-title" className="mt-2 text-lg font-semibold sm:mt-3 sm:text-xl">
           {allFinished
             ? "Fundamentos concluídos. Continue revisando."
             : finished > 0
@@ -40,8 +40,8 @@ export function LearningJourney({
         </h2>
         <p className="mt-2 max-w-2xl text-sm leading-6 text-evo-textSec">
           {allFinished
-            ? "Você acertou os exercícios de todas as aulas disponíveis. Revisite os conceitos ou pratique no laboratório abaixo."
-            : `Próxima etapa: ${destination.title}. Cada exercício respondido corretamente registra uma aula concluída.`}
+            ? "Revisite os conceitos ou pratique no laboratório."
+            : `Próxima etapa: ${destination.title}.`}
         </p>
         <p className="mt-3 text-xs leading-5 text-evo-textSec">
           {finished} de {lessons.length} exercícios concluídos · {isAuthenticated ? "salvos na sua conta" : "salvos neste navegador"}

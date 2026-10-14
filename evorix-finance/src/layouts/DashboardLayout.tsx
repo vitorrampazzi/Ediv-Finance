@@ -150,7 +150,7 @@ function ProfileMenu({
         aria-label={`Abrir menu da conta de ${name}`}
         aria-expanded={open}
         aria-controls="demo-profile-links"
-        className="flex h-10 w-10 items-center justify-center rounded-full border border-evo-border bg-evo-card text-evo-textSec transition hover:border-evo-accent hover:text-evo-accent focus-visible:outline focus-visible:outline-2 focus-visible:outline-evo-accent"
+        className="flex h-11 w-11 items-center justify-center rounded-full border border-evo-border bg-evo-card text-evo-textSec transition hover:border-evo-accent hover:text-evo-accent focus-visible:outline focus-visible:outline-2 focus-visible:outline-evo-accent"
       >
         <span aria-hidden="true" className="text-xs font-bold">
           {initials || <CircleUserRound size={20} />}
@@ -365,7 +365,7 @@ export const DashboardLayout = () => {
       </aside>
 
       <div className="flex min-h-screen min-w-0 flex-1 flex-col">
-        <header className="sticky top-0 z-20 flex min-h-16 items-center justify-between gap-3 border-b border-evo-border/70 bg-evo-bgInset px-4 md:min-h-20 md:px-8">
+        <header className="sticky top-0 z-20 flex min-h-16 items-center justify-between gap-2 border-b border-evo-border/70 bg-evo-bgInset px-4 pt-[env(safe-area-inset-top)] md:min-h-20 md:gap-3 md:px-8">
           <div className="flex min-w-0 items-center gap-3">
             <img
               src="/ediv-logo-clean.png"
@@ -402,7 +402,7 @@ export const DashboardLayout = () => {
 
         <main
           id="conteudo"
-          className="w-full flex-1 px-4 pt-6 pb-24 md:px-8 md:pt-10 lg:pb-8"
+          className="w-full min-w-0 flex-1 px-4 pt-4 pb-[calc(5rem+env(safe-area-inset-bottom))] md:px-8 md:pt-10 lg:pb-8"
         >
           <Outlet />
           <footer className="mx-auto mt-10 max-w-7xl border-t border-evo-border bg-evo-bgInset p-5 text-sm leading-relaxed text-evo-textSec">
@@ -427,7 +427,7 @@ export const DashboardLayout = () => {
             to={to}
             end={end}
             className={({ isActive }) =>
-              `flex min-h-14 flex-col items-center justify-center gap-1 border-t-2 text-[10px] focus-visible:outline focus-visible:outline-2 focus-visible:outline-evo-accent ${isActive ? "border-evo-green text-evo-textMain" : "border-transparent text-evo-textSec"}`
+              `flex min-h-14 flex-col items-center justify-center gap-1 border-t-2 text-xs font-medium focus-visible:outline focus-visible:outline-2 focus-visible:outline-evo-accent ${isActive ? "border-evo-green text-evo-textMain" : "border-transparent text-evo-textSec"}`
             }
           >
             <Icon size={19} strokeWidth={1.6} aria-hidden="true" />
