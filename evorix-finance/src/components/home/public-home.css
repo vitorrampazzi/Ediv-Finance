@@ -2,6 +2,10 @@
   --ph-ease: cubic-bezier(0.22, 1, 0.36, 1);
   --ph-accent: #a9d9d1;
   --ph-border: #4f5967;
+  background: #292d34;
+  color: #f6f7f9;
+  color-scheme: dark;
+  color-scheme: only dark;
   overflow: clip;
 }
 .ph-container {
@@ -132,6 +136,8 @@
   );
 }
 .ph-hero-line {
+  forced-color-adjust: none;
+  color-scheme: only dark;
   position: absolute;
   inset: 0;
   width: 100%;

@@ -10,6 +10,8 @@
   border-top: 2px solid #a9d9d1;
   background: #20252c;
   color: #f6f7f9;
+  color-scheme: dark;
+  color-scheme: only dark;
 }
 
 .ph-hero-panel::before {
@@ -83,9 +85,14 @@
 .ph-panel-scene {
   display: block;
   width: 100%;
-  height: 96px;
+  height: 128px;
   margin-top: 0.65rem;
   overflow: visible;
+  /* Preserve the illustration's paint when a browser forces its own palette. */
+  color-scheme: dark;
+  color-scheme: only dark;
+  forced-color-adjust: none;
+  background-color: #20252c;
   background-image: radial-gradient(
     rgb(169 217 209 / 12%) 0.8px,
     transparent 0.8px
@@ -94,14 +101,16 @@
 }
 
 .ph-panel-track {
-  stroke: rgb(169 217 209 / 28%);
-  stroke-width: 1;
+  fill: none;
+  stroke: #50625f;
+  stroke-width: 1.5;
 }
 
 .ph-panel-signal {
   stroke: #a9d9d1;
-  stroke-width: 2;
-  stroke-dasharray: 3 97;
+  fill: none;
+  stroke-width: 3;
+  stroke-dasharray: 8 92;
   stroke-linecap: round;
   animation: ph-panel-flow 4.6s linear infinite;
   animation-play-state: paused;
@@ -112,26 +121,28 @@
 }
 
 .ph-panel-baseline {
+  fill: none;
   stroke: #4f5967;
   stroke-width: 1;
   stroke-dasharray: 1 11;
   stroke-linecap: round;
 }
 
-.ph-panel-node {
+.ph-hero-panel[data-ph-inview="true"] .ph-panel-node {
   animation: ph-panel-node-in 480ms cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
-.ph-panel-node rect {
+.ph-panel-node-surface {
   fill: #20252c;
   stroke: #4f5967;
 }
 
-.ph-panel-node rect.ph-panel-node-center {
-  stroke: rgb(169 217 209 / 65%);
+.ph-panel-node-center {
+  stroke: #7caaa3;
 }
 
 .ph-panel-icon {
+  fill: none;
   stroke: #a9d9d1;
   stroke-width: 1.5;
   stroke-linejoin: round;
@@ -241,8 +252,56 @@
   width: 100%;
   min-height: 44px;
   margin: 0;
+  -webkit-appearance: none;
+  appearance: none;
+  background: transparent;
   accent-color: #a9d9d1;
   cursor: pointer;
+}
+
+.ph-panel-range::-webkit-slider-runnable-track {
+  height: 6px;
+  border-radius: 3px;
+  background: #59616e;
+}
+.ph-panel-range::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 18px;
+  height: 18px;
+  margin-top: -6px;
+  border: 2px solid #20252c;
+  border-radius: 50%;
+  background: #a9d9d1;
+}
+.ph-panel-range::-moz-range-track {
+  height: 6px;
+  border-radius: 3px;
+  background: #59616e;
+}
+.ph-panel-range::-moz-range-thumb {
+  width: 14px;
+  height: 14px;
+  border: 2px solid #20252c;
+  border-radius: 50%;
+  background: #a9d9d1;
+}
+
+@media (forced-colors: active) {
+  .ph-panel-range::-webkit-slider-runnable-track {
+    background: CanvasText;
+  }
+  .ph-panel-range::-webkit-slider-thumb {
+    background: Highlight;
+    border-color: Canvas;
+  }
+  .ph-panel-range::-moz-range-track {
+    background: CanvasText;
+  }
+  .ph-panel-range::-moz-range-thumb {
+    background: Highlight;
+    border-color: Canvas;
+  }
 }
 
 .ph-panel-profit-bar {
@@ -376,7 +435,7 @@
     padding: 1.1rem;
   }
   .ph-panel-scene {
-    height: 96px;
+    height: 128px;
     margin-top: 0.65rem;
   }
   .ph-panel-per-share dd {
@@ -390,6 +449,7 @@
 @media (prefers-reduced-motion: reduce) {
   .ph-panel-signal,
   .ph-panel-node,
+  .ph-hero-panel[data-ph-inview="true"] .ph-panel-node,
   .ph-panel-scene-copy {
     animation: none;
   }

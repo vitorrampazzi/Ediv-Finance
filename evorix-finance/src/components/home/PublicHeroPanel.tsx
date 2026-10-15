@@ -165,14 +165,23 @@ function FlowScene({ selected }: { selected: number }) {
     >
       <path
         d="M56 55C98 55 108 43 133 43H225C249 43 263 55 304 55"
+        fill="none"
+        stroke="#50625f"
         className="ph-panel-track"
       />
       <path
         d="M56 55C98 55 108 43 133 43H225C249 43 263 55 304 55"
         pathLength="100"
+        fill="none"
+        stroke="#a9d9d1"
         className="ph-panel-signal"
       />
-      <path d="M20 126H340" className="ph-panel-baseline" />
+      <path
+        d="M20 126H340"
+        fill="none"
+        stroke="#4f5967"
+        className="ph-panel-baseline"
+      />
       {topic.steps.map((step, index) => (
         <g
           key={step}
@@ -185,15 +194,26 @@ function FlowScene({ selected }: { selected: number }) {
             width="58"
             height="58"
             rx="13"
-            className={index === 1 ? "ph-panel-node-center" : undefined}
+            fill="#20252c"
+            stroke={index === 1 ? "#7caaa3" : "#4f5967"}
+            className={
+              index === 1
+                ? "ph-panel-node-surface ph-panel-node-center"
+                : "ph-panel-node-surface"
+            }
           />
           <g
             transform={`translate(${56 + index * 124} 55)`}
+            fill="none"
+            stroke="#a9d9d1"
+            strokeWidth="1.5"
+            strokeLinecap="round"
+            strokeLinejoin="round"
             className="ph-panel-icon"
           >
             <IconDrawing type={topic.icons[index]} />
           </g>
-          <text x={56 + index * 124} y="108" textAnchor="middle">
+          <text x={56 + index * 124} y="108" fill="#d5dbe5" textAnchor="middle">
             {step}
           </text>
         </g>
@@ -268,7 +288,7 @@ function DividendExample() {
 }
 
 export function PublicHeroPanel() {
-  const [selected, setSelected] = useState(2);
+  const [selected, setSelected] = useState(0);
   const panel = useRef<HTMLElement>(null);
   const panelId = useId();
   const topic = topics[selected];

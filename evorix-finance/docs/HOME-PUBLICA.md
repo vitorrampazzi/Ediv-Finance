@@ -7,16 +7,16 @@ para `/app`. O visitante recebe `PublicHome`. `HomeContent` continua exportado;
 seu corpo anterior está em `AccountHomeContent.tsx`, usado diretamente por
 `MemberHome`, com o mesmo conteúdo e comportamento.
 
-| Arquivo em `src/components/home/` | Papel |
-| --- | --- |
-| `PublicHome.tsx`, `public-home.css` | Hero, índice, mercado e CTA final |
-| `PublicHeroPanel.tsx`, `hero-panel.css` | Temas Empresa/Pesquisa/Dividendos e calculadora |
-| `TeachingJourney.tsx`, `teaching-journey.css` | Narrativa de rolagem e ilustrações |
-| `ResearchSample.tsx` | Três exemplos locais, tese e riscos expansíveis |
-| `ReadingChecklist.tsx` | Tese, prazo, data, riscos e metodologia |
-| `LearningTerms.tsx`, `src/lib/publicHomeTerms.ts` | Quatro definições e controles nativos |
-| `PublicQuestions.tsx`, `public-sections.css` | FAQ e estilos das seções |
-| `usePublicHomeMotion.ts` | Entradas únicas e pausa dos loops fora da viewport |
+| Arquivo em `src/components/home/`                 | Papel                                              |
+| ------------------------------------------------- | -------------------------------------------------- |
+| `PublicHome.tsx`, `public-home.css`               | Hero, índice, mercado e CTA final                  |
+| `PublicHeroPanel.tsx`, `hero-panel.css`           | Temas Empresa/Pesquisa/Dividendos e calculadora    |
+| `TeachingJourney.tsx`, `teaching-journey.css`     | Narrativa de rolagem e ilustrações                 |
+| `ResearchSample.tsx`                              | Três exemplos locais, tese e riscos expansíveis    |
+| `ReadingChecklist.tsx`                            | Tese, prazo, data, riscos e metodologia            |
+| `LearningTerms.tsx`, `src/lib/publicHomeTerms.ts` | Quatro definições e controles nativos              |
+| `PublicQuestions.tsx`, `public-sections.css`      | FAQ e estilos das seções                           |
+| `usePublicHomeMotion.ts`                          | Entradas únicas e pausa dos loops fora da viewport |
 
 O mercado reutiliza `HomeMarketHighlights` sem mudanças, com os mesmos filtros,
 consulta e estados. A disponibilidade de cadastro usa o hook existente em `Home`.
@@ -31,8 +31,9 @@ selecionam a etapa da narrativa e pausam sinais fora da tela. O scroll permanece
 nativo. Miniaturas continuam ocupando o mesmo espaço antes e depois do JavaScript.
 No celular, os trechos de estudo ficam empilhados.
 
-O painel inicia em Dividendos, com lucro fictício de R$ 100 milhões, 50 milhões de
-ações e distribuição de 40%. `100 milhões × 40% ÷ 50 milhões = R$ 0,80 por ação`.
+O painel inicia em Empresa (01/03). Ao escolher Dividendos, o exemplo usa lucro
+fictício de R$ 100 milhões, 50 milhões de ações e distribuição de 40%.
+`100 milhões × 40% ÷ 50 milhões = R$ 0,80 por ação`.
 O slider aceita 0–100% em passos de 5. O valor final acessível é separado do
 count-up visual. Preferência por movimento reduzido desliga os efeitos.
 
@@ -43,7 +44,7 @@ com as aulas e o glossário existentes; devem acompanhar futuras revisões edito
 ## Verificação realizada
 
 - Lint, TypeScript, testes unitários e build com pré-renderização.
-- HTML de `dist/index.html`: um H1, oito seções, âncoras, labels e R$ 0,80 presentes;
+- HTML de `dist/index.html`: um H1, oito seções, âncoras, labels e Empresa (01/03);
   nenhuma classe de ocultação progressiva no HTML emitido.
 - Vite preview revisado em 360, 768 e 1366 px, sem rolagem horizontal.
 - Abas, slider por teclado (0%, 5%, 40%, 100%), exemplos, glossário e FAQ.
@@ -58,17 +59,33 @@ Os dados de mercado da revisão são simulados. Nenhum teste acessou MySQL/Aiven
 enviou e-mail, criou conta ou usou credenciais. Não foram executadas as suítes de
 integração/banco nem os testes de navegador que dependem desses serviços.
 
+## Correção mobile — 14/10/2026
+
+- Painel inicial em Empresa (01/03), também no HTML pré-renderizado.
+- Cenas com cores explícitas e proteção contra recoloração automática dos SVGs
+  decorativos. Essa proteção fica limitada às ilustrações; controles continuam
+  respeitando as cores de acessibilidade do sistema.
+- Sinal do hero maior, slider com trilha escura e animações educativas acionadas
+  quando a figura aparece, pausando os loops fora da tela.
+- Glossário em telas pequenas/toque usa opacidade e deslocamento curto, sem 3D.
+- Revisão local em 360, 390, 768 e 1366 px, sem rolagem horizontal; figuras escuras,
+  slider e glossário funcionando. Cenário de movimento reduzido sem animações.
+- Lint, build e 32 testes unitários passaram. O celular físico das fotos não foi
+  conectado ao ambiente de revisão.
+
+Referência de compatibilidade: [cores forçadas em SVG e `forced-color-adjust`](https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/At-rules/@media/forced-colors).
+
 ## Tamanho dos arquivos
 
-Valores medidos com `gzipSync`, em bytes; chunks individuais, sem representar a soma
+Valores da primeira versão, medidos com `gzipSync`, em bytes; chunks individuais, sem representar a soma
 de todas as requisições da página.
 
-| Arquivo/grupo | Antes | Depois |
-| --- | ---: | ---: |
-| JavaScript do chunk Home | 6.762 | 9.102 |
-| JavaScript da home compartilhada, extraído | dentro de Home | 6.601 |
-| CSS específico da home pública | — | 5.222 |
-| JavaScript principal | 75.794 | 75.864 |
+| Arquivo/grupo                              |          Antes | Depois |
+| ------------------------------------------ | -------------: | -----: |
+| JavaScript do chunk Home                   |          6.762 |  9.102 |
+| JavaScript da home compartilhada, extraído | dentro de Home |  6.601 |
+| CSS específico da home pública             |              — |  5.222 |
+| JavaScript principal                       |         75.794 | 75.864 |
 
 O texto, as cenas e as interações aumentam o código da rota. O núcleo praticamente
 mantém o tamanho anterior; Framer Motion não foi usado. Dados novos não entram no

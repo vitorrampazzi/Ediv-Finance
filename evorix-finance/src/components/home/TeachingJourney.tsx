@@ -331,11 +331,11 @@ export function TeachingJourney() {
       (entries) => {
         for (const entry of entries) {
           (entry.target as HTMLElement).dataset.phInview = String(
-            entry.isIntersecting,
+            entry.isIntersecting && entry.intersectionRatio >= 0.2,
           );
         }
       },
-      { threshold: 0.05 },
+      { threshold: [0, 0.2] },
     );
     for (const element of loopElements) visibilityObserver.observe(element);
     observeSteps();
@@ -425,10 +425,8 @@ export function TeachingJourney() {
                   <p className="ph-teaching-step-text">{step.text}</p>
                   <figure
                     className="ph-teaching-mini"
-                    data-ph-teaching-mobile-loop={
-                      index === 2 ? true : undefined
-                    }
-                    data-ph-inview={index === 2 ? "false" : undefined}
+                    data-ph-teaching-mobile-loop
+                    data-ph-inview="false"
                   >
                     <Scene />
                     <figcaption>Exemplo didático · {step.diagram}</figcaption>

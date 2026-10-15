@@ -79,6 +79,13 @@
   height: auto;
 }
 
+.ph-teaching-svg[aria-hidden="true"] {
+  background-color: #20252c;
+  color-scheme: dark;
+  color-scheme: only dark;
+  forced-color-adjust: none;
+}
+
 .ph-teaching-mini figcaption {
   color: #d5dbe5;
   font-size: 0.8125rem;
@@ -124,19 +131,19 @@
   transform-origin: center bottom;
 }
 
-.ph-teaching-step.ph-is-current .ph-teaching-bar {
+.ph-teaching-mini[data-ph-inview="true"] .ph-teaching-bar {
   animation: ph-teaching-bar-grow 550ms cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
-.ph-teaching-step.ph-is-current .ph-teaching-bar-two {
+.ph-teaching-mini[data-ph-inview="true"] .ph-teaching-bar-two {
   animation-delay: 60ms;
 }
 
-.ph-teaching-step.ph-is-current .ph-teaching-bar-three {
+.ph-teaching-mini[data-ph-inview="true"] .ph-teaching-bar-three {
   animation-delay: 120ms;
 }
 
-.ph-teaching-step.ph-is-current .ph-teaching-revision {
+.ph-teaching-mini[data-ph-inview="true"] .ph-teaching-revision {
   animation: ph-teaching-revision-enter 650ms cubic-bezier(0.22, 1, 0.36, 1)
     both;
 }
@@ -375,10 +382,10 @@
   .ph-teaching-dividend-signal,
   .ph-teaching-scene.ph-is-active .ph-teaching-bar,
   .ph-teaching-scene.ph-is-active .ph-teaching-revision,
-  .ph-teaching-step.ph-is-current .ph-teaching-bar,
-  .ph-teaching-step.ph-is-current .ph-teaching-revision,
+  .ph-teaching-mini[data-ph-inview="true"] .ph-teaching-bar,
+  .ph-teaching-mini[data-ph-inview="true"] .ph-teaching-revision,
   .ph-teaching-mini .ph-teaching-dividend-signal {
-    animation: none;
+    animation: none !important;
     transform: none;
   }
 
