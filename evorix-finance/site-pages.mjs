@@ -1,9 +1,9 @@
 export const siteOrigin = "https://escoladodividendo.com.br";
 export const publicPages = {
   "/": {
-    title: "Ediv Finance",
+    title: "Dividendos e pesquisa de ações | Ediv Finance",
     description:
-      "Previsões de ações, pesquisa por empresa e educação sobre dividendos. Conheça a Ediv Finance.",
+      "Estude dividendos e leia pesquisas de ações na Ediv Finance. Entenda o negócio, os cenários e os riscos de cada empresa, com aulas e exemplos.",
   },
   "/mercado": {
     title: "Mercado de ações | Ediv Finance",

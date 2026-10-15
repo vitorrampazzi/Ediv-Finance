@@ -3,6 +3,14 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import { publicPages, pageMetadata, accountPaths } from "../site-pages.mjs";
 
+test("home apresenta dividendos e pesquisa de ações nos metadados", () => {
+  const home = pageMetadata("/");
+  assert.match(home.title, /Dividendos.*pesquisa de ações/);
+  assert.ok(home.title.length <= 60);
+  assert.ok(home.description.length <= 160);
+  assert.equal(home.canonical, "https://escoladodividendo.com.br/");
+});
+
 test("metadados públicos são únicos e contas/QA não são indexáveis", () => {
   assert.equal(
     new Set(Object.values(publicPages).map((p) => p.title)).size,

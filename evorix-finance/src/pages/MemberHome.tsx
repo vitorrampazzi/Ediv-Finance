@@ -1,4 +1,4 @@
-import { HomeContent } from "./Home";
+import { HomeContent } from "../components/home/AccountHomeContent";
 
 export function MemberHome() {
   return (
