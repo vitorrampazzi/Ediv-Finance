@@ -1,0 +1,235 @@
+.ph-brand {
+  position: relative;
+  isolation: isolate;
+  width: 100%;
+  max-width: 600px;
+  aspect-ratio: 600 / 550;
+  margin-inline: auto;
+  color: #b5d9d4;
+  user-select: none;
+}
+
+.ph-brand-art {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.ph-brand-grid {
+  position: absolute;
+  inset: 12% 7% 17%;
+  z-index: -2;
+  background-image:
+    linear-gradient(rgb(150 198 193 / 6%) 1px, transparent 1px),
+    linear-gradient(90deg, rgb(150 198 193 / 6%) 1px, transparent 1px);
+  background-size: 9.5% 10%;
+  opacity: 0.7;
+}
+
+.ph-brand-aura {
+  position: absolute;
+  inset: 11% 8% 13%;
+  z-index: -1;
+  border-radius: 50%;
+  background: radial-gradient(
+    ellipse at center,
+    rgb(26 149 148 / 15%),
+    rgb(26 149 148 / 4%) 48%,
+    transparent 72%
+  );
+}
+
+.ph-brand-orbits {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  stroke-width: 1;
+}
+
+.ph-brand-orbit {
+  fill: none;
+  stroke: rgb(143 189 184 / 18%);
+}
+
+.ph-brand-orbit-inner {
+  stroke: rgb(143 189 184 / 9%);
+  stroke-dasharray: 2 12;
+}
+
+.ph-brand-orbit-accent {
+  fill: none;
+  stroke: rgb(152 214 205 / 55%);
+  stroke-linecap: round;
+}
+
+.ph-brand-guides,
+.ph-brand-label-lines {
+  fill: none;
+  stroke: rgb(143 189 184 / 30%);
+}
+
+.ph-brand-pin {
+  fill: #95cac1;
+  stroke: none;
+}
+
+.ph-brand-signal {
+  fill: none;
+  stroke: #a5e0d5;
+  stroke-linecap: round;
+  transform-origin: 300px 262px;
+  opacity: 0.8;
+  animation: ph-brand-orbit-travel 18s linear infinite;
+}
+
+.ph-brand-signal circle {
+  fill: #a5e0d5;
+  stroke: none;
+}
+
+.ph-brand-signal-secondary {
+  opacity: 0.65;
+  animation-direction: reverse;
+  animation-duration: 16s;
+}
+
+.ph-brand-mark {
+  position: absolute;
+  top: 2%;
+  left: 10%;
+  width: 80%;
+  aspect-ratio: 508 / 503;
+  animation: ph-brand-mark-arrive 1.6s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.ph-brand-logo {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.ph-brand-logo-main {
+  filter: saturate(0.8) brightness(1.04);
+}
+
+.ph-brand-logo-depth {
+  opacity: 0.13;
+  transform: translate(9px, 11px) scale(1.015);
+  filter: saturate(0.65) brightness(0.6);
+}
+
+.ph-brand-label {
+  position: absolute;
+  padding: 0.45rem 0;
+  color: #c6dedb;
+  font-size: clamp(0.6875rem, 1.1vw, 0.8125rem);
+  line-height: 1.4;
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+}
+
+.ph-brand-label-research {
+  top: 10.3%;
+  right: 7.5%;
+}
+
+.ph-brand-label-learning {
+  bottom: 20%;
+  left: 3.5%;
+}
+
+.ph-brand-motion-control {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  gap: 0.45rem;
+  padding: 0.4rem 0.6rem;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: #9cafb0;
+  font-size: 0.75rem;
+  line-height: 1.5;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+.ph-brand-motion-control:active {
+  color: #e0eeeb;
+  background: rgb(150 198 193 / 8%);
+}
+
+.ph-brand[data-ph-inview="false"] :is(.ph-brand-mark, .ph-brand-signal) {
+  animation-play-state: paused;
+}
+
+.ph-brand[data-ph-paused="true"] .ph-brand-signal {
+  animation-play-state: paused;
+}
+
+@keyframes ph-brand-mark-arrive {
+  from {
+    opacity: 0.75;
+    transform: translateY(9px) scale(0.985);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes ph-brand-orbit-travel {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (max-width: 767px) {
+  .ph-brand {
+    max-width: 390px;
+    margin-block: -0.75rem -0.5rem;
+  }
+
+  .ph-brand-label {
+    font-size: 0.6875rem;
+  }
+
+  .ph-brand-logo-depth {
+    transform: translate(6px, 8px) scale(1.015);
+  }
+}
+
+@media (max-width: 479px) {
+  .ph-brand-label {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ph-brand :is(.ph-brand-mark, .ph-brand-signal) {
+    animation: none;
+    transform: none;
+  }
+
+  .ph-brand-motion-control {
+    display: none;
+  }
+}
+
+@media (prefers-contrast: more) {
+  .ph-brand-label,
+  .ph-brand-motion-control {
+    color: #e0eeeb;
+  }
+}

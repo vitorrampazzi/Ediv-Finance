@@ -1,8 +1,8 @@
-import { ArrowDown, ArrowRight, BookOpen } from "lucide-react";
+import { ArrowRight, BookOpen } from "lucide-react";
 import { Link } from "react-router-dom";
 import { authLink } from "../../lib/authDestination";
 import { HomeMarketHighlights } from "../HomeMarketHighlights";
-import { PublicHeroPanel } from "./PublicHeroPanel";
+import { PublicHeroBrand } from "./PublicHeroBrand";
 import { TeachingJourney } from "./TeachingJourney";
 import { ResearchSample } from "./ResearchSample";
 import { ReadingChecklist } from "./ReadingChecklist";
@@ -33,7 +33,7 @@ function StartAction({
           to={awaitingRegistration ? "/entrar" : "/aprender"}
         >
           {!awaitingRegistration && <BookOpen size={17} aria-hidden="true" />}
-          {awaitingRegistration ? "Entrar" : "Conhecer as aulas"}
+          {awaitingRegistration ? "Entrar" : "Explorar as aulas"}
         </Link>
       </div>
       <p className="ph-access-note">
@@ -56,40 +56,35 @@ export function PublicHome({
       <section className="ph-hero" aria-labelledby="ph-home-title">
         <div className="ph-container ph-hero-layout">
           <div className="ph-hero-copy">
-            <p className="edition-label ph-hero-entry">Escola do dividendo</p>
+            <p className="edition-label ph-hero-eyebrow ph-hero-entry">
+              Escola do Dividendo
+            </p>
             <h1 id="ph-home-title" className="display-title ph-hero-title">
-              <span>Entenda de onde</span> <span>vêm os dividendos.</span>
+              <span>Antes do dividendo,</span>{" "}
+              <span>entenda a</span>{" "}
+              <span className="ph-hero-title-accent">empresa.</span>
             </h1>
             <p className="ph-hero-description ph-hero-entry">
-              Leia pesquisas de ações. Estude o negócio, os resultados e a
-              distribuição de lucros.
+              Pesquisas de ações e aulas para entender as empresas por trás dos
+              dividendos.
             </p>
             <div className="ph-hero-entry">
               <StartAction awaitingRegistration={awaitingRegistration} />
             </div>
-            <a
-              className="ph-hero-scroll ph-text-link"
-              href="#como-a-ediv-ensina"
-            >
-              Veja como a Ediv ensina <ArrowDown size={16} aria-hidden="true" />
-            </a>
           </div>
-          <div className="ph-hero-panel-entry">
-            <PublicHeroPanel />
+          <div className="ph-hero-brand-entry">
+            <PublicHeroBrand />
           </div>
         </div>
         <nav className="ph-container ph-page-index" aria-label="Nesta página">
-          <a href="#como-a-ediv-ensina">
-            <span>01</span> O estudo
-          </a>
           <a href="#caderno-de-exemplo">
-            <span>02</span> A pesquisa
+            <span>01</span> Pesquisas de ações
           </a>
           <a href="#mercado">
-            <span>03</span> O mercado
+            <span>02</span> Análises de empresas
           </a>
-          <a href="#termos-do-mercado">
-            <span>04</span> Os termos
+          <a href="#como-a-ediv-ensina">
+            <span>03</span> Educação em dividendos
           </a>
         </nav>
       </section>
