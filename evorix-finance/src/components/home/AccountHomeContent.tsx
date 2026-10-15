@@ -19,7 +19,7 @@ export function HomeContent({
   return (
     <>
       <section
-        className={`home-editorial mx-auto grid max-w-7xl items-center gap-7 md:grid-cols-[1.15fr_.85fr] md:gap-12 ${member ? "py-3 md:py-8" : "px-4 py-7 sm:px-5 md:px-8 md:py-12"}`}
+        className={`home-editorial ediv-member-intro mx-auto grid max-w-7xl items-center gap-7 md:grid-cols-[1.15fr_.85fr] md:gap-12 ${member ? "py-3 md:py-8" : "px-4 py-7 sm:px-5 md:px-8 md:py-12"}`}
       >
         <div>
           <span className="edition-label">

@@ -1,4 +1,5 @@
-import { useEffect, useId, useRef, useState } from "react";
+import { useId, useRef, useState } from "react";
+import { motion, useReducedMotion } from "framer-motion";
 import { ArrowUpRight } from "lucide-react";
 import { Link } from "react-router-dom";
 import "./hero-panel.css";
@@ -12,6 +13,11 @@ const topics = [
     icons: ["building", "bars", "chart"],
     action: "Conhecer as empresas",
     path: "/mercado",
+    questions: [
+      ["Receita", "O que a empresa vende"],
+      ["Resultado", "O que sobra após os custos"],
+      ["Histórico", "Como o negócio evoluiu"],
+    ],
   },
   {
     label: "Pesquisa",
@@ -21,6 +27,11 @@ const topics = [
     icons: ["paper", "chart", "review"],
     action: "Explorar a pesquisa",
     path: "/ranking",
+    questions: [
+      ["Tese", "O que sustenta a estimativa"],
+      ["Prazo", "Quando reavaliar o cenário"],
+      ["Riscos", "O que pode mudar o resultado"],
+    ],
   },
   {
     label: "Dividendos",
@@ -30,6 +41,7 @@ const topics = [
     icons: ["bars", "distribution", "person"],
     action: "Estudar os dividendos",
     path: "/aprender",
+    questions: [],
   },
 ] as const;
 
@@ -41,64 +53,6 @@ const currency = new Intl.NumberFormat("pt-BR", {
   currency: "BRL",
 });
 const millions = (value: number) => `R$ ${integer.format(value)} milhões`;
-
-function CountedValue({
-  value,
-  format,
-}: {
-  value: number;
-  format: (value: number) => string;
-}) {
-  const visual = useRef<HTMLSpanElement>(null);
-  const renderedValue = useRef(value);
-
-  useEffect(() => {
-    const node = visual.current;
-    const startValue = renderedValue.current;
-    if (!node || startValue === value) return;
-
-    const preference = window.matchMedia("(prefers-reduced-motion: reduce)");
-    if (preference.matches) {
-      renderedValue.current = value;
-      return;
-    }
-
-    let frame = 0;
-    let startTime: number | null = null;
-    const finish = () => {
-      window.cancelAnimationFrame(frame);
-      node.textContent = format(value);
-      renderedValue.current = value;
-    };
-    const onPreference = () => {
-      if (preference.matches) finish();
-    };
-    const tick = (time: number) => {
-      startTime ??= time;
-      const progress = Math.min(1, (time - startTime) / 420);
-      const eased = 1 - (1 - progress) ** 3;
-      renderedValue.current = startValue + (value - startValue) * eased;
-      node.textContent = format(renderedValue.current);
-      if (progress < 1) frame = window.requestAnimationFrame(tick);
-    };
-
-    frame = window.requestAnimationFrame(tick);
-    preference.addEventListener("change", onPreference);
-    return () => {
-      window.cancelAnimationFrame(frame);
-      preference.removeEventListener("change", onPreference);
-    };
-  }, [value, format]);
-
-  return (
-    <>
-      <span ref={visual} aria-hidden="true">
-        {format(value)}
-      </span>
-      <span className="ph-panel-sr-only">{format(value)}</span>
-    </>
-  );
-}
 
 function IconDrawing({ type }: { type: SceneIcon }) {
   switch (type) {
@@ -268,15 +222,11 @@ function DividendExample() {
       <dl className="ph-panel-results">
         <div>
           <dt>Total distribuído</dt>
-          <dd>
-            <CountedValue value={distributed} format={millions} />
-          </dd>
+          <dd>{millions(distributed)}</dd>
         </div>
         <div className="ph-panel-per-share">
           <dt>Dividendo por ação</dt>
-          <dd>
-            <CountedValue value={perShare} format={currency.format} />
-          </dd>
+          <dd>{currency.format(perShare)}</dd>
         </div>
       </dl>
       <Link className="ph-panel-method" to="/metodologia">
@@ -289,55 +239,13 @@ function DividendExample() {
 
 export function PublicHeroPanel() {
   const [selected, setSelected] = useState(0);
-  const panel = useRef<HTMLElement>(null);
+  const buttons = useRef<(HTMLButtonElement | null)[]>([]);
+  const reducedMotion = useReducedMotion();
   const panelId = useId();
   const topic = topics[selected];
 
-  useEffect(() => {
-    const node = panel.current;
-    if (!node) return;
-    const finePointer = window.matchMedia("(hover: hover) and (pointer: fine)");
-    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)");
-    let frame = 0;
-    let point: { x: number; y: number } | null = null;
-    const apply = () => {
-      frame = 0;
-      if (!point) return;
-      node.style.setProperty("--ph-spot-x", `${point.x}px`);
-      node.style.setProperty("--ph-spot-y", `${point.y}px`);
-    };
-    const move = (event: PointerEvent) => {
-      if (
-        !finePointer.matches ||
-        reduced.matches ||
-        event.pointerType === "touch"
-      )
-        return;
-      const bounds = node.getBoundingClientRect();
-      point = { x: event.clientX - bounds.left, y: event.clientY - bounds.top };
-      if (!frame) frame = window.requestAnimationFrame(apply);
-    };
-    const leave = () => {
-      window.cancelAnimationFrame(frame);
-      frame = 0;
-      point = null;
-    };
-    node.addEventListener("pointermove", move);
-    node.addEventListener("pointerleave", leave);
-    return () => {
-      window.cancelAnimationFrame(frame);
-      node.removeEventListener("pointermove", move);
-      node.removeEventListener("pointerleave", leave);
-    };
-  }, []);
-
   return (
-    <aside
-      ref={panel}
-      className="ph-hero-panel"
-      aria-labelledby={`${panelId}-title`}
-      data-ph-loop
-    >
+    <aside className="ph-hero-panel" aria-labelledby={`${panelId}-title`}>
       <div className="ph-panel-heading">
         <p className="edition-label">Por trás de uma ação</p>
         <span className="ph-panel-folio" aria-hidden="true">
@@ -349,23 +257,60 @@ export function PublicHeroPanel() {
       </h2>
       <div
         className="ph-panel-topics"
-        role="group"
+        role="tablist"
         aria-label="Escolha um tema para explorar"
       >
         {topics.map((item, index) => (
           <button
             key={item.label}
+            ref={(element) => {
+              buttons.current[index] = element;
+            }}
             type="button"
-            aria-pressed={selected === index}
+            role="tab"
+            id={`${panelId}-tab-${index}`}
+            aria-selected={selected === index}
+            tabIndex={selected === index ? 0 : -1}
             aria-controls={`${panelId}-content`}
             onClick={() => setSelected(index)}
+            onKeyDown={(event) => {
+              let next: number;
+              if (event.key === "ArrowRight")
+                next = (index + 1) % topics.length;
+              else if (event.key === "ArrowLeft")
+                next = (index + topics.length - 1) % topics.length;
+              else if (event.key === "Home") next = 0;
+              else if (event.key === "End") next = topics.length - 1;
+              else return;
+              event.preventDefault();
+              setSelected(next);
+              buttons.current[next]?.focus();
+            }}
           >
-            {item.label}
+            {selected === index && (
+              <motion.span
+                className="ph-panel-selection"
+                layoutId={`${panelId}-selection`}
+                transition={
+                  reducedMotion
+                    ? { duration: 0 }
+                    : { type: "spring", stiffness: 420, damping: 38, mass: 0.9 }
+                }
+                aria-hidden="true"
+              />
+            )}
+            <span>{item.label}</span>
           </button>
         ))}
       </div>
       <FlowScene selected={selected} />
-      <div id={`${panelId}-content`} className="ph-panel-content">
+      <div
+        id={`${panelId}-content`}
+        role="tabpanel"
+        aria-labelledby={`${panelId}-tab-${selected}`}
+        tabIndex={0}
+        className="ph-panel-content"
+      >
         <div className="ph-panel-scene-copy" key={topic.label}>
           <h3>{topic.title}</h3>
           {selected !== 2 && <p>{topic.text}</p>}
@@ -373,19 +318,14 @@ export function PublicHeroPanel() {
         {selected === 2 ? (
           <DividendExample />
         ) : (
-          <div className="ph-panel-reading" aria-hidden="true">
-            <span>{selected === 0 ? "O negócio" : "A tese"}</span>
-            <div className="ph-panel-reading-lines">
-              <i />
-              <i />
-              <i />
-            </div>
-            <span>
-              {selected === 0
-                ? "Entender antes de comparar"
-                : "Premissas · Prazo · Riscos"}
-            </span>
-          </div>
+          <dl className="ph-panel-reading">
+            {topic.questions.map(([label, description]) => (
+              <div key={label}>
+                <dt>{label}</dt>
+                <dd>{description}</dd>
+              </div>
+            ))}
+          </dl>
         )}
         {selected !== 2 && (
           <Link to={topic.path} className="ph-panel-action">

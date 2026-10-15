@@ -54,18 +54,6 @@ export function PublicHome({
   return (
     <div ref={root} className="ph-home">
       <section className="ph-hero" aria-labelledby="ph-home-title">
-        <div className="ph-hero-grid" aria-hidden="true" />
-        <svg
-          className="ph-hero-line"
-          viewBox="0 0 1200 600"
-          preserveAspectRatio="none"
-          aria-hidden="true"
-        >
-          <path
-            d="M0 520 H180 Q205 520 230 480 L400 380 H545 Q570 380 590 340 L700 210 H885 Q910 210 930 175 L1200 35"
-            pathLength="1"
-          />
-        </svg>
         <div className="ph-container ph-hero-layout">
           <div className="ph-hero-copy">
             <p className="edition-label ph-hero-entry">Escola do dividendo</p>

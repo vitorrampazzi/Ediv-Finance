@@ -1,6 +1,7 @@
 import { Suspense, useLayoutEffect, useRef } from "react";
 import type { ReactNode } from "react";
 import { useLocation } from "react-router-dom";
+import { motion, useReducedMotion } from "framer-motion";
 import { PageErrorBoundary } from "./PageErrorBoundary";
 
 export function PageLoading() {
@@ -32,12 +33,26 @@ export function PageLoading() {
 // page instance, its forms, filters, videos and lesson position.
 function RevealedPage({ children }: { children: ReactNode }) {
   const { hash } = useLocation();
+  const reducedMotion = useReducedMotion();
   const entryHash = useRef(hash);
   useLayoutEffect(() => {
     if (!entryHash.current)
       window.scrollTo({ top: 0, left: 0, behavior: "instant" });
   }, []);
-  return <div className="page-enter min-w-0">{children}</div>;
+  return (
+    <motion.div
+      className="page-enter min-w-0"
+      initial={reducedMotion ? false : { y: 5 }}
+      animate={{ y: 0 }}
+      transition={
+        reducedMotion
+          ? { duration: 0 }
+          : { type: "spring", bounce: 0, duration: 0.26 }
+      }
+    >
+      {children}
+    </motion.div>
+  );
 }
 
 export function PageContent({ children }: { children: ReactNode }) {

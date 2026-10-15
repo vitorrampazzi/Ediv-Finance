@@ -12,11 +12,11 @@ export function AuthShell({
   children: ReactNode;
 }) {
   return (
-    <main className="flex min-h-screen items-center justify-center px-4 py-10">
-      <section className="w-full max-w-md border-t-2 border-evo-accent pt-6 sm:bg-evo-bgSec sm:p-8">
+    <main className="auth-shell flex min-h-screen items-center justify-center px-4 py-10">
+      <section className="w-full max-w-md rounded-2xl border border-evo-border/70 bg-evo-bgSec px-5 py-7 sm:p-9">
         <Link
           to="/"
-          className="mb-8 inline-flex items-center gap-2 text-sm text-evo-textSec hover:text-evo-textMain"
+          className="mb-8 inline-flex min-h-11 items-center gap-2 text-sm font-medium text-evo-textSec hover:text-evo-textMain"
         >
           <img
             src="/ediv-logo-clean.png"

@@ -1,5 +1,6 @@
 import { ArrowDown, ArrowUp } from "lucide-react";
 import type { MarketAsset } from "../hooks/useMarketAssets";
+import "./market-list.css";
 
 const money = new Intl.NumberFormat("pt-BR", {
   style: "currency",
@@ -12,7 +13,7 @@ const compactMoney = new Intl.NumberFormat("pt-BR", {
   maximumFractionDigits: 2,
 });
 const rowClass =
-  "grid min-h-28 grid-cols-[minmax(0,1fr)_auto] items-center gap-x-3 gap-y-3 py-5 md:min-h-26 md:grid-cols-[minmax(0,1.3fr)_minmax(8rem,.8fr)_minmax(7rem,.6fr)_minmax(8rem,.8fr)] md:gap-x-5 md:py-6";
+  "market-asset-row grid min-h-24 grid-cols-[minmax(0,1fr)_auto] items-center gap-x-3 gap-y-2 py-4 md:grid-cols-[minmax(0,1.3fr)_minmax(7rem,.8fr)_minmax(6rem,.6fr)_minmax(7rem,.8fr)] md:gap-x-5 md:py-5";
 
 function readNumber(value: string | null | undefined) {
   if (value === null || value === undefined || value.trim() === "") return null;
@@ -37,10 +38,10 @@ export function MarketAssetList({
   const metricLabel = metric === "marketCap" ? "Valor de mercado" : "Volume";
 
   return (
-    <div aria-busy={loading}>
+    <div aria-busy={loading} className="market-asset-list">
       <div
         aria-hidden="true"
-        className="hidden grid-cols-[minmax(0,1.3fr)_minmax(8rem,.8fr)_minmax(7rem,.6fr)_minmax(8rem,.8fr)] gap-5 border-b border-evo-border pb-3 text-[11px] font-medium uppercase tracking-[.13em] text-evo-textSec md:grid"
+        className="market-list-heading hidden grid-cols-[minmax(0,1.3fr)_minmax(7rem,.8fr)_minmax(6rem,.6fr)_minmax(7rem,.8fr)] gap-5 border-b border-evo-border pb-3 text-xs font-medium text-evo-textSec md:grid"
       >
         <span>Ação / setor</span>
         <span className="text-right">Preço</span>
@@ -85,12 +86,9 @@ export function MarketAssetList({
                   : metricValue.toLocaleString("pt-BR");
 
             return (
-              <li
-                key={asset.symbol}
-                className={`${rowClass} transition-colors hover:bg-evo-bgSec/30`}
-              >
+              <li key={asset.symbol} className={rowClass}>
                 <div className="col-start-1 row-start-1 min-w-0">
-                  <Heading className="text-base font-semibold tracking-tight text-evo-textMain">
+                  <Heading className="text-[1.0625rem] font-semibold tracking-tight text-evo-textMain">
                     {asset.symbol}
                   </Heading>
                   <p
@@ -112,7 +110,7 @@ export function MarketAssetList({
                   </strong>
                 </p>
                 <p
-                  className={`col-start-2 row-start-2 flex items-center justify-end gap-1 whitespace-nowrap font-numbers text-xs font-medium md:col-start-3 md:row-start-1 md:text-sm ${percentage === null ? "text-evo-textSec" : percentage >= 0 ? "text-evo-green" : "text-evo-red"}`}
+                  className={`market-asset-change col-start-2 row-start-2 flex items-center justify-end gap-1 whitespace-nowrap font-numbers text-xs font-medium md:col-start-3 md:row-start-1 md:text-sm ${percentage === null ? "text-evo-textSec" : percentage >= 0 ? "text-evo-green" : "text-evo-red"}`}
                 >
                   <span className="sr-only">Variação informada: </span>
                   {percentage === null ? (

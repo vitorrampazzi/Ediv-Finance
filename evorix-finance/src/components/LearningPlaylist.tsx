@@ -1,13 +1,9 @@
 import { useEffect, useRef, type KeyboardEvent } from "react";
 import {
-  BookOpen,
-  Building2,
   CheckCircle2,
-  ChartNoAxesCombined,
   ChevronLeft,
   ChevronRight,
   Clock3,
-  Files,
   ListVideo,
   LockKeyhole,
 } from "lucide-react";
@@ -29,8 +25,6 @@ type LearningPlaylistProps = {
   selectedId: string;
   onSelect: (id: string) => void;
 };
-
-const thumbnailIcons = [ChartNoAxesCombined, Building2, BookOpen, Files];
 
 export function LearningPlaylist({
   items,
@@ -118,17 +112,17 @@ export function LearningPlaylist({
       aria-label="Playlist dos minicursos"
       className="ediv-learning-playlist"
     >
-      <header className="flex items-center justify-between gap-3 border-b border-evo-border px-4 py-4">
+      <header className="ediv-learning-playlist-heading">
         <div className="min-w-0">
-          <h3 className="flex items-center gap-2 text-sm font-semibold text-evo-textMain">
-            <ListVideo
-              size={18}
-              className="text-evo-accent"
-              aria-hidden="true"
-            />
+          <h3 className="ediv-learning-playlist-title">
+            <ListVideo size={18} aria-hidden="true" />
             Aulas do curso
           </h3>
-          <p className="mt-1 text-xs text-evo-textSec" aria-live="polite">
+          <p
+            className="ediv-learning-playlist-position"
+            aria-live="polite"
+            aria-atomic="true"
+          >
             {String(Math.max(0, selectedIndex + 1)).padStart(2, "0")} de{" "}
             {String(items.length).padStart(2, "0")} aulas
           </p>
@@ -139,7 +133,7 @@ export function LearningPlaylist({
             aria-label="Selecionar aula anterior"
             disabled={selectedIndex <= 0}
             onClick={() => selectAdjacent(-1)}
-            className="grid h-11 w-11 place-items-center rounded-lg border border-evo-border text-evo-textMain transition-colors hover:border-evo-accent/60 hover:bg-evo-accent/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-evo-accent disabled:cursor-not-allowed disabled:opacity-35 motion-reduce:transition-none"
+            className="ediv-learning-navigation-button"
           >
             <ChevronLeft size={18} aria-hidden="true" />
           </button>
@@ -148,7 +142,7 @@ export function LearningPlaylist({
             aria-label="Selecionar próxima aula"
             disabled={selectedIndex < 0 || selectedIndex >= items.length - 1}
             onClick={() => selectAdjacent(1)}
-            className="grid h-11 w-11 place-items-center rounded-lg border border-evo-border text-evo-textMain transition-colors hover:border-evo-accent/60 hover:bg-evo-accent/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-evo-accent disabled:cursor-not-allowed disabled:opacity-35 motion-reduce:transition-none"
+            className="ediv-learning-navigation-button"
           >
             <ChevronRight size={18} aria-hidden="true" />
           </button>
@@ -159,7 +153,10 @@ export function LearningPlaylist({
         <div className="ediv-learning-playlist-progress">
           <div className="ediv-learning-progress-label">
             <span>Exercícios concluídos</span>
-            <strong>{completedCount}<span> / {items.length}</span></strong>
+            <strong>
+              {completedCount}
+              <span> / {items.length}</span>
+            </strong>
           </div>
           <div
             className="ediv-learning-progress-track"
@@ -169,7 +166,9 @@ export function LearningPlaylist({
             aria-valuemax={items.length}
             aria-valuenow={completedCount}
           >
-            <span style={{ width: `${(completedCount / items.length) * 100}%` }} />
+            <span
+              style={{ transform: `scaleX(${completedCount / items.length})` }}
+            />
           </div>
         </div>
       )}
@@ -182,8 +181,6 @@ export function LearningPlaylist({
       >
         {items.map((item, index) => {
           const isSelected = selectedId === item.id;
-          const ThumbnailIcon = thumbnailIcons[index % thumbnailIcons.length];
-
           return (
             <li key={item.id} className="ediv-learning-playlist-slide">
               <button
@@ -197,11 +194,7 @@ export function LearningPlaylist({
                 onClick={() => onSelect(item.id)}
                 className={`ediv-learning-lesson${isSelected ? " ediv-learning-lesson-selected" : ""}`}
               >
-                <span
-                  aria-hidden="true"
-                  className="ediv-learning-lesson-cover"
-                >
-                  <ThumbnailIcon size={23} strokeWidth={1.5} />
+                <span aria-hidden="true" className="ediv-learning-lesson-cover">
                   <span className="ediv-learning-lesson-number">
                     {String(index + 1).padStart(2, "0")}
                   </span>
@@ -209,8 +202,23 @@ export function LearningPlaylist({
 
                 <span className="min-w-0 flex-1">
                   <span className="ediv-learning-lesson-kicker">
-                    Aula {String(index + 1).padStart(2, "0")}
-                    {isSelected && <span className="ediv-learning-lesson-current">Selecionada</span>}
+                    {item.locked ? (
+                      <>
+                        <LockKeyhole size={12} aria-hidden="true" /> Requer
+                        conta
+                      </>
+                    ) : item.completed ? (
+                      <>
+                        <CheckCircle2 size={12} aria-hidden="true" /> Exercício
+                        concluído
+                      </>
+                    ) : isSelected ? (
+                      <span className="ediv-learning-lesson-current">
+                        Aula aberta
+                      </span>
+                    ) : (
+                      "Leitura disponível"
+                    )}
                   </span>
                   <span className="ediv-learning-lesson-title">
                     {item.title}
@@ -219,30 +227,21 @@ export function LearningPlaylist({
                     {item.subtitle}
                   </span>
                   <span className="sr-only">
-                    {item.courseTitle}
+                    Aula {index + 1} · {item.courseTitle}
                   </span>
                   <span className="ediv-learning-lesson-meta">
                     <span className="inline-flex items-center gap-1">
                       <Clock3 size={12} aria-hidden="true" />
                       Leitura estimada · {item.readingMinutes} min
                     </span>
-                    <span>
-                      {item.locked ? "Conteúdo com conta gratuita" : item.videoAvailable
-                        ? "Vídeo disponível"
-                        : "Vídeo em preparação"}
-                    </span>
+                    {!item.locked && (
+                      <span>
+                        {item.videoAvailable
+                          ? "Vídeo disponível"
+                          : "Vídeo em preparação"}
+                      </span>
+                    )}
                   </span>
-                  {item.locked ? (
-                    <span className="ediv-learning-lesson-status">
-                      <LockKeyhole size={11} aria-hidden="true" />
-                      Requer conta
-                    </span>
-                  ) : item.completed ? (
-                    <span className="ediv-learning-lesson-status ediv-learning-lesson-completed">
-                      <CheckCircle2 size={12} aria-hidden="true" />
-                      Exercício concluído
-                    </span>
-                  ) : null}
                 </span>
               </button>
             </li>
@@ -257,7 +256,9 @@ export function LearningPlaylist({
       ) : (
         <p className="ediv-learning-playlist-help">
           <span className="lg:hidden">Deslize para escolher outra aula.</span>
-          <span className="hidden lg:inline">Navegue pelas aulas com as setas do teclado.</span>
+          <span className="hidden lg:inline">
+            Navegue pelas aulas com as setas do teclado.
+          </span>
         </p>
       )}
     </aside>

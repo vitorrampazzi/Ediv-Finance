@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useAuth } from "../context/authContext";
+import { SegmentedControl } from "./SegmentedControl";
 
 const topics = [
   {
@@ -53,10 +54,10 @@ export function RankingPreview() {
   const topic = topics[selected];
   return (
     <aside
-      className="journey-preview rounded-xl border border-evo-border px-4 py-4 sm:rounded-none sm:border-x-0 sm:px-5 sm:py-5"
+      className="journey-preview ediv-research-start rounded-2xl border border-evo-border/70 px-4 py-4 sm:px-6 sm:py-6"
       aria-labelledby={`${panelId}-title`}
     >
-      <p className="text-xs font-semibold uppercase tracking-widest text-evo-accent">
+      <p className="text-xs font-medium tracking-wide text-evo-accent">
         Por trás de uma ação
       </p>
       <h2
@@ -65,23 +66,14 @@ export function RankingPreview() {
       >
         Descubra por onde começar.
       </h2>
-      <div
-        className="mt-2 grid grid-cols-3 gap-1 sm:mt-5"
-        role="group"
-        aria-label="Escolha um tema para explorar"
-      >
-        {topics.map((item, index) => (
-          <button
-            key={item.label}
-            type="button"
-            aria-pressed={selected === index}
-            aria-controls={`${panelId}-content`}
-            onClick={() => setSelected(index)}
-            className={`min-h-11 rounded-lg px-2 text-sm font-medium transition-colors ${selected === index ? "bg-evo-accent/10 text-evo-accent" : "text-evo-textSec hover:bg-evo-card hover:text-evo-textMain"}`}
-          >
-            {item.label}
-          </button>
-        ))}
+      <div className="mt-4 sm:mt-5">
+        <SegmentedControl
+          labels={topics.map((item) => item.label)}
+          selected={selected}
+          onSelect={setSelected}
+          label="Escolha um tema para explorar"
+          controls={`${panelId}-content`}
+        />
       </div>
       <div
         className="journey-scene relative mt-2 grid grid-cols-3 gap-2 pt-3 pb-2 sm:mt-5 sm:pt-8 sm:pb-4"

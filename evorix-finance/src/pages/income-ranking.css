@@ -8,6 +8,26 @@
   gap: 1rem 0.75rem;
   align-items: start;
   padding-block: 1.25rem;
+  border-color: var(--ediv-line, #394149);
+  border-radius: 12px;
+  transition: background-color 140ms ease;
+}
+
+.research-ranking-row:active {
+  background-color: rgb(169 217 209 / 7%);
+  transition-duration: 0ms;
+}
+
+.research-ranking-row:focus-visible {
+  outline-offset: 2px;
+}
+
+.research-ranking-row .research-ranking-arrow {
+  transition: transform 160ms ease;
+}
+
+.ranking-page :is(input, select) {
+  border-radius: 12px;
 }
 
 .research-ranking-position {
@@ -144,7 +164,7 @@
     align-items: end;
     padding-block: 0.75rem;
     color: var(--color-evo-textSec, #d5dbe5);
-    font-size: 0.6875rem;
+    font-size: 0.75rem;
     font-weight: 500;
     line-height: 1.5;
   }
@@ -224,5 +244,18 @@
 
   .research-ranking-open {
     display: none;
+  }
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .research-ranking-row:hover .research-ranking-arrow {
+    transform: translate(2px, -2px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .research-ranking-row .research-ranking-arrow {
+    transform: none;
+    transition: none;
   }
 }

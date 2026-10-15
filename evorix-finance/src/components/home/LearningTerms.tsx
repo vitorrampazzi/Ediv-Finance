@@ -1,5 +1,5 @@
 import type { CSSProperties } from "react";
-import { ArrowRight, RotateCw } from "lucide-react";
+import { ArrowRight, Plus } from "lucide-react";
 import { Link } from "react-router-dom";
 import { publicHomeTerms } from "../../lib/publicHomeTerms";
 import "./public-sections.css";
@@ -35,24 +35,17 @@ export function LearningTerms() {
               style={{ "--ph-delay": `${index * 60}ms` } as CSSProperties}
             >
               <summary className="ph-term-summary">
-                <span className="ph-term-turn">
-                  <span className="ph-term-front">
-                    <span className="ph-term-number" aria-hidden="true">
-                      0{index + 1}
-                    </span>
-                    <strong className="display-title">{term.term}</strong>
-                    <span className="ph-term-hint">{term.hint}</span>
-                    <span className="ph-term-control">
-                      Ver definição <RotateCw size={14} aria-hidden="true" />
-                    </span>
+                <span className="ph-term-number" aria-hidden="true">
+                  0{index + 1}
+                </span>
+                <strong>{term.term}</strong>
+                <span className="ph-term-hint">{term.hint}</span>
+                <span className="ph-term-control">
+                  <span className="ph-term-open-label">Ver definição</span>
+                  <span className="ph-term-close-label">
+                    Recolher definição
                   </span>
-                  <span className="ph-term-back" aria-hidden="true">
-                    <strong>{term.term}</strong>
-                    <span>{term.definition}</span>
-                    <span className="ph-term-control">
-                      Voltar <RotateCw size={14} />
-                    </span>
-                  </span>
+                  <Plus size={16} aria-hidden="true" />
                 </span>
               </summary>
               <p className="ph-term-definition">{term.definition}</p>

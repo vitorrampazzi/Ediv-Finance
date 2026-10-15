@@ -19,7 +19,7 @@ Foram consultadas páginas públicas e a apresentação oficial do aplicativo da
 - **Leitura compacta:** títulos diretos, uma descrição curta e poucos indicadores por empresa. Tese completa, metodologia e conteúdo complementar ficam no detalhe ou em blocos expansíveis. A lista continua mostrando os rótulos necessários para entender os números.
 - **Navegação persistente:** na área da conta, manter Início, Ranking, Análises e Aprender na barra inferior do celular. Cabeçalho e menu permanecem disponíveis durante a troca de conteúdo. No desktop, preservar o menu lateral.
 - **Busca e filtros:** deixar a busca por empresa ou ticker visível. Filtros adicionais podem ser recolhidos, com indicação quando houver filtros ativos e ação para limpar.
-- **Transições discretas:** animar somente a entrada do conteúdo da página, usando opacidade e um pequeno deslocamento. Evitar espera artificial, animação de toda a tela ou movimento a cada digitação. Respeitar a preferência do dispositivo por movimento reduzido. Esses critérios são decisões da Ediv, não características medidas dos concorrentes.
+- **Transições discretas:** animar somente a entrada do conteúdo da página, usando um deslocamento de 5 px e spring sem oscilação. Manter o conteúdo visível desde o HTML inicial. Evitar espera artificial, animação de toda a tela ou movimento a cada digitação. Respeitar a preferência do dispositivo por movimento reduzido. Esses critérios são decisões da Ediv, não características medidas dos concorrentes.
 - **Carregamento estável:** carregar o conteúdo dentro do layout existente. Antecipar os módulos dos destinos principais em interações de navegação pode reduzir a espera percebida. Isso não substitui a consulta dos dados nem altera as permissões.
 - **Orientação ao navegar:** abrir uma nova pesquisa no começo da página. Para evoluções futuras, considerar preservar filtros e posição ao voltar para a lista. Manter foco acessível e indicação clara do destino ativo.
 
@@ -37,3 +37,17 @@ Foram consultadas páginas públicas e a apresentação oficial do aplicativo da
 | Intenção de navegação | `src/components/NavigationIntent.tsx` e `src/lib/pageImports.ts` | Antecipação dos módulos JavaScript dos destinos de navegação; não antecipa consultas de dados. |
 
 Essa direção mantém o foco da Ediv em pesquisas e educação sobre dividendos. Funcionalidades de carteira dos concorrentes não precisam ser reproduzidas para cumprir essa proposta.
+
+## Refinamento de interface — 15 de outubro de 2026
+
+Aplicação dos princípios da habilidade `apple-design` à identidade existente da Ediv:
+
+- Grafite `#1c2025` no fundo, superfícies `#242a30` e verde `#a9d9d1` nos detalhes. Os tokens compartilhados ficam em `src/index.css` e `tailwind.config.js`.
+- Tipografia do sistema na área da conta e nas aulas, números tabulares e títulos com espaçamento ajustado por tamanho. A home pública conserva os títulos editoriais em serifada.
+- Controles com área mínima de 44 px, feedback ao pressionar e indicadores de seleção com spring sem bounce. Abas da home e do início da conta aceitam setas, Home e End.
+- Menus surgem junto ao botão de origem; Escape fecha e devolve o foco. O cabeçalho tem fundo quase sólido para evitar que o conteúdo de trás prejudique a leitura.
+- Carrossel e playlist usam a rolagem nativa do navegador no celular. A interface não bloqueia novas interações durante as transições.
+- Definições do glossário expandem com `details`, sem rotação em 3D. Removidos o pontilhado, o efeito de luz seguindo o mouse e os movimentos decorativos contínuos da home.
+- Preferências de movimento reduzido, contraste e transparência têm alternativas. Os vídeos ainda não publicados continuam indicados como em preparação.
+
+Revisão visual local em 360 × 800, 390 × 844 e desktop de 1366 × 900, com dados fictícios. Esta revisão de interface não substitui testes funcionais de cadastro, banco, e-mail ou aparelhos físicos.

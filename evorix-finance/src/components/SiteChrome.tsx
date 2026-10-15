@@ -8,14 +8,24 @@ import {
 } from "lucide-react";
 import type { ReactNode } from "react";
 import { useEffect, useRef, useState } from "react";
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { Link, NavLink, Outlet, useLocation } from "react-router-dom";
 import { useAuth } from "../context/authContext";
 import { PageContent } from "./PageContent";
+import "./navigation-chrome.css";
 
-export function SiteHeader({ showRegistrationAction = true }: { showRegistrationAction?: boolean }) {
+export function SiteHeader({
+  showRegistrationAction = true,
+}: {
+  showRegistrationAction?: boolean;
+}) {
   const { user } = useAuth();
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const { key: routeKey } = useLocation();
+  const [menuRoute, setMenuRoute] = useState<string | null>(null);
+  const mobileMenuOpen = menuRoute === routeKey;
   const menuButton = useRef<HTMLButtonElement>(null);
+  const headerRef = useRef<HTMLElement>(null);
+  const reducedMotion = useReducedMotion();
   const links = [
     {
       to: user ? "/app/ranking" : "/ranking",
@@ -34,26 +44,29 @@ export function SiteHeader({ showRegistrationAction = true }: { showRegistration
     },
   ];
   useEffect(() => {
+    if (!mobileMenuOpen) return;
     const close = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
-        setMobileMenuOpen(false);
+        setMenuRoute(null);
         menuButton.current?.focus();
       }
     };
-    const closeOnNavigation = (event: MouseEvent) => {
-      if (event.target instanceof Element && event.target.closest("a"))
-        setMobileMenuOpen(false);
+    const closeOnOutside = (event: PointerEvent | FocusEvent) => {
+      if (!headerRef.current?.contains(event.target as Node))
+        setMenuRoute(null);
     };
-    const closeOnBack = () => setMobileMenuOpen(false);
+    const closeOnBack = () => setMenuRoute(null);
     document.addEventListener("keydown", close);
-    document.addEventListener("click", closeOnNavigation);
+    document.addEventListener("pointerdown", closeOnOutside);
+    document.addEventListener("focusin", closeOnOutside);
     window.addEventListener("popstate", closeOnBack);
     return () => {
       document.removeEventListener("keydown", close);
-      document.removeEventListener("click", closeOnNavigation);
+      document.removeEventListener("pointerdown", closeOnOutside);
+      document.removeEventListener("focusin", closeOnOutside);
       window.removeEventListener("popstate", closeOnBack);
     };
-  }, []);
+  }, [mobileMenuOpen]);
   return (
     <>
       <a
@@ -62,11 +75,14 @@ export function SiteHeader({ showRegistrationAction = true }: { showRegistration
       >
         Pular para o conteúdo
       </a>
-      <header className="sticky top-0 z-40 border-b border-evo-border bg-evo-bgInset pt-[env(safe-area-inset-top)]">
+      <header
+        ref={headerRef}
+        className="ediv-site-header sticky top-0 z-40 pt-[env(safe-area-inset-top)]"
+      >
         <div className="relative mx-auto flex min-h-16 max-w-7xl items-center justify-between gap-3 px-4 py-3 sm:px-5 md:min-h-20 md:px-8">
           <Link
             to={user ? "/app" : "/"}
-            className="flex shrink-0 items-center gap-3"
+            className="ediv-brand-link flex shrink-0 items-center gap-3"
             aria-label="Ediv Finance, página inicial"
           >
             <img
@@ -81,14 +97,14 @@ export function SiteHeader({ showRegistrationAction = true }: { showRegistration
           </Link>
           <nav
             aria-label="Navegação principal"
-            className="hidden items-center gap-2 lg:flex"
+            className="ediv-public-links hidden items-center gap-2 lg:flex"
           >
             {links.map(({ to, label, Icon }) => (
               <NavLink
                 key={to}
                 to={to}
                 className={({ isActive }) =>
-                  `inline-flex min-h-11 items-center gap-2 px-3 text-sm font-medium ${isActive ? "text-evo-accent" : "text-evo-textSec hover:text-evo-textMain"}`
+                  `ediv-chrome-link inline-flex min-h-11 items-center gap-2 px-3 text-sm font-medium ${isActive ? "is-current" : ""}`
                 }
               >
                 <Icon size={16} aria-hidden="true" />
@@ -96,39 +112,49 @@ export function SiteHeader({ showRegistrationAction = true }: { showRegistration
               </NavLink>
             ))}
             {user ? (
-              <Link to="/app" className="action">
+              <Link to="/app" className="action ediv-chrome-primary">
                 Minha conta
               </Link>
             ) : (
               <>
                 <Link
                   to="/entrar"
-                  className="inline-flex min-h-11 items-center px-3 text-sm text-evo-textSec"
+                  className="ediv-chrome-link inline-flex min-h-11 items-center px-3 text-sm"
                 >
                   Entrar
                 </Link>
-                {showRegistrationAction && <Link to="/cadastro" className="action">
-                  Criar conta <ArrowRight size={15} />
-                </Link>}
+                {showRegistrationAction && (
+                  <Link to="/cadastro" className="action ediv-chrome-primary">
+                    Criar conta <ArrowRight size={15} />
+                  </Link>
+                )}
               </>
             )}
           </nav>
           <div className="flex items-center gap-2 lg:hidden">
             <Link
-              to={user ? "/app" : showRegistrationAction ? "/cadastro" : "/entrar"}
-              className={`inline-flex min-h-11 items-center gap-1 rounded-lg px-3 text-sm font-semibold ${user || showRegistrationAction ? "bg-evo-primary text-white" : "text-evo-textMain"}`}
+              to={
+                user ? "/app" : showRegistrationAction ? "/cadastro" : "/entrar"
+              }
+              className={`ediv-chrome-link inline-flex min-h-11 items-center gap-1 rounded-lg px-3 text-sm font-semibold ${user || showRegistrationAction ? "ediv-chrome-primary" : ""}`}
             >
-              {user ? "Minha conta" : showRegistrationAction ? "Criar conta" : "Entrar"}
-              {(user || showRegistrationAction) && <ArrowRight size={14} aria-hidden="true" />}
+              {user
+                ? "Minha conta"
+                : showRegistrationAction
+                  ? "Criar conta"
+                  : "Entrar"}
+              {(user || showRegistrationAction) && (
+                <ArrowRight size={14} aria-hidden="true" />
+              )}
             </Link>
             <button
               ref={menuButton}
               type="button"
-              onClick={() => setMobileMenuOpen((value) => !value)}
+              onClick={() => setMenuRoute(mobileMenuOpen ? null : routeKey)}
               aria-label={mobileMenuOpen ? "Fechar menu" : "Abrir menu"}
               aria-expanded={mobileMenuOpen}
               aria-controls="public-mobile-menu"
-              className="inline-flex h-11 w-11 items-center justify-center border border-evo-border text-evo-textSec"
+              className="ediv-chrome-icon inline-flex h-11 w-11 items-center justify-center"
             >
               {mobileMenuOpen ? (
                 <X size={19} aria-hidden="true" />
@@ -137,36 +163,54 @@ export function SiteHeader({ showRegistrationAction = true }: { showRegistration
               )}
             </button>
           </div>
-          {mobileMenuOpen && (
-            <nav
-              id="public-mobile-menu"
-              aria-label="Navegação móvel"
-              className="absolute inset-x-4 top-[calc(100%-0.25rem)] z-50 grid gap-1 rounded-xl border border-evo-border bg-evo-card p-2 shadow-2xl lg:hidden"
-            >
-              {links.map(({ to, label, Icon }) => (
-                <NavLink
-                  key={to}
-                  to={to}
-                  onClick={() => setMobileMenuOpen(false)}
-                  className={({ isActive }) =>
-                    `flex min-h-11 items-center gap-3 rounded-lg px-3 text-sm ${isActive ? "bg-evo-accent/10 text-evo-accent" : "text-evo-textSec hover:text-evo-textMain"}`
-                  }
-                >
-                  <Icon size={17} aria-hidden="true" />
-                  {label}
-                </NavLink>
-              ))}
-              {!user && (
-                <Link
-                  to="/entrar"
-                  onClick={() => setMobileMenuOpen(false)}
-                  className="flex min-h-11 items-center px-3 text-sm text-evo-textSec"
-                >
-                  Entrar
-                </Link>
-              )}
-            </nav>
-          )}
+          <AnimatePresence initial={false}>
+            {mobileMenuOpen && (
+              <motion.nav
+                id="public-mobile-menu"
+                aria-label="Navegação móvel"
+                initial={{
+                  opacity: 0,
+                  y: reducedMotion ? 0 : -6,
+                  scale: reducedMotion ? 1 : 0.985,
+                }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{
+                  opacity: 0,
+                  y: reducedMotion ? 0 : -6,
+                  scale: reducedMotion ? 1 : 0.985,
+                }}
+                transition={{
+                  type: "spring",
+                  bounce: 0,
+                  duration: reducedMotion ? 0.12 : 0.25,
+                }}
+                className="ediv-chrome-popover ediv-public-menu absolute inset-x-4 top-[calc(100%-0.25rem)] z-50 grid gap-1 p-2 lg:hidden"
+              >
+                {links.map(({ to, label, Icon }) => (
+                  <NavLink
+                    key={to}
+                    to={to}
+                    onClick={() => setMenuRoute(null)}
+                    className={({ isActive }) =>
+                      `ediv-chrome-link flex min-h-11 items-center gap-3 rounded-lg px-3 text-sm ${isActive ? "is-current" : ""}`
+                    }
+                  >
+                    <Icon size={17} aria-hidden="true" />
+                    {label}
+                  </NavLink>
+                ))}
+                {!user && (
+                  <Link
+                    to="/entrar"
+                    onClick={() => setMenuRoute(null)}
+                    className="ediv-chrome-link flex min-h-11 items-center px-3 text-sm"
+                  >
+                    Entrar
+                  </Link>
+                )}
+              </motion.nav>
+            )}
+          </AnimatePresence>
         </div>
       </header>
     </>
@@ -180,7 +224,7 @@ export function SiteFooter({
   const { user } = useAuth();
 
   return (
-    <footer className="site-footer border-t border-evo-border bg-evo-bgInset">
+    <footer className="site-footer ediv-site-footer">
       <div className="mx-auto max-w-7xl px-4 py-6 sm:px-5 md:px-8 md:py-12">
         <div className="grid grid-cols-2 gap-x-5 gap-y-5 sm:gap-8 lg:grid-cols-[1.5fr_1fr_1fr]">
           <div className="col-span-2 lg:col-span-1">

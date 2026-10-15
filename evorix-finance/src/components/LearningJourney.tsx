@@ -40,13 +40,8 @@ export function LearningJourney({
           )}
           {allFinished ? "Trilha concluída" : "Sua próxima aula"}
         </p>
-        <h2
-          id="learning-journey-title"
-          className="ediv-learning-journey-title"
-        >
-          {allFinished
-            ? "Hora de revisar os fundamentos"
-            : destination.title}
+        <h2 id="learning-journey-title" className="ediv-learning-journey-title">
+          {allFinished ? "Hora de revisar os fundamentos" : destination.title}
         </h2>
         {destination.locked && !allFinished && (
           <p className="ediv-learning-locked-note">
@@ -58,7 +53,10 @@ export function LearningJourney({
       <div className="ediv-learning-journey-progress">
         <div className="ediv-learning-progress-label">
           <span>Exercícios concluídos</span>
-          <strong>{finished}<span> / {lessons.length}</span></strong>
+          <strong>
+            {finished}
+            <span> / {lessons.length}</span>
+          </strong>
         </div>
         <div
           className="ediv-learning-progress-track"
@@ -68,10 +66,12 @@ export function LearningJourney({
           aria-valuemax={lessons.length}
           aria-valuenow={finished}
         >
-          <span style={{ width: `${progress}%` }} />
+          <span style={{ transform: `scaleX(${progress / 100})` }} />
         </div>
         <p className="ediv-learning-progress-note">
-          {isAuthenticated ? "Progresso salvo na sua conta" : "Progresso salvo neste navegador"}
+          {isAuthenticated
+            ? "Progresso salvo na sua conta"
+            : "Progresso salvo neste navegador"}
         </p>
       </div>
       <button

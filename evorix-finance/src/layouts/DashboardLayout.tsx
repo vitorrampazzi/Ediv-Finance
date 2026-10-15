@@ -1,5 +1,11 @@
 import { useEffect, useRef, useState } from "react";
 import {
+  AnimatePresence,
+  LayoutGroup,
+  motion,
+  useReducedMotion,
+} from "framer-motion";
+import {
   BookOpen,
   BarChart3,
   ChevronLeft,
@@ -23,6 +29,7 @@ import { useAuth } from "../context/authContext";
 import { roleLabels, userCan } from "../lib/permissions";
 import { NotificationsMenu } from "../components/NotificationsMenu";
 import { PageContent } from "../components/PageContent";
+import "../components/navigation-chrome.css";
 
 const navigation = [
   {
@@ -88,6 +95,7 @@ function NavigationLink({
   end?: boolean;
   collapsed?: boolean;
 }) {
+  const reducedMotion = useReducedMotion();
   return (
     <NavLink
       to={to}
@@ -95,11 +103,27 @@ function NavigationLink({
       title={collapsed ? label : undefined}
       aria-label={collapsed ? label : undefined}
       className={({ isActive }) =>
-        `relative flex min-h-11 items-center gap-3 border-l-2 px-3 py-2.5 text-sm transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-evo-accent ${collapsed ? "justify-center" : ""} ${isActive ? "border-evo-green bg-white/[0.03] text-evo-textMain" : "border-transparent text-evo-textSec hover:bg-white/[0.03] hover:text-evo-textMain"}`
+        `ediv-sidebar-link relative flex min-h-11 items-center gap-3 px-3 py-2.5 text-sm ${collapsed ? "justify-center" : ""} ${isActive ? "is-current" : ""}`
       }
     >
-      <Icon size={18} strokeWidth={1.6} aria-hidden="true" />
-      {!collapsed && <span className="font-medium">{label}</span>}
+      {({ isActive }) => (
+        <>
+          {isActive && (
+            <motion.span
+              aria-hidden="true"
+              className="ediv-sidebar-indicator"
+              layoutId="sidebar-selection"
+              transition={{
+                type: "spring",
+                bounce: 0,
+                duration: reducedMotion ? 0 : 0.32,
+              }}
+            />
+          )}
+          <Icon size={18} strokeWidth={1.7} aria-hidden="true" />
+          {!collapsed && <span className="font-medium">{label}</span>}
+        </>
+      )}
     </NavLink>
   );
 }
@@ -113,11 +137,15 @@ function ProfileMenu({
   email: string;
   onLogout: () => Promise<void>;
 }) {
-  const [open, setOpen] = useState(false);
+  const { key: routeKey } = useLocation();
+  const [menuRoute, setMenuRoute] = useState<string | null>(null);
+  const open = menuRoute === routeKey;
   const [logoutError, setLogoutError] = useState("");
   const [loggingOut, setLoggingOut] = useState(false);
   const { user } = useAuth();
   const ref = useRef<HTMLDivElement>(null);
+  const trigger = useRef<HTMLButtonElement>(null);
+  const reducedMotion = useReducedMotion();
   const navigate = useNavigate();
   const initials = name
     .trim()
@@ -128,129 +156,157 @@ function ProfileMenu({
     .toLocaleUpperCase("pt-BR");
 
   useEffect(() => {
-    const closeOnOutsideClick = (event: MouseEvent) => {
+    if (!open) return;
+    const closeOnOutsideClick = (event: PointerEvent | FocusEvent) => {
       if (ref.current && !ref.current.contains(event.target as Node))
-        setOpen(false);
+        setMenuRoute(null);
     };
     const closeOnEscape = (event: KeyboardEvent) => {
-      if (event.key === "Escape") setOpen(false);
+      if (event.key === "Escape") {
+        setMenuRoute(null);
+        trigger.current?.focus();
+      }
     };
-    document.addEventListener("mousedown", closeOnOutsideClick);
+    const closeOnBack = () => setMenuRoute(null);
+    document.addEventListener("pointerdown", closeOnOutsideClick);
+    document.addEventListener("focusin", closeOnOutsideClick);
     document.addEventListener("keydown", closeOnEscape);
+    window.addEventListener("popstate", closeOnBack);
     return () => {
-      document.removeEventListener("mousedown", closeOnOutsideClick);
+      document.removeEventListener("pointerdown", closeOnOutsideClick);
+      document.removeEventListener("focusin", closeOnOutsideClick);
       document.removeEventListener("keydown", closeOnEscape);
+      window.removeEventListener("popstate", closeOnBack);
     };
-  }, []);
+  }, [open]);
 
   return (
     <div className="relative" ref={ref}>
       <button
+        ref={trigger}
         type="button"
-        onClick={() => setOpen((value) => !value)}
-        aria-label={`Abrir menu da conta de ${name}`}
+        onClick={() => setMenuRoute(open ? null : routeKey)}
+        aria-label={`${open ? "Fechar" : "Abrir"} menu da conta de ${name}`}
         aria-expanded={open}
         aria-controls="demo-profile-links"
-        className="flex h-11 w-11 items-center justify-center rounded-full border border-evo-border bg-evo-card text-evo-textSec transition hover:border-evo-accent hover:text-evo-accent focus-visible:outline focus-visible:outline-2 focus-visible:outline-evo-accent"
+        className="ediv-chrome-icon ediv-account-avatar flex h-11 w-11 items-center justify-center rounded-full"
       >
         <span aria-hidden="true" className="text-xs font-bold">
           {initials || <CircleUserRound size={20} />}
         </span>
       </button>
-      {open && (
-        <div
-          id="demo-profile-links"
-          className="absolute right-0 z-50 mt-3 w-60 overflow-hidden rounded-xl border border-evo-border bg-evo-card shadow-2xl"
-        >
-          <div className="border-b border-evo-border p-4">
-            <p className="text-sm font-semibold text-evo-textMain">{name}</p>
-            <p className="mt-1 break-all text-xs text-evo-textSec">{email}</p>
-            <p className="mt-2 text-xs text-evo-accent">
-              {user && roleLabels[user.role]}
-            </p>
-          </div>
-          <div className="p-2">
-            {userCan(user, "users:read") && (
-              <Link
-                to="/app/admin"
-                onClick={() => setOpen(false)}
-                className="flex min-h-11 items-center gap-3 rounded-lg px-3 text-sm text-evo-accent"
-              >
-                <ShieldCheck size={16} /> Administração
-              </Link>
-            )}
-            {userCan(user, "rankings:write") && (
-              <Link
-                to="/app/ranking"
-                onClick={() => setOpen(false)}
-                className="flex min-h-11 items-center gap-3 rounded-lg px-3 text-sm text-evo-accent"
-              >
-                <TrendingUp size={16} /> Publicar pesquisa
-              </Link>
-            )}
-            <Link
-              to="/app/perfil"
-              onClick={() => setOpen(false)}
-              className="flex min-h-10 items-center gap-3 rounded-lg px-3 text-sm text-evo-textSec hover:bg-white/[0.04] hover:text-evo-textMain"
-            >
-              <CircleUserRound size={16} aria-hidden="true" /> Perfil
-            </Link>
-            <Link
-              to={
-                userCan(user, "support:manage")
-                  ? "/app/atendimentos"
-                  : "/app/conversas"
-              }
-              onClick={() => setOpen(false)}
-              className="flex min-h-11 items-center gap-3 rounded-lg px-3 text-sm text-evo-textSec"
-            >
-              <Headset size={16} />{" "}
-              {userCan(user, "support:manage") ? "Atendimentos" : "Conversas"}
-            </Link>
-            <Link
-              to="/app"
-              onClick={() => setOpen(false)}
-              className="flex min-h-11 items-center gap-3 rounded-lg px-3 text-sm text-evo-textSec"
-            >
-              Início da Ediv
-            </Link>
-            <Link
-              to="/app/config"
-              onClick={() => setOpen(false)}
-              className="flex min-h-10 items-center gap-3 rounded-lg px-3 text-sm text-evo-textSec hover:bg-white/[0.04] hover:text-evo-textMain"
-            >
-              <Settings size={16} aria-hidden="true" /> Configurações
-            </Link>
-            {logoutError && (
-              <p role="alert" className="px-3 py-2 text-xs text-evo-red">
-                {logoutError}
+      <AnimatePresence initial={false}>
+        {open && (
+          <motion.div
+            id="demo-profile-links"
+            initial={{
+              opacity: 0,
+              y: reducedMotion ? 0 : -5,
+              scale: reducedMotion ? 1 : 0.97,
+            }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{
+              opacity: 0,
+              y: reducedMotion ? 0 : -5,
+              scale: reducedMotion ? 1 : 0.97,
+            }}
+            transition={{
+              type: "spring",
+              bounce: 0,
+              duration: reducedMotion ? 0.12 : 0.25,
+            }}
+            className="ediv-chrome-popover ediv-profile-popover absolute right-0 z-50 mt-3 w-72 overflow-y-auto"
+          >
+            <div className="border-b border-evo-border p-4">
+              <p className="text-sm font-semibold text-evo-textMain">{name}</p>
+              <p className="mt-1 break-all text-xs text-evo-textSec">{email}</p>
+              <p className="mt-2 text-xs text-evo-accent">
+                {user && roleLabels[user.role]}
               </p>
-            )}
-            <button
-              type="button"
-              disabled={loggingOut}
-              onClick={async () => {
-                if (loggingOut) return;
-                setLogoutError("");
-                setLoggingOut(true);
-                try {
-                  await onLogout();
-                  navigate("/entrar", { replace: true });
-                } catch {
-                  setLogoutError(
-                    "Não foi possível encerrar a sessão. Verifique sua conexão e tente novamente.",
-                  );
-                  setLoggingOut(false);
+            </div>
+            <div className="p-2">
+              {userCan(user, "users:read") && (
+                <Link
+                  to="/app/admin"
+                  onClick={() => setMenuRoute(null)}
+                  className="flex min-h-11 items-center gap-3 rounded-lg px-3 text-sm text-evo-accent"
+                >
+                  <ShieldCheck size={16} /> Administração
+                </Link>
+              )}
+              {userCan(user, "rankings:write") && (
+                <Link
+                  to="/app/ranking"
+                  onClick={() => setMenuRoute(null)}
+                  className="flex min-h-11 items-center gap-3 rounded-lg px-3 text-sm text-evo-accent"
+                >
+                  <TrendingUp size={16} /> Publicar pesquisa
+                </Link>
+              )}
+              <Link
+                to="/app/perfil"
+                onClick={() => setMenuRoute(null)}
+                className="flex min-h-10 items-center gap-3 rounded-lg px-3 text-sm text-evo-textSec hover:bg-white/[0.04] hover:text-evo-textMain"
+              >
+                <CircleUserRound size={16} aria-hidden="true" /> Perfil
+              </Link>
+              <Link
+                to={
+                  userCan(user, "support:manage")
+                    ? "/app/atendimentos"
+                    : "/app/conversas"
                 }
-              }}
-              className="flex min-h-10 w-full items-center gap-3 rounded-lg px-3 text-sm text-evo-red hover:bg-evo-red/5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-evo-red disabled:cursor-wait disabled:opacity-60"
-            >
-              <LogOut size={16} aria-hidden="true" />
-              {loggingOut ? "Saindo…" : "Sair da conta"}
-            </button>
-          </div>
-        </div>
-      )}
+                onClick={() => setMenuRoute(null)}
+                className="flex min-h-11 items-center gap-3 rounded-lg px-3 text-sm text-evo-textSec"
+              >
+                <Headset size={16} />{" "}
+                {userCan(user, "support:manage") ? "Atendimentos" : "Conversas"}
+              </Link>
+              <Link
+                to="/app"
+                onClick={() => setMenuRoute(null)}
+                className="flex min-h-11 items-center gap-3 rounded-lg px-3 text-sm text-evo-textSec"
+              >
+                Início da Ediv
+              </Link>
+              <Link
+                to="/app/config"
+                onClick={() => setMenuRoute(null)}
+                className="flex min-h-10 items-center gap-3 rounded-lg px-3 text-sm text-evo-textSec hover:bg-white/[0.04] hover:text-evo-textMain"
+              >
+                <Settings size={16} aria-hidden="true" /> Configurações
+              </Link>
+              {logoutError && (
+                <p role="alert" className="px-3 py-2 text-xs text-evo-red">
+                  {logoutError}
+                </p>
+              )}
+              <button
+                type="button"
+                disabled={loggingOut}
+                onClick={async () => {
+                  if (loggingOut) return;
+                  setLogoutError("");
+                  setLoggingOut(true);
+                  try {
+                    await onLogout();
+                    navigate("/entrar", { replace: true });
+                  } catch {
+                    setLogoutError(
+                      "Não foi possível encerrar a sessão. Verifique sua conexão e tente novamente.",
+                    );
+                    setLoggingOut(false);
+                  }
+                }}
+                className="flex min-h-10 w-full items-center gap-3 rounded-lg px-3 text-sm text-evo-red hover:bg-evo-red/5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-evo-red disabled:cursor-wait disabled:opacity-60"
+              >
+                <LogOut size={16} aria-hidden="true" />
+                {loggingOut ? "Saindo…" : "Sair da conta"}
+              </button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
@@ -272,7 +328,7 @@ export const DashboardLayout = () => {
         Pular para o conteúdo
       </a>
       <aside
-        className={`hidden shrink-0 border-r border-evo-border/70 bg-evo-bgInset transition-[width] duration-200 motion-reduce:transition-none lg:sticky lg:top-0 lg:flex lg:h-screen lg:min-h-0 lg:flex-col ${collapsed ? "w-20" : "w-60"}`}
+        className={`ediv-account-sidebar hidden shrink-0 transition-[width] duration-200 motion-reduce:transition-none lg:sticky lg:top-0 lg:flex lg:h-screen lg:min-h-0 lg:flex-col ${collapsed ? "w-20" : "w-60"}`}
       >
         <div className="flex min-h-20 shrink-0 items-center justify-center px-3">
           <button
@@ -283,7 +339,7 @@ export const DashboardLayout = () => {
             }
             aria-expanded={!collapsed}
             aria-controls="account-sidebar-navigation"
-            className="group relative flex h-14 w-14 items-center justify-center rounded-xl transition-colors hover:bg-evo-card focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-evo-accent"
+            className="ediv-sidebar-logo ediv-chrome-icon group relative flex h-14 w-14 items-center justify-center rounded-xl"
           >
             <img
               src="/ediv-logo-clean.png"
@@ -312,43 +368,50 @@ export const DashboardLayout = () => {
           aria-label="Navegação principal"
           className="min-h-0 flex-1 space-y-7 overflow-y-auto px-4 pb-5"
         >
-          {navigationGroups.map((group) => (
-            <div key={group.label} className="space-y-1">
-              {!collapsed && (
-                <p className="mb-3 px-3 text-xs font-medium uppercase tracking-[.14em] text-evo-textSec">
-                  {group.label}
-                </p>
-              )}
-              {group.items.map((item) => (
-                <NavigationLink key={item.to} {...item} collapsed={collapsed} />
-              ))}
-            </div>
-          ))}
-          {(userCan(user, "users:read") || userCan(user, "support:manage")) && (
-            <div className="space-y-1 border-t border-evo-border/60 pt-4">
-              {!collapsed && (
-                <p className="mb-3 px-3 text-xs font-medium uppercase tracking-[.14em] text-evo-textSec">
-                  Gestão
-                </p>
-              )}
-              {userCan(user, "users:read") && (
-                <NavigationLink
-                  to="/app/admin"
-                  label="Administração"
-                  icon={ShieldCheck}
-                  collapsed={collapsed}
-                />
-              )}
-              {userCan(user, "support:manage") && (
-                <NavigationLink
-                  to="/app/atendimentos"
-                  label="Atendimentos"
-                  icon={Headset}
-                  collapsed={collapsed}
-                />
-              )}
-            </div>
-          )}
+          <LayoutGroup id="account-sidebar">
+            {navigationGroups.map((group) => (
+              <div key={group.label} className="space-y-1">
+                {!collapsed && (
+                  <p className="ediv-navigation-caption mb-3 px-3 text-xs font-medium">
+                    {group.label}
+                  </p>
+                )}
+                {group.items.map((item) => (
+                  <NavigationLink
+                    key={item.to}
+                    {...item}
+                    collapsed={collapsed}
+                  />
+                ))}
+              </div>
+            ))}
+            {(userCan(user, "users:read") ||
+              userCan(user, "support:manage")) && (
+              <div className="ediv-navigation-management space-y-1 pt-4">
+                {!collapsed && (
+                  <p className="ediv-navigation-caption mb-3 px-3 text-xs font-medium">
+                    Gestão
+                  </p>
+                )}
+                {userCan(user, "users:read") && (
+                  <NavigationLink
+                    to="/app/admin"
+                    label="Administração"
+                    icon={ShieldCheck}
+                    collapsed={collapsed}
+                  />
+                )}
+                {userCan(user, "support:manage") && (
+                  <NavigationLink
+                    to="/app/atendimentos"
+                    label="Atendimentos"
+                    icon={Headset}
+                    collapsed={collapsed}
+                  />
+                )}
+              </div>
+            )}
+          </LayoutGroup>
         </nav>
         <div className="shrink-0 border-t border-evo-border/70 p-4">
           <NavLink
@@ -356,7 +419,7 @@ export const DashboardLayout = () => {
             title={collapsed ? "Dúvidas e suporte" : undefined}
             aria-label={collapsed ? "Dúvidas e suporte" : undefined}
             className={({ isActive }) =>
-              `flex min-h-11 items-center gap-3 border-l-2 px-3 text-sm transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-evo-accent ${collapsed ? "justify-center" : ""} ${isActive ? "border-evo-green text-evo-textMain" : "border-transparent text-evo-textSec hover:bg-white/[0.03] hover:text-evo-textMain"}`
+              `ediv-sidebar-link flex min-h-11 items-center gap-3 px-3 text-sm ${collapsed ? "justify-center" : ""} ${isActive ? "is-current" : ""}`
             }
           >
             <Headset size={18} strokeWidth={1.6} aria-hidden="true" />
@@ -366,7 +429,7 @@ export const DashboardLayout = () => {
       </aside>
 
       <div className="flex min-h-screen min-w-0 flex-1 flex-col">
-        <header className="sticky top-0 z-20 flex min-h-16 items-center justify-between gap-2 border-b border-evo-border/70 bg-evo-bgInset px-4 pt-[env(safe-area-inset-top)] md:min-h-20 md:gap-3 md:px-8">
+        <header className="ediv-account-header sticky top-0 z-20 flex min-h-16 items-center justify-between gap-2 px-4 pt-[env(safe-area-inset-top)] md:min-h-20 md:gap-3 md:px-8">
           <div className="flex min-w-0 items-center gap-3">
             <img
               src="/ediv-logo-clean.png"
@@ -386,7 +449,7 @@ export const DashboardLayout = () => {
             <Link
               to="/app/conversas"
               aria-label="Dúvidas e suporte"
-              className="inline-flex min-h-11 min-w-11 items-center justify-center text-evo-textSec transition hover:text-evo-textMain focus-visible:outline focus-visible:outline-2 focus-visible:outline-evo-accent"
+              className="ediv-chrome-icon inline-flex min-h-11 min-w-11 items-center justify-center"
             >
               <Headset size={20} />
             </Link>
@@ -405,8 +468,10 @@ export const DashboardLayout = () => {
           id="conteudo"
           className="w-full min-w-0 flex-1 px-4 pt-4 pb-[calc(5rem+env(safe-area-inset-bottom))] md:px-8 md:pt-10 lg:pb-8"
         >
-          <PageContent key={user?.id}><Outlet /></PageContent>
-          <footer className="mx-auto mt-10 max-w-7xl border-t border-evo-border bg-evo-bgInset p-5 text-sm leading-relaxed text-evo-textSec">
+          <PageContent key={user?.id}>
+            <Outlet />
+          </PageContent>
+          <footer className="ediv-account-footer mx-auto mt-10 max-w-7xl p-5 text-sm leading-relaxed text-evo-textSec">
             Ediv Finance · Ações e dividendos.{" "}
             <Link to="/privacidade" className="ml-2 underline">
               Privacidade
@@ -418,9 +483,18 @@ export const DashboardLayout = () => {
         </main>
       </div>
 
+      <MobileNavigation />
+    </div>
+  );
+};
+
+function MobileNavigation() {
+  const reducedMotion = useReducedMotion();
+  return (
+    <LayoutGroup id="account-mobile">
       <nav
         aria-label="Navegação móvel"
-        className="fixed inset-x-0 bottom-0 z-30 grid grid-cols-4 border-t border-evo-border bg-evo-bgInset px-1 pb-[env(safe-area-inset-bottom)] pt-1 lg:hidden"
+        className="ediv-mobile-navigation fixed inset-x-0 bottom-0 z-30 grid grid-cols-4 px-1 pb-[env(safe-area-inset-bottom)] pt-1 lg:hidden"
       >
         {navigation.map(({ to, shortLabel, icon: Icon, end }) => (
           <NavLink
@@ -428,14 +502,36 @@ export const DashboardLayout = () => {
             to={to}
             end={end}
             className={({ isActive }) =>
-              `flex min-h-14 flex-col items-center justify-center gap-1 border-t-2 text-xs font-medium focus-visible:outline focus-visible:outline-2 focus-visible:outline-evo-accent ${isActive ? "border-evo-green text-evo-textMain" : "border-transparent text-evo-textSec"}`
+              `ediv-mobile-navigation-link flex min-h-14 flex-col items-center justify-center gap-1 text-xs font-medium ${isActive ? "is-current" : ""}`
             }
           >
-            <Icon size={19} strokeWidth={1.6} aria-hidden="true" />
-            <span>{shortLabel}</span>
+            {({ isActive }) => (
+              <>
+                <span className="ediv-mobile-navigation-icon">
+                  {isActive && (
+                    <motion.span
+                      aria-hidden="true"
+                      className="ediv-mobile-selection"
+                      layoutId="mobile-selection"
+                      transition={{
+                        type: "spring",
+                        bounce: 0,
+                        duration: reducedMotion ? 0 : 0.3,
+                      }}
+                    />
+                  )}
+                  <Icon
+                    size={20}
+                    strokeWidth={isActive ? 1.9 : 1.6}
+                    aria-hidden="true"
+                  />
+                </span>
+                <span>{shortLabel}</span>
+              </>
+            )}
           </NavLink>
         ))}
       </nav>
-    </div>
+    </LayoutGroup>
   );
-};
+}

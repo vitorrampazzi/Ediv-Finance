@@ -1,10 +1,5 @@
 import { useEffect, useId, useRef, useState } from "react";
-import {
-  ArrowLeft,
-  ArrowRight,
-  CheckCircle2,
-  Clock3,
-} from "lucide-react";
+import { ArrowLeft, ArrowRight, CheckCircle2, Clock3 } from "lucide-react";
 import { approvedVideoEmbed } from "../lib/learningCatalog";
 import "./learning-workspace.css";
 
@@ -115,12 +110,12 @@ export function LearningCourseCarousel({
       aria-labelledby="courses-title"
       className="ediv-learning-courses min-w-0 scroll-mt-24"
     >
-      <div className="flex flex-wrap items-end justify-between gap-4">
+      <div className="ediv-learning-section-heading">
         <div>
-          <h2 id="courses-title" className="text-2xl font-semibold">
+          <h2 id="courses-title" className="ediv-learning-section-title">
             Minicursos
           </h2>
-          <p className="mt-2 text-xs leading-relaxed text-evo-textSec">
+          <p className="ediv-learning-section-description">
             Leituras, aulas e exercícios por assunto.
           </p>
         </div>
@@ -135,7 +130,7 @@ export function LearningCourseCarousel({
             disabled={!bounds.previous}
             aria-label="Ver minicursos anteriores"
             aria-controls={carouselId}
-            className="inline-flex size-11 items-center justify-center rounded-full border border-evo-border bg-evo-card/30 text-evo-textMain transition-colors hover:border-evo-accent hover:text-evo-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-evo-accent disabled:cursor-default disabled:opacity-30 disabled:hover:border-evo-border disabled:hover:text-evo-textMain motion-reduce:transition-none"
+            className="ediv-learning-navigation-button"
           >
             <ArrowLeft size={18} aria-hidden="true" />
           </button>
@@ -145,7 +140,7 @@ export function LearningCourseCarousel({
             disabled={!bounds.next}
             aria-label="Ver próximos minicursos"
             aria-controls={carouselId}
-            className="inline-flex size-11 items-center justify-center rounded-full border border-evo-border bg-evo-card/30 text-evo-textMain transition-colors hover:border-evo-accent hover:text-evo-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-evo-accent disabled:cursor-default disabled:opacity-30 disabled:hover:border-evo-border disabled:hover:text-evo-textMain motion-reduce:transition-none"
+            className="ediv-learning-navigation-button"
           >
             <ArrowRight size={18} aria-hidden="true" />
           </button>
@@ -154,12 +149,12 @@ export function LearningCourseCarousel({
       <div
         id={carouselId}
         ref={viewportRef}
-        className="mt-5 min-w-0 snap-x snap-proximity overflow-x-auto overscroll-x-contain pb-3"
+        className="ediv-learning-course-viewport"
         role="group"
         aria-roledescription="carrossel"
         aria-label="Minicursos disponíveis"
       >
-        <ul ref={trackRef} className="flex list-none gap-5">
+        <ul ref={trackRef} className="ediv-learning-course-track">
           {courses.map((course, courseIndex) => {
             const selected = course.id === selectedCourseId;
             const count = course.chapterIds.filter((id) =>
@@ -191,22 +186,23 @@ export function LearningCourseCarousel({
                   }
                 >
                   <div className="ediv-learning-course-masthead">
-                    <span className="ediv-learning-course-number" aria-hidden="true">
+                    <span
+                      className="ediv-learning-course-number"
+                      aria-hidden="true"
+                    >
                       {String(courseIndex + 1).padStart(2, "0")}
                     </span>
                     {courseFinished || selected ? (
                       <span className="ediv-learning-course-state">
-                        {courseFinished && <CheckCircle2 size={13} aria-hidden="true" />}
-                        {courseFinished ? "Concluído" : "Curso aberto"}
+                        {courseFinished && (
+                          <CheckCircle2 size={13} aria-hidden="true" />
+                        )}
+                        {courseFinished ? "Concluído" : "Em estudo"}
                       </span>
                     ) : null}
                   </div>
-                  <p className="ediv-learning-eyebrow">
-                    {course.eyebrow}
-                  </p>
-                  <h3 className="ediv-learning-course-title">
-                    {course.title}
-                  </h3>
+                  <p className="ediv-learning-eyebrow">{course.eyebrow}</p>
+                  <h3 className="ediv-learning-course-title">{course.title}</h3>
                   <p className="ediv-learning-course-description">
                     {course.description}
                   </p>
@@ -219,7 +215,10 @@ export function LearningCourseCarousel({
                   </div>
                   <div className="ediv-learning-progress-label ediv-learning-course-progress-label">
                     <span>Exercícios concluídos</span>
-                    <strong>{count}<span> / {course.chapterIds.length}</span></strong>
+                    <strong>
+                      {count}
+                      <span> / {course.chapterIds.length}</span>
+                    </strong>
                   </div>
                   <div
                     className="ediv-learning-progress-track"
@@ -231,14 +230,14 @@ export function LearningCourseCarousel({
                   >
                     <span
                       style={{
-                        width: `${course.chapterIds.length ? (count / course.chapterIds.length) * 100 : 0}%`,
+                        transform: `scaleX(${course.chapterIds.length ? count / course.chapterIds.length : 0})`,
                       }}
                     />
                   </div>
                   <p className="ediv-learning-course-video-status">
                     {availableVideos
                       ? `${availableVideos} ${availableVideos === 1 ? "vídeo disponível" : "vídeos disponíveis"}`
-                      : "Vídeos em preparação"}{" "}
+                      : "Vídeos em preparação"}
                   </p>
                   {firstChapterId && (
                     <button

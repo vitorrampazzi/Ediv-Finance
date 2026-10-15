@@ -116,7 +116,7 @@ export function Analises({ publicView = false }: { publicView?: boolean }) {
 
   return (
     <section
-      className={`mx-auto max-w-7xl space-y-6 ${publicView ? "px-5 py-6 md:px-8 md:py-10" : ""}`}
+      className={`market-page mx-auto max-w-7xl space-y-6 ${publicView ? "px-5 py-6 md:px-8 md:py-10" : ""}`}
     >
       <div className="section-masthead relative flex items-start justify-between gap-3 sm:gap-5">
         <div className="relative z-10 min-w-0">
@@ -133,7 +133,7 @@ export function Analises({ publicView = false }: { publicView?: boolean }) {
         </div>
       </div>
 
-      <div className="grid gap-3 md:grid-cols-[minmax(16rem,1fr)_auto]">
+      <div className="market-query-bar grid gap-3 md:grid-cols-[minmax(16rem,1fr)_auto]">
         <div className="flex min-h-12 items-center gap-2 rounded-lg border border-evo-border bg-evo-bgSec px-3 focus-within:border-evo-accent">
           <Search
             size={17}
