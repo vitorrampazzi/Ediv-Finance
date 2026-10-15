@@ -2,11 +2,11 @@ import { useEffect, useId, useRef, useState } from "react";
 import {
   ArrowLeft,
   ArrowRight,
-  BookOpen,
   CheckCircle2,
   Clock3,
 } from "lucide-react";
 import { approvedVideoEmbed } from "../lib/learningCatalog";
+import "./learning-workspace.css";
 
 type Course = {
   id: string;
@@ -113,7 +113,7 @@ export function LearningCourseCarousel({
     <section
       id="cursos"
       aria-labelledby="courses-title"
-      className="min-w-0 scroll-mt-24"
+      className="ediv-learning-courses min-w-0 scroll-mt-24"
     >
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
@@ -121,7 +121,7 @@ export function LearningCourseCarousel({
             Minicursos
           </h2>
           <p className="mt-2 text-xs leading-relaxed text-evo-textSec">
-            Abra um curso para ver as aulas.
+            Leituras, aulas e exercícios por assunto.
           </p>
         </div>
         <div
@@ -160,7 +160,7 @@ export function LearningCourseCarousel({
         aria-label="Minicursos disponíveis"
       >
         <ul ref={trackRef} className="flex list-none gap-5">
-          {courses.map((course) => {
+          {courses.map((course, courseIndex) => {
             const selected = course.id === selectedCourseId;
             const count = course.chapterIds.filter((id) =>
               completed.includes(id),
@@ -182,66 +182,63 @@ export function LearningCourseCarousel({
               <li
                 key={course.id}
                 data-selected-course={selected ? "true" : undefined}
-                className="flex w-[min(78vw,22rem)] shrink-0 snap-start sm:w-[clamp(18rem,calc((100%_-_1.25rem)/2),34rem)]"
+                className="ediv-learning-course-slide"
               >
                 <article
                   className={
-                    "flex w-full flex-col rounded-xl border px-4 py-4 transition-colors sm:px-6 sm:py-6 motion-reduce:transition-none " +
-                    (selected
-                      ? "border-evo-accent/60 bg-evo-accent/5"
-                      : "border-evo-border bg-evo-card/25")
+                    "ediv-learning-course" +
+                    (selected ? " ediv-learning-course-selected" : "")
                   }
                 >
-                  <div className="flex items-start justify-between gap-3">
-                    <span className="inline-flex size-10 shrink-0 items-center justify-center rounded-full border border-evo-border text-evo-accent">
-                      <BookOpen size={19} aria-hidden="true" />
+                  <div className="ediv-learning-course-masthead">
+                    <span className="ediv-learning-course-number" aria-hidden="true">
+                      {String(courseIndex + 1).padStart(2, "0")}
                     </span>
-                    {selected && (
-                      <span className="rounded-full bg-evo-accent/10 px-3 py-1 text-xs font-medium text-evo-accent">
-                        Selecionado
+                    {courseFinished || selected ? (
+                      <span className="ediv-learning-course-state">
+                        {courseFinished && <CheckCircle2 size={13} aria-hidden="true" />}
+                        {courseFinished ? "Concluído" : "Curso aberto"}
                       </span>
-                    )}
+                    ) : null}
                   </div>
-                  <p className="mt-3 text-xs uppercase leading-relaxed tracking-[0.12em] text-evo-accent sm:mt-5">
+                  <p className="ediv-learning-eyebrow">
                     {course.eyebrow}
                   </p>
-                  <h3 className="mt-3 text-xl font-semibold leading-tight">
+                  <h3 className="ediv-learning-course-title">
                     {course.title}
                   </h3>
-                  <p className="mt-3 hidden flex-1 text-sm leading-relaxed text-evo-textSec sm:block">
+                  <p className="ediv-learning-course-description">
                     {course.description}
                   </p>
-                  <div className="mt-5 flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-evo-textSec">
+                  <div className="ediv-learning-course-meta">
                     <span>{course.chapterIds.length} aulas</span>
                     <span className="inline-flex items-center gap-1.5">
                       <Clock3 size={14} aria-hidden="true" />
                       {minutes} min de leitura
                     </span>
-                    <span className="inline-flex items-center gap-1.5">
-                      <CheckCircle2 size={14} aria-hidden="true" />
-                      {count}/{course.chapterIds.length} concluídas
-                    </span>
+                  </div>
+                  <div className="ediv-learning-progress-label ediv-learning-course-progress-label">
+                    <span>Exercícios concluídos</span>
+                    <strong>{count}<span> / {course.chapterIds.length}</span></strong>
                   </div>
                   <div
-                    className="mt-4 h-1.5 overflow-hidden rounded-full bg-evo-bgMain"
+                    className="ediv-learning-progress-track"
                     role="progressbar"
                     aria-label={"Exercícios concluídos: " + course.title}
                     aria-valuemin={0}
-                    aria-valuemax={course.chapterIds.length}
+                    aria-valuemax={Math.max(1, course.chapterIds.length)}
                     aria-valuenow={count}
                   >
-                    <div
-                      className="h-full bg-evo-accent transition-[width] motion-reduce:transition-none"
+                    <span
                       style={{
                         width: `${course.chapterIds.length ? (count / course.chapterIds.length) * 100 : 0}%`,
                       }}
                     />
                   </div>
-                  <p className="mt-3 hidden text-xs leading-5 text-evo-textSec sm:block">
+                  <p className="ediv-learning-course-video-status">
                     {availableVideos
                       ? `${availableVideos} ${availableVideos === 1 ? "vídeo disponível" : "vídeos disponíveis"}`
                       : "Vídeos em preparação"}{" "}
-                    · Leituras e exercícios disponíveis
                   </p>
                   {firstChapterId && (
                     <button
@@ -255,7 +252,7 @@ export function LearningCourseCarousel({
                             ? "Continuar minicurso: "
                             : "Abrir minicurso: ") + course.title
                       }
-                      className="mt-5 inline-flex min-h-11 items-center justify-between gap-3 border-t border-evo-border pt-4 text-sm font-semibold text-evo-accent focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-evo-accent"
+                      className="ediv-learning-course-action"
                     >
                       {courseFinished
                         ? "Revisar minicurso"

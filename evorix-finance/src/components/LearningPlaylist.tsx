@@ -10,8 +10,8 @@ import {
   Files,
   ListVideo,
   LockKeyhole,
-  Play,
 } from "lucide-react";
+import "./learning-workspace.css";
 
 export type LearningPlaylistItem = {
   id: string;
@@ -116,7 +116,7 @@ export function LearningPlaylist({
   return (
     <aside
       aria-label="Playlist dos minicursos"
-      className="min-w-0 overflow-hidden rounded-2xl border border-evo-border bg-evo-card"
+      className="ediv-learning-playlist"
     >
       <header className="flex items-center justify-between gap-3 border-b border-evo-border px-4 py-4">
         <div className="min-w-0">
@@ -126,11 +126,11 @@ export function LearningPlaylist({
               className="text-evo-accent"
               aria-hidden="true"
             />
-            Playlist
+            Aulas do curso
           </h3>
           <p className="mt-1 text-xs text-evo-textSec" aria-live="polite">
             {String(Math.max(0, selectedIndex + 1)).padStart(2, "0")} de{" "}
-            {String(items.length).padStart(2, "0")} aulas · {completedCount} concluídas
+            {String(items.length).padStart(2, "0")} aulas
           </p>
         </div>
         <div className="flex shrink-0 gap-1">
@@ -155,18 +155,37 @@ export function LearningPlaylist({
         </div>
       </header>
 
+      {items.length > 0 && (
+        <div className="ediv-learning-playlist-progress">
+          <div className="ediv-learning-progress-label">
+            <span>Exercícios concluídos</span>
+            <strong>{completedCount}<span> / {items.length}</span></strong>
+          </div>
+          <div
+            className="ediv-learning-progress-track"
+            role="progressbar"
+            aria-label="Exercícios concluídos neste curso"
+            aria-valuemin={0}
+            aria-valuemax={items.length}
+            aria-valuenow={completedCount}
+          >
+            <span style={{ width: `${(completedCount / items.length) * 100}%` }} />
+          </div>
+        </div>
+      )}
+
       <ol
         ref={listRef}
         aria-label="Aulas disponíveis"
         onKeyDown={handleListKeyDown}
-        className="flex snap-x snap-mandatory gap-3 overflow-x-auto overscroll-x-contain p-3 lg:max-h-[26rem] lg:snap-none lg:flex-col lg:gap-2 lg:overflow-x-hidden lg:overflow-y-auto lg:overscroll-y-contain"
+        className="ediv-learning-playlist-list"
       >
         {items.map((item, index) => {
           const isSelected = selectedId === item.id;
           const ThumbnailIcon = thumbnailIcons[index % thumbnailIcons.length];
 
           return (
-            <li key={item.id} className="w-[min(18rem,calc(100vw_-_5rem))] shrink-0 snap-start lg:w-full">
+            <li key={item.id} className="ediv-learning-playlist-slide">
               <button
                 ref={(element) => {
                   if (element) itemRefs.current.set(item.id, element);
@@ -176,50 +195,35 @@ export function LearningPlaylist({
                 data-playlist-item={item.id}
                 aria-current={isSelected ? "true" : undefined}
                 onClick={() => onSelect(item.id)}
-                className={`relative flex h-full w-full items-start gap-3 rounded-xl border p-3 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-evo-accent motion-reduce:transition-none ${
-                  isSelected
-                    ? "border-evo-accent/65 bg-evo-accent/10"
-                    : "border-transparent bg-evo-bgMain/40 hover:border-evo-border hover:bg-evo-bgMain/75"
-                }`}
+                className={`ediv-learning-lesson${isSelected ? " ediv-learning-lesson-selected" : ""}`}
               >
                 <span
                   aria-hidden="true"
-                  className={`relative grid h-20 w-20 shrink-0 place-items-center overflow-hidden rounded-lg border ${
-                    isSelected
-                      ? "border-evo-accent/40 bg-evo-accent/15 text-evo-accent"
-                      : "border-evo-border bg-evo-bgMain text-evo-textSec"
-                  }`}
+                  className="ediv-learning-lesson-cover"
                 >
-                  <span className="absolute -right-5 -top-5 h-16 w-16 rounded-full border border-current opacity-15" />
-                  <span className="absolute -bottom-5 -left-3 h-14 w-14 rounded-full border border-current opacity-15" />
-                  <ThumbnailIcon size={30} strokeWidth={1.5} />
-                  <span className="absolute bottom-1.5 left-2 text-[10px] font-bold tracking-widest">
+                  <ThumbnailIcon size={23} strokeWidth={1.5} />
+                  <span className="ediv-learning-lesson-number">
                     {String(index + 1).padStart(2, "0")}
                   </span>
-                  {isSelected ? (
-                    <span className="absolute bottom-1.5 right-1.5 grid h-5 w-5 place-items-center rounded-full bg-evo-accent text-evo-bgMain">
-                      <Play size={10} fill="currentColor" />
-                    </span>
-                  ) : null}
                 </span>
 
                 <span className="min-w-0 flex-1">
-                  <span className="block text-[10px] font-semibold uppercase tracking-[0.12em] text-evo-textSec">
+                  <span className="ediv-learning-lesson-kicker">
                     Aula {String(index + 1).padStart(2, "0")}
+                    {isSelected && <span className="ediv-learning-lesson-current">Selecionada</span>}
                   </span>
-                  <span className="mt-1 line-clamp-2 text-sm font-semibold leading-5 text-evo-textMain">
+                  <span className="ediv-learning-lesson-title">
                     {item.title}
                   </span>
-                  <span className="mt-1 line-clamp-2 text-xs leading-5 text-evo-textSec">
+                  <span className="ediv-learning-lesson-subtitle">
                     {item.subtitle}
                   </span>
-                  {/* The positioned button contains this absolute screen-reader label. */}
                   <span className="sr-only">
                     {item.courseTitle}
                   </span>
-                  <span className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1 text-[10px] text-evo-textSec">
+                  <span className="ediv-learning-lesson-meta">
                     <span className="inline-flex items-center gap-1">
-                      <Clock3 size={11} aria-hidden="true" />
+                      <Clock3 size={12} aria-hidden="true" />
                       Leitura · {item.readingMinutes} min
                     </span>
                     <span>
@@ -229,18 +233,14 @@ export function LearningPlaylist({
                     </span>
                   </span>
                   {item.locked ? (
-                    <span className="mt-2 inline-flex items-center gap-1 rounded border border-evo-border px-1.5 py-1 text-[10px] font-medium text-evo-textSec">
+                    <span className="ediv-learning-lesson-status">
                       <LockKeyhole size={11} aria-hidden="true" />
                       Requer conta
                     </span>
                   ) : item.completed ? (
-                    <span className="mt-2 inline-flex items-center gap-1 text-[10px] font-semibold text-evo-accent">
+                    <span className="ediv-learning-lesson-status ediv-learning-lesson-completed">
                       <CheckCircle2 size={12} aria-hidden="true" />
                       Exercício concluído
-                    </span>
-                  ) : isSelected ? (
-                    <span className="mt-2 inline-block text-[10px] font-semibold text-evo-accent">
-                      Aula selecionada
                     </span>
                   ) : null}
                 </span>
@@ -255,8 +255,9 @@ export function LearningPlaylist({
           As aulas aparecerão aqui quando estiverem disponíveis.
         </p>
       ) : (
-        <p className="border-t border-evo-border px-4 py-3 text-[11px] leading-5 text-evo-textSec">
-          O progresso acompanha os exercícios concluídos. Use as setas do teclado para escolher uma aula.
+        <p className="ediv-learning-playlist-help">
+          <span className="lg:hidden">Deslize para escolher outra aula.</span>
+          <span className="hidden lg:inline">Navegue pelas aulas com as setas do teclado.</span>
         </p>
       )}
     </aside>

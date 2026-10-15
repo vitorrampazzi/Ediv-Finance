@@ -1,4 +1,5 @@
 import { ArrowRight, BookOpen, CheckCircle2, LockKeyhole } from "lucide-react";
+import "./learning-workspace.css";
 
 type JourneyLesson = { id: string; title: string; locked?: boolean };
 
@@ -21,53 +22,62 @@ export function LearningJourney({
       (lesson) => !lesson.locked && !completed.includes(lesson.id),
     ) ?? lessons.find((lesson) => !completed.includes(lesson.id));
   const allFinished = lessons.length > 0 && finished === lessons.length;
+  const progress = lessons.length ? (finished / lessons.length) * 100 : 0;
   const destination = nextLesson ?? lessons[0];
   if (!destination) return null;
 
   return (
     <section
       aria-labelledby="learning-journey-title"
-      className="grid gap-3 border-y border-evo-border bg-evo-card/30 px-4 py-4 sm:gap-5 sm:px-6 sm:py-6 md:grid-cols-[minmax(0,1fr)_auto] md:items-center"
+      className="ediv-learning-journey"
     >
-      <div>
-        <p className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.14em] text-evo-accent">
+      <div className="ediv-learning-journey-copy">
+        <p className="ediv-learning-eyebrow">
           {allFinished ? (
             <CheckCircle2 size={16} aria-hidden="true" />
           ) : (
             <BookOpen size={16} aria-hidden="true" />
           )}
-          {allFinished ? "Revisão das aulas" : "Próxima aula"}
+          {allFinished ? "Trilha concluída" : "Sua próxima aula"}
         </p>
         <h2
           id="learning-journey-title"
-          className="mt-2 text-lg font-semibold sm:mt-3 sm:text-xl"
+          className="ediv-learning-journey-title"
         >
           {allFinished
-            ? "Fundamentos concluídos. Continue revisando."
-            : finished > 0
-              ? "Continue de onde sua trilha parou"
-              : "Comece pela leitura de uma pesquisa"}
+            ? "Hora de revisar os fundamentos"
+            : destination.title}
         </h2>
-        <p className="mt-2 max-w-2xl text-sm leading-6 text-evo-textSec">
-          {allFinished
-            ? "Revisite os conceitos ou pratique no laboratório."
-            : `Próxima etapa: ${destination.title}.`}
-        </p>
-        <p className="mt-3 text-xs leading-5 text-evo-textSec">
-          {finished} de {lessons.length} exercícios concluídos ·{" "}
-          {isAuthenticated ? "salvos na sua conta" : "salvos neste navegador"}
-          {destination.locked && !allFinished && (
-            <span className="ml-2 inline-flex items-center gap-1">
-              <LockKeyhole size={12} aria-hidden="true" /> Próxima aula com
-              conta gratuita
-            </span>
-          )}
+        {destination.locked && !allFinished && (
+          <p className="ediv-learning-locked-note">
+            <LockKeyhole size={13} aria-hidden="true" />
+            Disponível com conta gratuita
+          </p>
+        )}
+      </div>
+      <div className="ediv-learning-journey-progress">
+        <div className="ediv-learning-progress-label">
+          <span>Exercícios concluídos</span>
+          <strong>{finished}<span> / {lessons.length}</span></strong>
+        </div>
+        <div
+          className="ediv-learning-progress-track"
+          role="progressbar"
+          aria-label="Exercícios concluídos na trilha"
+          aria-valuemin={0}
+          aria-valuemax={lessons.length}
+          aria-valuenow={finished}
+        >
+          <span style={{ width: `${progress}%` }} />
+        </div>
+        <p className="ediv-learning-progress-note">
+          {isAuthenticated ? "Progresso salvo na sua conta" : "Progresso salvo neste navegador"}
         </p>
       </div>
       <button
         type="button"
         onClick={() => onSelect(destination.id)}
-        className="action justify-center md:max-w-56"
+        className="action ediv-learning-journey-action"
       >
         {allFinished
           ? "Revisar a trilha"

@@ -8,6 +8,7 @@ import {
   Search,
   Upload,
   RotateCcw,
+  X,
 } from "lucide-react";
 import { Card } from "../components/Card";
 import { RankingFundamentals } from "../components/RankingFundamentals";
@@ -26,12 +27,15 @@ import {
   CompanyComparison,
   VersionComparison,
 } from "../components/ResearchTools";
+import "./income-ranking.css";
 
 const money = new Intl.NumberFormat("pt-BR", {
   style: "currency",
   currency: "BRL",
 });
 const noEntries: Entry[] = [];
+const rankingFilterKeys = ["busca", "setor", "prazo", "ordem"] as const;
+type RankingFilterKey = (typeof rankingFilterKeys)[number];
 const date = (value: string) =>
   new Date(
     value.replace(" ", "T") + (value.endsWith("Z") ? "" : "Z"),
@@ -72,10 +76,16 @@ function MemberIncomeRanking() {
     current,
   } = useRankingPublication(publication);
   const [message, setMessage] = useState("");
-  const [search, setSearch] = useState("");
-  const [sector, setSector] = useState("");
-  const [horizon, setHorizon] = useState("");
-  const [sort, setSort] = useState("rank");
+  const search = (searchParams.get("busca") || "").slice(0, 80);
+  const requestedSector = (searchParams.get("setor") || "").slice(0, 120);
+  const requestedHorizon = searchParams.get("prazo") || "";
+  const horizon = ["6", "12", "24"].includes(requestedHorizon)
+    ? requestedHorizon
+    : "";
+  const requestedSort = searchParams.get("ordem") || "rank";
+  const sort = ["rank", "potential", "name"].includes(requestedSort)
+    ? requestedSort
+    : "rank";
   const [file, setFile] = useState<File | null>(null);
   const [preview, setPreview] = useState<Entry[]>([]);
   const [busy, setBusy] = useState(false);
@@ -104,12 +114,9 @@ function MemberIncomeRanking() {
       ? (ranking.totalEntries ?? ranking.entries.length)
       : 0;
   const changeView = (mode: "demo" | "real", resetPublication = false) => {
-    setSearch("");
-    setSector("");
-    setHorizon("");
-    setSort("rank");
     setSearchParams((current) => {
       const next = new URLSearchParams(current);
+      rankingFilterKeys.forEach((key) => next.delete(key));
       next.set("visual", mode);
       if (resetPublication) next.delete("publication");
       return next;
@@ -130,13 +137,40 @@ function MemberIncomeRanking() {
       sourceEntries.map((e) => e.sector).filter((s): s is string => Boolean(s)),
     ),
   ].sort();
+  const sector = sectors.includes(requestedSector) ? requestedSector : "";
+  const changeFilter = (key: RankingFilterKey, value: string) => {
+    setSearchParams(
+      (current) => {
+        const next = new URLSearchParams(current);
+        if (!value || (key === "ordem" && value === "rank")) next.delete(key);
+        else next.set(key, value);
+        return next;
+      },
+      { replace: true, preventScrollReset: true },
+    );
+  };
   const hasFilters = Boolean(search.trim() || sector || horizon);
   const clearFilters = () => {
-    setSearch("");
-    setSector("");
-    setHorizon("");
-    setSort("rank");
+    setSearchParams(
+      (current) => {
+        const next = new URLSearchParams(current);
+        rankingFilterKeys.forEach((key) => next.delete(key));
+        return next;
+      },
+      { replace: true, preventScrollReset: true },
+    );
   };
+  const activeFilters: { key: RankingFilterKey; label: string }[] = [
+    ...(search.trim() ? [{ key: "busca" as const, label: `Busca: ${search.trim()}` }] : []),
+    ...(sector ? [{ key: "setor" as const, label: `Setor: ${sector}` }] : []),
+    ...(horizon ? [{ key: "prazo" as const, label: `Até ${horizon} meses` }] : []),
+    ...(sort !== "rank"
+      ? [{
+          key: "ordem" as const,
+          label: sort === "name" ? "Nome da empresa" : showingDemo ? "Maior potencial simulado" : "Maior potencial informado",
+        }]
+      : []),
+  ];
   const learningPath = location.pathname.startsWith("/app/")
     ? "/app/aprender"
     : "/aprender";
@@ -594,7 +628,10 @@ function MemberIncomeRanking() {
             <span className="sr-only">Buscar empresa ou ticker</span>
             <input
               value={search}
-              onChange={(e) => setSearch(e.target.value)}
+              onChange={(e) => changeFilter("busca", e.target.value.slice(0, 80))}
+              maxLength={80}
+              autoComplete="off"
+              enterKeyHint="search"
               placeholder="Empresa ou ticker"
               className="min-h-11 min-w-0 w-full bg-transparent text-sm outline-none"
             />
@@ -607,7 +644,7 @@ function MemberIncomeRanking() {
               aria-label="Filtrar setor"
               className={input}
               value={sector}
-              onChange={(e) => setSector(e.target.value)}
+              onChange={(e) => changeFilter("setor", e.target.value)}
             >
               <option value="">Todos os setores</option>
               {sectors.map((s) => (
@@ -618,7 +655,7 @@ function MemberIncomeRanking() {
               aria-label="Filtrar horizonte"
               className={input}
               value={horizon}
-              onChange={(e) => setHorizon(e.target.value)}
+              onChange={(e) => changeFilter("prazo", e.target.value)}
             >
               <option value="">Todos os prazos</option>
               <option value="6">Até 6 meses</option>
@@ -629,7 +666,7 @@ function MemberIncomeRanking() {
               aria-label="Ordenar ranking"
               className={input}
               value={sort}
-              onChange={(e) => setSort(e.target.value)}
+              onChange={(e) => changeFilter("ordem", e.target.value)}
             >
               <option value="rank">
                 {showingDemo ? "Ordem da demonstração" : "Ordem da publicação"}
@@ -643,6 +680,23 @@ function MemberIncomeRanking() {
             </select>
           </MobileDisclosure>
         </div>
+        {activeFilters.length > 0 && (
+          <ul aria-label="Filtros e ordenação ativos" className="flex flex-wrap gap-2">
+            {activeFilters.map((filter) => (
+              <li key={filter.key} className="min-w-0 max-w-full">
+                <button
+                  type="button"
+                  onClick={() => changeFilter(filter.key, "")}
+                  aria-label={`Remover ${filter.label}`}
+                  className="inline-flex min-h-11 min-w-11 max-w-full items-center gap-2 rounded-lg border border-evo-border bg-evo-bgSec px-3 py-2 text-left text-xs text-evo-textMain hover:border-evo-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-evo-accent"
+                >
+                  <span className="min-w-0 break-words">{filter.label}</span>
+                  <X size={14} className="shrink-0 text-evo-textSec" aria-hidden="true" />
+                </button>
+              </li>
+            ))}
+          </ul>
+        )}
         <div className="flex flex-wrap items-center justify-between gap-2">
           <p
             role="status"
@@ -732,7 +786,16 @@ function MemberIncomeRanking() {
             </button>
           </Card>
         ) : (
-          <ol className="divide-y divide-evo-border border-y border-evo-border">
+          <div className="research-ranking">
+            <div className="research-ranking-heading" aria-hidden="true">
+              <span>Pos.</span>
+              <span>Empresa / setor</span>
+              <span className="text-right">{showingDemo ? "Potencial simulado" : "Potencial informado"}</span>
+              <span className="text-right">{showingDemo ? "Preço-alvo simulado" : "Preço-alvo informado"}</span>
+              <span className="text-right">Horizonte</span>
+              <span />
+            </div>
+          <ol className="divide-y divide-evo-border border-y border-evo-border" aria-label="Pesquisas de ações">
             {entries.map((entry) => {
               const coverage = getResearchCoverage(entry);
               return (
@@ -740,7 +803,7 @@ function MemberIncomeRanking() {
                   <article>
                     <Link
                       to={researchLink(entry.ticker)}
-                      className="group block py-5 transition-colors hover:bg-evo-accent/5 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-evo-accent sm:px-3"
+                      className="research-ranking-row group transition-colors hover:bg-evo-accent/5 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-evo-accent"
                       aria-label={
                         "Abrir pesquisa de " +
                         entry.companyName +
@@ -749,18 +812,16 @@ function MemberIncomeRanking() {
                         ")"
                       }
                     >
-                      <div className="flex items-start justify-between gap-4">
-                        <div className="flex min-w-0 items-start gap-3 sm:gap-5">
                           <span
-                            className="w-7 shrink-0 pt-1 font-numbers text-lg text-evo-textSec"
+                            className="research-ranking-position font-numbers text-lg text-evo-textSec"
                             aria-hidden="true"
                           >
                             {String(entry.rank).padStart(2, "0")}
                           </span>
-                          <div className="min-w-0">
+                          <div className="research-ranking-company min-w-0">
                             <h3 className="break-words text-xl font-semibold group-hover:text-evo-accent">
                               {entry.ticker}
-                              <span className="mt-1 block text-sm font-normal text-evo-textSec sm:ml-3 sm:mt-0 sm:inline">
+                              <span className="mt-1 block text-sm font-normal text-evo-textSec">
                                 {entry.companyName}
                               </span>
                             </h3>
@@ -768,16 +829,20 @@ function MemberIncomeRanking() {
                               {entry.sector || "Setor não informado"}
                               {showingDemo ? " · Empresa fictícia" : ""}
                             </p>
+                            <p className="research-ranking-excerpt whitespace-pre-wrap break-words text-sm leading-relaxed text-evo-textSec">
+                              {entry.thesis || "A justificativa ainda não foi informada pelo autor."}
+                            </p>
+                            <p className="research-ranking-coverage text-xs text-evo-textSec">
+                              {coverage.filled}/{coverage.total} campos de leitura preenchidos
+                              {entry.referencePeriod ? ` · ${entry.referencePeriod}` : " · Período não informado"}
+                            </p>
                           </div>
-                        </div>
                         <ArrowUpRight
                           size={21}
-                          className="mt-1 shrink-0 text-evo-accent"
+                          className="research-ranking-arrow shrink-0 text-evo-accent"
                           aria-hidden="true"
                         />
-                      </div>
-                      <div className="mt-4 sm:ml-12">
-                        <dl className="grid grid-cols-2 gap-x-4 gap-y-3 sm:grid-cols-3">
+                        <dl className="research-ranking-metrics">
                           <div>
                             <dt className="text-xs text-evo-textSec">
                               {showingDemo
@@ -814,28 +879,17 @@ function MemberIncomeRanking() {
                             </dd>
                           </div>
                         </dl>
-                        <p className="mt-4 hidden whitespace-pre-wrap break-words text-sm leading-relaxed text-evo-textSec sm:line-clamp-2">
-                          {entry.thesis ||
-                            "A justificativa ainda não foi informada pelo autor."}
-                        </p>
-                        <p className="mt-3 hidden text-xs text-evo-textSec sm:block">
-                          {coverage.filled}/{coverage.total} campos de leitura
-                          preenchidos
-                          {entry.referencePeriod
-                            ? ` · ${entry.referencePeriod}`
-                            : " · Período não informado"}
-                        </p>
-                        <span className="mt-3 inline-flex items-center gap-2 text-xs font-semibold text-evo-accent">
+                        <span className="research-ranking-open inline-flex items-center gap-2 text-xs font-semibold text-evo-accent">
                           Ler tese, história e indicadores{" "}
                           <ArrowUpRight size={14} aria-hidden="true" />
                         </span>
-                      </div>
                     </Link>
                   </article>
                 </li>
               );
             })}
           </ol>
+          </div>
         )}
       </section>
       {!showingDemo && current && ranking.sourceFileName && (

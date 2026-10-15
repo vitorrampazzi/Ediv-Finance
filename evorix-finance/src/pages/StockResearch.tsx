@@ -20,6 +20,7 @@ import { ResearchCoverage } from "../components/ResearchCoverage";
 import { ResearchSources } from "../components/ResearchSources";
 import { MobileDisclosure } from "../components/MobileDisclosure";
 import { StockResearchInsight } from "../components/StockResearchInsight";
+import { ResearchSectionNav } from "../components/ResearchSectionNav";
 import { useAuth } from "../context/authContext";
 import { useRankingPublication } from "../hooks/useRankingPublication";
 import { rankingDemoEntries } from "../lib/rankingDemo";
@@ -287,28 +288,7 @@ function MemberStockResearch() {
           </p>
         </div>
       </MobileDisclosure>
-      <nav
-        aria-label="Seções da pesquisa"
-        className="sticky top-[calc(4rem+env(safe-area-inset-top))] z-10 -mx-4 flex gap-2 overflow-x-auto overscroll-x-contain border-y border-evo-border bg-evo-bgMain px-4 py-1 text-sm sm:mx-0 sm:gap-4 sm:py-2 md:top-20"
-      >
-        {[
-          ["insight", "Gráfico do cenário"],
-          ["tese", "Opinião e cenário"],
-          ["riscos", "Riscos"],
-          ["historia", "A empresa"],
-          ["estatisticas", "Estatísticas"],
-          ["fundamentos", "Fundamentos"],
-          ["fontes", "Fontes e versão"],
-        ].map(([anchor, label]) => (
-          <a
-            key={anchor}
-            href={"#" + anchor}
-            className="inline-flex min-h-11 shrink-0 items-center rounded-md px-2 text-evo-textSec hover:bg-evo-accent/5 hover:text-evo-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-evo-accent"
-          >
-            {label}
-          </a>
-        ))}
-      </nav>
+      <ResearchSectionNav />
       <StockResearchInsight key={entry.ticker} entry={entry} demo={demo} />
       <div className="grid gap-x-10 lg:grid-cols-[minmax(0,1fr)_15rem]">
         <div className="min-w-0">
