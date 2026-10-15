@@ -62,6 +62,8 @@ integração/banco nem os testes de navegador que dependem desses serviços.
 ## Correção mobile — 14/10/2026
 
 - Painel inicial em Empresa (01/03), também no HTML pré-renderizado.
+- CSS próprio da home incluído no primeiro HTML, antes da importação lazy pelo
+  React, para evitar ilustrações e layout sem estilo na primeira renderização.
 - Cenas com cores explícitas e proteção contra recoloração automática dos SVGs
   decorativos. Essa proteção fica limitada às ilustrações; controles continuam
   respeitando as cores de acessibilidade do sistema.

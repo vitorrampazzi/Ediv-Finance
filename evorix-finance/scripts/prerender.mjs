@@ -1,4 +1,4 @@
-import { mkdir, readFile, writeFile } from "node:fs/promises";
+import { mkdir, readFile, readdir, writeFile } from "node:fs/promises";
 import { pathToFileURL } from "node:url";
 import { resolve } from "node:path";
 import { build } from "vite";
@@ -26,6 +26,13 @@ export async function prerender() {
     pathToFileURL(resolve(".test-artifacts/prerender/entry-server.js")).href
   );
   const shell = await readFile("dist/index.html", "utf8");
+  // The home is rendered before React imports its lazy CSS chunk. Load that
+  // stylesheet in the first document so SVG paint and layout never flash unstyled.
+  const homeStyles = (await readdir("dist/assets"))
+    .filter((name) => /^Home-[\w-]+\.css$/.test(name))
+    .sort()
+    .map((name) => `<link rel="stylesheet" crossorigin href="/assets/${name}" />`)
+    .join("");
   const learning = {
     access: "preview",
     completed: [],
@@ -69,7 +76,7 @@ export async function prerender() {
     return result
       .replace(
         "</head>",
-        `${canonical}<meta name="robots" content="${meta.noindex ? "noindex, nofollow" : "index, follow"}" /></head>`,
+        `${path === "/" ? homeStyles : ""}${canonical}<meta name="robots" content="${meta.noindex ? "noindex, nofollow" : "index, follow"}" /></head>`,
       )
       .replace('<div id="root"></div>', `<div id="root">${content}</div>`);
   }
