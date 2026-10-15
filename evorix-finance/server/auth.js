@@ -12,6 +12,7 @@ import {
 } from "./session-policy.js";
 import { pool } from "./database.js";
 import { MysqlLimitStore } from "./limit-store.js";
+import { withPasswordWork } from "./password-work.js";
 import { smtp, accountEmail, registrationAvailability } from "./mail.js";
 import {
   permissionsForRole,
@@ -26,7 +27,22 @@ const ARGON_OPTIONS = {
   parallelism: 1,
 };
 const SESSION_TOKEN_PATTERN = /^[A-Za-z0-9_-]{43}$/;
-const dummyPasswordHash = argon2.hash(randomBytes(32), ARGON_OPTIONS);
+let dummyPasswordHash;
+function getDummyPasswordHash() {
+  // Lazily initialize so public requests do not start a costly password job.
+  // Keep the same verification work for unknown addresses as existing users.
+  if (!dummyPasswordHash) {
+    dummyPasswordHash = withPasswordWork(() =>
+      argon2.hash(randomBytes(32), ARGON_OPTIONS),
+    ).catch((error) => {
+      dummyPasswordHash = undefined;
+      throw error;
+    });
+  }
+  return dummyPasswordHash;
+}
+const REGISTRATION_MESSAGE =
+  "Cadastro recebido. Se o endereço puder ser cadastrado, enviaremos um link de confirmação. Confira sua caixa de entrada e o spam; se necessário, use Reenviar confirmação.";
 const router = Router();
 
 const registerSchema = z
@@ -165,15 +181,34 @@ function verificationUrl(token, next) {
 
 async function makeVerificationToken(userId) {
   const token = makeOpaqueToken();
-  await pool.execute(
-    "DELETE FROM email_verification_tokens WHERE user_id = ? AND consumed_at IS NULL",
-    [userId],
-  );
-  await pool.execute(
-    `INSERT INTO email_verification_tokens (id, user_id, token_hash, expires_at)
-     VALUES (?, ?, ?, DATE_ADD(UTC_TIMESTAMP(3), INTERVAL 30 MINUTE))`,
-    [randomUUID(), userId, digest(token)],
-  );
+  const connection = await pool.getConnection();
+  try {
+    await connection.beginTransaction();
+    // Token creation and consumption use the same user -> token lock order.
+    const [users] = await connection.execute(
+      "SELECT id, email_verified_at FROM users WHERE id = ? FOR UPDATE",
+      [userId],
+    );
+    if (!users[0] || users[0].email_verified_at) {
+      await connection.rollback();
+      return null;
+    }
+    await connection.execute(
+      "DELETE FROM email_verification_tokens WHERE user_id = ? AND consumed_at IS NULL",
+      [userId],
+    );
+    await connection.execute(
+      `INSERT INTO email_verification_tokens (id, user_id, token_hash, expires_at)
+       VALUES (?, ?, ?, DATE_ADD(UTC_TIMESTAMP(3), INTERVAL 30 MINUTE))`,
+      [randomUUID(), userId, digest(token)],
+    );
+    await connection.commit();
+  } catch (error) {
+    await connection.rollback();
+    throw error;
+  } finally {
+    connection.release();
+  }
   return token;
 }
 
@@ -304,7 +339,9 @@ router.post("/register", registrationLimiter, async (req, res) => {
 
   const { name, email, password } = parsed.data;
   const userId = randomUUID();
-  const passwordHash = await argon2.hash(password, ARGON_OPTIONS);
+  const passwordHash = await withPasswordWork(() =>
+    argon2.hash(password, ARGON_OPTIONS),
+  );
 
   try {
     await pool.execute(
@@ -314,14 +351,14 @@ router.post("/register", registrationLimiter, async (req, res) => {
   } catch (error) {
     if (error.code === "ER_DUP_ENTRY") {
       return res.status(202).json({
-        message:
-          "Se o endereço puder ser cadastrado, enviaremos as próximas instruções por e-mail.",
+        message: REGISTRATION_MESSAGE,
       });
     }
     throw error;
   }
 
   const token = await makeVerificationToken(userId);
+  if (!token) return res.status(202).json({ message: REGISTRATION_MESSAGE });
   let delivery;
   try {
     delivery = await sendVerification(email, name, token, parsed.data.next);
@@ -330,14 +367,11 @@ router.post("/register", registrationLimiter, async (req, res) => {
       "Verification email delivery failed:",
       error.code || "mail transport error",
     );
-    return res.status(503).json({
-      error:
-        "Não foi possível enviar o e-mail de confirmação. Aguarde um pouco e use Reenviar confirmação; não é necessário repetir o cadastro.",
-    });
+    return res.status(202).json({ message: REGISTRATION_MESSAGE });
   }
 
   return res.status(202).json({
-    message: "Cadastro recebido. Confirme seu e-mail antes de entrar.",
+    message: REGISTRATION_MESSAGE,
     ...(delivery.developmentUrl
       ? { verificationUrl: delivery.developmentUrl }
       : {}),
@@ -358,22 +392,21 @@ router.post("/verification/resend", verificationLimiter, async (req, res) => {
   let developmentUrl;
   if (rows[0]) {
     const token = await makeVerificationToken(rows[0].id);
-    try {
-      ({ developmentUrl } = await sendVerification(
-        rows[0].email,
-        rows[0].name,
-        token,
-        parsed.data.next,
-      ));
-    } catch (error) {
-      console.error(
-        "Verification email delivery failed:",
-        error.code || "mail transport error",
-      );
-      return res.status(503).json({
-        error:
-          "Não foi possível enviar o e-mail de confirmação. Tente novamente mais tarde.",
-      });
+    if (token) {
+      try {
+        ({ developmentUrl } = await sendVerification(
+          rows[0].email,
+          rows[0].name,
+          token,
+          parsed.data.next,
+        ));
+      } catch (error) {
+        console.error(
+          "Verification email delivery failed:",
+          error.code || "mail transport error",
+        );
+        // Do not reveal whether a pending account exists when delivery fails.
+      }
     }
   }
 
@@ -388,14 +421,29 @@ router.post("/verify-email", verificationLimiter, async (req, res) => {
   const parsed = parseBody(verificationSchema, req.body);
   if (parsed.error) return res.status(400).json(parsed);
 
+  const tokenHash = digest(parsed.data.token);
+  const [candidates] = await pool.execute(
+    `SELECT user_id FROM email_verification_tokens
+     WHERE token_hash = ? AND consumed_at IS NULL AND expires_at > UTC_TIMESTAMP(3)
+     LIMIT 1`,
+    [tokenHash],
+  );
+  if (!candidates[0])
+    return res.status(400).json({
+      error:
+        "O link expirou ou já foi usado. Solicite um novo link de confirmação.",
+    });
   const connection = await pool.getConnection();
   try {
     await connection.beginTransaction();
+    await connection.execute("SELECT id FROM users WHERE id = ? FOR UPDATE", [
+      candidates[0].user_id,
+    ]);
     const [rows] = await connection.execute(
       `SELECT id, user_id FROM email_verification_tokens
        WHERE token_hash = ? AND consumed_at IS NULL AND expires_at > UTC_TIMESTAMP(3)
        LIMIT 1 FOR UPDATE`,
-      [digest(parsed.data.token)],
+      [tokenHash],
     );
     if (!rows[0]) {
       await connection.rollback();
@@ -435,8 +483,10 @@ router.post("/login", loginLimiter, async (req, res) => {
     [email],
   );
   const user = rows[0];
-  const storedHash = user ? user.password_hash : await dummyPasswordHash;
-  const isValidPassword = await argon2.verify(storedHash, password);
+  const storedHash = user ? user.password_hash : await getDummyPasswordHash();
+  const isValidPassword = await withPasswordWork(() =>
+    argon2.verify(storedHash, password),
+  );
 
   if (!user || !isValidPassword || user.blocked_at) {
     return res.status(401).json({
@@ -522,7 +572,9 @@ router.delete(
     );
     if (
       !users[0] ||
-      !(await argon2.verify(users[0].password_hash, parsed.data.password))
+      !(await withPasswordWork(() =>
+        argon2.verify(users[0].password_hash, parsed.data.password),
+      ))
     ) {
       return res.status(401).json({
         error: "Senha incorreta. Confira a senha atual da sua conta.",
@@ -665,15 +717,20 @@ router.post("/password/reset", recoveryLimiter, async (req, res) => {
     return res.status(400).json({
       error: "Confira o link e use uma senha de 12 a 128 caracteres.",
     });
-  const hash = await argon2.hash(parsed.data.password, ARGON_OPTIONS);
+  const tokenHash = digest(parsed.data.token);
   const [tokenRows] = await pool.execute(
-    "SELECT user_id FROM password_reset_tokens WHERE token_hash = ?",
-    [digest(parsed.data.token)],
+    "SELECT user_id FROM password_reset_tokens WHERE token_hash = ? AND consumed_at IS NULL AND expires_at > UTC_TIMESTAMP(3) LIMIT 1",
+    [tokenHash],
   );
   if (!tokenRows[0])
     return res
       .status(400)
       .json({ error: "O link expirou ou já foi usado. Solicite outro." });
+  // Reject random, consumed and expired tokens before scheduling Argon2.
+  // The token is checked again under a lock before any password is changed.
+  const hash = await withPasswordWork(() =>
+    argon2.hash(parsed.data.password, ARGON_OPTIONS),
+  );
   const connection = await pool.getConnection();
   try {
     await connection.beginTransaction();
@@ -682,7 +739,7 @@ router.post("/password/reset", recoveryLimiter, async (req, res) => {
     ]);
     const [tokens] = await connection.execute(
       "SELECT id, user_id FROM password_reset_tokens WHERE token_hash = ? AND consumed_at IS NULL AND expires_at > UTC_TIMESTAMP(3) FOR UPDATE",
-      [digest(parsed.data.token)],
+      [tokenHash],
     );
     if (!tokens[0]) {
       await connection.rollback();
@@ -730,7 +787,22 @@ router.post(
       return res.status(400).json({
         error: "Confira a senha atual e use ao menos 12 caracteres na nova.",
       });
-    const hash = await argon2.hash(parsed.data.password, ARGON_OPTIONS);
+    const [users] = await pool.execute(
+      "SELECT password_hash FROM users WHERE id = ? LIMIT 1",
+      [req.authenticatedUser.id],
+    );
+    if (
+      !users[0] ||
+      !(await withPasswordWork(() =>
+        argon2.verify(users[0].password_hash, parsed.data.currentPassword),
+      ))
+    ) {
+      return res.status(401).json({ error: "Senha atual incorreta." });
+    }
+    // Do expensive password work without holding a database connection/lock.
+    const hash = await withPasswordWork(() =>
+      argon2.hash(parsed.data.password, ARGON_OPTIONS),
+    );
     const connection = await pool.getConnection();
     try {
       await connection.beginTransaction();
@@ -738,15 +810,11 @@ router.post(
         "SELECT password_hash FROM users WHERE id = ? FOR UPDATE",
         [req.authenticatedUser.id],
       );
-      if (
-        !rows[0] ||
-        !(await argon2.verify(
-          rows[0].password_hash,
-          parsed.data.currentPassword,
-        ))
-      ) {
+      if (!rows[0] || rows[0].password_hash !== users[0].password_hash) {
         await connection.rollback();
-        return res.status(401).json({ error: "Senha atual incorreta." });
+        return res.status(401).json({
+          error: "Sua senha mudou. Entre novamente com sua senha atual.",
+        });
       }
       await connection.execute(
         "UPDATE users SET password_hash = ? WHERE id = ?",

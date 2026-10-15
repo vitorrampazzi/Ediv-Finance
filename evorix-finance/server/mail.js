@@ -41,13 +41,29 @@ export function emailConfiguration() {
 
 export function registrationAvailability() {
   const email = emailConfiguration();
+  const challengeRequired = Boolean(
+    config.turnstileSiteKey || config.turnstileSecretKey,
+  );
+  const challengeConfigured = Boolean(
+    config.turnstileSiteKey && config.turnstileSecretKey,
+  );
   const available =
-    config.allowDevelopmentEmailLinks || (email.configured && !email.testOnly);
+    config.registrationEnabled &&
+    (!challengeRequired || challengeConfigured) &&
+    (config.allowDevelopmentEmailLinks ||
+      (email.configured && !email.testOnly));
   return {
     available,
+    challenge: {
+      required: challengeRequired,
+      siteKey: config.turnstileSiteKey,
+    },
     message: available
       ? ""
-      : "Novos cadastros estão em preparação enquanto configuramos a confirmação por e-mail. Você já pode explorar o mercado, a primeira aula e o glossário. Quem tem conta confirmada pode continuar entrando normalmente.",
+      : !config.registrationEnabled ||
+          (challengeRequired && !challengeConfigured)
+        ? "Novos cadastros estão temporariamente indisponíveis. Quem já confirmou a conta pode continuar entrando normalmente."
+        : "Novos cadastros estão em preparação enquanto configuramos a confirmação por e-mail. Você já pode explorar o mercado, a primeira aula e o glossário. Quem tem conta confirmada pode continuar entrando normalmente.",
   };
 }
 

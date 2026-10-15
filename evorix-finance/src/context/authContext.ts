@@ -16,6 +16,7 @@ export const AuthContext = createContext<
         email: string,
         password: string,
         next?: string,
+        challengeToken?: string,
       ) => Promise<{ message?: string; verificationUrl?: string }>;
       resendVerification: (
         email: string,

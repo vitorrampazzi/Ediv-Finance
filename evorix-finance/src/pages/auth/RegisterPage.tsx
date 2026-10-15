@@ -11,6 +11,7 @@ import { useRegistrationAvailability } from "../../hooks/useRegistrationAvailabi
 import { AuthShell, ErrorMessage } from "../../components/auth/AuthShell";
 import { ConfirmationHelp } from "../../components/auth/ConfirmationHelp";
 import { SessionStatus } from "../../components/SessionStatus";
+import { RegistrationChallenge } from "../../components/auth/RegistrationChallenge";
 export function RegisterPage() {
   const availability = useRegistrationAvailability();
   const { user, loading, sessionError, register } = useAuth();
@@ -27,6 +28,9 @@ export function RegisterPage() {
   const [verificationUrl, setVerificationUrl] = useState("");
   const [busy, setBusy] = useState(false);
   const [submittedEmail, setSubmittedEmail] = useState("");
+  const [challengeToken, setChallengeToken] = useState("");
+  const [challengeResetKey, setChallengeResetKey] = useState(0);
+  const challenge = availability.current?.challenge;
 
   useEffect(() => {
     if (user) navigate(destination, { replace: true });
@@ -39,7 +43,17 @@ export function RegisterPage() {
     setVerificationUrl("");
     setBusy(true);
     try {
-      const result = await register(name, email, password, destination);
+      if (challenge?.required && !challengeToken)
+        throw new Error(
+          "Conclua a verificação de segurança antes de criar a conta.",
+        );
+      const result = await register(
+        name,
+        email,
+        password,
+        destination,
+        challengeToken || undefined,
+      );
       setMessage(result.message || "Cadastro recebido.");
       setVerificationUrl(result.verificationUrl || "");
       setSubmittedEmail(email.trim());
@@ -51,6 +65,8 @@ export function RegisterPage() {
           : "Não foi possível criar a conta. Tente novamente.",
       );
     } finally {
+      setChallengeToken("");
+      setChallengeResetKey((value) => value + 1);
       setBusy(false);
     }
   };
@@ -178,10 +194,17 @@ export function RegisterPage() {
               serviço.
             </p>
           </div>
+          {challenge?.required && challenge.siteKey && (
+            <RegistrationChallenge
+              siteKey={challenge.siteKey}
+              resetKey={challengeResetKey}
+              onToken={setChallengeToken}
+            />
+          )}
           {error && <ErrorMessage>{error}</ErrorMessage>}
           <button
             type="submit"
-            disabled={busy}
+            disabled={busy || Boolean(challenge?.required && !challengeToken)}
             className="inline-flex min-h-11 w-full items-center justify-center rounded-lg bg-evo-primary px-4 font-semibold text-white transition hover:bg-evo-primaryHover disabled:opacity-60"
           >
             {busy ? "Criando conta…" : "Criar conta grátis"}

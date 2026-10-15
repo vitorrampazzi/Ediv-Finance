@@ -1,7 +1,24 @@
-import { readdir, readFile } from 'node:fs/promises';
-import { fileURLToPath } from 'node:url';
-import { createPool } from 'mysql2/promise';
-import { config } from './config.js';
+import { readdir, readFile } from "node:fs/promises";
+import { fileURLToPath } from "node:url";
+import { createPool } from "mysql2/promise";
+import { config } from "./config.js";
+
+function boundedInteger(name, fallback, minimum, maximum) {
+  const configured = process.env[name]?.trim();
+  if (!configured) return fallback;
+  const value = Number(configured);
+  if (
+    !/^\d+$/.test(configured) ||
+    !Number.isSafeInteger(value) ||
+    value < minimum ||
+    value > maximum
+  ) {
+    throw new Error(
+      `${name} must be an integer between ${minimum} and ${maximum}.`,
+    );
+  }
+  return value;
+}
 
 export function createDatabasePool(credentials = config.mysql) {
   const connectionOptions = { ...config.mysql, ...credentials };
@@ -14,10 +31,19 @@ export function createDatabasePool(credentials = config.mysql) {
     waitForConnections: true,
     // Serverless platforms can create multiple function instances; keep the
     // per-instance pool small to avoid exhausting managed MySQL connections.
-    connectionLimit: Number(process.env.MYSQL_CONNECTION_LIMIT || (process.env.VERCEL === '1' ? 3 : 10)),
-    queueLimit: 0,
-    charset: 'utf8mb4',
-    timezone: 'Z',
+    connectionLimit: boundedInteger(
+      "MYSQL_CONNECTION_LIMIT",
+      process.env.VERCEL === "1" ? 3 : 10,
+      1,
+      30,
+    ),
+    // Reject overload instead of retaining an unbounded queue of requests.
+    queueLimit: boundedInteger("MYSQL_QUEUE_LIMIT", 30, 1, 200),
+    multipleStatements: false,
+    // mysql2 uses client flags, rather than a localInfile boolean option.
+    flags: ["-LOCAL_FILES"],
+    charset: "utf8mb4",
+    timezone: "Z",
     dateStrings: true,
     connectTimeout: 10_000,
     enableKeepAlive: true,
@@ -26,7 +52,9 @@ export function createDatabasePool(credentials = config.mysql) {
 
 export const pool = createDatabasePool();
 
-const migrationsDirectory = fileURLToPath(new URL('./migrations/', import.meta.url));
+const migrationsDirectory = fileURLToPath(
+  new URL("./migrations/", import.meta.url),
+);
 
 export async function runMigrations(migrationPool = pool) {
   await migrationPool.execute(`
@@ -37,22 +65,34 @@ export async function runMigrations(migrationPool = pool) {
   `);
 
   const files = (await readdir(migrationsDirectory))
-    .filter(file => /^\d+_[a-z0-9_-]+\.sql$/i.test(file))
+    .filter((file) => /^\d+_[a-z0-9_-]+\.sql$/i.test(file))
     .sort();
 
   for (const file of files) {
-    const [applied] = await migrationPool.execute('SELECT name FROM schema_migrations WHERE name = ?', [file]);
+    const [applied] = await migrationPool.execute(
+      "SELECT name FROM schema_migrations WHERE name = ?",
+      [file],
+    );
     if (applied.length) continue;
 
-    const sql = await readFile(new URL(`./migrations/${file}`, import.meta.url), 'utf8');
-    const statements = sql.split(';').map(statement => statement.trim()).filter(Boolean);
+    const sql = await readFile(
+      new URL(`./migrations/${file}`, import.meta.url),
+      "utf8",
+    );
+    const statements = sql
+      .split(";")
+      .map((statement) => statement.trim())
+      .filter(Boolean);
     for (const statement of statements) await migrationPool.query(statement);
 
     try {
-      await migrationPool.execute('INSERT INTO schema_migrations (name) VALUES (?)', [file]);
+      await migrationPool.execute(
+        "INSERT INTO schema_migrations (name) VALUES (?)",
+        [file],
+      );
       console.info(`Applied database migration: ${file}`);
     } catch (error) {
-      if (error.code !== 'ER_DUP_ENTRY') throw error;
+      if (error.code !== "ER_DUP_ENTRY") throw error;
     }
   }
 }

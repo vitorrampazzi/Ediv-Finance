@@ -7,14 +7,16 @@ export function useRegistrationAvailability() {
     revision: number;
     available?: boolean;
     message?: string;
+    challenge?: { required: boolean; siteKey: string | null };
     error?: string;
   } | null>(null);
   useEffect(() => {
     const controller = new AbortController();
-    apiRequest<{ available: boolean; message: string }>(
-      "/api/auth/availability",
-      { signal: controller.signal },
-    )
+    apiRequest<{
+      available: boolean;
+      message: string;
+      challenge?: { required: boolean; siteKey: string | null };
+    }>("/api/auth/availability", { signal: controller.signal })
       .then((data) => {
         if (!controller.signal.aborted) setResult({ revision, ...data });
       })

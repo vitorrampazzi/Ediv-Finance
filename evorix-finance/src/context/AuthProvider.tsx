@@ -48,7 +48,12 @@ async function apiRequest(
     response.status === 204 ? {} : await response.json().catch(() => ({}));
   if (!response.ok)
     throw new ApiError(
-      body.error || "Não foi possível concluir a solicitação. Tente novamente.",
+      body.error ||
+        (response.status === 429
+          ? "Muitas solicitações. Aguarde alguns instantes antes de tentar novamente."
+          : response.status === 503
+            ? "O serviço está ocupado. Tente novamente em instantes."
+            : "Não foi possível concluir a solicitação. Tente novamente."),
       response.status,
       typeof body.code === "string" ? body.code : undefined,
     );
@@ -257,10 +262,22 @@ export function AuthProvider({
   );
 
   const register = useCallback(
-    (name: string, email: string, password: string, next?: string) =>
+    (
+      name: string,
+      email: string,
+      password: string,
+      next?: string,
+      challengeToken?: string,
+    ) =>
       apiRequest("/api/auth/register", {
         method: "POST",
-        body: JSON.stringify({ name, email, password, next }),
+        body: JSON.stringify({
+          name,
+          email,
+          password,
+          next,
+          ...(challengeToken ? { challengeToken } : {}),
+        }),
       }),
     [],
   );

@@ -9,6 +9,7 @@ export const fileBody = express.raw({
     "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
   ],
   limit: "1mb",
+  inflate: false,
 });
 export class ImportError extends Error {}
 export function normalizeHeader(value) {
