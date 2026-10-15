@@ -25,27 +25,42 @@ export function ResearchSectionNav() {
       .filter((target): target is HTMLElement => target !== null);
     let frame = 0;
     let observer: IntersectionObserver | undefined;
+    let readingLine = 0;
 
     const selectSection = () => {
       frame = 0;
-      const readingLine = nav.getBoundingClientRect().bottom + 24;
-      const lastPassed = targets.filter(
-        (target) => target.getBoundingClientRect().top <= readingLine,
-      ).at(-1);
+      const lastPassed = targets
+        .filter((target) => target.getBoundingClientRect().top <= readingLine + 2)
+        .at(-1);
       const next = lastPassed?.id ?? targets[0]?.id;
-      if (next) setActive((current) => current === next ? current : next);
+      if (next) setActive((current) => (current === next ? current : next));
     };
     const scheduleSelection = () => {
       if (!frame) frame = window.requestAnimationFrame(selectSection);
     };
     const observe = () => {
       observer?.disconnect();
-      // Observe a reading band below the sticky header. Section boundaries update
-      // the indicator without subscribing to every scroll frame.
-      const top = Math.round(nav.getBoundingClientRect().height + (innerWidth >= 768 ? 80 : 64));
-      const bottom = Math.max(0, window.innerHeight - top - 120);
+      // Match the anchor's scroll margin so a clicked section stays selected.
+      // A narrow band tracks section boundaries without a scroll-frame listener.
+      const stickyTop =
+        Number.parseFloat(window.getComputedStyle(nav).top) || 0;
+      const anchorOffset = Math.max(
+        0,
+        ...targets.map(
+          (target) =>
+            Number.parseFloat(window.getComputedStyle(target).scrollMarginTop) ||
+            0,
+        ),
+      );
+      readingLine = Math.min(
+        window.innerHeight - 2,
+        Math.ceil(
+          Math.max(nav.getBoundingClientRect().height + stickyTop + 24, anchorOffset),
+        ),
+      );
+      const bottom = Math.max(0, window.innerHeight - readingLine - 1);
       observer = new IntersectionObserver(scheduleSelection, {
-        rootMargin: `-${top}px 0px -${bottom}px 0px`,
+        rootMargin: `-${readingLine}px 0px -${bottom}px 0px`,
         threshold: 0,
       });
       targets.forEach((target) => observer?.observe(target));
@@ -68,16 +83,21 @@ export function ResearchSectionNav() {
     if (!nav || !link) return;
     const viewport = nav.getBoundingClientRect();
     const bounds = link.getBoundingClientRect();
-    const adjustment = bounds.left < viewport.left
-      ? bounds.left - viewport.left - 12
-      : bounds.right > viewport.right
-        ? bounds.right - viewport.right + 12
-        : 0;
+    const adjustment =
+      bounds.left < viewport.left
+        ? bounds.left - viewport.left - 12
+        : bounds.right > viewport.right
+          ? bounds.right - viewport.right + 12
+          : 0;
     if (adjustment) nav.scrollBy({ left: adjustment, behavior: "instant" });
   }, [active]);
 
   return (
-    <nav ref={navigation} aria-label="Seções da pesquisa" className="research-section-nav">
+    <nav
+      ref={navigation}
+      aria-label="Seções da pesquisa"
+      className="research-section-nav"
+    >
       {sections.map(([anchor, label], index) => (
         <a
           key={anchor}

@@ -54,6 +54,75 @@
   grid-column: 2 / -1;
 }
 
+@media (max-width: 639px) {
+  .ranking-page > .section-masthead {
+    padding-block: 0 0.75rem;
+  }
+
+  .ranking-heading {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 4.25rem;
+    gap: 0.5rem 0.75rem;
+  }
+
+  .ranking-heading > :first-child {
+    display: contents;
+  }
+
+  .ranking-heading .edition-label,
+  .ranking-heading h1,
+  .ranking-heading h1 + p {
+    grid-column: 1;
+    margin-top: 0;
+  }
+
+  .ranking-heading h1 {
+    font-size: 1.75rem;
+  }
+
+  .ranking-heading h1 + p {
+    font-size: 0.8125rem;
+    line-height: 1.5;
+  }
+
+  .ranking-header-visual {
+    grid-column: 2;
+    grid-row: 1 / 4;
+  }
+
+  .ranking-header-visual .research-visual {
+    width: 4.25rem;
+    height: 4rem;
+  }
+
+  .ranking-header-actions {
+    grid-column: 1 / -1;
+    align-items: center;
+    margin-top: 0.125rem;
+    font-size: 0.75rem;
+  }
+
+  .ranking-header-actions > a,
+  .ranking-header-actions > button {
+    font-size: 0.75rem;
+  }
+
+  .ranking-comparison > details {
+    padding: 0 0.75rem;
+  }
+
+  .ranking-comparison > details[open] {
+    padding-bottom: 0.75rem;
+  }
+
+  .ranking-comparison > details > summary {
+    min-height: 2.75rem;
+    align-content: center;
+    padding-block: 0.625rem;
+    font-size: 0.875rem;
+  }
+}
+
 @media (min-width: 640px) and (max-width: 767px) {
   .research-ranking-metrics {
     grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -74,7 +143,7 @@
     display: grid;
     align-items: end;
     padding-block: 0.75rem;
-    color: var(--color-evo-textSec);
+    color: var(--color-evo-textSec, #d5dbe5);
     font-size: 0.6875rem;
     font-weight: 500;
     line-height: 1.5;

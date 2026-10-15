@@ -25,7 +25,9 @@
   font-size: 0.8125rem;
   font-weight: 500;
   white-space: nowrap;
-  transition: color 160ms ease, border-color 160ms ease;
+  transition:
+    color 160ms ease,
+    border-color 160ms ease;
 }
 .research-section-nav a span {
   font-family: ui-monospace, monospace;

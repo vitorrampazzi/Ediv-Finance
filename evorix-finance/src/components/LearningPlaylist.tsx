@@ -224,7 +224,7 @@ export function LearningPlaylist({
                   <span className="ediv-learning-lesson-meta">
                     <span className="inline-flex items-center gap-1">
                       <Clock3 size={12} aria-hidden="true" />
-                      Leitura · {item.readingMinutes} min
+                      Leitura estimada · {item.readingMinutes} min
                     </span>
                     <span>
                       {item.locked ? "Conteúdo com conta gratuita" : item.videoAvailable

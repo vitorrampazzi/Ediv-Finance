@@ -26,13 +26,24 @@ export async function prerender() {
     pathToFileURL(resolve(".test-artifacts/prerender/entry-server.js")).href
   );
   const shell = await readFile("dist/index.html", "utf8");
-  // The home is rendered before React imports its lazy CSS chunk. Load that
-  // stylesheet in the first document so SVG paint and layout never flash unstyled.
-  const homeStyles = (await readdir("dist/assets"))
-    .filter((name) => /^Home-[\w-]+\.css$/.test(name))
-    .sort()
-    .map((name) => `<link rel="stylesheet" crossorigin href="/assets/${name}" />`)
-    .join("");
+  // Public HTML arrives before React imports route CSS. Include each page's
+  // stylesheet up front to keep illustrations, lessons and lists styled on mobile.
+  const cssFiles = (await readdir("dist/assets"))
+    .filter((name) => name.endsWith(".css"))
+    .sort();
+  const pageCss = {
+    "/": /^Home-[\w-]+\.css$/,
+    "/aprender": /^Aprender-[\w-]+\.css$/,
+    "/mercado": /^analises-[\w-]+\.css$/,
+  };
+  const pageStyles = (path) =>
+    cssFiles
+      .filter((name) => pageCss[path]?.test(name))
+      .map(
+        (name) =>
+          `<link rel="stylesheet" crossorigin href="/assets/${name}" />`,
+      )
+      .join("");
   const learning = {
     access: "preview",
     completed: [],
@@ -76,7 +87,7 @@ export async function prerender() {
     return result
       .replace(
         "</head>",
-        `${path === "/" ? homeStyles : ""}${canonical}<meta name="robots" content="${meta.noindex ? "noindex, nofollow" : "index, follow"}" /></head>`,
+        `${pageStyles(path)}${canonical}<meta name="robots" content="${meta.noindex ? "noindex, nofollow" : "index, follow"}" /></head>`,
       )
       .replace('<div id="root"></div>', `<div id="root">${content}</div>`);
   }

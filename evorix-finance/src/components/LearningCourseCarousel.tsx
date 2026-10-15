@@ -214,7 +214,7 @@ export function LearningCourseCarousel({
                     <span>{course.chapterIds.length} aulas</span>
                     <span className="inline-flex items-center gap-1.5">
                       <Clock3 size={14} aria-hidden="true" />
-                      {minutes} min de leitura
+                      {minutes} min de leitura estimada
                     </span>
                   </div>
                   <div className="ediv-learning-progress-label ediv-learning-course-progress-label">

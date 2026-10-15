@@ -1,5 +1,5 @@
 import { useRankingPublication } from "../hooks/useRankingPublication";
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { Link, useLocation, useSearchParams } from "react-router-dom";
 import {
   ArrowUpRight,
@@ -41,7 +41,7 @@ const date = (value: string) =>
     value.replace(" ", "T") + (value.endsWith("Z") ? "" : "Z"),
   ).toLocaleString("pt-BR");
 const input =
-  "min-h-11 w-full rounded-lg border border-evo-border bg-evo-bgMain px-3 text-sm";
+  "min-h-11 w-full rounded-lg border border-evo-border bg-evo-bgMain px-3 text-base sm:text-sm";
 const button =
   "inline-flex min-h-11 items-center justify-center gap-2 rounded-lg bg-evo-primary px-4 text-sm font-semibold text-white hover:bg-evo-primaryHover disabled:opacity-50";
 export function IncomeRanking() {
@@ -122,22 +122,28 @@ function MemberIncomeRanking() {
       return next;
     });
   };
+  const sectors = [
+    ...new Set(
+      sourceEntries.map((e) => e.sector).filter((s): s is string => Boolean(s)),
+    ),
+  ].sort((a, b) => a.localeCompare(b, "pt-BR"));
+  const sector = sectors.includes(requestedSector) ? requestedSector : "";
   const researchLink = (ticker: string) => {
     const params = new URLSearchParams(searchParams);
+    rankingFilterKeys.forEach((key) => params.delete(key));
+    if (search.trim()) params.set("busca", search.trim());
+    if (sector) params.set("setor", sector);
+    if (horizon) params.set("prazo", horizon);
+    if (sort !== "rank") params.set("ordem", sort);
     params.set("visual", showingDemo ? "demo" : "real");
-    if (!showingDemo && (ranking.id || publication))
+    if (showingDemo) params.delete("publication");
+    else if (ranking.id || publication)
       params.set("publication", ranking.id || publication);
     const base = location.pathname.startsWith("/app/")
       ? "/app/ranking/acao/"
       : "/ranking/acao/";
     return base + encodeURIComponent(ticker) + "?" + params.toString();
   };
-  const sectors = [
-    ...new Set(
-      sourceEntries.map((e) => e.sector).filter((s): s is string => Boolean(s)),
-    ),
-  ].sort();
-  const sector = sectors.includes(requestedSector) ? requestedSector : "";
   const changeFilter = (key: RankingFilterKey, value: string) => {
     setSearchParams(
       (current) => {
@@ -161,41 +167,48 @@ function MemberIncomeRanking() {
     );
   };
   const activeFilters: { key: RankingFilterKey; label: string }[] = [
-    ...(search.trim() ? [{ key: "busca" as const, label: `Busca: ${search.trim()}` }] : []),
+    ...(search.trim()
+      ? [{ key: "busca" as const, label: `Busca: ${search.trim()}` }]
+      : []),
     ...(sector ? [{ key: "setor" as const, label: `Setor: ${sector}` }] : []),
     ...(horizon ? [{ key: "prazo" as const, label: `Até ${horizon} meses` }] : []),
     ...(sort !== "rank"
-      ? [{
-          key: "ordem" as const,
-          label: sort === "name" ? "Nome da empresa" : showingDemo ? "Maior potencial simulado" : "Maior potencial informado",
-        }]
+      ? [
+          {
+            key: "ordem" as const,
+            label:
+              sort === "name"
+                ? "Nome da empresa"
+                : showingDemo
+                  ? "Maior potencial simulado"
+                  : "Maior potencial informado",
+          },
+        ]
       : []),
   ];
   const learningPath = location.pathname.startsWith("/app/")
     ? "/app/aprender"
     : "/aprender";
-  const entries = useMemo(
-    () =>
-      sourceEntries
-        .filter(
-          (e) =>
-            (!search.trim() ||
-              (e.ticker + " " + e.companyName)
-                .toLocaleLowerCase("pt-BR")
-                .includes(search.trim().toLocaleLowerCase("pt-BR"))) &&
-            (!sector || e.sector === sector) &&
-            (!horizon ||
-              (e.horizonMonths !== null && e.horizonMonths <= Number(horizon))),
-        )
-        .sort((a, b) =>
-          sort === "potential"
-            ? Number(b.expectedReturnPercent) - Number(a.expectedReturnPercent)
-            : sort === "name"
-              ? a.companyName.localeCompare(b.companyName)
-              : a.rank - b.rank,
-        ),
-    [sourceEntries, search, sector, horizon, sort],
-  );
+  const entries = sourceEntries
+    .filter(
+      (e) =>
+        (!search.trim() ||
+          (e.ticker + " " + e.companyName)
+            .toLocaleLowerCase("pt-BR")
+            .includes(search.trim().toLocaleLowerCase("pt-BR"))) &&
+        (!sector || e.sector === sector) &&
+        (!horizon ||
+          (e.horizonMonths !== null && e.horizonMonths <= Number(horizon))),
+    )
+    .sort((a, b) =>
+      sort === "potential"
+        ? Number(b.expectedReturnPercent) - Number(a.expectedReturnPercent) ||
+          a.rank - b.rank
+        : sort === "name"
+          ? a.companyName.localeCompare(b.companyName, "pt-BR") ||
+            a.rank - b.rank
+          : a.rank - b.rank,
+    );
   const retryPublication = async () => {
     setLoading(true);
     setError("");
@@ -270,10 +283,10 @@ function MemberIncomeRanking() {
   return (
     <section
       id="pagina-conteudo"
-      className="mx-auto max-w-7xl space-y-6 px-4 py-6 sm:px-6 md:py-10"
+      className="ranking-page mx-auto max-w-7xl space-y-3 px-4 py-4 sm:space-y-6 sm:px-6"
     >
       <section className="section-masthead">
-        <div className="mobile-page-heading flex items-start justify-between gap-3 sm:gap-4 sm:items-center">
+        <div className="ranking-heading mobile-page-heading flex items-start justify-between gap-3 sm:gap-4 sm:items-center">
           <div className="min-w-0 flex-1">
             <p className="edition-label">
               {showingDemo
@@ -290,31 +303,39 @@ function MemberIncomeRanking() {
                 <>Leia as previsões e o que sustenta cada cenário.</>
               )}
             </p>
-            <div className="mt-5 flex flex-wrap gap-3">
+            <div className="ranking-header-actions mt-5 flex flex-wrap gap-2 sm:gap-3">
               <Link
                 to={learningPath + "#ranking"}
                 className="inline-flex min-h-11 items-center gap-2 text-sm font-medium text-evo-accent"
               >
-                <BookOpen size={17} /> Como interpretar o ranking
+                <BookOpen size={17} aria-hidden="true" />
+                <span className="sm:hidden">Como ler</span>
+                <span className="hidden sm:inline">Como interpretar o ranking</span>
               </Link>
               <button
                 type="button"
                 className="min-h-11 rounded-lg border border-evo-border px-4 text-sm font-semibold hover:border-evo-accent/50"
                 onClick={() => changeView(showingDemo ? "real" : "demo")}
               >
-                {showingDemo
-                  ? "Ver publicações da equipe"
-                  : "Explorar demonstração"}
+                <span className="sm:hidden">
+                  {showingDemo ? "Publicações" : "Ver exemplo"}
+                </span>
+                <span className="hidden sm:inline">
+                  {showingDemo
+                    ? "Ver publicações da equipe"
+                    : "Explorar demonstração"}
+                </span>
               </button>
               <Link
                 to="/metodologia"
                 className="inline-flex min-h-11 items-center text-sm text-evo-textSec underline hover:text-evo-accent"
               >
-                Como funciona a pesquisa
+                <span className="sm:hidden">Metodologia</span>
+                <span className="hidden sm:inline">Como funciona a pesquisa</span>
               </Link>
             </div>
           </div>
-          <div className="shrink-0 self-start sm:self-center">
+          <div className="ranking-header-visual shrink-0 self-start sm:self-center">
             <OrbitCoins variant="ranking" size="sm" />
           </div>
         </div>
@@ -536,20 +557,24 @@ function MemberIncomeRanking() {
         </details>
       )}
       {!loading && !error && (
-        <CompanyComparison
-          key={showingDemo ? "demo" : ranking.id || "empty"}
-          entries={sourceEntries}
-          demo={showingDemo}
-        />
+        <div className="ranking-comparison">
+          <CompanyComparison
+            key={showingDemo ? "demo" : ranking.id || "empty"}
+            entries={sourceEntries}
+            demo={showingDemo}
+          />
+        </div>
       )}
       {!loading && !error && !showingDemo && current && (
-        <VersionComparison
-          key={ranking.id}
-          publicationId={ranking.id}
-          history={ranking.history}
-        />
+        <div className="ranking-comparison">
+          <VersionComparison
+            key={ranking.id}
+            publicationId={ranking.id}
+            history={ranking.history}
+          />
+        </div>
       )}
-      <section className="space-y-4">
+      <section className="space-y-3 sm:space-y-4">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
             <h2 className="text-xl font-semibold">
@@ -624,7 +649,7 @@ function MemberIncomeRanking() {
         )}
         <div className="grid min-w-0 gap-3 lg:grid-cols-[minmax(0,1fr)_3fr]">
           <label className="relative flex min-w-0 items-center gap-2 rounded-lg border border-evo-border bg-evo-bgMain px-3">
-            <Search size={17} />
+            <Search size={17} aria-hidden="true" />
             <span className="sr-only">Buscar empresa ou ticker</span>
             <input
               value={search}
@@ -633,7 +658,7 @@ function MemberIncomeRanking() {
               autoComplete="off"
               enterKeyHint="search"
               placeholder="Empresa ou ticker"
-              className="min-h-11 min-w-0 w-full bg-transparent text-sm outline-none"
+              className="min-h-11 min-w-0 w-full bg-transparent text-base outline-none focus-visible:ring-2 focus-visible:ring-evo-accent sm:text-sm"
             />
           </label>
           <MobileDisclosure
@@ -849,7 +874,7 @@ function MemberIncomeRanking() {
                                 ? "Potencial simulado"
                                 : "Potencial informado"}
                             </dt>
-                            <dd className="mt-1 font-numbers text-xl font-semibold text-evo-accent">
+                            <dd className={`mt-1 font-numbers text-xl font-semibold ${Number(entry.expectedReturnPercent) < 0 ? "text-evo-red" : "text-evo-accent"}`}>
                               {Number(
                                 entry.expectedReturnPercent,
                               ).toLocaleString("pt-BR")}
