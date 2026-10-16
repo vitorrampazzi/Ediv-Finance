@@ -1,5 +1,5 @@
-# Arquivo de teste da importação
+# Ranking import test fixture
 
-`import-ranking.xlsx` contém uma aba com cabeçalhos aceitos pelo importador e uma empresa fictícia. Os números são dados sintéticos para verificar a leitura de decimais: potencial `27.5`, preço-alvo `42.75` e horizonte `12` meses.
+`import-ranking.xlsx` contains a worksheet with importer-supported headers and one fictional company. Its synthetic values check decimal parsing: potential `27.5`, target price `42.75`, and horizon `12` months.
 
-A suíte envia o arquivo apenas ao servidor local ligado a um schema temporário. Esse conteúdo não é uma pesquisa do corretor nem deve ser publicado em produção.
+The suite sends this file only to the local server connected to a temporary schema. It is not adviser research and must not be published to production.
