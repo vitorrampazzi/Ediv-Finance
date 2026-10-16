@@ -60,9 +60,9 @@ export function PublicHome({
               Escola do Dividendo
             </p>
             <h1 id="ph-home-title" className="display-title ph-hero-title">
-              <span>Antes do dividendo,</span>{" "}
-              <span>entenda a</span>{" "}
-              <span className="ph-hero-title-accent">empresa.</span>
+              <span>Aprenda a olhar</span>{" "}
+              <span className="ph-hero-title-accent">a raiz,</span>{" "}
+              <span>não só o fruto.</span>
             </h1>
             <p className="ph-hero-description ph-hero-entry">
               Pesquisas de ações e aulas para entender as empresas por trás dos
