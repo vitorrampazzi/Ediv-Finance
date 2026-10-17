@@ -187,3 +187,80 @@ Preparada sobre main5673c3f em bare temporário, sem reparar Git compartilhado.
 Publicação atômica pelo conector GitHub com expected_sha, preservando a main.
 Não entram planilha/imagens de referência, fixtures, node_modules, dist ou caches.
 As sessões entregaram claims livres; coordenação fará confirmação do deploy.
+
+Resultado final: main atualizada em `14464bd3675cd939d584eeb1777afbe6a6719057`,
+status Vercel success confirmado no GitHub. Chrome no domínio oficial mostrou
+botão Ativar tema claro (escuro atual), tabela com sete colunas e seis empresas
+da demonstração, sem coluna de posição nem prefixos ornamentais. Nenhuma
+preferência ou dado da conta real foi alterado; navegação de leitura somente.
+Captura final ranking-publicado.png salva na pasta de visualizações da conversa.
+Servidor local4182 encerrado; sem alterações na QA.
+
+## Rodada4 — introdução após cadastro e informações na tabela
+
+Usuário solicitou introdução guiada com modais obrigatórios após cadastro e
+valores fictícios nas seis colunas. Card11 do Trello lido; título inclui escolha
+inicial de aparência, sem descrição adicional. Sessões existentes receberam
+escopos separados e entregaram seus relatos/reservas livres.
+
+### Decisões e implementação
+
+- Interface: GuidedTour/CSS, seis etapas, navegação e targets no DashboardLayout,
+  opção Rever introdução no menu. Backend: tabela com resumos e helper puro.
+- Coordenação: onboarding.mjs/d.mts, src/lib/onboarding.ts,
+  AccountOnboarding.tsx, RegisterPage.tsx, tests/onboarding.test.mjs,
+  package.json e documentos do harness. Texto do ranking no tour atualizado
+  para refletir os resumos atuais em vez de disponibilidade.
+- Usuário reforçou PRIMEIRO CADASTRO: removida a heurística de createdAt antes
+  da publicação. Login comum nunca inicia tour, inclusive conta recente.
+  O next do cadastro carrega sinal de introdução por confirmação de e-mail até
+  primeiro login; não autentica antes da confirmação. Retomar um tour em andamento
+  mantém o passo, e conclusão impede reabertura automática neste navegador.
+- Persistência local por user.id/versão, sem dados pessoais nem migração; falha
+  de storage usa memória e informa dentro do dialog. Sem sincronização de
+  conclusão entre dispositivos. A API atual não dispõe de campo apropriado,
+  conforme auditoria do backend; nenhum domínio de preferências/aulas reutilizado.
+- URLs de retorno restritas às rotas permitidas, query/hash preservados e sinal
+  removido; limite1500 respeitado no next. Mudanças de página por replace.
+- A tabela deriva os36 resumos dos mesmos textos já presentes na demonstração,
+  sem criar publicação nem associar números fictícios a empresas reais.
+- Mensagens cruzadas entre chats divergiram temporariamente sobre6/7 etapas;
+  contrato foi congelado, código final relido e consolidado em6 antes da validação.
+  Em nova integração, usar o contrato vigente no disco/relato como referência.
+
+### Verificações reais
+
+- Node22: npm test **61/61 passou**; inclui6 testes novos de onboarding e4 de
+  resumos. Cobrem login comum sem gatilho, sequência sem salto/conclusão precoce,
+  retomada/reload, isolamento por usuário, storage bloqueado, destinos seguros,
+  sincronização de abas e valores derivados do conteúdo fonte.
+- npm run lint completo passou; lint focado repetido após ajustes finais passou.
+- npm run build Node22 passou, TypeScript e9 rotas públicas pré-renderizadas.
+  Harness check passou. SSR do backend conferiu36 resumos/links e isolamento real.
+- Chrome com servidor local4183 exclusivamente de fixtures, sem banco real:
+  formulário cadastro→link fictício de confirmação→primeiro login abriu etapa1;
+  Esc e clique de fundo mantiveram dialog; tema operável dentro do modal;
+  Shift+Tab/Tab circularam Continuar→Voltar com foco dentro do dialog;
+  Voltar funcionou, reload na etapa3 retomou3/6, todas rotas até6/6 funcionaram.
+  Concluir retornou a /app/ranking?mode=demo, query original preservada.
+- Logout/login normal posterior não abriu dialog (count0). Outra identidade
+  de conta recém-criada, entrando sem jornada de cadastro, também count0.
+  Replay manual pelo menu abriu etapa1. Nenhum cadastro/teste na produção.
+- Mobile320x780: painel296px entre x12..308, alvo móvel ranking x77..165,
+  painel termina691px e destaque começa711px (sem sobreposição). Claro e escuro
+  conferidos. Tabela rolável288px/conteúdo1008px/empresa144px; foco em DRE x167
+  ficou à direita da coluna fixa que termina160px. Link abriu DRE e details aberto,
+  com receita240milhões e lucro48milhões iguais à tabela.
+- Capturas: introducao-primeiro-cadastro.png, introducao-mobile.png,
+  ranking-valores-claro.png, ranking-valores-escuro.png e ranking-valores-mobile.png.
+  Todas na pasta de visualizações desta conversa; representam fixtures locais.
+- Não executados: MySQL real/integração com SMTP/Turnstile e leitor de tela.
+  Sem schema, credenciais, pesquisas reais, QA ou dados de conta real alterados.
+
+### Publicação preparada
+
+Main14464bd como base no bare temporário, sem reparar metadados do checkout.
+Publicação pela API GitHub com parent/expected_sha e sem force, conforme
+autorização vigente do usuário para main. Manifesto exclui fixtures/dist/cache,
+planilha e capturas; novos helpers raiz incluídos explicitamente. Próximo passo:
+publicar, acompanhar Vercel e conferir tabela/ausência do tour no acesso normal.

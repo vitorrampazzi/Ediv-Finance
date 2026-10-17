@@ -4,20 +4,20 @@
   "sessions": {
     "coordenacao": {
       "phase": "revisao",
-      "summary": "Rodada3 validada:51 testes/lint/build e browser desktop/mobile; publicando tabela e refinamentos main",
-      "updatedAt": "2026-10-17T18:41:06.984Z",
+      "summary": "61 testes/lint/build/browser passaram; cadastro inicia tour, login normal não; tabela com36 resumos validada",
+      "updatedAt": "2026-10-17T19:02:57.559Z",
       "claims": []
     },
     "interface": {
       "phase": "revisao",
-      "summary": "Botão tema44px, escuro padrão e números ornamentais removidos; tema7/7 Node22, lint focado e tsc passaram",
-      "updatedAt": "2026-10-17T18:36:20.269Z",
+      "summary": "Tour6 etapas:modal obrigatório,foco,spotlight e navegação; notice integrado;13 testes Node22,lint focado e tsc passaram",
+      "updatedAt": "2026-10-17T18:56:49.162Z",
       "claims": []
     },
     "backend": {
       "phase": "revisao",
-      "summary": "Ranking tabela 7 colunas e âncoras granulares pronto; 3/3 testes, lint e tsc Node22/SSR passaram; browser integrado com coordenação",
-      "updatedAt": "2026-10-17T18:36:31.835Z",
+      "summary": "Resumos/valores demo consistentes36 módulos; real isolado;7 testes/lint/tsc/SSR passaram; auditoria tour sem migração entregue",
+      "updatedAt": "2026-10-17T18:54:32.374Z",
       "claims": []
     }
   }

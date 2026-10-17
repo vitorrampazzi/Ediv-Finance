@@ -195,3 +195,68 @@ Ranking tabular e seus módulos permanecem com backend.
 Arquivos finalizados para revisão integrada. Validar botão nos dois headers,
 teclado/touch, escuro inicial com SO claro, persistência/reload, home/metodologia/
 pesquisa/aprender sem ornamentos e layout320px depois de retirar colunas.
+
+## Rodada 4 — contrato frontend do tour (em implementação)
+
+`GuidedTour` recebe `active`, `step`, `onStepChange`, `onComplete`,
+`completing?`, `error?` e `notice?`. Seis etapas em `src/lib/guidedTourSteps.ts`:
+tema/boas-vindas, início, ranking, análises, aprender e conta (inclui suporte).
+Navegação interna por etapa usa replace, sem nova entrada de histórico.
+Controlador `AccountOnboarding.tsx` da coordenação decide gatilho/persistência,
+captura destino inicial e o restaura ao concluir; esta sessão não modifica auth.
+Layout terá targets data-tour inicio/tema/ranking/analises/aprender/conta nos
+elementos desktop e mobile. Native dialog modal bloqueia interação fora,
+impede Escape/fundo e oferece Voltar/Continuar/Concluir com foco no conteúdo.
+Integração acordada: DashboardLayout renderiza AccountOnboarding e ProfileMenu
+chama requestOnboardingReplay() ao selecionar Rever introdução. Wrapper restaura
+returnTo ao concluir; GuidedTour não decide elegibilidade nem retorno.
+
+### Entrega frontend do tour
+
+Contrato consolidado final em disco: **seis etapas** (índices0–5), compatível
+com `onboardingStepCount = 6` do helper da coordenação. Sequência: tema/boas-vindas
+→ início → ranking → análises → aprender → conta. Suporte é explicado na conta;
+o target suporte também foi preparado no header para extensões futuras.
+
+Arquivos desta sessão: `GuidedTour.tsx`, `guided-tour.css`,
+`guidedTourSteps.ts`, `DashboardLayout.tsx` e este relato.
+
+- Modal nativo `dialog.showModal()` em portal no body: fundo inerte, cancel de
+  Escape prevenido, sem botão de fechar/pular nem fechamento no clique externo.
+- Voltar/Continuar/Concluir exigem ativação explícita. Não há avanço automático.
+  Foco vai ao título a cada etapa e Tab/Shift+Tab circulam pelos controles do
+  modal. Ao encerrar, restaura foco anterior conectado ou menu da conta.
+- Troca de página por `navigate(..., { replace: true })` interno por etapa.
+  Destino original, elegibilidade e conclusão são responsabilidade exclusiva
+  do wrapper/helper da coordenação. Cadastro/confirmação/sessão não alterados
+  nesta sessão.
+- Spotlight mede o primeiro target visível entre desktop/mobile, usa viewport
+  e altura real do painel para se posicionar, acompanha resize/scroll e mudança
+  de página, com centro como fallback quando o alvo não está disponível.
+- Primeira etapa inclui ThemeToggle operável dentro do modal (o header por trás
+  continua inerte). Paleta usa os tokens existentes de claro/escuro.
+- `notice` aparece com role=status DENTRO do dialog para que storage bloqueado
+  seja anunciado. Erro de conclusão é exibido com role=alert e tentativa pode
+  ser repetida. Observers/listeners são removidos no cleanup.
+- Targets estáveis data-tour nas navegações principal/móvel e nos controles de
+  tema/conta/suporte. ProfileMenu oferece Rever introdução pela função de replay
+  exportada no helper da coordenação. Layout renderiza AccountOnboarding uma
+  única vez, sem key de rota e sem duplicar o hook de gatilho.
+
+### Validações
+
+- Node22: `--test tests/onboarding.test.mjs tests/theme.test.mjs`: **13/13 passaram**.
+  Os seis testes de onboarding foram criados pela coordenação; esta sessão os
+  executou para conferir elegibilidade, retomada, progressão, isolamento e
+  degradação de persistência no contrato compartilhado.
+- ESLint focado em GuidedTour, guidedTourSteps e DashboardLayout: **passou**.
+- TypeScript `tsc -b` com Node22: **passou** após wrapper/helper estarem no disco.
+- Revisão React Best Practices: efeitos com dependências completas, callbacks
+  de progressão não usados como dependência instável, geometria medida por RAF,
+  observers removidos e nenhum dado de autenticação copiado para o modal.
+- Browser de modal/foco/spotlight, zoom/mobile320px, navegação até conclusão e
+  build integrado: serão executados pela coordenação. Não declarar reprodução
+  visual ou aprovação end-to-end a partir dos testes puros.
+- Nenhuma instalação, alteração de banco, Git remoto ou deploy por esta sessão.
+
+Estado de entrega: revisão integrada com coordenação; reservas liberadas.

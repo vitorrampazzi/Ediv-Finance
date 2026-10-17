@@ -11,6 +11,7 @@ import { useRegistrationAvailability } from "../../hooks/useRegistrationAvailabi
 import { AuthShell, ErrorMessage } from "../../components/auth/AuthShell";
 import { ConfirmationHelp } from "../../components/auth/ConfirmationHelp";
 import { SessionStatus } from "../../components/SessionStatus";
+import { onboardingEntryDestination } from "../../../onboarding.mjs";
 import { RegistrationChallenge } from "../../components/auth/RegistrationChallenge";
 export function RegisterPage() {
   const availability = useRegistrationAvailability();
@@ -20,6 +21,7 @@ export function RegisterPage() {
   const destination = safeAuthDestination(
     new URLSearchParams(location.search).get("next"),
   );
+  const introductionDestination = onboardingEntryDestination(destination);
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -51,7 +53,7 @@ export function RegisterPage() {
         name,
         email,
         password,
-        destination,
+        introductionDestination,
         challengeToken || undefined,
       );
       setMessage(result.message || "Cadastro recebido.");
@@ -86,7 +88,7 @@ export function RegisterPage() {
           </p>
           <ConfirmationHelp
             email={submittedEmail}
-            destination={destination}
+            destination={introductionDestination}
             initialLink={verificationUrl}
           />
           <button
@@ -215,7 +217,7 @@ export function RegisterPage() {
         <ConfirmationHelp
           key={email}
           email={email.trim()}
-          destination={destination}
+          destination={introductionDestination}
         />
       )}
       <p className="mt-4 text-xs leading-relaxed text-evo-textSec">

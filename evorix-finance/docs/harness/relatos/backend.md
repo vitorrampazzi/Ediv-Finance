@@ -252,3 +252,64 @@ compensa a coluna fixa ao navegar horizontalmente pelo teclado.
 
 Reservas liberadas para revisão integrada. Nenhuma publicação, instalação,
 alteração de banco ou de valores financeiros feita por esta sessão.
+
+## Rodada: valores e informações nas células — 17/10/2026
+
+### Resultado
+
+As seis colunas mostram agora resumos do próprio conteúdo, mantendo empresa e
+células clicáveis. Na demonstração, cada módulo apresenta duas informações:
+ativos/patrimônio, receita/lucro, caixa operacional/variação, setor/código,
+dívida líquida/bruta e margem/referência. Os valores vêm diretamente das strings
+que `rankingDemo.ts` já usa no detalhe. Não foi necessário alterar a fonte demo,
+calcular novos indicadores nem injetar qualquer dado em publicação/API real.
+
+`research-module-summary.mjs` seleciona as linhas da demo por rótulo, preservando
+texto, moeda, unidade, sinal negativo e zero. Nas publicações reais, mostra as
+duas primeiras linhas não vazias do conteúdo publicado, sem selecionar métricas
+de demonstração. Linhas reais longas são resumidas com reticências (180 caracteres)
+e acesso **Ver módulo** ao texto integral. Ausentes continuam **Não publicado**.
+
+O aviso visível e o caption distinguem empresas e valores fictícios, sem dados
+de mercado. Os links preservam âncoras, query/filtros/versão e abertura em nova aba.
+A descrição acessível inclui os valores/rótulos visíveis e o aviso fictício.
+CSS permite quebra dos valores, sem line-clamp nem corte horizontal da informação;
+preserva tokens claro/escuro e geometria de rolagem/foco já validada em320px.
+
+### Arquivos e verificações
+
+- Alterados apenas `ResearchRankingTable.tsx`, `research-ranking-table.css` e este relato.
+- Novos `research-module-summary.mjs`, `.d.mts` e `tests/research-module-summary.test.mjs`.
+- `rankingDemo.ts`, módulos detalhados, API, schema e dados publicados não foram alterados.
+- Node22: **7/7 testes focados passaram** (4 novos de resumo +3 módulos/links).
+- Node22: **lint focado e tsc -b passaram**.
+- SSR Vite/ReactDOMServer: **36 módulos demo conferidos**. Cada par rótulo/valor
+  coincide literalmente com o texto de detalhe;36 links preservados, aviso
+  fictício presente, nenhuma imagem de marca real na demo, resumo real isolado
+  e fonte original sem mutação. Não houve reprodução visual nesta sessão.
+- Skill React aplicada: helper puro sem estado/busca, keys estáveis, links
+  sem interceptação de nova aba, valores acessíveis e CSS sem corte por clamp.
+- Coordenação informada dos novos arquivos para manifesto/npm test; fará browser,
+  validação integrada e publicação. Nenhum servidor adicional iniciado por backend.
+
+### Auditoria de persistência do tour — somente leitura
+
+- `server/migrations/002_portfolio.sql:21`–`:28`: `user_preferences` tem
+  `risk_profile` ENUM e dois booleans de notificações, sem campo JSON/genérico/tour.
+- `server/portfolio.js:526` e `:543`: GET/PUT de preferências expõem/persistem
+  apenas perfil, notificações e patrimônio declarado (tabela separada). Não há
+  contrato de onboarding; campo extra não é persistido pelo SQL existente.
+- `server/migrations/007_research_workflow.sql:11` e `server/learning.js:30`:
+  `learning_progress` representa aula/exercício validado, não conclusão de tour;
+  a API exige ID de aula existente e resposta correta. Não reutilizar esse domínio.
+- `server/auth.js:267` retorna identidade/perfil da conta, sem preferência de tour.
+- Não há armazenamento adequado por conta e entre dispositivos sem mudança de
+  contrato/schema. Não sobrecarregar flags de notificações, perfil de risco,
+  rascunhos ou cache do provedor com o marcador do tour.
+- Opção sem migração nesta rodada: localStorage com chave por `user.id` +versão,
+  deixando explícito que vale neste navegador. Falha de storage não pode ser
+  anunciada como salvamento. Persistência entre dispositivos exige proposta e
+  migração futura própria; nenhum backend/onboarding foi editado nesta auditoria.
+- Achado enviado à coordenação e à interface antes da implementação do tour.
+
+Entrega em `revisao`, reservas liberadas para integração.

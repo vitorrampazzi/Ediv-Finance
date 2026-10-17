@@ -29,6 +29,8 @@ import { useAuth } from "../context/authContext";
 import { roleLabels, userCan } from "../lib/permissions";
 import { NotificationsMenu } from "../components/NotificationsMenu";
 import { ThemeToggle } from "../components/ThemeToggle";
+import { AccountOnboarding } from "../components/AccountOnboarding";
+import { requestOnboardingReplay } from "../lib/onboarding";
 import { PageContent } from "../components/PageContent";
 import "../components/navigation-chrome.css";
 
@@ -39,6 +41,7 @@ const navigation = [
     shortLabel: "Início",
     icon: House,
     end: true,
+    tour: "inicio",
   },
   {
     to: "/app/ranking",
@@ -46,6 +49,7 @@ const navigation = [
     shortLabel: "Ranking",
     icon: TrendingUp,
     end: false,
+    tour: "ranking",
   },
   {
     to: "/app/analises",
@@ -53,6 +57,7 @@ const navigation = [
     shortLabel: "Análises",
     icon: BarChart3,
     end: false,
+    tour: "analises",
   },
   {
     to: "/app/aprender",
@@ -60,6 +65,7 @@ const navigation = [
     shortLabel: "Aprender",
     icon: BookOpen,
     end: false,
+    tour: "aprender",
   },
 ];
 
@@ -89,17 +95,20 @@ function NavigationLink({
   icon: Icon,
   end = false,
   collapsed = false,
+  tour,
 }: {
   to: string;
   label: string;
   icon: typeof TrendingUp;
   end?: boolean;
   collapsed?: boolean;
+  tour?: string;
 }) {
   const reducedMotion = useReducedMotion();
   return (
     <NavLink
       to={to}
+      data-tour={tour}
       end={end}
       title={collapsed ? label : undefined}
       aria-label={collapsed ? label : undefined}
@@ -133,10 +142,12 @@ function ProfileMenu({
   name,
   email,
   onLogout,
+  onRestart,
 }: {
   name: string;
   email: string;
   onLogout: () => Promise<void>;
+  onRestart: () => void;
 }) {
   const { key: routeKey } = useLocation();
   const [menuRoute, setMenuRoute] = useState<string | null>(null);
@@ -185,6 +196,7 @@ function ProfileMenu({
     <div className="relative" ref={ref}>
       <button
         ref={trigger}
+        data-tour="conta"
         type="button"
         onClick={() => setMenuRoute(open ? null : routeKey)}
         aria-label={`${open ? "Fechar" : "Abrir"} menu da conta de ${name}`}
@@ -282,6 +294,16 @@ function ProfileMenu({
                   {logoutError}
                 </p>
               )}
+              <button
+                type="button"
+                className="flex min-h-11 w-full items-center gap-3 rounded-lg px-3 text-sm text-evo-textSec hover:bg-evo-bgSec"
+                onClick={() => {
+                  setMenuRoute(null);
+                  onRestart();
+                }}
+              >
+                <BookOpen size={16} aria-hidden="true" /> Rever introdução
+              </button>
               <button
                 type="button"
                 disabled={loggingOut}
@@ -447,9 +469,12 @@ export const DashboardLayout = () => {
             )}
           </div>
           <div className="flex shrink-0 items-center gap-2 md:gap-4">
-            <ThemeToggle />
+            <span data-tour="tema" className="inline-flex">
+              <ThemeToggle />
+            </span>
             <Link
               to="/app/conversas"
+              data-tour="suporte"
               aria-label="Dúvidas e suporte"
               className="ediv-chrome-icon inline-flex min-h-11 min-w-11 items-center justify-center"
             >
@@ -461,6 +486,7 @@ export const DashboardLayout = () => {
                 name={user.name}
                 email={user.email}
                 onLogout={logout}
+                onRestart={requestOnboardingReplay}
               />
             )}
           </div>
@@ -486,6 +512,7 @@ export const DashboardLayout = () => {
       </div>
 
       <MobileNavigation />
+      <AccountOnboarding />
     </div>
   );
 };
@@ -498,10 +525,11 @@ function MobileNavigation() {
         aria-label="Navegação móvel"
         className="ediv-mobile-navigation fixed inset-x-0 bottom-0 z-30 grid grid-cols-4 px-1 pb-[env(safe-area-inset-bottom)] pt-1 lg:hidden"
       >
-        {navigation.map(({ to, shortLabel, icon: Icon, end }) => (
+        {navigation.map(({ to, shortLabel, icon: Icon, end, tour }) => (
           <NavLink
             key={to}
             to={to}
+            data-tour={tour}
             end={end}
             className={({ isActive }) =>
               `ediv-mobile-navigation-link flex min-h-14 flex-col items-center justify-center gap-1 text-xs font-medium ${isActive ? "is-current" : ""}`

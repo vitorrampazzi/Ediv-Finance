@@ -1,11 +1,12 @@
 import { useId } from "react";
-import { ArrowUpRight, Check } from "lucide-react";
+import { ArrowUpRight } from "lucide-react";
 import { Link } from "react-router-dom";
 import {
   hasResearchModule,
   researchModuleLink,
   researchModules,
 } from "../../research-modules.mjs";
+import { researchModuleSummary } from "../../research-module-summary.mjs";
 import type { Entry } from "../lib/ranking";
 import { CompanyLogo } from "./CompanyLogo";
 import "./research-ranking-table.css";
@@ -24,9 +25,10 @@ export function ResearchRankingTable({
     <div className="research-table">
       <p id={hintId} className="research-table-hint">
         {demo
-          ? "Demonstração · empresas e conteúdos fictícios. "
+          ? "Demonstração · empresas e valores fictícios, sem dados de mercado. "
           : "Conteúdos da publicação selecionada. "}
-        Abra a empresa para ler a pesquisa ou selecione um módulo disponível.
+        Confira os resumos e abra cada módulo para consultar o conteúdo
+        completo.
         <span className="research-table-scroll-hint">
           {" "}
           Deslize a tabela para consultar todos os módulos.
@@ -41,7 +43,7 @@ export function ResearchRankingTable({
       >
         <table className="research-modules-table">
           <caption className="sr-only">
-            Disponibilidade dos módulos por empresa
+            Resumos dos módulos de pesquisa por empresa
             {demo
               ? " — demonstração com dados fictícios"
               : " — publicação selecionada"}
@@ -89,25 +91,46 @@ export function ResearchRankingTable({
                       </span>
                     </Link>
                   </th>
-                  {researchModules.map(({ key, label }) => (
-                    <td key={key}>
-                      {hasResearchModule(entry, key) ? (
-                        <Link
-                          to={researchModuleLink(destination, key)}
-                          className="research-table-module-link"
-                          aria-label={`${label} de ${entry.companyName} (${entry.ticker}): disponível${demo ? " na demonstração" : ""}`}
-                        >
-                          <Check size={13} aria-hidden="true" />
-                          <span>Disponível</span>
-                          <ArrowUpRight size={13} aria-hidden="true" />
-                        </Link>
-                      ) : (
-                        <span className="research-table-unavailable">
-                          Não publicado
-                        </span>
-                      )}
-                    </td>
-                  ))}
+                  {researchModules.map(({ key, label }) => {
+                    const summary = researchModuleSummary(entry, key, demo);
+                    return (
+                      <td key={key}>
+                        {hasResearchModule(entry, key) ? (
+                          <Link
+                            to={researchModuleLink(destination, key)}
+                            className="research-table-module-link"
+                            aria-label={`${label} de ${entry.companyName} (${entry.ticker}): ${summary.map((item) => [item.label, item.value].filter(Boolean).join(": ")).join("; ")}. Abrir módulo${demo ? ". Valores fictícios" : ""}`}
+                          >
+                            <span className="research-table-summary">
+                              {summary.map((item, index) => (
+                                <span
+                                  className="research-table-summary-item"
+                                  key={index}
+                                >
+                                  {item.label && (
+                                    <span className="research-table-summary-label">
+                                      {item.label}
+                                    </span>
+                                  )}
+                                  <span className="research-table-summary-value">
+                                    {item.value}
+                                  </span>
+                                </span>
+                              ))}
+                            </span>
+                            <span className="research-table-module-action">
+                              Ver módulo{" "}
+                              <ArrowUpRight size={13} aria-hidden="true" />
+                            </span>
+                          </Link>
+                        ) : (
+                          <span className="research-table-unavailable">
+                            Não publicado
+                          </span>
+                        )}
+                      </td>
+                    );
+                  })}
                 </tr>
               );
             })}

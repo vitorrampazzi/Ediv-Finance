@@ -5,6 +5,40 @@ revalide comportamento no código antes de mudar contratos.
 
 ## Objetivo atual
 
+### Rodada4 — introdução guiada e valores de exemplo (17/10/2026)
+
+Usuário pediu tour após cadastro com modais obrigatórios, cada etapa apontando
+para uma área do menu/página, e informações fictícias nas seis colunas do ranking
+para visualizar o resultado. Esta autorização substitui a decisão anterior de
+mostrar somente disponibilidade; vale exclusivamente para a demonstração, sem
+alterar pesquisas reais ou apresentar métricas inventadas como dados de mercado.
+
+Card lido: https://trello.com/c/KiC5f6YA/11 — introdução na home logada e escolha
+inicial de aparência; sem descrição adicional. Cadastro exige confirmação de
+e-mail e login; preservar esse contrato e iniciar tour no primeiro acesso verificado.
+
+Aceitação: seis etapas (aparência, início, ranking, análises, aprender, conta com
+suporte), avanço/volta explícitos, Escape/fundo não dispensam, foco no modal e alvo
+destacado visível ou fallback central; navegação replace, retorno ao destino
+original incluindo query/hash, retomada do passo após reload, opção Rever introdução.
+Usuário reforçou que LOGIN NORMAL NÃO INICIA tour. Somente next gerado na jornada
+de cadastro leva sinal de introdução ao primeiro login após confirmação. Não usar
+createdAt/idade da conta como gatilho; conta nova em login comum também não inicia.
+Etapa interrompida pode ser retomada; concluída só reabre por replay voluntário.
+Estado por user.id/version no navegador,
+sem prometer sincronização cross-device; storage bloqueado usa memória e avisa.
+Auditoria confirmou ausência de campo adequado no banco; nenhuma migração.
+
+Tabela: valores fictícios coerentes com o detalhe de DEMO1..6 em cada coluna,
+texto de demonstração explícito, links granulares/empresa preservados; conteúdo
+real deriva apenas de texto publicado e campos ausentes continuam honestos.
+Verificar desktop/320px, teclado e ambos temas sem rolagem da página.
+
+Divisão: interface GuidedTour/steps/CSS/targets/Layout; backend tabela/resumos
+e testes; coordenação gatilho/store/AccountOnboarding/RegisterPage, contexto,
+ambiente local isolado, validação final e main conforme autorização vigente.
+Todos reservam arquivos/relatos; sem produção para testes de cadastro/banco.
+
 ### Nova rodada — refinamento visual e ranking (17/10/2026)
 
 Usuário pediu: controle de tema por clique no mesmo botão (alternar claro/escuro),
@@ -33,6 +67,11 @@ EXCETO IncomeRanking.tsx/income-ranking.css (backend) e backend = ranking tabela
 helper/campos de disponibilidade e testes. Coordenação = Excel, contexto,
 integração/browser e publicação na main conforme autorização vigente. Não alterar
 contratos/API/persistência/banco salvo necessidade demonstrada e combinada.
+
+Rodada concluída: publicada na main em14464bd3675cd939d584eeb1777afbe6a6719057,
+deploy Vercel success confirmado e tabela/botão conferidos no domínio oficial.
+51 testes, lint e build Node22 passaram. Evidências no relato da coordenação.
+Planilha original, dados publicados e QA não foram alterados.
 
 Organizar três sessões colaborativas da Escola do Dividendo com engenharia de
 harness: contexto persistente, escopo reservado, verificações executáveis,
