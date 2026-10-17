@@ -1,6 +1,6 @@
 import { useSyncExternalStore } from "react";
 
-export type ThemePreference = "system" | "light" | "dark";
+export type ThemePreference = "light" | "dark";
 type ThemeSnapshot = Readonly<{
   theme: "light" | "dark";
   preference: ThemePreference;
@@ -17,7 +17,7 @@ declare global {
 }
 
 // Stable SSR snapshot; all theme-dependent paint is controlled by root CSS tokens.
-const serverSnapshot: ThemeSnapshot = { theme: "dark", preference: "system" };
+const serverSnapshot: ThemeSnapshot = { theme: "dark", preference: "dark" };
 const getServerSnapshot = () => serverSnapshot;
 const getSnapshot = () => window.edivTheme?.getSnapshot() ?? serverSnapshot;
 const subscribe = (listener: () => void) =>

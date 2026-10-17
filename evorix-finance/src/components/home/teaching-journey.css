@@ -41,11 +41,6 @@
   color: var(--ediv-accent);
   font-size: 0.8125rem;
 }
-.ph-teaching-step-label > span,
-.ph-teaching-number {
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-  font-size: 0.75rem;
-}
 .ph-teaching-step h3 {
   font-size: clamp(1.75rem, 3vw, 2.25rem);
   line-height: 1.15;
@@ -170,9 +165,6 @@
   }
   .ph-teaching-stage-key .ph-is-current {
     color: var(--ediv-accent);
-  }
-  .ph-teaching-number {
-    margin-right: 0.25rem;
   }
   .ph-teaching-scene-stack {
     display: grid;

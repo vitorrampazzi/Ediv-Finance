@@ -107,7 +107,7 @@ function MemberRankingHighlights() {
                 ).toLocaleDateString("pt-BR")}
           </p>
           <div className="mt-3 border-t border-evo-border">
-            {entries.slice(0, 3).map((entry, index) => (
+            {entries.slice(0, 3).map((entry) => (
               <Link
                 key={entry.ticker}
                 to={
@@ -119,15 +119,9 @@ function MemberRankingHighlights() {
                     ? "&publication=" + encodeURIComponent(publication.id)
                     : "")
                 }
-                className="group grid min-w-0 grid-cols-[1.5rem_minmax(0,1fr)_auto] items-center gap-x-3 border-b border-evo-border py-4 transition-colors hover:bg-evo-bgSec focus-visible:outline focus-visible:outline-2 focus-visible:outline-evo-accent sm:grid-cols-[2rem_minmax(0,1fr)_auto_auto] sm:gap-x-6 sm:py-5"
+                className="group grid min-w-0 grid-cols-[minmax(0,1fr)_auto] items-center gap-x-3 border-b border-evo-border py-4 transition-colors hover:bg-evo-bgSec focus-visible:outline focus-visible:outline-2 focus-visible:outline-evo-accent sm:grid-cols-[minmax(0,1fr)_auto_auto] sm:gap-x-6 sm:py-5"
               >
-                <span
-                  aria-hidden="true"
-                  className="col-start-1 row-span-2 row-start-1 font-numbers text-xs text-evo-accent"
-                >
-                  {String(index + 1).padStart(2, "0")}
-                </span>
-                <div className="company-identity col-start-2 row-span-2 row-start-1">
+                <div className="company-identity col-start-1 row-span-2 row-start-1">
                   <CompanyLogo ticker={entry.ticker} demo={showingDemo} />
                   <div className="company-identity-copy">
                     <h3 className="font-semibold group-hover:text-evo-accent">
@@ -138,18 +132,18 @@ function MemberRankingHighlights() {
                     </p>
                   </div>
                 </div>
-                <p className="col-start-3 row-start-1 text-right font-numbers text-xl">
+                <p className="col-start-2 row-start-1 text-right font-numbers text-xl">
                   <span className="mb-1 block font-sans text-xs text-evo-textSec">
                     {showingDemo ? "Potencial simulado" : "Potencial informado"}
                   </span>
                   {Number(entry.expectedReturnPercent).toLocaleString("pt-BR")}%
                 </p>
-                <p className="col-start-3 row-start-2 mt-1 text-right text-xs text-evo-textSec">
+                <p className="col-start-2 row-start-2 mt-1 text-right text-xs text-evo-textSec">
                   {entry.horizonMonths
                     ? entry.horizonMonths + " meses"
                     : "Prazo não informado"}
                 </p>
-                <span className="col-start-2 col-end-4 mt-2 text-xs text-evo-accent sm:col-start-4 sm:col-end-5 sm:row-span-2 sm:row-start-1 sm:mt-0 sm:text-sm">
+                <span className="col-span-2 mt-2 text-xs text-evo-accent sm:col-span-1 sm:col-start-3 sm:row-span-2 sm:row-start-1 sm:mt-0 sm:text-sm">
                   {showingDemo ? "Abrir exemplo" : "Ler pesquisa"}
                 </span>
               </Link>

@@ -112,6 +112,12 @@ function MemberStockResearch() {
         "estatisticas",
         "fundamentos",
         "fontes",
+        "pesquisa-balanco",
+        "pesquisa-dre",
+        "pesquisa-fluxo-caixa",
+        "pesquisa-empresa",
+        "pesquisa-divida-liquida",
+        "pesquisa-estatisticas",
       ].includes(anchor)
     )
       return;
@@ -420,7 +426,7 @@ function MemberStockResearch() {
           </section>
           <section id="fundamentos" className={section}>
             <p className="text-xs font-semibold uppercase tracking-widest text-evo-accent">
-              04 / Dados da pesquisa
+              Dados da pesquisa
             </p>
             <h2 className="mt-3 text-2xl font-semibold">
               Fundamentos e documentos
@@ -438,7 +444,7 @@ function MemberStockResearch() {
           </section>
           <section id="fontes" className={section}>
             <p className="text-xs font-semibold uppercase tracking-widest text-evo-accent">
-              05 / Origem e contexto
+              Origem e contexto
             </p>
             <h2 className="mt-3 text-2xl font-semibold">
               Fontes e versão da pesquisa

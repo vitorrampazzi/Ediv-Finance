@@ -185,3 +185,70 @@ conseguiram conexão pelas ferramentas web/fetch deste ambiente. Assim, a
 disponibilidade específica do logo MWET4 não foi confirmada nesta sessão;
 continua valendo fallback honesto se o provedor não possuir a imagem.
 Coordenação fará validação remota e commit complementar; nada publicado por backend.
+
+## Rodada: ranking tabular com módulos do Excel — 17/10/2026
+
+### Entrega
+
+`IncomeRanking` agora usa tabela compacta com cabeçalho cinza, divisórias
+horizontais e primeira coluna logo + ticker + nome. Removidas a coluna decorativa
+de posição e as etapas ornamentais 01/02/03. As demais seis colunas correspondem
+ao escopo confirmado pela coordenação: Balanço patrimonial, DRE, Fluxo de caixa,
+Informações da empresa, Dívida líquida e Estatísticas.
+
+Cada campo string preenchido após `trim` mostra **Disponível** com link ao
+conteúdo; string vazia/null e dados de tipo numérico não viram disponibilidade.
+Texto `"0"` publicado é conteúdo disponível. Ausência mostra **Não publicado** sem
+link. O modo demo mantém identificação explícita de conteúdo/empresas fictícios.
+Não foi importada a lista de tickers do Excel nem criado qualquer valor financeiro.
+
+A tabela não usa clique na linha: são links normais para empresa e módulos,
+permitindo teclado, menu de contexto e nova aba. `researchLink` existente preserva
+filtros, ordem, modo e publicação; o helper acrescenta somente a âncora do módulo.
+Filtros, ordenação, importação, editor, histórico e comparação foram preservados.
+Potencial/preço-alvo/horizonte continuam na pesquisa e nos dados, fora da grade.
+
+### Contrato de âncoras e responsividade
+
+Helper compartilhado `research-modules.mjs` + `.d.mts` define campos/labels/âncoras:
+`pesquisa-balanco`, `pesquisa-dre`, `pesquisa-fluxo-caixa`, `pesquisa-empresa`,
+`pesquisa-divida-liquida`, `pesquisa-estatisticas`.
+
+`RankingFundamentals` publica esses IDs somente no detalhe `initiallyOpen`,
+evitando duplicatas na prévia de importação. Ao navegar para hash permitido,
+layoutEffect abre o `details` via ref antes de scrollar ao conteúdo. Se a área
+tiver sido recolhida manualmente, nova navegação a módulo também a abre.
+A interface confirmou inclusão dos seis IDs na whitelist de `StockResearch`
+e preservação de `initiallyOpen`; este arquivo não foi editado por backend.
+
+Tabela semântica com caption, `scope=col/row`, região de rolagem rotulada e focável.
+Primeira coluna sticky; rolagem local no mobile, sem trocar a tabela por cards.
+Coluna empresa176px em viewport pequeno, cabeçalho cinza por tokens nos dois temas,
+linhas de aproximadamente60px e links de pelo menos44px de altura. Instrução de
+scroll considera a largura do container real; `scroll-padding-inline-start`
+compensa a coluna fixa ao navegar horizontalmente pelo teclado.
+
+### Arquivos e verificações
+
+- Alterados: `src/pages/IncomeRanking.tsx`, `src/pages/income-ranking.css`,
+  `src/components/RankingFundamentals.tsx` e este relato.
+- Novos: `src/components/ResearchRankingTable.tsx`,
+  `src/components/research-ranking-table.css`, `research-modules.mjs`,
+  `research-modules.d.mts`, `tests/research-modules.test.mjs`.
+- Node22: **3/3 testes focados passaram** (seis módulos, presença textual e
+  whitespace/tipos, preservação de query/versão/mode e substituição apenas do hash).
+- Node22: **lint focado e tsc -b passaram** após remover formatter monetário que
+  ficou sem uso ao retirar as antigas colunas.
+- SSR Vite/ReactDOMServer: **passou** para7 headers, header da linha,2 links de
+  módulos preenchidos/4 ausentes, caption, query preservada, seis âncoras no detalhe
+  e ausência de IDs na prévia. Fixture SSR foi corrigida para respeitar contrato
+  tipado de fundamentos (string/null); o teste puro cobre rejeição de número.
+- Skill React aplicada novamente: hooks incondicionais, lista estável por ticker/
+  chave, sem fetch adicional, links sem handlers de clique que impeçam nova aba,
+  decoração SVG oculta para leitor e estado de abertura isolado por ref.
+- `harness check` passou. A coordenação informou **51 testes globais passando**.
+  Browser final em320px, ambos temas, teclado/coluna fixa e navegação granular
+  será validado pela coordenação no preview existente; não iniciei outro servidor.
+
+Reservas liberadas para revisão integrada. Nenhuma publicação, instalação,
+alteração de banco ou de valores financeiros feita por esta sessão.

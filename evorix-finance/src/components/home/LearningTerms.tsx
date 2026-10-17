@@ -35,9 +35,6 @@ export function LearningTerms() {
               style={{ "--ph-delay": `${index * 60}ms` } as CSSProperties}
             >
               <summary className="ph-term-summary">
-                <span className="ph-term-number" aria-hidden="true">
-                  0{index + 1}
-                </span>
                 <strong>{term.term}</strong>
                 <span className="ph-term-hint">{term.hint}</span>
                 <span className="ph-term-control">

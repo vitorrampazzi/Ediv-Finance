@@ -107,35 +107,16 @@ svg :is([stroke="#95ccb4" i], [stroke="#82b7a0" i]) {
   flex-shrink: 0;
   width: 44px;
   height: 44px;
-}
-
-.ediv-theme-select {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  appearance: none;
-  border: 0;
-  border-radius: inherit;
+  border: 1px solid transparent;
   cursor: pointer;
-  background: transparent;
-  color: transparent;
-}
-
-.ediv-theme-select option {
-  color: var(--ediv-text);
-  background: var(--ediv-surface);
 }
 
 .ediv-theme-control svg {
   pointer-events: none;
 }
-.ediv-theme-control:focus-within {
+.ediv-theme-control:focus-visible {
   outline: 2px solid var(--ediv-accent);
   outline-offset: 3px;
-}
-.ediv-theme-select:focus-visible {
-  outline: none;
 }
 .ediv-theme-light-icon {
   display: none;
@@ -149,15 +130,7 @@ svg :is([stroke="#95ccb4" i], [stroke="#82b7a0" i]) {
 
 @media (forced-colors: active) {
   .ediv-theme-control {
-    width: auto;
-  }
-  .ediv-theme-control svg {
-    display: none;
-  }
-  .ediv-theme-select {
-    position: static;
-    width: auto;
-    appearance: auto;
+    border-color: ButtonText;
     color: ButtonText;
   }
 }

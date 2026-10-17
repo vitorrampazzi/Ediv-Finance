@@ -2,7 +2,6 @@ import { useRankingPublication } from "../hooks/useRankingPublication";
 import { useState } from "react";
 import { Link, useLocation, useSearchParams } from "react-router-dom";
 import {
-  ArrowUpRight,
   BookOpen,
   FileSpreadsheet,
   Search,
@@ -22,7 +21,7 @@ import { OrbitCoins } from "../components/OrbitCoins";
 import { MobileDisclosure } from "../components/MobileDisclosure";
 import { ResearchEditor } from "../components/ResearchEditor";
 import { PublicationReview } from "../components/PublicationReview";
-import { getResearchCoverage } from "../lib/researchCoverage";
+import { ResearchRankingTable } from "../components/ResearchRankingTable";
 import { userCan } from "../lib/permissions";
 import {
   CompanyComparison,
@@ -30,10 +29,6 @@ import {
 } from "../components/ResearchTools";
 import "./income-ranking.css";
 
-const money = new Intl.NumberFormat("pt-BR", {
-  style: "currency",
-  currency: "BRL",
-});
 const noEntries: Entry[] = [];
 const rankingFilterKeys = ["busca", "setor", "prazo", "ordem"] as const;
 type RankingFilterKey = (typeof rankingFilterKeys)[number];
@@ -353,28 +348,19 @@ function MemberIncomeRanking() {
       >
         {[
           [
-            "01",
             "Entenda a tese",
             "Abra a empresa para conhecer as premissas que sustentam o cenário.",
           ],
           [
-            "02",
             "Leia os riscos",
             "Confira o que pode contrariar a previsão antes de comparar percentuais.",
           ],
           [
-            "03",
             "Confira a versão",
             "Use o prazo, a data e as fontes da publicação para dar contexto aos números.",
           ],
-        ].map(([number, title, text]) => (
-          <div key={number} className="mb-3 flex items-start gap-3 sm:mb-0">
-            <span
-              className="pt-0.5 font-numbers text-sm text-evo-accent"
-              aria-hidden="true"
-            >
-              {number}
-            </span>
+        ].map(([title, text]) => (
+          <div key={title} className="mb-3 sm:mb-0">
             <div>
               <h2 className="text-sm font-semibold">{title}</h2>
               <p className="mt-1 text-xs leading-5 text-evo-textSec">{text}</p>
@@ -832,129 +818,11 @@ function MemberIncomeRanking() {
             </button>
           </Card>
         ) : (
-          <div className="research-ranking">
-            <div className="research-ranking-heading" aria-hidden="true">
-              <span>Pos.</span>
-              <span>Empresa / setor</span>
-              <span className="text-right">
-                {showingDemo ? "Potencial simulado" : "Potencial informado"}
-              </span>
-              <span className="text-right">
-                {showingDemo ? "Preço-alvo simulado" : "Preço-alvo informado"}
-              </span>
-              <span className="text-right">Horizonte</span>
-              <span />
-            </div>
-            <ol
-              className="divide-y divide-evo-border border-y border-evo-border"
-              aria-label="Pesquisas de ações"
-            >
-              {entries.map((entry) => {
-                const coverage = getResearchCoverage(entry);
-                return (
-                  <li key={entry.ticker}>
-                    <article>
-                      <Link
-                        to={researchLink(entry.ticker)}
-                        className="research-ranking-row group transition-colors hover:bg-evo-accent/5 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-evo-accent"
-                        aria-label={
-                          "Abrir pesquisa de " +
-                          entry.companyName +
-                          " (" +
-                          entry.ticker +
-                          ")"
-                        }
-                      >
-                        <span
-                          className="research-ranking-position font-numbers text-lg text-evo-textSec"
-                          aria-hidden="true"
-                        >
-                          {String(entry.rank).padStart(2, "0")}
-                        </span>
-                        <div className="research-ranking-company min-w-0">
-                          <div className="company-identity">
-                            <CompanyLogo
-                              ticker={entry.ticker}
-                              demo={showingDemo}
-                            />
-                            <h3 className="break-words text-xl font-semibold group-hover:text-evo-accent">
-                              {entry.ticker}
-                              <span className="mt-1 block text-sm font-normal text-evo-textSec">
-                                {entry.companyName}
-                              </span>
-                            </h3>
-                          </div>
-                          <p className="mt-2 text-xs text-evo-textSec">
-                            {entry.sector || "Setor não informado"}
-                            {showingDemo ? " · Empresa fictícia" : ""}
-                          </p>
-                          <p className="research-ranking-excerpt whitespace-pre-wrap break-words text-sm leading-relaxed text-evo-textSec">
-                            {entry.thesis ||
-                              "A justificativa ainda não foi informada pelo autor."}
-                          </p>
-                          <p className="research-ranking-coverage text-xs text-evo-textSec">
-                            {coverage.filled}/{coverage.total} campos de leitura
-                            preenchidos
-                            {entry.referencePeriod
-                              ? ` · ${entry.referencePeriod}`
-                              : " · Período não informado"}
-                          </p>
-                        </div>
-                        <ArrowUpRight
-                          size={21}
-                          className="research-ranking-arrow shrink-0 text-evo-accent"
-                          aria-hidden="true"
-                        />
-                        <dl className="research-ranking-metrics">
-                          <div>
-                            <dt className="text-xs text-evo-textSec">
-                              {showingDemo
-                                ? "Potencial simulado"
-                                : "Potencial informado"}
-                            </dt>
-                            <dd
-                              className={`mt-1 font-numbers text-xl font-semibold ${Number(entry.expectedReturnPercent) < 0 ? "text-evo-red" : "text-evo-accent"}`}
-                            >
-                              {Number(
-                                entry.expectedReturnPercent,
-                              ).toLocaleString("pt-BR")}
-                              %
-                            </dd>
-                          </div>
-                          <div>
-                            <dt className="text-xs text-evo-textSec">
-                              {showingDemo
-                                ? "Preço-alvo simulado"
-                                : "Preço-alvo informado"}
-                            </dt>
-                            <dd className="mt-1 font-numbers text-lg">
-                              {entry.targetPrice
-                                ? money.format(Number(entry.targetPrice))
-                                : "Não informado"}
-                            </dd>
-                          </div>
-                          <div>
-                            <dt className="text-xs text-evo-textSec">
-                              Horizonte
-                            </dt>
-                            <dd className="mt-1 font-numbers text-lg">
-                              {entry.horizonMonths
-                                ? entry.horizonMonths + " meses"
-                                : "Não informado"}
-                            </dd>
-                          </div>
-                        </dl>
-                        <span className="research-ranking-open inline-flex items-center gap-2 text-xs font-semibold text-evo-accent">
-                          Ler tese, história e indicadores{" "}
-                          <ArrowUpRight size={14} aria-hidden="true" />
-                        </span>
-                      </Link>
-                    </article>
-                  </li>
-                );
-              })}
-            </ol>
-          </div>
+          <ResearchRankingTable
+            entries={entries}
+            demo={showingDemo}
+            researchLink={researchLink}
+          />
         )}
       </section>
       {!showingDemo && current && ranking.sourceFileName && (

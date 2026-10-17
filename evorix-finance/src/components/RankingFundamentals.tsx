@@ -8,6 +8,12 @@ import {
   LockKeyhole,
 } from "lucide-react";
 import { IndicatorHelp } from "./ResearchTools";
+import { useLayoutEffect, useRef } from "react";
+import { useLocation } from "react-router-dom";
+import {
+  researchModuleAnchor,
+  researchModules,
+} from "../../research-modules.mjs";
 
 export type RankingFundamentalData = {
   balanceSheet?: string | null;
@@ -46,6 +52,22 @@ export function RankingFundamentals({
   locked?: boolean;
   initiallyOpen?: boolean;
 }) {
+  const detailsRef = useRef<HTMLDetailsElement>(null);
+  const { hash } = useLocation();
+  useLayoutEffect(() => {
+    if (
+      !initiallyOpen ||
+      locked ||
+      !researchModules.some(({ anchor }) => hash === `#${anchor}`)
+    )
+      return;
+    if (detailsRef.current) {
+      detailsRef.current.open = true;
+      document
+        .getElementById(hash.slice(1))
+        ?.scrollIntoView({ block: "start", behavior: "instant" });
+    }
+  }, [hash, data, initiallyOpen, locked]);
   const filled = modules.filter(([key]) => Boolean(data[key]?.trim())).length;
   const maxRevenue = Math.max(
     1,
@@ -99,6 +121,7 @@ export function RankingFundamentals({
     );
   return (
     <details
+      ref={detailsRef}
       className="mt-4 rounded-lg border border-evo-border"
       open={
         initiallyOpen ||
@@ -186,7 +209,12 @@ export function RankingFundamentals({
           {modules.map(([key, label, Icon]) => (
             <section
               key={key}
-              className="min-w-0 rounded-lg border border-evo-border bg-evo-bgMain p-4"
+              id={
+                initiallyOpen
+                  ? (researchModuleAnchor(key) ?? undefined)
+                  : undefined
+              }
+              className="min-w-0 scroll-mt-40 rounded-lg border border-evo-border bg-evo-bgMain p-4"
             >
               <div className="flex items-start gap-2">
                 <Icon

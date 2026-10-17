@@ -49,7 +49,7 @@ function boot({ saved = null, dark = false, blocked = false } = {}) {
     getStored: () => stored,
     systemChange: (value) => {
       media.matches = value;
-      events.get("media:change")();
+      events.get("media:change")?.();
     },
     storageChange: (value, key = "ediv-appearance-v1") =>
       events.get("storage")({ key, newValue: value, storageArea: storage }),
@@ -71,30 +71,32 @@ test("boot applies saved appearance before React and sets browser chrome color",
   );
 });
 
-test("system preference follows live changes until an explicit override is made", () => {
-  const page = boot({ dark: true });
-  assert.equal(page.store.getSnapshot().theme, "dark");
-  page.systemChange(false);
-  assert.equal(page.store.getSnapshot().theme, "light");
-  page.store.setPreference("dark");
-  page.systemChange(false);
-  assert.equal(page.store.getSnapshot().theme, "dark");
-  assert.equal(page.getStored(), "dark");
-  page.store.setPreference("system");
-  assert.equal(page.getStored(), null);
-  assert.equal(page.store.getSnapshot().theme, "light");
+test("app starts dark independent of operating system and ignores system changes", () => {
+  for (const dark of [false, true]) {
+    const page = boot({ dark });
+    assert.equal(page.store.getSnapshot().theme, "dark");
+    page.systemChange(!dark);
+    assert.equal(page.store.getSnapshot().theme, "dark");
+    page.store.setPreference("light");
+    page.systemChange(dark);
+    assert.equal(page.store.getSnapshot().theme, "light");
+  }
 });
 
-test("reload preserves a valid choice; malformed storage uses system", () => {
+test("reload preserves valid choices; malformed or legacy system storage uses dark", () => {
   const page = boot();
-  page.store.setPreference("dark");
+  page.store.setPreference("light");
   assert.equal(
     boot({ saved: page.getStored() }).store.getSnapshot().theme,
-    "dark",
+    "light",
   );
   assert.equal(
     boot({ saved: "{invalid}", dark: true }).store.getSnapshot().preference,
-    "system",
+    "dark",
+  );
+  assert.equal(
+    boot({ saved: "system", dark: false }).store.getSnapshot().theme,
+    "dark",
   );
 });
 
@@ -104,18 +106,18 @@ test("unavailable storage preserves an interactive page and in-memory override",
   assert.equal(page.store.getSnapshot().theme, "light");
   page.systemChange(true);
   assert.equal(page.store.getSnapshot().theme, "light");
-  page.store.setPreference("system");
+  page.store.setPreference("dark");
   assert.equal(page.store.getSnapshot().theme, "dark");
 });
 
-test("cross-tab updates synchronize appearance and clearing storage restores system", () => {
+test("cross-tab updates synchronize appearance and clearing storage restores dark", () => {
   const page = boot({ dark: true });
   page.storageChange("light");
   assert.equal(page.store.getSnapshot().theme, "light");
   page.storageChange("dark", "unrelated");
   assert.equal(page.store.getSnapshot().theme, "light");
   page.storageChange(null, null);
-  assert.equal(page.store.getSnapshot().preference, "system");
+  assert.equal(page.store.getSnapshot().preference, "dark");
   assert.equal(page.store.getSnapshot().theme, "dark");
 });
 
@@ -126,13 +128,13 @@ test("subscribers update only on a changed snapshot and can unsubscribe", () => 
   const initial = page.store.getSnapshot();
   page.systemChange(false);
   assert.equal(page.store.getSnapshot(), initial);
-  page.store.setPreference("dark");
-  assert.equal(updates, 1);
-  unsubscribe();
   page.store.setPreference("light");
   assert.equal(updates, 1);
+  unsubscribe();
+  page.store.setPreference("dark");
+  assert.equal(updates, 1);
   page.store.setPreference("unexpected");
-  assert.equal(page.store.getSnapshot().preference, "light");
+  assert.equal(page.store.getSnapshot().preference, "dark");
 });
 
 test("both palettes retain readable semantic text against main surfaces", () => {

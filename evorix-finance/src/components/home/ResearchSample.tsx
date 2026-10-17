@@ -37,9 +37,6 @@ export function ResearchSample() {
               style={{ "--ph-delay": `${index * 60}ms` } as CSSProperties}
             >
               <summary className="ph-sample-summary">
-                <span className="ph-sample-position" aria-hidden="true">
-                  {String(index + 1).padStart(2, "0")}
-                </span>
                 <span className="research-sample-identity">
                   <CompanyLogo ticker={entry.ticker} demo size="sm" />
                   <span className="ph-sample-company">

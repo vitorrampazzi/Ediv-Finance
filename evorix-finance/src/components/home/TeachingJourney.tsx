@@ -385,7 +385,6 @@ export function TeachingJourney() {
                   key={step.name}
                   className={active === index ? "ph-is-current" : undefined}
                 >
-                  <span className="ph-teaching-number">0{index + 1}</span>{" "}
                   {step.name}
                 </span>
               ))}
@@ -417,10 +416,7 @@ export function TeachingJourney() {
                     stepRefs.current[index] = element;
                   }}
                 >
-                  <p className="ph-teaching-step-label">
-                    <span>0{index + 1}</span>
-                    {step.name}
-                  </p>
+                  <p className="ph-teaching-step-label">{step.name}</p>
                   <h3 className="display-title">{step.title}</h3>
                   <p className="ph-teaching-step-text">{step.text}</p>
                   <figure

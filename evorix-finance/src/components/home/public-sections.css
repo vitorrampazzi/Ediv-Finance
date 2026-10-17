@@ -15,7 +15,7 @@
 }
 .ph-sample-summary {
   display: grid;
-  grid-template-columns: 1.5rem minmax(0, 1fr) auto;
+  grid-template-columns: minmax(0, 1fr) auto;
   min-height: 100px;
   align-items: center;
   gap: 0.8rem;
@@ -35,20 +35,14 @@
 .ph-faq-item summary::marker {
   content: "";
 }
-.ph-sample-position,
 .ph-sample-potential strong,
-.ph-sample-horizon strong,
-.ph-term-number,
-.ph-checklist-points dt span {
+.ph-sample-horizon strong {
   font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
   font-variant-numeric: tabular-nums;
 }
-.ph-sample-position {
-  grid-row: span 2;
-  align-self: start;
-  padding-top: 0.2rem;
-  color: var(--ediv-accent);
-  font-size: 0.75rem;
+.ph-sample-summary > .research-sample-identity {
+  grid-column: 1;
+  grid-row: 1;
 }
 .ph-sample-company {
   display: grid;
@@ -69,7 +63,7 @@
 }
 .ph-sample-potential {
   display: grid;
-  grid-column: 2;
+  grid-column: 1;
   gap: 0.2rem;
 }
 .ph-sample-potential strong {
@@ -79,7 +73,7 @@
 }
 .ph-sample-horizon {
   display: grid;
-  grid-column: 3;
+  grid-column: 2;
   grid-row: 2;
   gap: 0.2rem;
   text-align: right;
@@ -90,7 +84,7 @@
   font-weight: 400;
 }
 .ph-sample-arrow {
-  grid-column: 3;
+  grid-column: 2;
   grid-row: 1;
   justify-self: end;
   color: var(--ediv-accent);
@@ -105,7 +99,7 @@
 .ph-sample-copy {
   display: grid;
   gap: 1.25rem;
-  padding: 0 0 1.5rem 2.3rem;
+  padding: 0 0 1.5rem;
 }
 .ph-sample-copy h3 {
   margin: 0 0 0.4rem;
@@ -141,13 +135,8 @@
   font-size: 1rem;
   font-weight: 600;
 }
-.ph-checklist-points dt span {
-  color: var(--ediv-accent);
-  font-size: 0.75rem;
-  font-weight: 400;
-}
 .ph-checklist-points dd {
-  margin: 0.4rem 0 0 2rem;
+  margin: 0.4rem 0 0;
   color: var(--ediv-muted);
   font-size: 0.875rem;
   line-height: 1.5;
@@ -161,7 +150,7 @@
 .ph-terms {
   border-block: 1px solid var(--ph-border, var(--ediv-line));
   background: var(--ediv-inset);
-  color-scheme: only dark;
+  color-scheme: inherit;
 }
 .ph-terms-grid {
   display: grid;
@@ -178,7 +167,7 @@
 }
 .ph-term-summary {
   display: grid;
-  grid-template-columns: 1.5rem minmax(0, 1fr);
+  grid-template-columns: minmax(0, 1fr);
   align-items: center;
   gap: 0.5rem 0.75rem;
   padding: 1rem;
@@ -193,19 +182,15 @@
   line-height: 1.35;
   letter-spacing: -0.025em;
 }
-.ph-term-number {
-  color: var(--ediv-accent);
-  font-size: 0.75rem;
-}
 .ph-term-hint {
-  grid-column: 2;
+  grid-column: 1;
   color: var(--ediv-muted);
   font-size: 0.875rem;
   line-height: 1.5;
 }
 .ph-term-control {
   display: flex;
-  grid-column: 2;
+  grid-column: 1;
   min-height: 30px;
   align-items: center;
   justify-content: space-between;
@@ -318,32 +303,26 @@
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
   .ph-sample-summary {
-    grid-template-columns: 2rem minmax(0, 1fr) auto auto 1.25rem;
+    grid-template-columns: minmax(0, 1fr) auto auto 1.25rem;
     gap: 1.25rem;
     min-height: 100px;
   }
-  .ph-sample-position {
-    grid-row: 1;
-    align-self: center;
-    padding-top: 0;
-  }
   .ph-sample-potential {
-    grid-column: 3;
+    grid-column: 2;
     grid-row: 1;
     text-align: right;
   }
   .ph-sample-horizon {
-    grid-column: 4;
+    grid-column: 3;
     grid-row: 1;
     gap: 0.6rem;
   }
   .ph-sample-arrow {
-    grid-column: 5;
+    grid-column: 4;
   }
   .ph-sample-copy {
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 2rem;
-    padding-left: 3.25rem;
   }
 }
 @media (min-width: 900px) {

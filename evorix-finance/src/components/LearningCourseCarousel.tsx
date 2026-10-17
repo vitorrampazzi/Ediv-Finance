@@ -155,7 +155,7 @@ export function LearningCourseCarousel({
         aria-label="Minicursos disponíveis"
       >
         <ul ref={trackRef} className="ediv-learning-course-track">
-          {courses.map((course, courseIndex) => {
+          {courses.map((course) => {
             const selected = course.id === selectedCourseId;
             const count = course.chapterIds.filter((id) =>
               completed.includes(id),
@@ -186,20 +186,16 @@ export function LearningCourseCarousel({
                   }
                 >
                   <div className="ediv-learning-course-masthead">
-                    <span
-                      className="ediv-learning-course-number"
-                      aria-hidden="true"
-                    >
-                      {String(courseIndex + 1).padStart(2, "0")}
+                    <span className="ediv-learning-course-state">
+                      {courseFinished && (
+                        <CheckCircle2 size={13} aria-hidden="true" />
+                      )}
+                      {courseFinished
+                        ? "Concluído"
+                        : selected
+                          ? "Em estudo"
+                          : "Disponível"}
                     </span>
-                    {courseFinished || selected ? (
-                      <span className="ediv-learning-course-state">
-                        {courseFinished && (
-                          <CheckCircle2 size={13} aria-hidden="true" />
-                        )}
-                        {courseFinished ? "Concluído" : "Em estudo"}
-                      </span>
-                    ) : null}
                   </div>
                   <p className="ediv-learning-eyebrow">{course.eyebrow}</p>
                   <h3 className="ediv-learning-course-title">{course.title}</h3>

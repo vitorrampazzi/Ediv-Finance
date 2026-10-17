@@ -216,18 +216,6 @@
   margin-bottom: 1.125rem;
 }
 
-.ediv-learning-course-number {
-  color: var(--learning-muted);
-  font-size: 0.875rem;
-  font-weight: 500;
-  font-variant-numeric: tabular-nums;
-  letter-spacing: 0.015em;
-}
-
-.ediv-learning-course-selected .ediv-learning-course-number {
-  color: var(--learning-accent);
-}
-
 .ediv-learning-course-state {
   display: inline-flex;
   align-items: center;
@@ -399,26 +387,6 @@
 .ediv-learning-lesson:active {
   background: var(--ediv-raised);
   transition-duration: 0ms;
-}
-
-.ediv-learning-lesson-cover {
-  display: flex;
-  flex: 0 0 1.75rem;
-  align-items: center;
-  justify-content: center;
-  min-height: 1.5rem;
-  color: var(--learning-muted);
-}
-
-.ediv-learning-lesson-selected .ediv-learning-lesson-cover {
-  color: var(--learning-accent);
-}
-
-.ediv-learning-lesson-number {
-  color: inherit;
-  font-size: 0.8125rem;
-  font-weight: 500;
-  font-variant-numeric: tabular-nums;
 }
 
 .ediv-learning-lesson-kicker {

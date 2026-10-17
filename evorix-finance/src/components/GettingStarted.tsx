@@ -83,18 +83,12 @@ export function GettingStarted({ compact = false }: GettingStartedProps) {
               action: "Aulas e exercícios",
               to: user ? "/app/aprender" : "/aprender",
             },
-          ].map(({ title, text, action, to }, index) => (
+          ].map(({ title, text, action, to }) => (
             <li key={title}>
               <Link
-                className="group grid min-h-11 grid-cols-[2rem_minmax(0,1fr)_1rem] items-start gap-x-3 py-4 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-evo-accent sm:grid-cols-[3rem_minmax(0,.75fr)_minmax(0,1fr)_1rem] sm:items-center sm:gap-x-6"
+                className="group grid min-h-11 grid-cols-[minmax(0,1fr)_1rem] items-start gap-x-3 py-4 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-evo-accent sm:grid-cols-[minmax(0,.75fr)_minmax(0,1fr)_1rem] sm:items-center sm:gap-x-6"
                 to={to}
               >
-                <span
-                  className="pt-0.5 font-mono text-xs text-evo-accent"
-                  aria-hidden="true"
-                >
-                  {String(index + 1).padStart(2, "0")}
-                </span>
                 <div className="min-w-0">
                   <h3 className="text-base font-semibold transition-colors group-hover:text-evo-accent sm:text-lg">
                     {title}
@@ -139,21 +133,21 @@ export function GettingStarted({ compact = false }: GettingStartedProps) {
           {[
             {
               Icon: ChartNoAxesCombined,
-              title: "1. Leia a pesquisa",
+              title: "Leia a pesquisa",
               text: "No ranking, abra uma empresa para consultar o cenário e as premissas da pesquisa.",
               to: user ? "/app/ranking" : authLink("cadastro", "/app/ranking"),
               action: user ? "Abrir ranking" : "Criar conta grátis",
             },
             {
               Icon: Building2,
-              title: "2. Compare as ações",
+              title: "Compare as ações",
               text: "Consulte as cotações e os indicadores disponíveis nas análises.",
               to: user ? "/app/analises" : "/mercado",
               action: "Explorar análises",
             },
             {
               Icon: BookOpen,
-              title: "3. Estude dividendos",
+              title: "Estude dividendos",
               text: "Leia uma aula sobre a distribuição de lucros e responda ao exercício para registrar sua conclusão.",
               to: user ? "/app/aprender" : "/aprender",
               action: "Entrar na escola",

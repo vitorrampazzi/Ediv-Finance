@@ -41,7 +41,7 @@ export const learningChapters: LearningChapter[] = [
 export const learningCourses = [
   {
     id: "pesquisa",
-    eyebrow: "Curso 01 · Fundamentos da pesquisa",
+    eyebrow: "Fundamentos da pesquisa",
     title: "Leia uma análise com autonomia",
     description:
       "Entenda as hipóteses do corretor, o prazo do cenário e o que pode fazer a tese mudar.",
@@ -49,7 +49,7 @@ export const learningCourses = [
   },
   {
     id: "dividendos",
-    eyebrow: "Curso 02 · Escola do Dividendo",
+    eyebrow: "Escola do Dividendo",
     title: "Da empresa ao dividendo",
     description:
       "Conheça o caminho entre o resultado do negócio, a geração de caixa e o pagamento ao acionista.",

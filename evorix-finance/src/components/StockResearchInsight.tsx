@@ -340,9 +340,7 @@ export function StockResearchInsight({
               className={`research-insight-stage ${active === index ? "is-current" : ""}`}
             >
               <div>
-                <p className="edition-label">
-                  {String(index + 1).padStart(2, "0")} / {step.label}
-                </p>
+                <p className="edition-label">{step.label}</p>
                 <h3 className="mt-3 text-lg font-medium">{step.title}</h3>
                 <p className="mt-3 max-w-md text-sm leading-7 text-evo-textSec">
                   {step.text}

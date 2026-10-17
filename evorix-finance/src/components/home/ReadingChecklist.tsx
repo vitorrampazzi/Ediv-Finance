@@ -33,12 +33,9 @@ export function ReadingChecklist() {
         </div>
         <div>
           <dl className="ph-checklist-points">
-            {readingPoints.map(([title, explanation], index) => (
+            {readingPoints.map(([title, explanation]) => (
               <div key={title}>
-                <dt>
-                  <span aria-hidden="true">0{index + 1}</span>
-                  {title}
-                </dt>
+                <dt>{title}</dt>
                 <dd>{explanation}</dd>
               </div>
             ))}

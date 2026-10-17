@@ -5,6 +5,35 @@ revalide comportamento no código antes de mudar contratos.
 
 ## Objetivo atual
 
+### Nova rodada — refinamento visual e ranking (17/10/2026)
+
+Usuário pediu: controle de tema por clique no mesmo botão (alternar claro/escuro),
+escuro como padrão da aplicação; remover a numeração decorativa ao lado de
+títulos/seções em todo o site; ranking em tabela semelhante à referência Suno,
+com logos/empresas clicáveis e campos definidos no Excel fornecido.
+
+Planilha lida sem alterações: Lista de Ações e modulos necessarios (1).xlsx,
+Planilha1!F3:H28. Contém25 tickers para pesquisa e seis módulos em H4:H9:
+balanço patrimonial, DRE, fluxo de caixa, informações cadastráveis da empresa,
+dívida líquida e estatísticas. Não contém métricas/valores financeiros para a tabela.
+Usuário confirmou: cada célula mostra disponibilidade e dá acesso ao conteúdo.
+Não importar essa lista como publicação nem inventar conteúdo ou números.
+
+Aceitação: botão tema44px acessível por teclado/touch, clique alterna escuro/claro,
+preferência persistente; ausência/valor inválido/antiga preferência sistema usa
+escuro independentemente do SO. Numeração ornamental removida sem apagar dados,
+datas, contagens, ordem funcional de exercícios ou percentuais. Tabela sem coluna
+decorativa de posição, header discreto, divisórias horizontais, alinhamento,
+logo/ticker e seis colunas de disponibilidade; célula/empresa abre seção/pesquisa
+correta com filtros/versão/demo preservados. Manter temas e mobile320px com
+rolagem restrita à tabela, identificação da empresa visível e foco acessível.
+
+Divisão desta rodada: interface = tema e números ornamentais em todo site,
+EXCETO IncomeRanking.tsx/income-ranking.css (backend) e backend = ranking tabela,
+helper/campos de disponibilidade e testes. Coordenação = Excel, contexto,
+integração/browser e publicação na main conforme autorização vigente. Não alterar
+contratos/API/persistência/banco salvo necessidade demonstrada e combinada.
+
 Organizar três sessões colaborativas da Escola do Dividendo com engenharia de
 harness: contexto persistente, escopo reservado, verificações executáveis,
 evidência das entregas e recuperação após interrupções.
@@ -29,6 +58,13 @@ componente/dados de logos e integra superfícies de empresas, podendo editar TSX
 nessa tarefa. Coordenação prepara ambiente, integra, valida e publica. Usar
 reservas; não editar os arquivos da outra sessão sem combinar. Somente a
 coordenação faz Git remoto/deploy/instalação de dependências.
+
+Resultado da rodada: implementação publicada na main em2b155cd, com complemento
+de tickers fracionários em5673c3f. 48 testes e build Node22 passaram; lint completo
+passou. Chrome local validou desktop e mobile320px, temas, persistência, logos carregadas,
+fallback de imagem e demo sem marcas reais. Vercel confirmou ambos os deploys
+com success e a versão final foi conferida no domínio oficial. QA não foi alterada.
+Relatos por sessão documentam os detalhes e limites das verificações.
 
 ## Produto e arquitetura
 

@@ -194,12 +194,6 @@ export function LearningPlaylist({
                 onClick={() => onSelect(item.id)}
                 className={`ediv-learning-lesson${isSelected ? " ediv-learning-lesson-selected" : ""}`}
               >
-                <span aria-hidden="true" className="ediv-learning-lesson-cover">
-                  <span className="ediv-learning-lesson-number">
-                    {String(index + 1).padStart(2, "0")}
-                  </span>
-                </span>
-
                 <span className="min-w-0 flex-1">
                   <span className="ediv-learning-lesson-kicker">
                     {item.locked ? (

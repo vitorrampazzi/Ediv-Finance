@@ -228,11 +228,6 @@
 .ph-page-index a:last-child {
   border-bottom: 0;
 }
-.ph-page-index span {
-  color: var(--ediv-muted);
-  font-family: ui-monospace, monospace;
-  font-size: 0.75rem;
-}
 .ph-market {
   background: var(--ediv-inset);
   border-block: 1px solid var(--ph-border);

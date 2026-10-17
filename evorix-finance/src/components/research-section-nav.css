@@ -29,17 +29,9 @@
     color 160ms ease,
     border-color 160ms ease;
 }
-.research-section-nav a span {
-  font-family: ui-monospace, monospace;
-  font-size: 0.6875rem;
-  color: var(--ediv-muted);
-}
 .research-section-nav a[aria-current="location"] {
   border-bottom-color: var(--ediv-accent);
   color: var(--ediv-accent);
-}
-.research-section-nav a[aria-current="location"] span {
-  color: inherit;
 }
 .research-section-nav a:hover {
   color: var(--ediv-text);

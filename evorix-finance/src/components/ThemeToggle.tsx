@@ -1,27 +1,21 @@
 import { Moon, Sun } from "lucide-react";
-import { useTheme, type ThemePreference } from "../lib/theme";
+import { useTheme } from "../lib/theme";
 
 export function ThemeToggle() {
-  const { preference, setPreference } = useTheme();
+  const { theme, setPreference } = useTheme();
+  const nextTheme = theme === "dark" ? "light" : "dark";
+  const label =
+    nextTheme === "light" ? "Ativar tema claro" : "Ativar tema escuro";
   return (
-    <label
+    <button
+      type="button"
       className="ediv-theme-control ediv-chrome-icon"
-      title="Escolher aparência"
+      title={label}
+      aria-label={label}
+      onClick={() => setPreference(nextTheme)}
     >
       <Sun className="ediv-theme-light-icon" size={19} aria-hidden="true" />
       <Moon className="ediv-theme-dark-icon" size={19} aria-hidden="true" />
-      <span className="sr-only">Aparência</span>
-      <select
-        className="ediv-theme-select"
-        value={preference}
-        onChange={(event) =>
-          setPreference(event.target.value as ThemePreference)
-        }
-      >
-        <option value="system">Tema do sistema</option>
-        <option value="light">Tema claro</option>
-        <option value="dark">Tema escuro</option>
-      </select>
-    </label>
+    </button>
   );
 }

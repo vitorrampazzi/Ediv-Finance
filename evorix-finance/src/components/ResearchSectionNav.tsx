@@ -30,7 +30,9 @@ export function ResearchSectionNav() {
     const selectSection = () => {
       frame = 0;
       const lastPassed = targets
-        .filter((target) => target.getBoundingClientRect().top <= readingLine + 2)
+        .filter(
+          (target) => target.getBoundingClientRect().top <= readingLine + 2,
+        )
         .at(-1);
       const next = lastPassed?.id ?? targets[0]?.id;
       if (next) setActive((current) => (current === next ? current : next));
@@ -48,14 +50,18 @@ export function ResearchSectionNav() {
         0,
         ...targets.map(
           (target) =>
-            Number.parseFloat(window.getComputedStyle(target).scrollMarginTop) ||
-            0,
+            Number.parseFloat(
+              window.getComputedStyle(target).scrollMarginTop,
+            ) || 0,
         ),
       );
       readingLine = Math.min(
         window.innerHeight - 2,
         Math.ceil(
-          Math.max(nav.getBoundingClientRect().height + stickyTop + 24, anchorOffset),
+          Math.max(
+            nav.getBoundingClientRect().height + stickyTop + 24,
+            anchorOffset,
+          ),
         ),
       );
       const bottom = Math.max(0, window.innerHeight - readingLine - 1);
@@ -98,14 +104,13 @@ export function ResearchSectionNav() {
       aria-label="Seções da pesquisa"
       className="research-section-nav"
     >
-      {sections.map(([anchor, label], index) => (
+      {sections.map(([anchor, label]) => (
         <a
           key={anchor}
           href={`#${anchor}`}
           aria-current={active === anchor ? "location" : undefined}
           onClick={() => setActive(anchor)}
         >
-          <span aria-hidden="true">{String(index + 1).padStart(2, "0")}</span>
           {label}
         </a>
       ))}

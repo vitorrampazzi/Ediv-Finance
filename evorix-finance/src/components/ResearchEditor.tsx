@@ -464,9 +464,6 @@ export function ResearchEditor({
                       <span className="company-identity min-w-0 break-words">
                         <CompanyLogo ticker={entry.ticker} size="sm" />
                         <span className="company-identity-copy">
-                          <span className="mr-2 text-xs text-evo-textSec">
-                            {String(index + 1).padStart(2, "0")}
-                          </span>
                           <strong>{entry.ticker}</strong> · {entry.empresa}
                           {editing === index ? " · em edição" : ""}
                         </span>

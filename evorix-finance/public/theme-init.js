@@ -1,16 +1,10 @@
 /* Runs before styles and prerendered markup. Keep external: CSP permits self scripts. */
 (function () {
   var storageKey = "ediv-appearance-v1";
-  var preference = "system";
-  var media;
+  var preference = "dark";
   var listeners = new Set();
-  try {
-    media = window.matchMedia("(prefers-color-scheme: dark)");
-  } catch (_) {
-    /* Use light without media support. */
-  }
   function valid(value) {
-    return value === "light" || value === "dark" || value === "system";
+    return value === "light" || value === "dark";
   }
   try {
     var saved = window.localStorage.getItem(storageKey);
@@ -20,12 +14,7 @@
   }
   var snapshot;
   function apply() {
-    var theme =
-      preference === "system"
-        ? media && media.matches
-          ? "dark"
-          : "light"
-        : preference;
+    var theme = preference;
     if (
       snapshot &&
       snapshot.theme === theme &&
@@ -55,8 +44,7 @@
       if (!valid(value)) return;
       preference = value;
       try {
-        if (value === "system") window.localStorage.removeItem(storageKey);
-        else window.localStorage.setItem(storageKey, value);
+        window.localStorage.setItem(storageKey, value);
       } catch (_) {
         /* Retain the choice for this page when persistence fails. */
       }
@@ -64,10 +52,6 @@
     },
   };
   apply();
-  if (media) {
-    if (media.addEventListener) media.addEventListener("change", apply);
-    else if (media.addListener) media.addListener(apply);
-  }
   window.addEventListener("storage", function (event) {
     if (event.key !== storageKey && event.key !== null) return;
     try {
@@ -76,7 +60,7 @@
     } catch (_) {
       return;
     }
-    preference = valid(event.newValue) ? event.newValue : "system";
+    preference = valid(event.newValue) ? event.newValue : "dark";
     apply();
   });
 })();

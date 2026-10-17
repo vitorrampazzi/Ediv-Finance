@@ -137,3 +137,61 @@ mas não precisou de mudança. Package scripts/test gates pertencem à coordena�
 Arquivos prontos para revisão integrada. Não fiz commit remoto ou deploy.
 A coordenação deve validar home, formulário, painel móvel e pesquisa nos dois
 temas, incluindo teclado, persistência após reload e sistema sem override.
+
+## Rodada 3 — botão de tema e remoção de numeração ornamental
+
+Autorização de 17/10/2026: alternar claro/escuro clicando no mesmo ícone, escuro
+como padrão independente do SO e retirar números decorativos em todo site.
+A nova regra substitui a preferência inicial pelo sistema da rodada anterior.
+Ranking tabular e seus módulos permanecem com backend.
+
+### Mudanças
+
+- `ThemeToggle.tsx`: select substituído por botão nativo44px na mesma posição,
+  title/aria-label indicam a próxima ação (Ativar tema claro/escuro). Clique,
+  Enter e Espaço usam a ativação nativa; foco e forced-colors preservados.
+- `theme-init.js` e `theme.ts`: padrão escuro também para valor inválido/legado
+  `system`; não consulta matchMedia nem acompanha o SO. Somente light/dark são
+  salvos. Persistência, armazenamento indisponível em memória, clear e eventos
+  cross-tab continuam tratados. CSS do select removido de `index.css`.
+- Removidos prefixos/selos ornamentais de PublicHome (índices), TeachingJourney
+  (Empresa/Pesquisa/Dividendos), ResearchSample, ReadingChecklist, LearningTerms,
+  GettingStarted (dois layouts), RankingHighlights, Metodologia, ResearchSectionNav,
+  StockResearch (04/05), StockResearchInsight e LearningCourseCarousel.
+- `learningCatalog.ts`: retirado Curso01/02 das sobrancelhas. Cartões continuam
+  com status útil (Disponível/Em estudo/Concluído) e contagem de aulas/exercícios.
+- A pedido complementar da coordenação, LearningPlaylist perdeu o badge visual
+  redundante01/02 e ResearchEditor perdeu o ordinal ao lado do ticker da lista.
+  Ordem acessível AulaX, contagem de aulas, progresso, duração, dados financeiros,
+  linhas de erro de importação e passos operacionais do formulário preservados.
+- `PublicHeroPanel` mantém selected/03 por ser posição funcional do carrossel.
+- CSS de home/public-sections, teaching-journey, research-section-nav e
+  learning-workspace ajustado: sem colunas/margens vazias após retirar números.
+  Componentes de exemplo mantêm marca, empresa, percentuais e prazo.
+- Combinação com backend: adicionados os seis hashes pesquisa-* à whitelist de
+  StockResearch para scroll após carga; RankingFundamentals já tem initiallyOpen
+  e permanece assim. Não editei RankingFundamentals, IncomeRanking, income-ranking
+  ou novos arquivos RankingTable.
+
+### Validação e revisão
+
+- `node22 --test tests/theme.test.mjs`: **7/7 passaram** com escuro padrão
+  independente do SO, reload, legado system, storage bloqueado, cross-tab e
+  contraste das duas paletas. Nenhuma alteração na paleta desta rodada.
+- `tsc -b`: **passou** após os componentes alterados.
+- ESLint focado em todos TS/TSX modificados: **passou**, incluindo LearningPlaylist
+  e ResearchEditor após a ampliação do escopo.
+- Prettier aplicado apenas aos arquivos reservados desta sessão.
+- Revisão React Best Practices reaplicada: botão nativo rotulado, props derivadas
+  sem estado duplicado, listeners globais deduplicados e sem listener SO, keys
+  estáveis preservadas; operações de edição/progresso sem mudança de contrato.
+- Busca dos padStart/prefixos restantes identificou somente formatação monetária,
+  contador funcional da playlist e posição do carrossel nas áreas desta sessão.
+- Browser, build integrado e publicação são da coordenação. Nenhum Git remoto,
+  deploy, instalação ou alteração de dados feito nesta sessão.
+
+### Entrega
+
+Arquivos finalizados para revisão integrada. Validar botão nos dois headers,
+teclado/touch, escuro inicial com SO claro, persistência/reload, home/metodologia/
+pesquisa/aprender sem ornamentos e layout320px depois de retirar colunas.

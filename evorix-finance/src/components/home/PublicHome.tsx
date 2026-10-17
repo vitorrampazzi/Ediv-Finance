@@ -77,15 +77,9 @@ export function PublicHome({
           </div>
         </div>
         <nav className="ph-container ph-page-index" aria-label="Nesta página">
-          <a href="#caderno-de-exemplo">
-            <span>01</span> Pesquisas de ações
-          </a>
-          <a href="#mercado">
-            <span>02</span> Análises de empresas
-          </a>
-          <a href="#como-a-ediv-ensina">
-            <span>03</span> Educação em dividendos
-          </a>
+          <a href="#caderno-de-exemplo">Pesquisas de ações</a>
+          <a href="#mercado">Análises de empresas</a>
+          <a href="#como-a-ediv-ensina">Educação em dividendos</a>
         </nav>
       </section>
       <TeachingJourney />

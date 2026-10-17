@@ -6,22 +6,18 @@ import { PageState } from "../components/PageState";
 
 const readingSteps = [
   [
-    "01",
     "Comece pela empresa",
     "Conheça o negócio, o setor e o contexto publicado pela equipe. A posição no ranking é um caminho para abrir a pesquisa de cada empresa.",
   ],
   [
-    "02",
     "Leia o cenário e suas premissas",
     "Confira a tese, o preço-alvo, o potencial informado e o horizonte. Relacione esses números às premissas da publicação.",
   ],
   [
-    "03",
     "Investigue os riscos",
     "Identifique os fatores que podem contrariar a tese e quais informações ainda precisam ser preenchidas.",
   ],
   [
-    "04",
     "Confira período, fontes e versão",
     "Consulte as datas e fontes da pesquisa. Use o histórico para acompanhar publicações anteriores e comparar as mudanças de conteúdo.",
   ],
@@ -65,12 +61,9 @@ export function Metodologia() {
               "Publicação e histórico",
               "Cada publicação tem uma versão própria. Atualizações preservam o histórico para que você consulte o cenário que foi publicado naquela data.",
             ],
-          ].map(([title, text], index) => (
+          ].map(([title, text]) => (
             <li key={title} className="border-t-2 border-evo-accent/45 pt-5">
-              <span className="font-numbers text-xs text-evo-accent">
-                0{index + 1}
-              </span>
-              <h3 className="mt-3 font-semibold">{title}</h3>
+              <h3 className="font-semibold">{title}</h3>
               <p className="mt-3 text-sm leading-7 text-evo-textSec">{text}</p>
             </li>
           ))}
@@ -84,18 +77,12 @@ export function Metodologia() {
           Um roteiro para ler com contexto
         </h2>
         <dl className="mt-5 divide-y divide-evo-border">
-          {readingSteps.map(([number, title, text]) => (
-            <div key={number} className="py-5">
+          {readingSteps.map(([title, text]) => (
+            <div key={title} className="py-5">
               <dt className="flex items-baseline gap-3 font-semibold">
-                <span
-                  aria-hidden="true"
-                  className="w-9 shrink-0 font-numbers text-lg text-evo-accent"
-                >
-                  {number}
-                </span>
                 {title}
               </dt>
-              <dd className="mt-2 max-w-3xl text-sm leading-7 text-evo-textSec sm:ml-12">
+              <dd className="mt-2 max-w-3xl text-sm leading-7 text-evo-textSec">
                 {text}
               </dd>
             </div>
