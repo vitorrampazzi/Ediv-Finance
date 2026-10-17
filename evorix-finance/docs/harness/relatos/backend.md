@@ -162,3 +162,26 @@ Reservas liberadas e backend em `revisao`. Próximo passo da coordenação: vali
 home/mercado/ranking/pesquisa nos dois temas e em 320 px, imagem quebrada convertendo
 em ticker sem salto e demos sem requests; depois reconciliar/publicar conforme
 autorização do usuário. Nenhum commit remoto ou deploy feito por esta sessão.
+
+## Complemento: mercado fracionário — 17/10/2026
+
+A coordenação observou MWET4F e FSRF11F na home publicada. A regra anterior de
+símbolo aceitava apenas o ticker base, deixando empresas reais fracionárias sem
+tentativa de carregar sua marca. `companySymbol` agora aceita um único `F`
+terminal após o número da classe e o remove exclusivamente para localizar o
+logo da mesma ação/unit: PETR4F → PETR4, TAEE11F → TAEE11. Não há troca de classe,
+alteração dos tickers exibidos nem dos símbolos usados em preços/caches.
+URLs fornecidas pela brapi são aceitas quando seguras e correspondentes ao base.
+O fallback textual foi ampliado a sete caracteres para preservar FSRF11F inteiro.
+Demos continuam sem URL; demais sufixos, caminhos e símbolos inválidos são rejeitados.
+
+Arquivos: `company-logo.mjs` e `tests/company-logo.test.mjs`; sem alteração de
+componentes ou API. Node22: **5/5 testes focados passaram**, incluindo fracionários
+ON/PN/units, B3SA3F, MWET4F, FSRF11F, base seguro, preservação do ticker no fallback
+e manutenção das rejeições/demos. `node --check company-logo.mjs` passou.
+
+Tentativas sem credencial de consultar catálogo MWET e URLs MWET4/MWET4F não
+conseguiram conexão pelas ferramentas web/fetch deste ambiente. Assim, a
+disponibilidade específica do logo MWET4 não foi confirmada nesta sessão;
+continua valendo fallback honesto se o provedor não possuir a imagem.
+Coordenação fará validação remota e commit complementar; nada publicado por backend.

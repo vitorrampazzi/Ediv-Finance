@@ -1,11 +1,11 @@
 const logoOrigin = "https://icons.brapi.dev";
 
-// Preserve the complete share class/unit ticker; never guess a company's domain
-// or replace a preferred share with an ordinary share for an image.
+// Fractional trading uses the same issuer/share class. Remove only its terminal
+// F for the image lookup; never replace PN/ON/units or change the displayed ticker.
 export function companySymbol(value) {
   if (typeof value !== "string") return null;
   const symbol = value.trim().toUpperCase();
-  return /^[A-Z][A-Z0-9]{3}\d{1,2}$/.test(symbol) ? symbol : null;
+  return /^([A-Z][A-Z0-9]{3}\d{1,2})F?$/.exec(symbol)?.[1] ?? null;
 }
 
 export function companyLogoUrl(ticker, supplied, demo = false) {
@@ -34,5 +34,5 @@ export function companyLogoUrl(ticker, supplied, demo = false) {
 
 export function companyFallback(ticker) {
   const text = typeof ticker === "string" ? ticker.trim().toUpperCase() : "";
-  return text.replace(/[^A-Z0-9]/g, "").slice(0, 6) || "—";
+  return text.replace(/[^A-Z0-9]/g, "").slice(0, 7) || "—";
 }

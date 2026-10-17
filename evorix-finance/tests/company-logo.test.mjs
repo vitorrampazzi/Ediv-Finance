@@ -17,18 +17,38 @@ test("preserva classe ON, PN e units e normaliza somente caixa/espaços", () => 
 
 test("empresas fictícias e símbolos inválidos não solicitam imagens reais", () => {
   assert.equal(companyLogoUrl("PETR4", undefined, true), null);
+  assert.equal(companyLogoUrl("PETR4F", undefined, true), null);
   for (const value of [
     "",
     "../PETR4",
     "PETR4.SA",
     "^BVSP",
     "BTC-USD",
+    "PETR4FF",
+    "PETR4F.SA",
+    "PETRF4",
+    "PETR4F/",
     "javascript:alert(1)",
     null,
   ]) {
     assert.equal(companySymbol(value), null);
     assert.equal(companyLogoUrl(value), null);
   }
+});
+
+test("fracionário usa logo da mesma classe sem alterar identificação exibida", () => {
+  for (const base of ["PETR3", "PETR4", "TAEE11", "B3SA3", "MWET4", "FSRF11"]) {
+    const fractional = `${base}F`;
+    const url = `https://icons.brapi.dev/icons/${base}.svg`;
+    assert.equal(companySymbol(` ${fractional.toLowerCase()} `), base);
+    assert.equal(companyLogoUrl(fractional), url);
+    assert.equal(companyLogoUrl(fractional, url), url);
+    assert.equal(companyFallback(fractional), fractional);
+  }
+  assert.equal(
+    companyLogoUrl("PETR4F", "https://icons.brapi.dev/icons/PETR3.svg"),
+    "https://icons.brapi.dev/icons/PETR4.svg",
+  );
 });
 
 test("origens arbitrárias, credenciais e URLs de outra empresa nunca chegam à imagem", () => {

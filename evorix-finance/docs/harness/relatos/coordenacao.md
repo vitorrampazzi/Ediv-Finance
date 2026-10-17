@@ -93,3 +93,18 @@ recebeu main para comparação; publicação atômica pelo GitHub usa a árvore/
 da main e expected_sha. Fixtures, dependências, dist, logs e cache não são enviados.
 Vercel MCP retornou403; CLI ausente. Confirmação do deploy pelo status Vercel
 do commit no GitHub e leitura pública do resultado.
+
+### Resultado e complemento fracionário
+
+Main publicada em `2b155cde71d1bf3f73742c23f2935c24bcacc0ee`; status Vercel
+success confirmado no GitHub e site aberto no Chrome com controle Aparência
+e logos carregadas. O usuário já tinha sessão válida no navegador; navegação
+redirecionou para /app sem novo login. Nenhum dado da conta foi alterado.
+
+Nessa leitura, home retornou MWET4F e FSRF11F. Backend ajustou apenas resolução
+da imagem para remover F terminal do mercado fracionário, mantendo classe e
+ticker exibido (PETR4F→PETR4 para imagem; não PN→ON). Fallback agora preserva
+até sete caracteres. Testes adicionais cobrem fracionários, classes, rejeições e
+preservação da identificação. Cobertura de cada imagem continua dependente do
+provedor; se ausente, o ticker permanece. Complemento será publicado sobre
+a main atual após novo teste/build. Servidores locais de fixtures encerrados.
