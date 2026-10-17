@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import { Card } from "../components/Card";
 import { RankingFundamentals } from "../components/RankingFundamentals";
+import { CompanyLogo } from "../components/CompanyLogo";
 import type { Entry } from "../lib/ranking";
 import { ApiError } from "../lib/api";
 import { useAuth } from "../context/authContext";
@@ -171,7 +172,9 @@ function MemberIncomeRanking() {
       ? [{ key: "busca" as const, label: `Busca: ${search.trim()}` }]
       : []),
     ...(sector ? [{ key: "setor" as const, label: `Setor: ${sector}` }] : []),
-    ...(horizon ? [{ key: "prazo" as const, label: `Até ${horizon} meses` }] : []),
+    ...(horizon
+      ? [{ key: "prazo" as const, label: `Até ${horizon} meses` }]
+      : []),
     ...(sort !== "rank"
       ? [
           {
@@ -310,7 +313,9 @@ function MemberIncomeRanking() {
               >
                 <BookOpen size={17} aria-hidden="true" />
                 <span className="sm:hidden">Como ler</span>
-                <span className="hidden sm:inline">Como interpretar o ranking</span>
+                <span className="hidden sm:inline">
+                  Como interpretar o ranking
+                </span>
               </Link>
               <button
                 type="button"
@@ -331,7 +336,9 @@ function MemberIncomeRanking() {
                 className="inline-flex min-h-11 items-center text-sm text-evo-textSec underline hover:text-evo-accent"
               >
                 <span className="sm:hidden">Metodologia</span>
-                <span className="hidden sm:inline">Como funciona a pesquisa</span>
+                <span className="hidden sm:inline">
+                  Como funciona a pesquisa
+                </span>
               </Link>
             </div>
           </div>
@@ -518,7 +525,12 @@ function MemberIncomeRanking() {
                   <tbody>
                     {preview.map((e) => (
                       <tr key={e.ticker} className="border-t border-evo-border">
-                        <td className="p-3">{e.ticker}</td>
+                        <td className="p-3">
+                          <span className="company-identity-inline">
+                            <CompanyLogo ticker={e.ticker} size="sm" />
+                            {e.ticker}
+                          </span>
+                        </td>
                         <td>{e.expectedReturnPercent}%</td>
                         <td>{e.horizonMonths ?? "—"}</td>
                         <td>
@@ -653,7 +665,9 @@ function MemberIncomeRanking() {
             <span className="sr-only">Buscar empresa ou ticker</span>
             <input
               value={search}
-              onChange={(e) => changeFilter("busca", e.target.value.slice(0, 80))}
+              onChange={(e) =>
+                changeFilter("busca", e.target.value.slice(0, 80))
+              }
               maxLength={80}
               autoComplete="off"
               enterKeyHint="search"
@@ -706,7 +720,10 @@ function MemberIncomeRanking() {
           </MobileDisclosure>
         </div>
         {activeFilters.length > 0 && (
-          <ul aria-label="Filtros e ordenação ativos" className="flex flex-wrap gap-2">
+          <ul
+            aria-label="Filtros e ordenação ativos"
+            className="flex flex-wrap gap-2"
+          >
             {activeFilters.map((filter) => (
               <li key={filter.key} className="min-w-0 max-w-full">
                 <button
@@ -716,7 +733,11 @@ function MemberIncomeRanking() {
                   className="inline-flex min-h-11 min-w-11 max-w-full items-center gap-2 rounded-lg border border-evo-border bg-evo-bgSec px-3 py-2 text-left text-xs text-evo-textMain hover:border-evo-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-evo-accent"
                 >
                   <span className="min-w-0 break-words">{filter.label}</span>
-                  <X size={14} className="shrink-0 text-evo-textSec" aria-hidden="true" />
+                  <X
+                    size={14}
+                    className="shrink-0 text-evo-textSec"
+                    aria-hidden="true"
+                  />
                 </button>
               </li>
             ))}
@@ -815,53 +836,70 @@ function MemberIncomeRanking() {
             <div className="research-ranking-heading" aria-hidden="true">
               <span>Pos.</span>
               <span>Empresa / setor</span>
-              <span className="text-right">{showingDemo ? "Potencial simulado" : "Potencial informado"}</span>
-              <span className="text-right">{showingDemo ? "Preço-alvo simulado" : "Preço-alvo informado"}</span>
+              <span className="text-right">
+                {showingDemo ? "Potencial simulado" : "Potencial informado"}
+              </span>
+              <span className="text-right">
+                {showingDemo ? "Preço-alvo simulado" : "Preço-alvo informado"}
+              </span>
               <span className="text-right">Horizonte</span>
               <span />
             </div>
-          <ol className="divide-y divide-evo-border border-y border-evo-border" aria-label="Pesquisas de ações">
-            {entries.map((entry) => {
-              const coverage = getResearchCoverage(entry);
-              return (
-                <li key={entry.ticker}>
-                  <article>
-                    <Link
-                      to={researchLink(entry.ticker)}
-                      className="research-ranking-row group transition-colors hover:bg-evo-accent/5 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-evo-accent"
-                      aria-label={
-                        "Abrir pesquisa de " +
-                        entry.companyName +
-                        " (" +
-                        entry.ticker +
-                        ")"
-                      }
-                    >
-                          <span
-                            className="research-ranking-position font-numbers text-lg text-evo-textSec"
-                            aria-hidden="true"
-                          >
-                            {String(entry.rank).padStart(2, "0")}
-                          </span>
-                          <div className="research-ranking-company min-w-0">
+            <ol
+              className="divide-y divide-evo-border border-y border-evo-border"
+              aria-label="Pesquisas de ações"
+            >
+              {entries.map((entry) => {
+                const coverage = getResearchCoverage(entry);
+                return (
+                  <li key={entry.ticker}>
+                    <article>
+                      <Link
+                        to={researchLink(entry.ticker)}
+                        className="research-ranking-row group transition-colors hover:bg-evo-accent/5 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-evo-accent"
+                        aria-label={
+                          "Abrir pesquisa de " +
+                          entry.companyName +
+                          " (" +
+                          entry.ticker +
+                          ")"
+                        }
+                      >
+                        <span
+                          className="research-ranking-position font-numbers text-lg text-evo-textSec"
+                          aria-hidden="true"
+                        >
+                          {String(entry.rank).padStart(2, "0")}
+                        </span>
+                        <div className="research-ranking-company min-w-0">
+                          <div className="company-identity">
+                            <CompanyLogo
+                              ticker={entry.ticker}
+                              demo={showingDemo}
+                            />
                             <h3 className="break-words text-xl font-semibold group-hover:text-evo-accent">
                               {entry.ticker}
                               <span className="mt-1 block text-sm font-normal text-evo-textSec">
                                 {entry.companyName}
                               </span>
                             </h3>
-                            <p className="mt-2 text-xs text-evo-textSec">
-                              {entry.sector || "Setor não informado"}
-                              {showingDemo ? " · Empresa fictícia" : ""}
-                            </p>
-                            <p className="research-ranking-excerpt whitespace-pre-wrap break-words text-sm leading-relaxed text-evo-textSec">
-                              {entry.thesis || "A justificativa ainda não foi informada pelo autor."}
-                            </p>
-                            <p className="research-ranking-coverage text-xs text-evo-textSec">
-                              {coverage.filled}/{coverage.total} campos de leitura preenchidos
-                              {entry.referencePeriod ? ` · ${entry.referencePeriod}` : " · Período não informado"}
-                            </p>
                           </div>
+                          <p className="mt-2 text-xs text-evo-textSec">
+                            {entry.sector || "Setor não informado"}
+                            {showingDemo ? " · Empresa fictícia" : ""}
+                          </p>
+                          <p className="research-ranking-excerpt whitespace-pre-wrap break-words text-sm leading-relaxed text-evo-textSec">
+                            {entry.thesis ||
+                              "A justificativa ainda não foi informada pelo autor."}
+                          </p>
+                          <p className="research-ranking-coverage text-xs text-evo-textSec">
+                            {coverage.filled}/{coverage.total} campos de leitura
+                            preenchidos
+                            {entry.referencePeriod
+                              ? ` · ${entry.referencePeriod}`
+                              : " · Período não informado"}
+                          </p>
+                        </div>
                         <ArrowUpRight
                           size={21}
                           className="research-ranking-arrow shrink-0 text-evo-accent"
@@ -874,7 +912,9 @@ function MemberIncomeRanking() {
                                 ? "Potencial simulado"
                                 : "Potencial informado"}
                             </dt>
-                            <dd className={`mt-1 font-numbers text-xl font-semibold ${Number(entry.expectedReturnPercent) < 0 ? "text-evo-red" : "text-evo-accent"}`}>
+                            <dd
+                              className={`mt-1 font-numbers text-xl font-semibold ${Number(entry.expectedReturnPercent) < 0 ? "text-evo-red" : "text-evo-accent"}`}
+                            >
                               {Number(
                                 entry.expectedReturnPercent,
                               ).toLocaleString("pt-BR")}
@@ -908,12 +948,12 @@ function MemberIncomeRanking() {
                           Ler tese, história e indicadores{" "}
                           <ArrowUpRight size={14} aria-hidden="true" />
                         </span>
-                    </Link>
-                  </article>
-                </li>
-              );
-            })}
-          </ol>
+                      </Link>
+                    </article>
+                  </li>
+                );
+              })}
+            </ol>
           </div>
         )}
       </section>

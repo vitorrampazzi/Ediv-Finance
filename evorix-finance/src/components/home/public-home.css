@@ -1,10 +1,10 @@
 .ph-home {
   --ph-ease: cubic-bezier(0.22, 1, 0.36, 1);
-  --ph-accent: var(--ediv-accent, #a9d9d1);
-  --ph-border: var(--ediv-line, rgb(255 255 255 / 10%));
-  background: var(--ediv-canvas, #1c2025);
-  color: var(--ediv-text, #f2f3f4);
-  color-scheme: only dark;
+  --ph-accent: var(--ediv-accent);
+  --ph-border: var(--ediv-line);
+  background: var(--ediv-canvas);
+  color: var(--ediv-text);
+  color-scheme: inherit;
   overflow: clip;
   font-optical-sizing: auto;
 }
@@ -36,7 +36,7 @@
 .ph-section-description {
   max-width: 38rem;
   margin-top: 0.75rem;
-  color: var(--ediv-muted, #bcc6cd);
+  color: var(--ediv-muted);
   font-size: 0.9375rem;
   line-height: 1.7;
 }
@@ -55,9 +55,9 @@
 .ph-primary {
   min-height: 48px;
   padding: 0.8rem 1.15rem;
-  border: 1px solid rgb(169 217 209 / 12%);
+  border: 1px solid color-mix(in srgb, var(--ediv-accent) 12%, transparent);
   border-radius: 10px;
-  background: #28665f;
+  background: var(--ediv-primary);
   color: #fff;
   font-weight: 600;
   transition:
@@ -65,7 +65,7 @@
     transform 150ms var(--ph-ease);
 }
 .ph-primary:active {
-  background: #34776f;
+  background: var(--ediv-primary-hover);
   transform: scale(0.975);
   transition-duration: 70ms;
 }
@@ -94,14 +94,14 @@
 }
 .ph-access-note {
   margin-top: 0.8rem;
-  color: var(--ediv-muted, #bcc6cd);
+  color: var(--ediv-muted);
   font-size: 0.8125rem;
   line-height: 1.6;
 }
 .ph-hero {
   padding-top: clamp(0.75rem, 1.6vw, 1.5rem);
   border-bottom: 1px solid var(--ph-border);
-  background: var(--ediv-canvas, #1c2025);
+  background: var(--ediv-canvas);
 }
 .ph-hero-layout.ph-container {
   position: relative;
@@ -112,9 +112,9 @@
   gap: 0.5rem;
   padding: clamp(1.5rem, 5vw, 4.75rem);
   overflow: hidden;
-  border: 1px solid #394a52;
+  border: 1px solid var(--ediv-border);
   border-radius: 18px;
-  background: #18262b;
+  background: var(--ediv-inset);
 }
 .ph-hero-layout::before {
   position: absolute;
@@ -131,6 +131,15 @@
   pointer-events: none;
   content: "";
 }
+
+/* Keep the forest photograph while providing a light reading surface. */
+:root[data-theme="light"] .ph-hero-layout::after {
+  background: linear-gradient(
+    105deg,
+    rgb(247 248 246 / 97%),
+    rgb(237 243 238 / 88%)
+  );
+}
 .ph-hero-copy {
   z-index: 1;
   min-width: 0;
@@ -139,7 +148,7 @@
   display: flex;
   align-items: center;
   gap: 0.8rem;
-  color: #c3d0d5;
+  color: var(--ediv-muted);
   font-size: 0.6875rem;
   letter-spacing: 0.16em;
   text-transform: uppercase;
@@ -153,7 +162,7 @@
 }
 .ph-hero-title {
   margin-top: 1.2rem;
-  color: #f4f3ef;
+  color: var(--ediv-text);
   font-size: clamp(2.5rem, 10vw, 3.5rem);
   line-height: 1.03;
   letter-spacing: -0.045em;
@@ -163,12 +172,12 @@
   display: block;
 }
 .ph-hero-title .ph-hero-title-accent {
-  color: #54c3c1;
+  color: var(--ediv-accent);
 }
 .ph-hero-description {
   max-width: 32rem;
   margin-top: 1.2rem;
-  color: #ced7dc;
+  color: var(--ediv-muted);
   font-size: 0.9375rem;
   line-height: 1.65;
 }
@@ -183,10 +192,10 @@
   background: #207d80;
 }
 .ph-hero .ph-text-link {
-  color: #d2e1e3;
+  color: var(--ediv-muted);
 }
 .ph-hero .ph-access-note {
-  color: #b9c7ce;
+  color: var(--ediv-muted);
 }
 .ph-start {
   margin-top: 1.5rem;
@@ -212,7 +221,7 @@
   gap: 1rem;
   padding: 0.75rem 0.2rem;
   border-bottom: 1px solid var(--ph-border);
-  color: #e1e5e7;
+  color: var(--ediv-text);
   font-family: Georgia, "Times New Roman", serif;
   font-size: 1rem;
 }
@@ -220,12 +229,12 @@
   border-bottom: 0;
 }
 .ph-page-index span {
-  color: #9eb1bc;
+  color: var(--ediv-muted);
   font-family: ui-monospace, monospace;
   font-size: 0.75rem;
 }
 .ph-market {
-  background: var(--ediv-inset, #20262b);
+  background: var(--ediv-inset);
   border-block: 1px solid var(--ph-border);
 }
 .ph-market-data {
@@ -236,12 +245,12 @@
 }
 .ph-source {
   margin-top: 1rem;
-  color: var(--ediv-muted, #bcc6cd);
+  color: var(--ediv-muted);
   font-size: 0.8125rem;
   line-height: 1.6;
 }
 .ph-final {
-  background: var(--ediv-inset, #20262b);
+  background: var(--ediv-inset);
   border-top: 1px solid var(--ph-border);
 }
 .ph-final-layout {
@@ -272,7 +281,7 @@
 }
 @media (hover: hover) and (pointer: fine) {
   .ph-primary:hover {
-    background: #34776f;
+    background: var(--ediv-primary-hover);
   }
   .ph-text-link:hover,
   .ph-inline-link:hover {
@@ -380,11 +389,11 @@
 }
 @media (prefers-contrast: more) {
   .ph-home {
-    --ph-border: #8a969f;
+    --ph-border: var(--ediv-muted);
   }
   .ph-home .edition-label,
   .ph-home .ph-access-note,
   .ph-home .ph-source {
-    color: #e1e7eb;
+    color: var(--ediv-muted);
   }
 }

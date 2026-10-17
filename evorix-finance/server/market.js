@@ -4,6 +4,7 @@ import { z } from "zod";
 import { readCache, saveCache } from "./provider-cache.js";
 import { config } from "./config.js";
 import { MysqlLimitStore } from "./limit-store.js";
+import { companyLogoUrl } from "../company-logo.mjs";
 
 const router = Router();
 const quoteCache = new Map();
@@ -59,6 +60,7 @@ async function fetchQuote(symbol) {
         const quote = {
           symbol,
           name: String(asset.name || symbol).slice(0, 120),
+          logoUrl: companyLogoUrl(symbol, asset.logo),
           currency: "BRL",
           price: Number(asset.close).toFixed(8),
           change: null,
@@ -98,6 +100,7 @@ async function fetchQuote(symbol) {
       const quote = {
         symbol,
         name: String(item.shortName || item.longName || symbol).slice(0, 120),
+        logoUrl: companyLogoUrl(symbol, item.logourl),
         currency: String(item.currency || "BRL"),
         price: price.toFixed(8),
         change:
@@ -271,6 +274,7 @@ router.get("/assets", quoteLimiter, async (req, res) => {
     assets: filtered.slice(offset, offset + filters.limit).map((asset) => ({
       symbol: asset.stock,
       name: String(asset.name || asset.stock).slice(0, 120),
+      logoUrl: companyLogoUrl(asset.stock, asset.logo),
       price: Number(asset.close).toFixed(8),
       changePercent: Number.isFinite(Number(asset.change))
         ? Number(asset.change).toFixed(4)

@@ -3,6 +3,7 @@ import { apiRequest } from "../lib/api";
 export type MarketQuote = {
   symbol: string;
   name: string;
+  logoUrl?: string | null;
   currency: string;
   price: string | null;
   change: string | null;

@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { CompanyLogo } from "../CompanyLogo";
 import type { RefObject } from "react";
 import {
   ArrowDownLeft,
@@ -195,8 +196,11 @@ export function ConversationPanel({
               <ul className="max-h-56 overflow-auto">
                 {conversation.portfolio.map((operation, index) => (
                   <li className="mt-2 break-words" key={index}>
-                    {operation.ticker} · {operation.side} · {operation.quantity}{" "}
-                    · {formatMoney(operation.unit_price)}
+                    <span className="company-identity-inline">
+                      <CompanyLogo ticker={operation.ticker} size="sm" />
+                      {operation.ticker} · {operation.side} ·{" "}
+                      {operation.quantity} · {formatMoney(operation.unit_price)}
+                    </span>
                   </li>
                 ))}
               </ul>

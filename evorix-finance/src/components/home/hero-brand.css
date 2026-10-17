@@ -5,7 +5,7 @@
   max-width: 600px;
   aspect-ratio: 600 / 550;
   margin-inline: auto;
-  color: #b5d9d4;
+  color: var(--ediv-accent);
   user-select: none;
 }
 
@@ -71,13 +71,13 @@
 }
 
 .ph-brand-pin {
-  fill: #95cac1;
+  fill: var(--ediv-accent);
   stroke: none;
 }
 
 .ph-brand-signal {
   fill: none;
-  stroke: #a5e0d5;
+  stroke: var(--ediv-accent);
   stroke-linecap: round;
   transform-origin: 300px 262px;
   opacity: 0.8;
@@ -85,7 +85,7 @@
 }
 
 .ph-brand-signal circle {
-  fill: #a5e0d5;
+  fill: var(--ediv-accent);
   stroke: none;
 }
 
@@ -125,7 +125,7 @@
 .ph-brand-label {
   position: absolute;
   padding: 0.45rem 0;
-  color: #c6dedb;
+  color: var(--ediv-text);
   font-size: clamp(0.6875rem, 1.1vw, 0.8125rem);
   line-height: 1.4;
   letter-spacing: 0.01em;
@@ -155,7 +155,7 @@
   border: 0;
   border-radius: 6px;
   background: transparent;
-  color: #9cafb0;
+  color: var(--ediv-muted);
   font-size: 0.75rem;
   line-height: 1.5;
   cursor: pointer;
@@ -163,7 +163,7 @@
 }
 
 .ph-brand-motion-control:active {
-  color: #e0eeeb;
+  color: var(--ediv-text);
   background: rgb(150 198 193 / 8%);
 }
 
@@ -230,6 +230,6 @@
 @media (prefers-contrast: more) {
   .ph-brand-label,
   .ph-brand-motion-control {
-    color: #e0eeeb;
+    color: var(--ediv-text);
   }
 }

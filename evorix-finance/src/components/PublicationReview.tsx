@@ -1,4 +1,5 @@
 import { ClipboardCheck } from "lucide-react";
+import { CompanyLogo } from "./CompanyLogo";
 import type { Entry } from "../lib/ranking";
 import {
   getResearchCoverage,
@@ -94,7 +95,10 @@ export function PublicationReview({
                 .filter((item) => item.missing.length > 0)
                 .map((item) => (
                   <li key={item.entry.ticker}>
-                    <strong>{item.entry.ticker}</strong>
+                    <span className="company-identity-inline">
+                      <CompanyLogo ticker={item.entry.ticker} size="sm" />
+                      <strong>{item.entry.ticker}</strong>
+                    </span>
                     <span className="mt-1 block leading-5 text-evo-textSec">
                       {item.missing.map((field) => field.label).join(" · ")}
                     </span>

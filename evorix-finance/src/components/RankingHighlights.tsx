@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { apiRequest, ApiError } from "../lib/api";
 import { rankingDemoEntries } from "../lib/rankingDemo";
 import { useAuth } from "../context/authContext";
+import { CompanyLogo } from "./CompanyLogo";
 
 type Publication = {
   id: string | null;
@@ -126,12 +127,17 @@ function MemberRankingHighlights() {
                 >
                   {String(index + 1).padStart(2, "0")}
                 </span>
-                <h3 className="col-start-2 row-start-1 font-semibold group-hover:text-evo-accent">
-                  {entry.ticker}
-                </h3>
-                <p className="col-start-2 row-start-2 mt-1 truncate text-xs text-evo-textSec">
-                  {entry.companyName}
-                </p>
+                <div className="company-identity col-start-2 row-span-2 row-start-1">
+                  <CompanyLogo ticker={entry.ticker} demo={showingDemo} />
+                  <div className="company-identity-copy">
+                    <h3 className="font-semibold group-hover:text-evo-accent">
+                      {entry.ticker}
+                    </h3>
+                    <p className="mt-1 truncate text-xs text-evo-textSec">
+                      {entry.companyName}
+                    </p>
+                  </div>
+                </div>
                 <p className="col-start-3 row-start-1 text-right font-numbers text-xl">
                   <span className="mb-1 block font-sans text-xs text-evo-textSec">
                     {showingDemo ? "Potencial simulado" : "Potencial informado"}

@@ -9,6 +9,7 @@ import { formatMoney, units } from "../lib/finance";
 import { formatPercent } from "../lib/portfolioInsights";
 import { PortfolioPulse } from "../components/PortfolioPulse";
 import { OrbitCoins } from "../components/OrbitCoins";
+import { CompanyLogo } from "../components/CompanyLogo";
 
 export function Dashboard() {
   const { user } = useAuth();
@@ -199,9 +200,14 @@ export function Dashboard() {
                         scope="row"
                         className="max-w-48 py-5 pr-4 font-medium"
                       >
-                        <span>{position.ticker}</span>
-                        <span className="mt-1 block truncate text-xs font-normal text-evo-textSec">
-                          {position.assetName}
+                        <span className="company-identity">
+                          <CompanyLogo ticker={position.ticker} size="sm" />
+                          <span className="company-identity-copy">
+                            <span>{position.ticker}</span>
+                            <span className="mt-1 block truncate text-xs font-normal text-evo-textSec">
+                              {position.assetName}
+                            </span>
+                          </span>
                         </span>
                       </th>
                       <td className="py-5 pr-4 text-right font-numbers text-xs">

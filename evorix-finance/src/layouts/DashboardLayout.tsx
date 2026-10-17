@@ -28,6 +28,7 @@ import {
 import { useAuth } from "../context/authContext";
 import { roleLabels, userCan } from "../lib/permissions";
 import { NotificationsMenu } from "../components/NotificationsMenu";
+import { ThemeToggle } from "../components/ThemeToggle";
 import { PageContent } from "../components/PageContent";
 import "../components/navigation-chrome.css";
 
@@ -446,6 +447,7 @@ export const DashboardLayout = () => {
             )}
           </div>
           <div className="flex shrink-0 items-center gap-2 md:gap-4">
+            <ThemeToggle />
             <Link
               to="/app/conversas"
               aria-label="Dúvidas e suporte"

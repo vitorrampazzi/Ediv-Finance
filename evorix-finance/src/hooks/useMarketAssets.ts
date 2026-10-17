@@ -4,6 +4,7 @@ import { apiRequest } from "../lib/api";
 export type MarketAsset = {
   symbol: string;
   name: string;
+  logoUrl?: string | null;
   price: string;
   changePercent: string | null;
   volume: string | null;

@@ -3,10 +3,10 @@
 }
 .market-asset-list > ul,
 .market-asset-list > div {
-  border-color: var(--ediv-line, #394149);
+  border-color: var(--ediv-line, var(--ediv-border));
 }
 .market-asset-row {
-  border-color: var(--ediv-line, #394149);
+  border-color: var(--ediv-line, var(--ediv-border));
 }
 .market-asset-change {
   line-height: 1.5;
@@ -14,17 +14,17 @@
 }
 .market-list-heading {
   padding-top: 0.75rem;
-  color: var(--ediv-muted, #bcc6cd);
+  color: var(--ediv-muted);
 }
 .market-query-bar > div {
-  border-color: var(--ediv-line, #394149);
+  border-color: var(--ediv-line, var(--ediv-border));
   border-radius: 12px;
-  background: var(--ediv-inset, #20262b);
+  background: var(--ediv-inset);
   transition: border-color 120ms ease;
 }
 .market-query-bar > div:focus-within {
-  border-color: var(--ediv-accent, #a9d9d1);
-  outline: 2px solid rgb(169 217 209 / 15%);
+  border-color: var(--ediv-accent);
+  outline: 2px solid color-mix(in srgb, var(--ediv-accent) 15%, transparent);
   outline-offset: 2px;
 }
 .market-query-bar :is(input, select) {
@@ -40,6 +40,6 @@
 }
 @media (prefers-contrast: more) {
   .market-asset-row {
-    border-color: #7b8990;
+    border-color: var(--ediv-muted);
   }
 }

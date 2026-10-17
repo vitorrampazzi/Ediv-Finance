@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
+import { CompanyLogo } from "./CompanyLogo";
 import type { FormEvent } from "react";
 import {
   ResponsiveContainer,
@@ -253,7 +254,12 @@ export function PortfolioExtras({
                       <td className="p-3">
                         {row.side === "BUY" ? "Compra" : "Venda"}
                       </td>
-                      <td>{row.ticker}</td>
+                      <td>
+                        <span className="company-identity-inline">
+                          <CompanyLogo ticker={row.ticker} size="sm" />
+                          {row.ticker}
+                        </span>
+                      </td>
                       <td>{row.quantity}</td>
                       <td>{formatMoney(row.price)}</td>
                       <td>{row.date}</td>
@@ -561,7 +567,8 @@ export function PortfolioExtras({
                       key={row.id}
                       className="rounded-lg border border-evo-border p-3 text-sm"
                     >
-                      <p className="font-semibold">
+                      <p className="company-identity-inline font-semibold">
+                        <CompanyLogo ticker={row.ticker} size="sm" />
                         {row.ticker} · {eventNames[row.kind]}
                       </p>
                       <p className="mt-1 text-evo-textSec">

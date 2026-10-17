@@ -2,6 +2,7 @@ import type { CSSProperties } from "react";
 import { ArrowRight, ChevronDown } from "lucide-react";
 import { Link } from "react-router-dom";
 import { rankingDemoEntries } from "../../lib/rankingDemo";
+import { CompanyLogo } from "../CompanyLogo";
 import "./public-sections.css";
 
 export function ResearchSample() {
@@ -39,10 +40,13 @@ export function ResearchSample() {
                 <span className="ph-sample-position" aria-hidden="true">
                   {String(index + 1).padStart(2, "0")}
                 </span>
-                <span className="ph-sample-company">
-                  <strong>{entry.companyName}</strong>
-                  <span>
-                    {entry.ticker} · {entry.sector}
+                <span className="research-sample-identity">
+                  <CompanyLogo ticker={entry.ticker} demo size="sm" />
+                  <span className="ph-sample-company">
+                    <strong>{entry.companyName}</strong>
+                    <span>
+                      {entry.ticker} · {entry.sector}
+                    </span>
                   </span>
                 </span>
                 <span className="ph-sample-potential">

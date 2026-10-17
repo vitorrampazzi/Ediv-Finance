@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { apiRequest } from "../lib/api";
 import { assistantEnabled } from "../lib/features";
+import { CompanyLogo } from "./CompanyLogo";
 import type { RankingFundamentalData } from "./RankingFundamentals";
 export type ResearchEntry = RankingFundamentalData & {
   rank: number;
@@ -138,7 +139,14 @@ export function CompanyComparison({
                 <dd className="mt-2 grid gap-3 text-sm sm:grid-cols-2">
                   {[a, b].map((entry) => (
                     <div key={entry.ticker} className="min-w-0">
-                      <span className="text-xs text-evo-accent">
+                      <span className="company-identity-inline text-xs text-evo-accent">
+                        {key === "companyName" && (
+                          <CompanyLogo
+                            ticker={entry.ticker}
+                            demo={demo}
+                            size="sm"
+                          />
+                        )}
                         {entry.ticker}
                       </span>
                       <p className="mt-1 whitespace-pre-wrap break-words text-evo-textSec">
@@ -256,12 +264,18 @@ export function VersionComparison({
           </p>
           {result.added.map((e) => (
             <p key={"add" + e.ticker} className="text-sm text-evo-accent">
-              Adicionado: {e.ticker} · {e.companyName}
+              <span className="company-identity-inline">
+                <CompanyLogo ticker={e.ticker} size="sm" />
+                Adicionado: {e.ticker} · {e.companyName}
+              </span>
             </p>
           ))}
           {result.removed.map((e) => (
             <p key={"remove" + e.ticker} className="text-sm">
-              Removido: {e.ticker} · {e.companyName}
+              <span className="company-identity-inline">
+                <CompanyLogo ticker={e.ticker} size="sm" />
+                Removido: {e.ticker} · {e.companyName}
+              </span>
             </p>
           ))}
           {result.changed.map((change) => (
@@ -270,8 +284,11 @@ export function VersionComparison({
               className="rounded-lg border border-evo-border p-3"
             >
               <summary className="min-h-11 cursor-pointer text-sm font-semibold">
-                {change.ticker} ·{" "}
-                {change.fields.map((f) => labels[f] || f).join(", ")}
+                <span className="company-identity-inline">
+                  <CompanyLogo ticker={change.ticker} size="sm" />
+                  {change.ticker} ·{" "}
+                  {change.fields.map((f) => labels[f] || f).join(", ")}
+                </span>
               </summary>
               <dl className="space-y-3">
                 {change.fields.map((field) => (

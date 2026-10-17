@@ -8,13 +8,13 @@
   gap: 1rem 0.75rem;
   align-items: start;
   padding-block: 1.25rem;
-  border-color: var(--ediv-line, #394149);
+  border-color: var(--ediv-line, var(--ediv-border));
   border-radius: 12px;
   transition: background-color 140ms ease;
 }
 
 .research-ranking-row:active {
-  background-color: rgb(169 217 209 / 7%);
+  background-color: color-mix(in srgb, var(--ediv-accent) 7%, transparent);
   transition-duration: 0ms;
 }
 
@@ -163,7 +163,7 @@
     display: grid;
     align-items: end;
     padding-block: 0.75rem;
-    color: var(--color-evo-textSec, #d5dbe5);
+    color: var(--color-evo-textSec, var(--ediv-muted));
     font-size: 0.75rem;
     font-weight: 500;
     line-height: 1.5;

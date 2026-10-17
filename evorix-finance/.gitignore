@@ -32,3 +32,7 @@ dist-ssr
 # Backups criptografados e chaves locais
 .backups/
 .test-artifacts/
+
+# Gravações temporárias do quadro de colaboração
+docs/harness/state.json.lock/
+docs/harness/state.json.*.tmp

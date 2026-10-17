@@ -2,7 +2,7 @@
   display: flex;
   min-width: 0;
   padding: 4px;
-  border: 1px solid var(--ediv-line, #394149);
+  border: 1px solid var(--ediv-line, var(--ediv-border));
   border-radius: 12px;
   background: rgb(0 0 0 / 14%);
 }
@@ -14,26 +14,26 @@
   min-height: 44px;
   padding: 0.5rem 0.625rem;
   border-radius: 8px;
-  color: var(--ediv-muted, #bcc6cd);
+  color: var(--ediv-muted);
   font-size: 0.8125rem;
   font-weight: 500;
   line-height: 1.4;
   transition: color 120ms ease;
 }
 .ediv-segmented button[aria-pressed="true"] {
-  color: var(--ediv-text, #f2f3f4);
+  color: var(--ediv-text);
 }
 .ediv-segmented button:active {
-  color: #fff;
-  background: rgb(255 255 255 / 5%);
+  color: var(--ediv-text);
+  background: var(--ediv-subtle);
 }
 .ediv-segmented-selection {
   position: absolute;
   z-index: -1;
   inset: 0;
-  border: 1px solid rgb(255 255 255 / 8%);
+  border: 1px solid var(--ediv-line);
   border-radius: inherit;
-  background: #343e45;
+  background: var(--ediv-raised);
   box-shadow: 0 1px 3px rgb(0 0 0 / 18%);
 }
 .ediv-segmented button:focus-visible {
@@ -42,6 +42,6 @@
 @media (prefers-contrast: more) {
   .ediv-segmented,
   .ediv-segmented-selection {
-    border-color: #a9d9d1;
+    border-color: var(--ediv-accent);
   }
 }

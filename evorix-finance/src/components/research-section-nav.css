@@ -8,8 +8,8 @@
   padding-inline: 1rem;
   overflow-x: auto;
   overscroll-behavior-x: contain;
-  border-block: 1px solid #4f5967;
-  background: #292d34;
+  border-block: 1px solid var(--ediv-border);
+  background: var(--ediv-inset);
   scrollbar-width: thin;
   scroll-padding-inline: 1rem;
 }
@@ -21,7 +21,7 @@
   gap: 0.5rem;
   padding: 0.35rem 0.1rem;
   border-bottom: 2px solid transparent;
-  color: #d5dbe5;
+  color: var(--ediv-muted);
   font-size: 0.8125rem;
   font-weight: 500;
   white-space: nowrap;
@@ -32,20 +32,20 @@
 .research-section-nav a span {
   font-family: ui-monospace, monospace;
   font-size: 0.6875rem;
-  color: #b7c0ce;
+  color: var(--ediv-muted);
 }
 .research-section-nav a[aria-current="location"] {
-  border-bottom-color: #a9d9d1;
-  color: #a9d9d1;
+  border-bottom-color: var(--ediv-accent);
+  color: var(--ediv-accent);
 }
 .research-section-nav a[aria-current="location"] span {
   color: inherit;
 }
 .research-section-nav a:hover {
-  color: #f6f7f9;
+  color: var(--ediv-text);
 }
 .research-section-nav a:focus-visible {
-  outline: 2px solid #a9d9d1;
+  outline: 2px solid var(--ediv-accent);
   outline-offset: -4px;
 }
 @media (min-width: 640px) {

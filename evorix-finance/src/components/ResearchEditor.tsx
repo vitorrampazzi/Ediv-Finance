@@ -1,4 +1,5 @@
 import { useId, useRef, useState } from "react";
+import { CompanyLogo } from "./CompanyLogo";
 import {
   ArrowRight,
   CheckCircle2,
@@ -460,12 +461,15 @@ export function ResearchEditor({
                     className={`rounded-lg border p-3 text-sm ${editing === index ? "border-evo-accent/50 bg-evo-accent/5" : "border-evo-border bg-evo-bgMain/40"}`}
                   >
                     <div className="flex flex-wrap items-center justify-between gap-3">
-                      <span className="min-w-0 break-words">
-                        <span className="mr-2 text-xs text-evo-textSec">
-                          {String(index + 1).padStart(2, "0")}
+                      <span className="company-identity min-w-0 break-words">
+                        <CompanyLogo ticker={entry.ticker} size="sm" />
+                        <span className="company-identity-copy">
+                          <span className="mr-2 text-xs text-evo-textSec">
+                            {String(index + 1).padStart(2, "0")}
+                          </span>
+                          <strong>{entry.ticker}</strong> · {entry.empresa}
+                          {editing === index ? " · em edição" : ""}
                         </span>
-                        <strong>{entry.ticker}</strong> · {entry.empresa}
-                        {editing === index ? " · em edição" : ""}
                       </span>
                       <div className="flex gap-2">
                         <button

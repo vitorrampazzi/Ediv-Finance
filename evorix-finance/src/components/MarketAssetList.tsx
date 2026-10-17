@@ -1,5 +1,6 @@
 import { ArrowDown, ArrowUp } from "lucide-react";
 import type { MarketAsset } from "../hooks/useMarketAssets";
+import { CompanyLogo } from "./CompanyLogo";
 import "./market-list.css";
 
 const money = new Intl.NumberFormat("pt-BR", {
@@ -87,19 +88,22 @@ export function MarketAssetList({
 
             return (
               <li key={asset.symbol} className={rowClass}>
-                <div className="col-start-1 row-start-1 min-w-0">
-                  <Heading className="text-[1.0625rem] font-semibold tracking-tight text-evo-textMain">
-                    {asset.symbol}
-                  </Heading>
-                  <p
-                    className="mt-1 truncate text-xs text-evo-textSec"
-                    title={asset.name}
-                  >
-                    {asset.name}
-                  </p>
-                  <p className="mt-1 hidden text-xs text-evo-textSec md:block">
-                    {asset.sector || asset.subType || "B3"}
-                  </p>
+                <div className="company-identity col-start-1 row-start-1 min-w-0">
+                  <CompanyLogo ticker={asset.symbol} logoUrl={asset.logoUrl} />
+                  <div className="company-identity-copy">
+                    <Heading className="text-[1.0625rem] font-semibold tracking-tight text-evo-textMain">
+                      {asset.symbol}
+                    </Heading>
+                    <p
+                      className="mt-1 truncate text-xs text-evo-textSec"
+                      title={asset.name}
+                    >
+                      {asset.name}
+                    </p>
+                    <p className="mt-1 hidden text-xs text-evo-textSec md:block">
+                      {asset.sector || asset.subType || "B3"}
+                    </p>
+                  </div>
                 </div>
                 <p className="col-start-2 row-start-1 text-right">
                   <span className="sr-only">Preço informado: </span>

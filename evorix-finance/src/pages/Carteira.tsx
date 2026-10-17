@@ -8,6 +8,7 @@ import {
   Trash2,
 } from "lucide-react";
 import { Card } from "../components/Card";
+import { CompanyLogo } from "../components/CompanyLogo";
 import { OrbitCoins } from "../components/OrbitCoins";
 import { PortfolioPulse } from "../components/PortfolioPulse";
 import { PortfolioExtras } from "../components/PortfolioExtras";
@@ -325,9 +326,15 @@ export const Carteira = () => {
                       scope="row"
                       className="p-4 font-medium text-evo-textMain"
                     >
-                      <span>{position.ticker}</span>
-                      <span className="block text-xs font-normal text-evo-textSec">
-                        {position.assetName} · {typeLabels[position.assetType]}
+                      <span className="company-identity">
+                        <CompanyLogo ticker={position.ticker} size="sm" />
+                        <span className="company-identity-copy">
+                          <span>{position.ticker}</span>
+                          <span className="block text-xs font-normal text-evo-textSec">
+                            {position.assetName} ·{" "}
+                            {typeLabels[position.assetType]}
+                          </span>
+                        </span>
                       </span>
                     </th>
                     <td className="p-4 text-right text-evo-textMain">
@@ -429,9 +436,14 @@ export const Carteira = () => {
                         scope="row"
                         className="p-4 font-medium text-evo-textMain"
                       >
-                        {transaction.ticker}
-                        <span className="block text-xs font-normal text-evo-textSec">
-                          {transaction.assetName}
+                        <span className="company-identity">
+                          <CompanyLogo ticker={transaction.ticker} size="sm" />
+                          <span className="company-identity-copy">
+                            {transaction.ticker}
+                            <span className="block text-xs font-normal text-evo-textSec">
+                              {transaction.assetName}
+                            </span>
+                          </span>
                         </span>
                       </th>
                       <td className="p-4 text-right text-evo-textSec">

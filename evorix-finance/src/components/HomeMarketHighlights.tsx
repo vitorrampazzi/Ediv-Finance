@@ -2,6 +2,7 @@ import { ArrowRight, ArrowUpRight } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useAuth } from "../context/authContext";
 import { useMarketAssets } from "../hooks/useMarketAssets";
+import { CompanyLogo } from "./CompanyLogo";
 
 const money = new Intl.NumberFormat("pt-BR", {
   style: "currency",
@@ -88,9 +89,12 @@ export function HomeMarketHighlights() {
             aria-label={`Ver análise de ${asset.symbol}, ${asset.name}`}
           >
             <div className="col-start-1 row-start-1 flex items-center justify-between gap-3">
-              <h3 className="text-lg font-semibold tracking-tight">
-                {asset.symbol}
-              </h3>
+              <div className="company-identity">
+                <CompanyLogo ticker={asset.symbol} logoUrl={asset.logoUrl} />
+                <h3 className="text-lg font-semibold tracking-tight">
+                  {asset.symbol}
+                </h3>
+              </div>
               <ArrowUpRight
                 size={19}
                 className="hidden shrink-0 text-evo-green sm:block"

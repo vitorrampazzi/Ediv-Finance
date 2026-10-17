@@ -9,6 +9,20 @@
   --ediv-text: #f2f3f4;
   --ediv-muted: #bcc6cd;
   --ediv-accent: #a9d9d1;
+  --ediv-deep: #181d21;
+  --ediv-border: #394149;
+  --ediv-green: #95ccb4;
+  --ediv-red: #f298a0;
+  --ediv-primary: #28665f;
+  --ediv-primary-hover: #34776f;
+  --ediv-on-accent: #142923;
+  --ediv-hover: rgb(255 255 255 / 5%);
+  --ediv-active: rgb(255 255 255 / 8%);
+  --ediv-subtle: rgb(255 255 255 / 3%);
+  --ediv-selection: rgb(169 217 209 / 10%);
+  --ediv-raised: #343e45;
+  --ediv-chrome: rgb(32 38 43 / 97%);
+  --ediv-graphic-surface: #263c3e;
   --ediv-radius: 14px;
   --ediv-ease: cubic-bezier(0.2, 0.8, 0.2, 1);
   color-scheme: dark;
@@ -17,6 +31,135 @@
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   font-optical-sizing: auto;
+}
+
+:root[data-theme="light"] {
+  --ediv-canvas: #f7f8f6;
+  --ediv-surface: #ffffff;
+  --ediv-inset: #edf1ee;
+  --ediv-deep: #e5ebe7;
+  --ediv-line: #c9d3cd;
+  --ediv-border: #b6c4bc;
+  --ediv-text: #182a26;
+  --ediv-muted: #4b625a;
+  --ediv-accent: #22675c;
+  --ediv-green: #246c4b;
+  --ediv-red: #ad3244;
+  --ediv-primary: #28665f;
+  --ediv-primary-hover: #20564f;
+  --ediv-on-accent: #ffffff;
+  --ediv-hover: rgb(24 70 56 / 5%);
+  --ediv-active: rgb(24 70 56 / 9%);
+  --ediv-subtle: rgb(24 70 56 / 3%);
+  --ediv-selection: rgb(34 103 92 / 10%);
+  --ediv-raised: #e2eae5;
+  --ediv-chrome: rgb(247 248 246 / 97%);
+  --ediv-graphic-surface: #e2eee8;
+  color-scheme: light;
+}
+
+/* Existing SVG illustrations and charts carry presentation attributes. CSS tokens
+   let them inherit the active palette without recoloring downloaded company logos. */
+svg :is([fill="#d5dbe5" i], [fill="#f6f7f9" i], [fill="#f2f3f4" i]) {
+  fill: var(--ediv-text);
+}
+svg :is([fill="#292d34" i], [fill="#20252c" i]) {
+  fill: var(--ediv-inset);
+}
+svg [fill="#4f5967" i] {
+  fill: var(--ediv-border);
+}
+svg [fill="#a9d9d1" i] {
+  fill: var(--ediv-accent);
+}
+svg [fill="#95ccb4" i] {
+  fill: var(--ediv-green);
+}
+:root[data-theme="light"] svg [fill="#28665f" i] {
+  fill: var(--ediv-graphic-surface);
+}
+svg [stroke="#4f5967" i] {
+  stroke: var(--ediv-border);
+}
+svg :is([stroke="#d5dbe5" i], [stroke="#c1c7d0" i]) {
+  stroke: var(--ediv-muted);
+}
+svg :is([stroke="#a9d9d1" i], [stroke="#9cc7c5" i]) {
+  stroke: var(--ediv-accent);
+}
+svg :is([stroke="#95ccb4" i], [stroke="#82b7a0" i]) {
+  stroke: var(--ediv-green);
+}
+
+.recharts-default-tooltip {
+  background-color: var(--ediv-surface) !important;
+  border-color: var(--ediv-border) !important;
+  color: var(--ediv-text) !important;
+}
+.recharts-cartesian-axis-tick text {
+  fill: var(--ediv-muted);
+}
+
+.ediv-theme-control {
+  position: relative;
+  display: inline-grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 44px;
+  height: 44px;
+}
+
+.ediv-theme-select {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  appearance: none;
+  border: 0;
+  border-radius: inherit;
+  cursor: pointer;
+  background: transparent;
+  color: transparent;
+}
+
+.ediv-theme-select option {
+  color: var(--ediv-text);
+  background: var(--ediv-surface);
+}
+
+.ediv-theme-control svg {
+  pointer-events: none;
+}
+.ediv-theme-control:focus-within {
+  outline: 2px solid var(--ediv-accent);
+  outline-offset: 3px;
+}
+.ediv-theme-select:focus-visible {
+  outline: none;
+}
+.ediv-theme-light-icon {
+  display: none;
+}
+:root[data-theme="light"] .ediv-theme-light-icon {
+  display: block;
+}
+:root[data-theme="light"] .ediv-theme-dark-icon {
+  display: none;
+}
+
+@media (forced-colors: active) {
+  .ediv-theme-control {
+    width: auto;
+  }
+  .ediv-theme-control svg {
+    display: none;
+  }
+  .ediv-theme-select {
+    position: static;
+    width: auto;
+    appearance: auto;
+    color: ButtonText;
+  }
 }
 
 html {
@@ -348,6 +491,11 @@ textarea {
   .action-secondary {
     border-color: #7b8990;
   }
+  :root[data-theme="light"] {
+    --ediv-line: #667e73;
+    --ediv-border: #667e73;
+    --ediv-muted: #354c42;
+  }
 }
 
 @media (prefers-reduced-transparency: reduce) {
@@ -366,12 +514,12 @@ button:disabled {
 }
 
 ::selection {
-  background: rgba(82, 157, 148, 0.38);
+  background: var(--ediv-primary);
   color: #fff;
 }
 
 :focus-visible {
-  outline: 2px solid #9cc7c5;
+  outline: 2px solid var(--ediv-accent);
   outline-offset: 3px;
 }
 
@@ -388,16 +536,16 @@ button:disabled {
 }
 
 ::-webkit-scrollbar-track {
-  background: #20252c;
+  background: var(--ediv-inset);
 }
 
 ::-webkit-scrollbar-thumb {
   border-radius: 999px;
-  background: #647080;
+  background: var(--ediv-muted);
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #629a94;
+  background: var(--ediv-accent);
 }
 
 .research-visual {
@@ -409,7 +557,7 @@ button:disabled {
   width: 104px;
   height: 96px;
   pointer-events: none;
-  color: #a9d9d1;
+  color: var(--ediv-accent);
 }
 
 .research-visual--hero {
@@ -447,7 +595,7 @@ button:disabled {
   width: 47%;
   padding: 10% 6% 8%;
   border: 1px solid rgb(169 217 209 / 75%);
-  background: #263c3e;
+  background: var(--ediv-graphic-surface);
   box-shadow: -4px 7px 15px rgb(12 17 22 / 30%);
   transform: rotate(7deg);
   animation: researchSheetFloat 6s ease-in-out infinite;
@@ -467,7 +615,7 @@ button:disabled {
 }
 
 .research-visual-sheet-heading span {
-  color: #e1f2ed;
+  color: var(--ediv-text);
   font-size: 4px;
   font-weight: 600;
   letter-spacing: 0.12em;
@@ -511,7 +659,7 @@ button:disabled {
   width: 22%;
   padding: 5%;
   border-left: 1px solid currentColor;
-  background: #263c3e;
+  background: var(--ediv-graphic-surface);
   transform: rotate(-7deg);
   animation: researchNoteFloat 7.5s ease-in-out infinite;
   animation-delay: -3s;

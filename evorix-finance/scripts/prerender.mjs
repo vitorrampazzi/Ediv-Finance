@@ -38,7 +38,7 @@ export async function prerender() {
   };
   const pageStyles = (path) =>
     cssFiles
-      .filter((name) => pageCss[path]?.test(name))
+      .filter((name) => pageCss[path]?.test(name) || /^CompanyLogo-[\w-]+\.css$/.test(name))
       .map(
         (name) =>
           `<link rel="stylesheet" crossorigin href="/assets/${name}" />`,

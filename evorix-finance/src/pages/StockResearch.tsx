@@ -14,6 +14,7 @@ import {
   useSearchParams,
 } from "react-router-dom";
 import { RankingAccessLanding } from "../components/RankingAccessLanding";
+import { CompanyLogo } from "../components/CompanyLogo";
 import { RankingFundamentals } from "../components/RankingFundamentals";
 import { IndicatorHelp } from "../components/ResearchTools";
 import { ResearchCoverage } from "../components/ResearchCoverage";
@@ -220,9 +221,17 @@ function MemberStockResearch() {
           <span aria-hidden="true">/</span>
           <span>{entry.sector || "Setor não informado"}</span>
         </div>
-        <h1 className="display-title mt-4 break-words text-3xl sm:text-5xl">
-          {entry.companyName}
-        </h1>
+        <div className="company-identity research-heading-identity">
+          <CompanyLogo
+            ticker={entry.ticker}
+            demo={demo}
+            size="lg"
+            loading="eager"
+          />
+          <h1 className="display-title break-words text-3xl sm:text-5xl">
+            {entry.companyName}
+          </h1>
+        </div>
         <p className="mt-3 font-numbers text-xl text-evo-textSec">
           {entry.ticker}{" "}
           <span className="ml-3 font-sans text-xs">
@@ -556,6 +565,7 @@ function MemberStockResearch() {
                 {previous.ticker} · {previous.companyName}
               </span>
             </span>
+            <CompanyLogo ticker={previous.ticker} demo={demo} size="sm" />
           </Link>
         ) : (
           <Link
@@ -578,6 +588,7 @@ function MemberStockResearch() {
                 {next.ticker} · {next.companyName}
               </span>
             </span>
+            <CompanyLogo ticker={next.ticker} demo={demo} size="sm" />
             <ArrowRight
               size={17}
               className="shrink-0 text-evo-accent"

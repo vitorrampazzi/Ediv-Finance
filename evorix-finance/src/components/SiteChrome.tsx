@@ -12,6 +12,7 @@ import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { Link, NavLink, Outlet, useLocation } from "react-router-dom";
 import { useAuth } from "../context/authContext";
 import { PageContent } from "./PageContent";
+import { ThemeToggle } from "./ThemeToggle";
 import "./navigation-chrome.css";
 
 export function SiteHeader({
@@ -131,37 +132,44 @@ export function SiteHeader({
               </>
             )}
           </nav>
-          <div className="flex items-center gap-2 lg:hidden">
-            <Link
-              to={
-                user ? "/app" : showRegistrationAction ? "/cadastro" : "/entrar"
-              }
-              className={`ediv-chrome-link inline-flex min-h-11 items-center gap-1 rounded-lg px-3 text-sm font-semibold ${user || showRegistrationAction ? "ediv-chrome-primary" : ""}`}
-            >
-              {user
-                ? "Minha conta"
-                : showRegistrationAction
-                  ? "Criar conta"
-                  : "Entrar"}
-              {(user || showRegistrationAction) && (
-                <ArrowRight size={14} aria-hidden="true" />
-              )}
-            </Link>
-            <button
-              ref={menuButton}
-              type="button"
-              onClick={() => setMenuRoute(mobileMenuOpen ? null : routeKey)}
-              aria-label={mobileMenuOpen ? "Fechar menu" : "Abrir menu"}
-              aria-expanded={mobileMenuOpen}
-              aria-controls="public-mobile-menu"
-              className="ediv-chrome-icon inline-flex h-11 w-11 items-center justify-center"
-            >
-              {mobileMenuOpen ? (
-                <X size={19} aria-hidden="true" />
-              ) : (
-                <Menu size={19} aria-hidden="true" />
-              )}
-            </button>
+          <div className="flex shrink-0 items-center gap-1 sm:gap-2">
+            <ThemeToggle />
+            <div className="flex items-center gap-1 sm:gap-2 lg:hidden">
+              <Link
+                to={
+                  user
+                    ? "/app"
+                    : showRegistrationAction
+                      ? "/cadastro"
+                      : "/entrar"
+                }
+                className={`ediv-chrome-link inline-flex min-h-11 items-center gap-1 rounded-lg px-3 text-sm font-semibold ${user || showRegistrationAction ? "ediv-chrome-primary" : ""}`}
+              >
+                {user
+                  ? "Minha conta"
+                  : showRegistrationAction
+                    ? "Criar conta"
+                    : "Entrar"}
+                {(user || showRegistrationAction) && (
+                  <ArrowRight size={14} aria-hidden="true" />
+                )}
+              </Link>
+              <button
+                ref={menuButton}
+                type="button"
+                onClick={() => setMenuRoute(mobileMenuOpen ? null : routeKey)}
+                aria-label={mobileMenuOpen ? "Fechar menu" : "Abrir menu"}
+                aria-expanded={mobileMenuOpen}
+                aria-controls="public-mobile-menu"
+                className="ediv-chrome-icon inline-flex h-11 w-11 items-center justify-center"
+              >
+                {mobileMenuOpen ? (
+                  <X size={19} aria-hidden="true" />
+                ) : (
+                  <Menu size={19} aria-hidden="true" />
+                )}
+              </button>
+            </div>
           </div>
           <AnimatePresence initial={false}>
             {mobileMenuOpen && (

@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { useTheme } from "../../lib/theme";
 
 interface TurnstileApi {
   render(
@@ -6,7 +7,7 @@ interface TurnstileApi {
     options: {
       sitekey: string;
       action: "register";
-      theme: "dark";
+      theme: "dark" | "light";
       size: "flexible" | "compact";
       "response-field": false;
       callback: (token: string) => void;
@@ -73,6 +74,7 @@ export function RegistrationChallenge({
   const [issue, setIssue] = useState("");
   const [ready, setReady] = useState(false);
   const [attempt, setAttempt] = useState(0);
+  const { theme } = useTheme();
 
   useEffect(() => {
     let cancelled = false;
@@ -83,7 +85,7 @@ export function RegistrationChallenge({
         const id = api.render(container.current, {
           sitekey: siteKey,
           action: "register",
-          theme: "dark",
+          theme,
           size:
             container.current.getBoundingClientRect().width < 300
               ? "compact"
@@ -128,7 +130,7 @@ export function RegistrationChallenge({
         widget.current = null;
       }
     };
-  }, [siteKey, onToken, attempt]);
+  }, [siteKey, onToken, attempt, theme]);
 
   useEffect(() => {
     onToken("");

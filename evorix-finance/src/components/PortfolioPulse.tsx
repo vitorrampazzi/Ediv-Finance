@@ -12,6 +12,7 @@ import type { PortfolioInsights } from "../lib/portfolioInsights";
 import { formatPercent } from "../lib/portfolioInsights";
 import { formatMoney, units } from "../lib/finance";
 import { typeLabels } from "../lib/portfolio";
+import { CompanyLogo } from "./CompanyLogo";
 
 const allocationColors = [
   "#7cbdb7",
@@ -333,11 +334,14 @@ export function PortfolioPulse({
                     key={item.ticker}
                     className="flex items-center justify-between gap-4 py-4"
                   >
-                    <div className="min-w-0">
-                      <p className="font-medium">{item.ticker}</p>
-                      <p className="mt-1 truncate text-xs text-evo-textSec">
-                        {item.assetName}
-                      </p>
+                    <div className="company-identity min-w-0">
+                      <CompanyLogo ticker={item.ticker} size="sm" />
+                      <div className="company-identity-copy">
+                        <p className="font-medium">{item.ticker}</p>
+                        <p className="mt-1 truncate text-xs text-evo-textSec">
+                          {item.assetName}
+                        </p>
+                      </div>
                     </div>
                     <div className="shrink-0 text-right">
                       <p

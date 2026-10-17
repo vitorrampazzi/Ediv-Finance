@@ -46,7 +46,18 @@ test("rotas desconhecidas não são reescritas para HTML com status 200", async 
     config.headers[0].headers.map((header) => [header.key, header.value]),
   );
   assert.match(headers["Content-Security-Policy"], /frame-ancestors 'none'/);
-  assert.match(headers["Content-Security-Policy"], /script-src 'self';/);
+  const directives = Object.fromEntries(
+    headers["Content-Security-Policy"]
+      .split(";")
+      .map((directive) => directive.trim().split(/\s+/))
+      .filter(([name]) => name)
+      .map(([name, ...sources]) => [name, sources]),
+  );
+  assert.deepEqual(directives["script-src"], [
+    "'self'",
+    "https://challenges.cloudflare.com",
+  ]);
+  assert.deepEqual(directives["object-src"], ["'none'"]);
   assert.equal(headers["X-Frame-Options"], "DENY");
   assert.equal(headers["X-Content-Type-Options"], "nosniff");
 });

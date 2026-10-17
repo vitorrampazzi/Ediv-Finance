@@ -4,6 +4,7 @@ import { Link } from "react-router-dom";
 import { OrbitCoins } from "../components/OrbitCoins";
 import { useFavoritos } from "../hooks/useFavoritos";
 import { useMarketQuotes } from "../hooks/useMarketQuotes";
+import { CompanyLogo } from "../components/CompanyLogo";
 
 const money = new Intl.NumberFormat("pt-BR", {
   style: "currency",
@@ -181,16 +182,19 @@ export const Favoritos = () => {
                     className="favorite-card-enter grid grid-cols-[minmax(0,1fr)_auto_2.75rem] items-center gap-x-3 gap-y-3 py-5 transition-colors hover:bg-evo-bgSec/30 md:grid-cols-[minmax(0,1.2fr)_minmax(8rem,.7fr)_minmax(8rem,.7fr)_minmax(10rem,1fr)_3rem] md:gap-x-5 md:py-6"
                     style={{ animationDelay: `${Math.min(index, 8) * 65}ms` }}
                   >
-                    <div className="col-start-1 row-start-1 min-w-0">
-                      <h3 className="text-base font-semibold tracking-tight">
-                        {ticker}
-                      </h3>
-                      <p
-                        className="mt-1 truncate text-xs text-evo-textSec"
-                        title={quote?.name}
-                      >
-                        {quote?.name || "Cotação não disponível"}
-                      </p>
+                    <div className="company-identity col-start-1 row-start-1 min-w-0">
+                      <CompanyLogo ticker={ticker} logoUrl={quote?.logoUrl} />
+                      <div className="company-identity-copy">
+                        <h3 className="text-base font-semibold tracking-tight">
+                          {ticker}
+                        </h3>
+                        <p
+                          className="mt-1 truncate text-xs text-evo-textSec"
+                          title={quote?.name}
+                        >
+                          {quote?.name || "Cotação não disponível"}
+                        </p>
+                      </div>
                     </div>
                     <p className="col-start-2 row-start-1 text-right font-numbers text-base font-medium sm:text-lg">
                       <span className="sr-only">Preço informado: </span>
