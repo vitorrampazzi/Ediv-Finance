@@ -13,6 +13,7 @@ import { Link, NavLink, Outlet, useLocation } from "react-router-dom";
 import { useAuth } from "../context/authContext";
 import { PageContent } from "./PageContent";
 import { ThemeToggle } from "./ThemeToggle";
+import { openPrivacyPreferences } from "../lib/analytics";
 import "./navigation-chrome.css";
 
 export function SiteHeader({
@@ -312,6 +313,15 @@ export function SiteFooter({
                 <Link className="hover:text-evo-textMain" to="/privacidade">
                   Privacidade e uso
                 </Link>
+              </li>
+              <li>
+                <button
+                  type="button"
+                  className="min-h-11 text-left hover:text-evo-textMain"
+                  onClick={openPrivacyPreferences}
+                >
+                  Preferências de cookies
+                </button>
               </li>
               <li>
                 <Link className="hover:text-evo-textMain" to="/suporte">

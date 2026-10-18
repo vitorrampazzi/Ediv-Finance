@@ -5,6 +5,13 @@ import { Card } from "../components/Card";
 import { useAuth } from "../context/authContext";
 import { apiRequest } from "../lib/api";
 import { PasswordInput } from "../components/PasswordInput";
+import { PasswordRequirements } from "../components/PasswordRequirements";
+import {
+  isValidNewPassword,
+  passwordMinLength,
+  passwordMaxLength,
+  passwordPolicyHint,
+} from "../../password-policy.mjs";
 export const Configuracoes = () => {
   const { deleteAccount } = useAuth();
   const navigate = useNavigate();
@@ -33,6 +40,11 @@ export const Configuracoes = () => {
   };
   const change = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    if (!isValidNewPassword(password)) {
+      setError(passwordPolicyHint);
+      document.getElementById("settings-new-password")?.focus();
+      return;
+    }
     if (password !== repeat) {
       setError("As novas senhas precisam ser iguais.");
       return;
@@ -61,7 +73,7 @@ export const Configuracoes = () => {
       <Card glow="none">
         <h2 className="text-lg font-semibold">Alterar senha</h2>
         <p className="mt-2 text-sm text-evo-textSec">
-          Use pelo menos 12 caracteres. A alteração encerra todas as sessões.
+          A alteração encerra todas as sessões. Você precisará entrar novamente.
         </p>
         <form onSubmit={change} className="mt-5 grid gap-4 sm:grid-cols-2">
           <div className="text-sm sm:col-span-2">
@@ -85,15 +97,17 @@ export const Configuracoes = () => {
             </label>
             <PasswordInput
               id="settings-new-password"
+              aria-describedby="settings-password-hint"
               visibilityLabel="nova senha"
               containerClassName="mt-2"
               required
-              minLength={12}
-              maxLength={128}
+              minLength={passwordMinLength}
+              maxLength={passwordMaxLength}
               autoComplete="new-password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
             />
+            <PasswordRequirements id="settings-password-hint" />
           </div>
           <div className="text-sm">
             <label htmlFor="settings-confirm-password" className="block">
@@ -104,8 +118,8 @@ export const Configuracoes = () => {
               visibilityLabel="confirmação da nova senha"
               containerClassName="mt-2"
               required
-              minLength={12}
-              maxLength={128}
+              minLength={passwordMinLength}
+              maxLength={passwordMaxLength}
               autoComplete="new-password"
               value={repeat}
               onChange={(e) => setRepeat(e.target.value)}

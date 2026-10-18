@@ -5,6 +5,41 @@ revalide comportamento no código antes de mudar contratos.
 
 ## Objetivo atual
 
+### Rodada5 — senhas, login e Google Analytics (17/10/2026)
+
+Usuário pediu senha mínima8 com maiúscula/número/especial, espaçamento entre
+recuperação de senha e reenviar confirmação, termos/LGPD e Analytics do zero.
+Depois pediu para DEIXAR A PARTE JURÍDICA PARA DEPOIS por não ter controlador/
+CNPJ/contato definidos. Não criar termos, checkbox contratual ou migração nesta
+rodada. A página de transparência existente só recebe explicação factual da
+integração de estatísticas/cookies; isso não constitui certificação LGPD.
+
+Aceitação senha: helper único frontend/API,8..128, pelo menos1 maiúscula,
+1 dígito e1 especial (pontuação/símbolo, espaços não contam), sem exigir minúscula;
+cadastro/reset/troca validam senha nova, login/senha atual legada preservados.
+Login: ações separadas com44px e gap, mobile320px e desktop, ambos temas.
+
+Analytics: usuário autorizou abrir painel Chrome, informou equipe1..10,
+concluiu pessoalmente criação/aceite de termos Google e autorizou DESATIVAR
+métrica otimizada em favor da medição controlada pelo site. Propriedade
+Escola do Dividendo — Site, Brasil/São Paulo,BRL, setor Empregos e educação;
+compartilhamentos opcionais desmarcados. Objetivos tráfego+engajamento/retenção.
+Fluxo Web para escoladodividendo.com.br criado; ID e restante via navegador.
+
+Aceitação técnica: GA4 só após permissão explícita, recusar equivalente e sem
+bloquear conta, opção reabrir/revogar em todos layouts, escolha versionada6meses,
+memória+aviso em storage bloqueado. Nunca enviar nome/email/senha/conta, buscas,
+query/hash/tokens ou conteúdo de conversas. Rotas permitidas+nomes estáticos,
+empresa agregada, auth/perfil/config/suporte/admin fora. Sem Google Signals,
+Ads,User-ID ou dados fornecidos pelo usuário; métrica otimizada OFF na propriedade.
+Somente domínio oficial; localhost/previews/QA/staff não enviam. SPA pageviews
+manuais com send_page_view:false e dedupe por rota; revogação desabilita tag antes
+de atualizar consentimento e limpa cookiesGA acessíveis, sem apagar dados remotos.
+
+Divisão: interface authTSX/spacing, backend política/schemas/testes de senha,
+coordenação consentimento/analytics/CSP/transparência/docs/integração/browser/main.
+Sem banco/migração/testes de cadastro em produção. Publicar main continua autorizado.
+
 ### Rodada4 — introdução guiada e valores de exemplo (17/10/2026)
 
 Usuário pediu tour após cadastro com modais obrigatórios, cada etapa apontando
@@ -38,6 +73,11 @@ Divisão: interface GuidedTour/steps/CSS/targets/Layout; backend tabela/resumos
 e testes; coordenação gatilho/store/AccountOnboarding/RegisterPage, contexto,
 ambiente local isolado, validação final e main conforme autorização vigente.
 Todos reservam arquivos/relatos; sem produção para testes de cadastro/banco.
+
+Publicada em main0cb02dc93a6b367583ce7ffb60c681dca4ebee27; status Vercel
+success confirmado.61 testes/lint/build Node22 e Chrome local aprovaram fluxo
+cadastro→confirmação→primeiro login, ausência em login comum, replay, teclado,
+retomada, retorno e tabela nos dois temas/mobile. Sem migração ou QA.
 
 ### Nova rodada — refinamento visual e ranking (17/10/2026)
 

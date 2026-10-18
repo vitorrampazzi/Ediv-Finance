@@ -159,22 +159,24 @@ export function LoginPage() {
           destination={destination}
         />
       )}
-      <Link
-        to="/recuperar-senha"
-        className="mt-3 inline-flex min-h-11 items-center text-sm text-evo-accent underline"
-      >
-        Esqueci minha senha
-      </Link>
-      {!verificationEmail && (
-        <button
-          type="button"
-          disabled={resending || !email}
-          onClick={resend}
-          className="mt-3 min-h-10 text-left text-xs text-evo-textSec underline decoration-evo-border underline-offset-4 hover:text-evo-textMain disabled:opacity-50"
+      <div className="mt-4 flex flex-col items-start gap-2 border-t border-evo-border pt-3 sm:flex-row sm:flex-wrap sm:items-center sm:gap-x-6 sm:gap-y-2">
+        <Link
+          to="/recuperar-senha"
+          className="inline-flex min-h-11 items-center py-2 text-sm text-evo-accent underline underline-offset-4"
         >
-          {resending ? "Enviando…" : "Reenviar confirmação de e-mail"}
-        </button>
-      )}
+          Esqueci minha senha
+        </Link>
+        {!verificationEmail && (
+          <button
+            type="button"
+            disabled={resending || !email}
+            onClick={resend}
+            className="inline-flex min-h-11 items-center py-2 text-left text-xs text-evo-textSec underline decoration-evo-border underline-offset-4 hover:text-evo-textMain disabled:opacity-50"
+          >
+            {resending ? "Enviando…" : "Reenviar confirmação de e-mail"}
+          </button>
+        )}
+      </div>
       <p className="mt-5 text-center text-sm text-evo-textSec">
         Ainda não tem conta?{" "}
         <Link

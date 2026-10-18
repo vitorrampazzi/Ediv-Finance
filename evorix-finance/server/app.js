@@ -52,14 +52,24 @@ app.use(
   helmet({
     contentSecurityPolicy: {
       directives: {
-        scriptSrc: ["'self'", "https://challenges.cloudflare.com"],
+        scriptSrc: [
+          "'self'",
+          "https://challenges.cloudflare.com",
+          "https://www.googletagmanager.com",
+        ],
         scriptSrcAttr: ["'none'"],
         frameSrc: [
           "https://www.youtube-nocookie.com",
           "https://player.vimeo.com",
           "https://challenges.cloudflare.com",
         ],
-        connectSrc: ["'self'", "https://challenges.cloudflare.com"],
+        connectSrc: [
+          "'self'",
+          "https://challenges.cloudflare.com",
+          "https://www.googletagmanager.com",
+          "https://*.google-analytics.com",
+          "https://www.google.com",
+        ],
       },
     },
   }),

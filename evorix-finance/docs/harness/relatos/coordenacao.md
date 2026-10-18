@@ -264,3 +264,107 @@ Publicação pela API GitHub com parent/expected_sha e sem force, conforme
 autorização vigente do usuário para main. Manifesto exclui fixtures/dist/cache,
 planilha e capturas; novos helpers raiz incluídos explicitamente. Próximo passo:
 publicar, acompanhar Vercel e conferir tabela/ausência do tour no acesso normal.
+
+Main atualizada atomicamente em0cb02dc93a6b367583ce7ffb60c681dca4ebee27.
+Vercel success confirmado no status do commit. Servidor fixture4183 encerrado,
+aba local fechada e viewport restaurado. Conferência final no domínio em andamento.
+
+Domínio oficial conferido: /app/ranking mostrou36 resumos fictícios nas seis
+colunas e dialog count0 no acesso comum da conta existente. Primeiro balanço
+mostra ativosR$1.600milhões e patrimônioR$900milhões, iguais ao detalhe.
+Captura ranking-valores-publicado.png salva e aba marcada como entrega.
+Deploy confirmado; reservas liberadas e rodada concluída. Banco e QA intactos.
+
+## Rodada5 — senha, login e integração Google Analytics
+
+Escopo pedido: mínimo8/maiúscula/número/especial, espaçamento do login,
+termos/LGPD e Analytics do zero. Usuário adiou expressamente a parte jurídica
+por não ter identificação/controlador/contato definidos. Nenhum termo próprio,
+checkbox contratual, registro de aceite ou migração foi acrescentado.
+
+### Entregas e configuração externa
+
+Interface entregou PasswordRequirements e ajustes Register/ResetPassword/
+Configuracoes/Login. Backend entregou password-policy.mjs/d.mts,
+server/password-schema.js, integração auth e5 testes reais do schema, preservando
+credenciais legadas no login/senha atual. Sem banco nessa mudança.
+
+Coordenação implementou analytics-policy.mjs/d.mts, src/lib/analytics.ts,
+PrivacyConsent/CSS e links em SiteChrome/DashboardLayout/AuthShell. App inclui
+o controlador global. Transparencia recebe explicação factual dos dados,
+server/app.js e vercel.json permitem fontes Google específicas mantendo scripts
+sem unsafe-inline/eval. tests/site.test.mjs confere allowlist de scripts exata;
+tests/analytics.test.mjs e package.json incluem contrato de coleta. Guia de uso
+em docs/ANALYTICS-E-PRIVACIDADE.md. Não foram adicionadas dependências.
+
+Usuário autorizou abrir o painel após primeira rejeição automática por falta
+de autorização específica. Informou equipe1..10 após revisão pedir confirmação,
+aceitou pessoalmente os termos Google no Chrome e autorizou desligar a métrica
+otimizada após confirmação específica solicitada pelo controle automático.
+Uma abertura de seletor de fuso foi interrompida por divergência no rótulo;
+estado foi relido e a operação refeita com ação/descrição corretas. Nenhuma
+rejeição foi contornada. Todos esses pontos foram resolvidos antes de concluir.
+
+Conta Escola do Dividendo, propriedade Escola do Dividendo — Site, Brasil,
+São Paulo,BRL, categoria Empregos e educação. Objetivos tráfego+engajamento/
+retenção. Fluxo https://escoladodividendo.com.br; ID públicoG-M8REFJ819V.
+ID lido na home e conferido nos detalhes do fluxo, onde switch métrica otimizada
+estava0. Configuração de compartilhamentos opcionais ficou desmarcada no
+assistente. Não criados segredos, usuários, Ads ou faturamento. Termos Google
+foram aceitos pelo humano, não pela automação.
+
+### Contrato de privacidade e medição
+
+- Consent Mode básico: tag e eventos ausentes antes de permissão. Recusa livre,
+  sem condicionar cadastro; reabertura/revogação em todoslayouts. Escolha local
+  versionada180dias, fallback memória com aviso. Sem alegação de anonimização.
+- Campos enviados: rotas/títulos estáticos e página agregada empresa, sem query,
+  hash, ticker ou dados da conta. Referrer inicial só origem de fontes conhecidas,
+  nunca busca/caminho/credenciais/fragmento; UTM/ads IDs não coletados.
+- Auth,perfil,config,suporte/admin e rotas desconhecidas não medidos. Apenas
+  domínio oficial; localhost/previews/QA, equipeADMIN/ANALYST e sessão em erro/
+  validação pendente bloqueados. Sem User-ID ou coleta de formulário.
+- send_page_view:false, métrica otimizadaOFF, dedupe por rota; demais consentimentos
+  de publicidade negados. Revogação desabilita transmissão ANTES de atualizar
+  consentimento e limpa cookiesGA acessíveis, sem prometer apagar dados remotos.
+- ID padrão público em analytics-policy, override VITE_GA4_MEASUREMENT_ID opcional
+  (vazio desativa). Bundle final contém o ID correto. Sem API secret.
+
+### Verificações executadas
+
+- Node22: npm test76/76 passou (5 senha e10 Analytics, além de61 existentes).
+  Schema real de register/reset/change importado sem DB; senha8 válida, falhas
+  de composição/Unicode/limites e login legado cobertos. Controller/fila falsos
+  testam recusa/ausência, consentimentos, revogação, origem, campos, expiração,
+  falha storage e abas sem enviar tráfego artificial ao Google.
+- npm run lint completo passou; lint focado após ajustes finais passou.
+  npm run build Node22 passou (tsc+Vite+9 páginas estáticas). Harness check passou.
+- Chrome local4184 de fixtures usa registerSchema real sem DB. Senha8 sem
+  maiúscula rejeitou com foco no campo;8 válida confirmou cadastro fictício202.
+  Confirmação/onboarding next preservados. Nada criado em conta/banco real.
+- Login320: ambos alvos44px; recuperação termina545.39 e reenviar começa553.39
+  (gap8px). Scrollwidth320/viewport320; desktop também conferido sem sobreposição.
+- Preferências: autorizar/reabrir mostra permitidas; recusar/reabrir mostra
+  somente necessários; após reload escolha conservada. Localhost tag count0.
+  Escape fecha, foco volta ao botão de origem; body overflowhidden no modal e
+  restaurado ao fechar. Claro/escuro e320px conferidos; modal pequeno rolável.
+- Capturas locais: login-espacamento-mobile/desktop.png,
+  analytics-consentimento-mobile/claro.png e analytics-fluxo-configurado.png
+  na pasta de visualizações da coordenação. FluxoGoogle é configuração real;
+  telas do app nestas capturas usam somente fixtures.
+- Não executados: SMTP/Turnstile/MySQL real e leitor de tela. Nenhum evento
+  artificial enviado à propriedade de produção; chegada real depende das
+  primeiras visitas consentidas. Não declarar relatório com dados recebidos.
+
+### Recuperação da revisão complementar
+
+As implementações das sessões foram entregues e liberadas. A revisão adicional
+somente leitura de Analytics foi interrompida em ambas: wait_threads confirmou
+turn status failed por limite de uso, sem revisão entregue nem código alterado.
+Coordenação assumiu a revisão final de consentimento/rotas/foco, corrigiu gate
+de sessionError e concluiu testes/browser. A etapa suplementar foi encerrada;
+coordenação libera somente reservas dos relatos desses turnos terminados e
+registra a limitação, sem atribuir aprovação independente inexistente.
+
+Próximo passo: publicar integração na main com expected_sha, acompanhar Vercel
+e conferir artefato/controles no domínio sem gerar eventos de teste em produção.

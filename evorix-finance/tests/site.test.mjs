@@ -56,6 +56,7 @@ test("rotas desconhecidas não são reescritas para HTML com status 200", async 
   assert.deepEqual(directives["script-src"], [
     "'self'",
     "https://challenges.cloudflare.com",
+    "https://www.googletagmanager.com",
   ]);
   assert.deepEqual(directives["object-src"], ["'none'"]);
   assert.equal(headers["X-Frame-Options"], "DENY");

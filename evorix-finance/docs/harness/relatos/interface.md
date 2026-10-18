@@ -260,3 +260,54 @@ Arquivos desta sessão: `GuidedTour.tsx`, `guided-tour.css`,
 - Nenhuma instalação, alteração de banco, Git remoto ou deploy por esta sessão.
 
 Estado de entrega: revisão integrada com coordenação; reservas liberadas.
+
+## Rodada 5 — senha e espaçamento de recuperação (em implementação)
+
+Escopo desta sessão: RegisterPage, ResetPasswordPage, Configuracoes (nova senha),
+LoginPage e componente PasswordRequirements. Coordenação integra termos depois
+da liberação. Regra:8–128 caracteres, ao menos uma maiúscula, um número e um
+caractere especial; sem exigir minúscula. Login, senha atual e senha usada para
+excluir conta não recebem nova regra de criação.
+
+Contrato proposto ao backend: password-policy.mjs/.d.mts exporta limites,
+mensagem e função de validação única; frontend importa essa mesma política,
+sem manter regex separada. Definição final será registrada ao receber helper.
+
+### Implementação e contrato final
+
+- Helper do backend lido e adotado: `passwordMinLength = 8`,
+  `passwordMaxLength = 128`, `passwordPolicyHint` e
+  `isValidNewPassword(value: unknown): boolean`.
+- Política compartilhada usa maiúscula Unicode Lu, dígito decimal Unicode Nd
+  e pontuação/símbolo P/S como especial; espaço não satisfaz especial. Não há
+  exigência de letra minúscula, trim ou normalização da senha. Mínimo contado
+  em codepoints e máximo128 em UTF16 preservam o contrato do backend.
+- RegisterPage, ResetPasswordPage e Configuracoes usam o mesmo helper na
+  submissão antes da chamada de API. Erro usa a mensagem compartilhada e
+  direciona o foco ao campo de nova senha. Confirmação ainda confere igualdade.
+- Inputs de nova senha/confirmação usam as constantes8/128. Login, senha atual
+  e senha de exclusão mantiveram max128 e não receberam requisito novo.
+- `PasswordRequirements.tsx` apresenta a mensagem compartilhada e lembrete
+  de não reutilização; os três campos principais apontam para seu hint por
+  aria-describedby. Sem regex duplicada ou medidor enganoso de força.
+- Falha local de senha no cadastro não aciona ConfirmationHelp; esse apoio
+  continua disponível após erro da tentativa de cadastro no servidor.
+- LoginPage: recuperação e reenvio em container próprio com border-top/gap,
+  pilha no mobile e quebra em linha no desktop; ambos min44px de altura,
+  espaçamento horizontal24px e vertical8px, sem ações inline grudadas.
+- Não editei termos/checkbox, payload de aceitação ou API. RegisterPage fica
+  liberado para a coordenação completar termos/privacidade após esta entrega.
+
+### Validação
+
+- ESLint focado nos cinco TSX alterados: passou.
+- TypeScript `tsc -b` com Node22: passou com o helper/d.mts compartilhado.
+- `node22 --test tests/password-policy.test.mjs`: **5/5 passaram**; suíte criada
+  pelo backend, executada nesta sessão para conferir contrato compartilhado,
+  casos Unicode/limites e preservação de login/senha atual legados.
+- Revisão React Best Practices: informação acessível associada ao campo,
+  guardas no submit sem efeitos adicionais, sem nova dependência, mensagens
+  derivadas do contrato único; tipos e autenticação existente preservados.
+- Browser320px, validação real das rotas/formulários, ambos temas e build final
+  pertencem à coordenação. Nenhum teste em produção ou banco por esta sessão.
+- Não foram feitos Git remoto, deploy ou instalação de dependências.

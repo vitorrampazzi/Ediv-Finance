@@ -9,6 +9,7 @@ import {
 } from "react-router-dom";
 import { PageContent, PageLoading } from "./components/PageContent";
 import { NavigationIntent } from "./components/NavigationIntent";
+import { PrivacyConsent } from "./components/PrivacyConsent";
 import { pageImports } from "./lib/pageImports";
 const DashboardLayout = lazy(() =>
   pageImports.dashboard().then((module) => ({
@@ -129,6 +130,7 @@ function App() {
         </aside>
       )}
       <AuthProvider>
+        <PrivacyConsent />
         <PageErrorBoundary>
           <Suspense fallback={<PageLoading />}>
             <Routes>

@@ -31,6 +31,7 @@ import { NotificationsMenu } from "../components/NotificationsMenu";
 import { ThemeToggle } from "../components/ThemeToggle";
 import { AccountOnboarding } from "../components/AccountOnboarding";
 import { requestOnboardingReplay } from "../lib/onboarding";
+import { openPrivacyPreferences } from "../lib/analytics";
 import { PageContent } from "../components/PageContent";
 import "../components/navigation-chrome.css";
 
@@ -507,6 +508,13 @@ export const DashboardLayout = () => {
             <Link to="/app/conversas" className="ml-2 underline">
               Contato
             </Link>
+            <button
+              type="button"
+              className="ml-2 min-h-11 underline"
+              onClick={openPrivacyPreferences}
+            >
+              Preferências de cookies
+            </button>
           </footer>
         </main>
       </div>

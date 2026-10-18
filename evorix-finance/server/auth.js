@@ -13,6 +13,14 @@ import {
 import { pool } from "./database.js";
 import { MysqlLimitStore } from "./limit-store.js";
 import { withPasswordWork } from "./password-work.js";
+import { passwordPolicyHint } from "../password-policy.mjs";
+import {
+  registerSchema,
+  loginSchema,
+  verificationSchema,
+  resetPasswordSchema,
+  changePasswordSchema,
+} from "./password-schema.js";
 import { smtp, accountEmail, registrationAvailability } from "./mail.js";
 import {
   permissionsForRole,
@@ -45,35 +53,6 @@ const REGISTRATION_MESSAGE =
   "Cadastro recebido. Se o endereço puder ser cadastrado, enviaremos um link de confirmação. Confira sua caixa de entrada e o spam; se necessário, use Reenviar confirmação.";
 const router = Router();
 
-const registerSchema = z
-  .object({
-    next: z.string().max(1500).optional(),
-    name: z.string().trim().min(2).max(100),
-    email: z
-      .string()
-      .trim()
-      .email()
-      .max(254)
-      .transform((value) => value.toLowerCase()),
-    password: z
-      .string()
-      .min(12)
-      .max(128)
-      .refine((value) => Buffer.byteLength(value, "utf8") <= 1024),
-  })
-  .strict();
-const loginSchema = z.object({
-  email: z
-    .string()
-    .trim()
-    .email()
-    .max(254)
-    .transform((value) => value.toLowerCase()),
-  password: z.string().min(1).max(128),
-});
-const verificationSchema = z.object({
-  token: z.string().regex(/^[A-Za-z0-9_-]{40,50}$/),
-});
 const emailOnlySchema = z.object({
   next: z.string().max(1500).optional(),
   email: z
@@ -707,15 +686,10 @@ router.post("/password/forgot", recoveryLimiter, async (req, res) => {
 });
 
 router.post("/password/reset", recoveryLimiter, async (req, res) => {
-  const parsed = z
-    .object({
-      token: verificationSchema.shape.token,
-      password: registerSchema.shape.password,
-    })
-    .safeParse(req.body);
+  const parsed = resetPasswordSchema.safeParse(req.body);
   if (!parsed.success)
     return res.status(400).json({
-      error: "Confira o link e use uma senha de 12 a 128 caracteres.",
+      error: `Confira o link. ${passwordPolicyHint}`,
     });
   const tokenHash = digest(parsed.data.token);
   const [tokenRows] = await pool.execute(
@@ -777,15 +751,10 @@ router.post(
   recoveryLimiter,
   requireAuthenticatedUser,
   async (req, res) => {
-    const parsed = z
-      .object({
-        currentPassword: loginSchema.shape.password,
-        password: registerSchema.shape.password,
-      })
-      .safeParse(req.body);
+    const parsed = changePasswordSchema.safeParse(req.body);
     if (!parsed.success)
       return res.status(400).json({
-        error: "Confira a senha atual e use ao menos 12 caracteres na nova.",
+        error: `Confira a senha atual. ${passwordPolicyHint}`,
       });
     const [users] = await pool.execute(
       "SELECT password_hash FROM users WHERE id = ? LIMIT 1",

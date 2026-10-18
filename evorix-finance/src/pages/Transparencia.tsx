@@ -5,6 +5,7 @@ import { assistantEnabled } from "../lib/features";
 import { authLink } from "../lib/authDestination";
 import { useSupportInformation } from "../hooks/useSupportInformation";
 import { SupportHelpCenter } from "../components/support/SupportHelpCenter";
+import { openPrivacyPreferences } from "../lib/analytics";
 export function Suporte() {
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -137,7 +138,7 @@ export function Privacidade() {
     <section className="mx-auto max-w-4xl space-y-8 px-5 py-12">
       <header>
         <p className="text-sm text-evo-accent">
-          Transparência · versão de 06/10/2026
+          Transparência · versão de 17/10/2026
         </p>
         <h1 className="mt-2 text-3xl font-bold">
           Privacidade e uso da plataforma
@@ -186,6 +187,51 @@ export function Privacidade() {
           <p className="mt-2 text-sm leading-7 text-evo-textSec">{body}</p>
         </section>
       ))}
+      <section id="estatisticas" className="scroll-mt-28">
+        <h2 className="text-lg font-semibold">
+          Estatísticas opcionais e cookies
+        </h2>
+        <p className="mt-2 text-sm leading-7 text-evo-textSec">
+          Quando configurado, o Google Analytics 4 ajuda a entender quais
+          páginas são mais usadas. A ferramenta só é carregada após você
+          permitir estatísticas. Recusar mantém o acesso ao site e à conta. A
+          escolha fica neste navegador por até seis meses e pode ser alterada
+          abaixo.
+        </p>
+        <p className="mt-2 text-sm leading-7 text-evo-textSec">
+          Com a permissão, o Google pode tratar identificadores de cookies,
+          páginas acessadas e informações técnicas de navegação, inclusive fora
+          do Brasil. Não enviamos nome, e-mail, senha, mensagens, dados da
+          conta, buscas ou tokens. Endereços são reduzidos a rotas conhecidas,
+          sem parâmetros ou fragmentos. Páginas de autenticação, perfil,
+          configurações, suporte e administração ficam fora da medição.
+          Publicidade, sinais do Google e personalização de anúncios ficam
+          desativados nesta integração.
+        </p>
+        <p className="mt-2 text-sm leading-7 text-evo-textSec">
+          Os cookies necessários mantêm autenticação e proteção contra abuso. O
+          armazenamento local também guarda aparência, introdução, progresso de
+          visitante e suas preferências de cookies. Ao retirar a permissão de
+          estatísticas, bloqueamos novos envios e removemos os cookies de
+          Analytics acessíveis neste domínio; a retirada não apaga
+          automaticamente dados já enviados ao Google.
+        </p>
+        <button
+          type="button"
+          className="action-secondary mt-4"
+          onClick={openPrivacyPreferences}
+        >
+          Alterar preferências de cookies
+        </button>
+        <a
+          href="https://policies.google.com/technologies/partner-sites?hl=pt-BR"
+          target="_blank"
+          rel="noreferrer"
+          className="mt-3 block min-h-11 text-sm text-evo-accent underline"
+        >
+          Como o Google usa dados de sites parceiros
+        </a>
+      </section>
       <Link className="action" to="/suporte">
         Contato e suporte
       </Link>

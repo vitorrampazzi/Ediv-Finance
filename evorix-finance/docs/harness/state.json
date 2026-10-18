@@ -4,20 +4,20 @@
   "sessions": {
     "coordenacao": {
       "phase": "revisao",
-      "summary": "61 testes/lint/build/browser passaram; cadastro inicia tour, login normal não; tabela com36 resumos validada",
-      "updatedAt": "2026-10-17T19:02:57.559Z",
+      "summary": "GA4G-M8REFJ819V configurado;76 testes/lint/build/browser; preparando publicação main",
+      "updatedAt": "2026-10-18T00:29:40.169Z",
       "claims": []
     },
     "interface": {
-      "phase": "revisao",
-      "summary": "Tour6 etapas:modal obrigatório,foco,spotlight e navegação; notice integrado;13 testes Node22,lint focado e tsc passaram",
-      "updatedAt": "2026-10-17T18:56:49.162Z",
+      "phase": "concluido",
+      "summary": "Senha/login entregues; revisão extra interrompida por limite de uso; coordenação concluiu validação final",
+      "updatedAt": "2026-10-18T00:29:39.509Z",
       "claims": []
     },
     "backend": {
-      "phase": "revisao",
-      "summary": "Resumos/valores demo consistentes36 módulos; real isolado;7 testes/lint/tsc/SSR passaram; auditoria tour sem migração entregue",
-      "updatedAt": "2026-10-17T18:54:32.374Z",
+      "phase": "concluido",
+      "summary": "Política senha/schema5 testes entregues; revisão extra indisponível por limite de uso; integração validada pela coordenação",
+      "updatedAt": "2026-10-18T00:29:39.863Z",
       "claims": []
     }
   }

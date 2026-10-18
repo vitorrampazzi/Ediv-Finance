@@ -5,6 +5,13 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/authContext";
 import { authLink, safeAuthDestination } from "../../lib/authDestination";
 import { PasswordInput } from "../../components/PasswordInput";
+import { PasswordRequirements } from "../../components/PasswordRequirements";
+import {
+  isValidNewPassword,
+  passwordMinLength,
+  passwordMaxLength,
+  passwordPolicyHint,
+} from "../../../password-policy.mjs";
 import { ResearchAvailability } from "../../components/ResearchAvailability";
 import { useRegistrationAvailability } from "../../hooks/useRegistrationAvailability";
 
@@ -32,6 +39,7 @@ export function RegisterPage() {
   const [submittedEmail, setSubmittedEmail] = useState("");
   const [challengeToken, setChallengeToken] = useState("");
   const [challengeResetKey, setChallengeResetKey] = useState(0);
+  const [showConfirmationHelp, setShowConfirmationHelp] = useState(false);
   const challenge = availability.current?.challenge;
 
   useEffect(() => {
@@ -43,6 +51,12 @@ export function RegisterPage() {
     setError("");
     setMessage("");
     setVerificationUrl("");
+    setShowConfirmationHelp(false);
+    if (!isValidNewPassword(password)) {
+      setError(passwordPolicyHint);
+      document.getElementById("register-password")?.focus();
+      return;
+    }
     setBusy(true);
     try {
       if (challenge?.required && !challengeToken)
@@ -61,6 +75,7 @@ export function RegisterPage() {
       setSubmittedEmail(email.trim());
       setPassword("");
     } catch (reason) {
+      setShowConfirmationHelp(true);
       setError(
         reason instanceof Error
           ? reason.message
@@ -182,19 +197,13 @@ export function RegisterPage() {
               aria-describedby="register-password-hint"
               autoComplete="new-password"
               required
-              minLength={12}
-              maxLength={128}
+              minLength={passwordMinLength}
+              maxLength={passwordMaxLength}
               value={password}
               onChange={(event) => setPassword(event.target.value)}
               className="min-h-11 w-full rounded-lg border border-evo-border bg-evo-bgMain px-3 text-evo-textMain"
             />
-            <p
-              id="register-password-hint"
-              className="mt-1.5 text-xs text-evo-textSec"
-            >
-              Use pelo menos 12 caracteres. Não reutilize a senha de outro
-              serviço.
-            </p>
+            <PasswordRequirements id="register-password-hint" />
           </div>
           {challenge?.required && challenge.siteKey && (
             <RegistrationChallenge
@@ -213,13 +222,17 @@ export function RegisterPage() {
           </button>
         </form>
       )}
-      {!message && availability.current?.available && error && email && (
-        <ConfirmationHelp
-          key={email}
-          email={email.trim()}
-          destination={introductionDestination}
-        />
-      )}
+      {!message &&
+        availability.current?.available &&
+        showConfirmationHelp &&
+        error &&
+        email && (
+          <ConfirmationHelp
+            key={email}
+            email={email.trim()}
+            destination={introductionDestination}
+          />
+        )}
       <p className="mt-4 text-xs leading-relaxed text-evo-textSec">
         O cadastro guarda seu nome, e-mail e senha protegida para autenticação.
         Consulte nossa política de privacidade e uso. Não informe CPF, dados

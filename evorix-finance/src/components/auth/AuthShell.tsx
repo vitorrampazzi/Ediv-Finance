@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import { Link } from "react-router-dom";
 import { ArrowLeft, CircleAlert } from "lucide-react";
+import { openPrivacyPreferences } from "../../lib/analytics";
 
 export function AuthShell({
   title,
@@ -37,6 +38,13 @@ export function AuthShell({
         >
           <ArrowLeft size={16} /> Voltar ao site
         </Link>
+        <button
+          type="button"
+          className="mt-2 block min-h-11 text-left text-xs text-evo-textSec underline"
+          onClick={openPrivacyPreferences}
+        >
+          Preferências de cookies
+        </button>
       </section>
     </main>
   );

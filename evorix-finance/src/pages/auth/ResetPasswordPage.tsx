@@ -5,6 +5,13 @@ import { Link } from "react-router-dom";
 import { apiRequest } from "../../lib/api";
 
 import { PasswordInput } from "../../components/PasswordInput";
+import { PasswordRequirements } from "../../components/PasswordRequirements";
+import {
+  isValidNewPassword,
+  passwordMinLength,
+  passwordMaxLength,
+  passwordPolicyHint,
+} from "../../../password-policy.mjs";
 
 import { AuthShell, ErrorMessage } from "../../components/auth/AuthShell";
 export function ResetPasswordPage() {
@@ -19,6 +26,11 @@ export function ResetPasswordPage() {
   }, []);
   const submit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    if (!isValidNewPassword(password)) {
+      setError(passwordPolicyHint);
+      document.getElementById("reset-password")?.focus();
+      return;
+    }
     if (password !== confirmation) {
       setError("As senhas precisam ser iguais.");
       return;
@@ -70,15 +82,17 @@ export function ResetPasswordPage() {
             </label>
             <PasswordInput
               id="reset-password"
+              aria-describedby="reset-password-hint"
               visibilityLabel="nova senha"
               containerClassName="mt-2"
               required
               autoComplete="new-password"
-              minLength={12}
-              maxLength={128}
+              minLength={passwordMinLength}
+              maxLength={passwordMaxLength}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
             />
+            <PasswordRequirements id="reset-password-hint" />
           </div>
           <div className="text-sm">
             <label htmlFor="reset-password-confirmation" className="block">
@@ -90,8 +104,8 @@ export function ResetPasswordPage() {
               containerClassName="mt-2"
               required
               autoComplete="new-password"
-              minLength={12}
-              maxLength={128}
+              minLength={passwordMinLength}
+              maxLength={passwordMaxLength}
               value={confirmation}
               onChange={(e) => setConfirmation(e.target.value)}
             />

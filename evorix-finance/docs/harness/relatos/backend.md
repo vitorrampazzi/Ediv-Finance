@@ -313,3 +313,69 @@ preserva tokens claro/escuro e geometria de rolagem/foco já validada em320px.
 - Achado enviado à coordenação e à interface antes da implementação do tour.
 
 Entrega em `revisao`, reservas liberadas para integração.
+
+## Rodada: política de novas senhas — 17/10/2026
+
+### Implementação
+
+Helper compartilhado `password-policy.mjs` + `.d.mts` exporta
+`passwordMinLength=8`, `passwordMaxLength=128`, `passwordPolicyHint` e
+`isValidNewPassword`. Exige ao menos uma letra maiúscula, um dígito decimal e um
+caractere de pontuação/símbolo. Usa propriedades Unicode: Á e dígitos como٣
+funcionam; emoji pode ser especial, espaços e acento combinante isolado não.
+Senhas não são aparadas nem normalizadas. Mínimo de8 codepoints evita contar
+emoji como dois caracteres; máximo128 unidades UTF16 preserva o limite anterior
+e `maxLength` do formulário. O limite de1024 bytes do backend foi preservado.
+
+`server/password-schema.js` contém os schemas reais sem importar DB/config/Argon,
+para testar o contrato usado pelas rotas. `server/auth.js` importa os schemas de
+cadastro, login, verificação, reset e troca. Cadastro/reset/nova senha da troca
+usam a mesma política; login e senha atual da troca mantêm validação legada
+de1..128 sem complexidade. Exclusão de conta também manteve senha legada.
+Hash Argon2, confirmação de e-mail, tokens, cookies e revogação de sessões não
+foram alterados. Mensagens de reset/troca usam o hint compartilhado.
+
+Interface recebeu o contrato e confirmou uso do mesmo helper nos formulários,
+sem regex duplicada. Nenhum TSX, CSP, analytics, banco ou schema foi editado por backend.
+
+### Evidências
+
+- Node22: `--test tests/password-policy.test.mjs`: **5/5 passaram**.
+- Cobrem regra incompleta,8/128/129 limites, Unicode, emoji sem inflar mínimo,
+  espaços preservados, número romano não decimal, acento combinante não especial,
+  os schemas reais de cadastro/reset/troca e aceitação legada do login/senha atual.
+- `node --check server/auth.js`: **passou**. Schemas/helper foram importados e
+  executados pelos testes, sem conexão de banco.
+- Fixture existente usa senha sintética compatível; a suíte de integração possui
+  cadastro em `tests/integration.test.mjs:73` e reset/troca/revogação em`:719`.
+  Não rodei integração SQL nesta sessão, pois envolve banco e não foi autorizada
+  nesta rodada. Coordenação executa gates completos no ambiente adequado.
+- `harness check` passou. Novos arquivos comunicados para manifesto/npm test.
+
+### Auditoria técnica do registro de termos — opção futura, adiada
+
+`server/migrations/001_identity.sql:1` define users sem versão/hash/data de aceite.
+`created_at` e `email_verified_at` não registram qual documento foi apresentado.
+Não há tabela de aceites de termos nas migrações inspecionadas. O consentimento
+em `server/support.js:193` é de compartilhamento de carteira na conversa e não
+deve ser reaproveitado. O audit de administrador é domínio diferente.
+`registerSchema.strict()` rejeita campos novos sem contrato explícito de API.
+
+Proposta técnica se retomada: documentos imutáveis identificados por versão/hash
+e tabela própria de aceites por usuário/documento/versão, com timestamp do servidor.
+Validar aceite e versão atual na API e gravar na mesma transação do cadastro;
+disponibilizar os registros no export de dados da conta. Isso exige migração e
+contrato; não pode ser implementado só com um checkbox nem inferido de e-mail
+confirmado. Aceite de termos e eventual consentimento de analytics são registros
+separados. Definições jurídicas, documentos e identificação do controlador
+continuam sob responsabilidade da coordenação/usuário, sem dados inventados.
+
+Testes futuros: rejeitar aceite ausente/versão desconhecida, registrar versão e
+horário do servidor junto ao usuário, rollback se gravação falhar, idempotência,
+isolamento por conta e export dos registros; verificar que não muda login legado.
+
+Após a auditoria, a coordenação informou que o usuário pediu deixar a parte
+jurídica quieta por enquanto. **Nenhum campo de aceite, documento, contrato API,
+migração ou escrita de banco foi implementado nesta rodada.**
+
+Entrega de senha em `revisao`, reservas liberadas. Somente a coordenação publica.
