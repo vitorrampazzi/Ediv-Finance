@@ -38,7 +38,7 @@ export function Metodologia() {
           por trás da pesquisa.
         </h1>
         <p className="mt-5 max-w-2xl text-sm leading-7 text-evo-textSec">
-          A Ediv reúne pesquisas de ações e conteúdo sobre dividendos. Aqui você
+          A Escola do Dividendo reúne pesquisas de ações e conteúdo sobre dividendos. Aqui você
           entende como as publicações são organizadas, quais informações
           procurar e como acompanhar suas versões.
         </p>

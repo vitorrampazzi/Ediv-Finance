@@ -41,7 +41,7 @@ export function ReadingChecklist() {
             ))}
           </dl>
           <p className="ph-checklist-footnote">
-            A Ediv reúne pesquisas e aulas. Não é corretora e não executa
+            A Escola do Dividendo reúne pesquisas e aulas. Não é corretora e não executa
             ordens.
           </p>
         </div>

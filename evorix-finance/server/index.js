@@ -17,7 +17,7 @@ try {
   } else await pool.execute("SELECT id FROM users LIMIT 0");
 
   const server = app.listen(config.port, config.host, () => {
-    console.info(`Ediv Finance API ready on ${config.host}:${config.port}`);
+    console.info(`Escola do Dividendo API ready on ${config.host}:${config.port}`);
   });
   // Bound slow uploads and idle keep-alive connections on the standalone server.
   // Vercel controls these transport limits when the app runs as a Function.

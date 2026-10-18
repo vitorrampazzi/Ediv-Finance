@@ -37,7 +37,7 @@ export function HomeContent({
               ? "Explore as ações e a primeira aula enquanto preparamos a abertura dos cadastros."
               : member
                 ? "Abra a pesquisa de uma empresa ou continue suas aulas."
-                : "Na Ediv, você lê pesquisas de ações e estuda as empresas que distribuem lucros."}
+                : "Na Escola do Dividendo, você lê pesquisas de ações e estuda as empresas que distribuem lucros."}
           </p>
           <div className="mt-5 flex flex-wrap items-center gap-2 sm:mt-6 sm:gap-3">
             <Link

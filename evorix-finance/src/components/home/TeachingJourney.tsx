@@ -365,7 +365,7 @@ export function TeachingJourney() {
       <div className="ph-teaching-layout">
         <div className="ph-teaching-fixed">
           <header className="ph-teaching-intro">
-            <p className="edition-label">Como a Ediv ensina</p>
+            <p className="edition-label">Como a Escola do Dividendo ensina</p>
             <h2 id={titleId} className="display-title ph-teaching-title">
               Como ler uma empresa.
             </h2>

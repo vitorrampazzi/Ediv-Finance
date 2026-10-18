@@ -18,13 +18,13 @@ export function PublicQuestions() {
         <div className="ph-faq-list" data-ph-reveal>
           <details className="ph-faq-item">
             <summary>
-              A Ediv é uma corretora?
+              A Escola do Dividendo é uma corretora?
               <ChevronDown size={18} aria-hidden="true" />
             </summary>
             <div className="ph-faq-expand">
               <p>
                 Não. Você encontra pesquisas de ações e aulas sobre dividendos.
-                Não há compra ou venda de ações dentro da Ediv.
+                Não há compra ou venda de ações dentro da Escola do Dividendo.
               </p>
             </div>
           </details>

@@ -165,7 +165,7 @@ export function ConversationPanel({
                       />
                     )}
                     {message.is_staff
-                      ? "Equipe Ediv"
+                      ? "Equipe Escola do Dividendo"
                       : staff
                         ? "Aluno"
                         : "Você"}

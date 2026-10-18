@@ -5,6 +5,17 @@ revalide comportamento no código antes de mudar contratos.
 
 ## Objetivo atual
 
+### Rodada6 — marca Escola do Dividendo (17/10/2026)
+
+Usuário pediu substituir nomes públicos Ediv Finance por Escola do Dividendo.
+Aceitação: cabeçalho, navegação, ajuda, telas de conta, e-mails e metadados
+consistentes; sem duplicar marca no e-mail; leitura desktop/mobile320px.
+Identificadores técnicos, nomes de arquivos/repositório e chaves persistidas
+continuam compatíveis. Coordenação implementa/valida/publica na main.
+Rodada5 publicada em43b9a75bb5928e3b3678d7955b4fd8683aa88b53; Vercel success
+confirmado. Analytics configurado, sem eventos artificiais nem testes no banco.
+
+
 ### Rodada5 — senhas, login e Google Analytics (17/10/2026)
 
 Usuário pediu senha mínima8 com maiúscula/número/especial, espaçamento entre
@@ -147,7 +158,7 @@ Relatos por sessão documentam os detalhes e limites das verificações.
 
 ## Produto e arquitetura
 
-- Nome público: Ediv Finance / Escola do Dividendo. A pasta legada é evorix-finance.
+- Nome público: Escola do Dividendo. A pasta legada é evorix-finance.
 - Educação sobre ações e dividendos. Jornada principal: ranking → pesquisa → aprendizado.
 - React/TypeScript/Vite no `src/`; Express em `server/`; MySQL; entrada Vercel em `api/handler.js`.
 - A pasta Node está dentro da raiz Git. O guia está em `docs/GUIA-DESENVOLVEDOR.md`.

@@ -85,7 +85,7 @@ export function SiteHeader({
           <Link
             to={user ? "/app" : "/"}
             className="ediv-brand-link flex shrink-0 items-center gap-3"
-            aria-label="Ediv Finance, página inicial"
+            aria-label="Escola do Dividendo, página inicial"
           >
             <img
               src="/ediv-logo-clean.png"
@@ -94,7 +94,7 @@ export function SiteHeader({
               className="h-10 w-10 object-contain"
             />
             <span className="hidden font-semibold tracking-tight md:inline">
-              Ediv Finance
+              Escola do Dividendo
             </span>
           </Link>
           <nav
@@ -240,7 +240,7 @@ export function SiteFooter({
             <Link
               to={user ? "/app" : "/"}
               className="inline-flex items-center gap-3"
-              aria-label="Ediv Finance, página inicial"
+              aria-label="Escola do Dividendo, página inicial"
             >
               <img
                 src="/ediv-logo-clean.png"
@@ -249,7 +249,7 @@ export function SiteFooter({
                 className="h-9 w-9 object-contain"
               />
               <span className="font-semibold tracking-tight text-evo-textMain">
-                Ediv Finance
+                Escola do Dividendo
               </span>
             </Link>
             <p className="mt-3 max-w-sm text-sm leading-relaxed text-evo-textSec">
@@ -341,7 +341,7 @@ export function SiteFooter({
 
         <div className="mt-8 border-t border-evo-border pt-5">
           <p className="text-sm text-evo-textSec">
-            © {new Date().getFullYear()} Ediv Finance. · Versão beta
+            © {new Date().getFullYear()} Escola do Dividendo. · Versão beta
           </p>
         </div>
       </div>

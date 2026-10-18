@@ -203,11 +203,11 @@ async function sendVerification(email, name, token, next) {
   await smtp.sendMail({
     from: config.mailFrom,
     to: email,
-    subject: "Confirme seu e-mail — Ediv Finance",
+    subject: "Confirme seu e-mail — Escola do Dividendo",
     text: `Olá, ${name}.\n\nPara confirmar seu endereço de e-mail, abra este link em até 30 minutos:\n${link}\n\nSe você não solicitou este cadastro, ignore esta mensagem.`,
     html: accountEmail({
       heading: "Confirme seu e-mail",
-      introduction: `Olá, ${name}. Confirme seu endereço para acessar sua conta gratuita na Ediv Finance.`,
+      introduction: `Olá, ${name}. Confirme seu endereço para acessar sua conta gratuita na Escola do Dividendo.`,
       link,
       action: "Confirmar meu e-mail",
     }),
@@ -660,7 +660,7 @@ router.post("/password/forgot", recoveryLimiter, async (req, res) => {
         await smtp.sendMail({
           from: config.mailFrom,
           to: rows[0].email,
-          subject: "Redefina sua senha — Ediv Finance",
+          subject: "Redefina sua senha — Escola do Dividendo",
           text: `Use o link em até 30 minutos: ${url}\nSe não solicitou, ignore. Sua senha não mudou.`,
           html: accountEmail({
             heading: "Redefina sua senha",
@@ -877,7 +877,7 @@ router.get("/export", requireAuthenticatedUser, async (req, res) => {
   }
   res.setHeader(
     "Content-Disposition",
-    'attachment; filename="ediv-meus-dados.json"',
+    'attachment; filename="escola-do-dividendo-meus-dados.json"',
   );
   return res.json(data);
 });

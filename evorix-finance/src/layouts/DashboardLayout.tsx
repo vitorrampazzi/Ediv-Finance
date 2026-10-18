@@ -281,7 +281,7 @@ function ProfileMenu({
                 onClick={() => setMenuRoute(null)}
                 className="flex min-h-11 items-center gap-3 rounded-lg px-3 text-sm text-evo-textSec"
               >
-                Início da Ediv
+                Início da Escola do Dividendo
               </Link>
               <Link
                 to="/app/config"
@@ -501,7 +501,7 @@ export const DashboardLayout = () => {
             <Outlet />
           </PageContent>
           <footer className="ediv-account-footer mx-auto mt-10 max-w-7xl p-5 text-sm leading-relaxed text-evo-textSec">
-            Ediv Finance · Ações e dividendos.{" "}
+            Escola do Dividendo · Ações e dividendos.{" "}
             <Link to="/privacidade" className="ml-2 underline">
               Privacidade
             </Link>{" "}

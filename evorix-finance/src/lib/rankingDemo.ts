@@ -204,7 +204,7 @@ export const rankingDemoEntries: RankingDemoEntry[] = examples.map(
       number(example.target),
     referencePeriod: "3º trimestre de 2026 · cenário fictício",
     dataSource:
-      "Exemplo visual criado para a Ediv Finance. Sem dados de mercado.",
+      "Exemplo visual criado para a Escola do Dividendo. Sem dados de mercado.",
     revenueHistory: [0.77, 0.89, 1].map((factor, quarter) => ({
       period: quarter + 1 + "T26",
       value: Math.round(example.revenue * factor),

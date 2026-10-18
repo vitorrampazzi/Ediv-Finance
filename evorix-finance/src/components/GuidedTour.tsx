@@ -248,7 +248,7 @@ export function GuidedTour({
         }
       >
         <p className="ediv-tour-eyebrow">
-          <Compass size={17} aria-hidden="true" /> Introdução à Ediv
+          <Compass size={17} aria-hidden="true" /> Introdução à Escola do Dividendo
         </p>
         <p className="ediv-tour-progress" aria-live="polite" aria-atomic="true">
           Etapa {currentIndex + 1} de {guidedTourSteps.length}

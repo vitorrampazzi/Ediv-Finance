@@ -20,7 +20,7 @@ export function Suporte() {
       <header className="border-b border-evo-border pb-7">
         <p className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[.16em] text-evo-accent">
           <Headphones size={16} aria-hidden="true" />
-          Central de ajuda · Ediv Finance
+          Central de ajuda · Escola do Dividendo
         </p>
         <h1 className="mt-4 text-3xl font-semibold tracking-tight sm:text-4xl">
           Dúvidas e suporte
@@ -44,7 +44,7 @@ export function Suporte() {
         className="space-y-5 border-t border-evo-border pt-7"
       >
         <h2 id="contact-information-title" className="text-xl font-semibold">
-          Como falar com a Ediv
+          Como falar com a Escola do Dividendo
         </h2>
         <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
           <div className="min-w-0 border-l-2 border-evo-border pl-5">
@@ -146,8 +146,8 @@ export function Privacidade() {
       </header>
       {[
         [
-          "O que a Ediv oferece",
-          "A Ediv Finance oferece pesquisas de ações e educação sobre dividendos. Você pode ler cenários por empresa, estudar indicadores, consultar cotações e acompanhar sua formação.",
+          "O que a Escola do Dividendo oferece",
+          "A Escola do Dividendo oferece pesquisas de ações e educação sobre dividendos. Você pode ler cenários por empresa, estudar indicadores, consultar cotações e acompanhar sua formação.",
         ],
         [
           "Dados da sua conta",
@@ -161,7 +161,7 @@ export function Privacidade() {
           ? [
               [
                 "Assistente educativo experimental",
-                "Disponível neste ambiente de avaliação. Após sua confirmação no chat, a pergunta e o histórico recente são enviados ao Google Gemini. No plano gratuito, o conteúdo pode ser usado para melhorar serviços e passar por revisão humana. A Ediv não envia automaticamente sua carteira ou perfil e não grava esse histórico no banco. Respostas podem conter erros; confira fontes oficiais. A opção local processa perguntas apenas no navegador.",
+                "Disponível neste ambiente de avaliação. Após sua confirmação no chat, a pergunta e o histórico recente são enviados ao Google Gemini. No plano gratuito, o conteúdo pode ser usado para melhorar serviços e passar por revisão humana. A Escola do Dividendo não envia automaticamente sua carteira ou perfil e não grava esse histórico no banco. Respostas podem conter erros; confira fontes oficiais. A opção local processa perguntas apenas no navegador.",
               ],
             ]
           : []),

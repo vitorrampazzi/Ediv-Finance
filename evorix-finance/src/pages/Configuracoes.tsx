@@ -62,7 +62,7 @@ export const Configuracoes = () => {
       <header>
         <h1 className="text-2xl font-bold">Conta e segurança</h1>
         <p className="mt-2 text-sm text-evo-textSec">
-          Controle seu acesso e os dados que você registra na Ediv.
+          Controle seu acesso e os dados que você registra na Escola do Dividendo.
         </p>
       </header>
       {error && (

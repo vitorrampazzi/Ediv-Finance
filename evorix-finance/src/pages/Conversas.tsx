@@ -127,7 +127,7 @@ function MemberConversations({ teamView }: { teamView: boolean }) {
             </p>
             <p className="mt-2 leading-relaxed text-evo-textSec">
               {staff
-                ? "Cada resposta é identificada como equipe Ediv. O aluno acompanha as atualizações na mesma conversa."
+                ? "Cada resposta é identificada como equipe Escola do Dividendo. O aluno acompanha as atualizações na mesma conversa."
                 : "Você e a equipe autorizada têm acesso às mensagens. Envie perguntas a qualquer hora e acompanhe o retorno aqui."}
             </p>
             <p className="mt-3 text-xs leading-relaxed text-evo-textSec">

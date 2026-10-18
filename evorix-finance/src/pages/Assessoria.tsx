@@ -147,7 +147,7 @@ export const Assessoria = () => (
       <Card glow="blue" className="space-y-4">
         <div>
           <p className="text-xs font-semibold uppercase tracking-[.18em] text-evo-accent">
-            Assinatura Ediv
+            Assinatura Escola do Dividendo
           </p>
           <h3 className="mt-2 text-xl font-bold">
             Acompanhamento por R$ 29,90 ao mês

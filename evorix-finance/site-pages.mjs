@@ -1,47 +1,47 @@
 export const siteOrigin = "https://escoladodividendo.com.br";
 export const publicPages = {
   "/": {
-    title: "Dividendos e pesquisa de ações | Ediv Finance",
+    title: "Dividendos e pesquisa de ações | Escola do Dividendo",
     description:
-      "Estude dividendos e leia pesquisas de ações na Ediv Finance. Entenda o negócio, os cenários e os riscos de cada empresa, com aulas e exemplos.",
+      "Estude dividendos e leia pesquisas de ações na Escola do Dividendo. Entenda o negócio, os cenários e os riscos de cada empresa, com aulas e exemplos.",
   },
   "/mercado": {
-    title: "Mercado de ações | Ediv Finance",
+    title: "Mercado de ações | Escola do Dividendo",
     description:
       "Explore ações brasileiras. Consulte cotações, conheça empresas e aprenda a interpretar os dados do mercado.",
   },
   "/ranking": {
-    title: "Ranking de ações | Ediv Finance",
+    title: "Ranking de ações | Escola do Dividendo",
     description:
-      "Conheça o ranking de cenários da Ediv Finance. Acesse pesquisas, premissas, horizonte e riscos com uma conta gratuita.",
+      "Conheça o ranking de cenários da Escola do Dividendo. Acesse pesquisas, premissas, horizonte e riscos com uma conta gratuita.",
   },
   "/aprender": {
-    title: "Escola de dividendos | Ediv Finance",
+    title: "Aulas sobre dividendos | Escola do Dividendo",
     description:
       "Estude dividendos, geração de caixa, projeções e riscos. Explore as aulas e cursos da escola de dividendos.",
   },
   "/glossario": {
-    title: "Glossário de investimentos | Ediv Finance",
+    title: "Glossário de investimentos | Escola do Dividendo",
     description:
       "Entenda dividendos, preço-alvo, risco e outros termos usados nas pesquisas de ações, com explicações simples.",
   },
   "/assessoria": {
-    title: "Assessoria | Ediv Finance",
+    title: "Assessoria | Escola do Dividendo",
     description:
-      "Conheça a proposta de acompanhamento da Ediv Finance e os canais de atendimento. Serviço de assinatura em preparação.",
+      "Conheça a proposta de acompanhamento da Escola do Dividendo e os canais de atendimento. Serviço de assinatura em preparação.",
   },
   "/privacidade": {
-    title: "Privacidade | Ediv Finance",
+    title: "Privacidade | Escola do Dividendo",
     description:
-      "Saiba quais dados a Ediv Finance usa, como funcionam suas ferramentas e quais controles sua conta oferece.",
+      "Saiba quais dados a Escola do Dividendo usa, como funcionam suas ferramentas e quais controles sua conta oferece.",
   },
   "/suporte": {
-    title: "Dúvidas e suporte | Ediv Finance",
+    title: "Dúvidas e suporte | Escola do Dividendo",
     description:
-      "Encontre respostas sobre pesquisas, dividendos, acesso à conta e ferramentas. Consulte a central de ajuda e converse com a equipe Ediv.",
+      "Encontre respostas sobre pesquisas, dividendos, acesso à conta e ferramentas. Consulte a central de ajuda e converse com a equipe Escola do Dividendo.",
   },
   "/metodologia": {
-    title: "Pesquisa e metodologia | Ediv Finance",
+    title: "Pesquisa e metodologia | Escola do Dividendo",
     description:
       "Conheça como as pesquisas de ações são organizadas, confira autoria, fontes e versões e aprenda a ler os cenários com contexto.",
   },
@@ -62,9 +62,9 @@ export function pageMetadata(path, qa = false) {
     title:
       metadata?.title ||
       (normalizedPath(path) === "/app"
-        ? "Início | Ediv Finance"
-        : "Ediv Finance"),
-    description: metadata?.description || "Acesse sua conta na Ediv Finance.",
+        ? "Início | Escola do Dividendo"
+        : "Escola do Dividendo"),
+    description: metadata?.description || "Acesse sua conta na Escola do Dividendo.",
     canonical: metadata ? siteOrigin + normalizedPath(path) : null,
     noindex: qa || !metadata,
   };

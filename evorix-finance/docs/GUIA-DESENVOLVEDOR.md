@@ -1,4 +1,4 @@
-# Ediv Finance — guia para desenvolvimento e apresentação
+# Escola do Dividendo — guia para desenvolvimento e apresentação
 
 Atualizado em 9 de outubro de 2026.
 
@@ -35,7 +35,7 @@ em produção.
 A raiz Git está um nível acima desta pasta. O projeto Node fica em
 `evorix-finance/`; o workflow do GitHub fica na raiz Git, em
 `.github/workflows/quality.yml`. O nome antigo da pasta/schema não muda o nome
-público Ediv Finance.
+público Escola do Dividendo.
 
 ### Fluxo de uma solicitação
 

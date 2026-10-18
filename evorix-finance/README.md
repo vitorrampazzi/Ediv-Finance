@@ -1,4 +1,4 @@
-# Ediv Finance
+# Escola do Dividendo
 
 ## Colaboração entre sessões
 
@@ -11,7 +11,7 @@ Os chats compartilham os arquivos deste diretório; cada chat mantém seu própr
 
 A React/Vite application with a Node.js/Express API and MySQL persistence. The public home page includes stock analysis backed by brapi.dev. The `/app` area requires a verified account and brings together research rankings, company research pages, learning, and support.
 
-Ediv is short for Escola do Dividendo. The `/ranking` route introduces the ranking; viewing the list requires a verified account. Analysts and Administrators create research in the editor or import CSV/Excel (.xlsx) files, review a preview, and publish versioned research with history.
+Escola do Dividendo is an education and stock research platform. The `/ranking` route introduces the ranking; viewing the list requires a verified account. Analysts and Administrators create research in the editor or import CSV/Excel (.xlsx) files, review a preview, and publish versioned research with history.
 
 For an architecture overview and a starting point for contributing, see the [developer guide](docs/GUIA-DESENVOLVEDOR.md). The `/metodologia` page explains how to read the research and how publication works; professional details remain configurable.
 

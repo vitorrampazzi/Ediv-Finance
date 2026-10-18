@@ -25,7 +25,7 @@ export function AuthShell({
             aria-hidden="true"
             className="h-8 w-8 object-contain"
           />
-          Ediv Finance
+          Escola do Dividendo
         </Link>
         <h1 className="display-title text-3xl">{title}</h1>
         <p className="mt-2 text-sm leading-relaxed text-evo-textSec">

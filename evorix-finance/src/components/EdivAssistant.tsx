@@ -69,7 +69,7 @@ function getLocalAnswer(question: string): LocalAnswer {
     )
   ) {
     return {
-      text: "A Ediv está focada em pesquisa de ações e educação sobre dividendos. A área de carteira não faz parte desta POC. Entre no ranking e abra uma empresa para conhecer sua tese, os riscos e os indicadores publicados.",
+      text: "A Escola do Dividendo está focada em pesquisa de ações e educação sobre dividendos. A área de carteira não faz parte desta POC. Entre no ranking e abra uma empresa para conhecer sua tese, os riscos e os indicadores publicados.",
       href: "/app/ranking",
       linkLabel: "Abrir ranking de previsões",
     };
@@ -139,12 +139,12 @@ function getLocalAnswer(question: string): LocalAnswer {
     /\b(privacidade|dados|salva|armazen|enviado|seguranca)\b/.test(normalized)
   ) {
     return {
-      text: "O histórico da Ediv fica na memória temporária desta página. No modo local, a pergunta é processada no navegador. No modo IA, pergunta e histórico recente vão ao Google após sua confirmação. Não envie dados pessoais, carteira ou credenciais.",
+      text: "O histórico da Escola do Dividendo fica na memória temporária desta página. No modo local, a pergunta é processada no navegador. No modo IA, pergunta e histórico recente vão ao Google após sua confirmação. Não envie dados pessoais, carteira ou credenciais.",
     };
   }
 
   return {
-    text: "Ainda não tenho uma resposta local para essa pergunta. Posso explicar riscos, proventos, preços-alvo, carteira, cotações e os recursos da Ediv. Escolha um dos atalhos ou reformule sua dúvida.",
+    text: "Ainda não tenho uma resposta local para essa pergunta. Posso explicar riscos, proventos, preços-alvo, carteira, cotações e os recursos da Escola do Dividendo. Escolha um dos atalhos ou reformule sua dúvida.",
   };
 }
 
@@ -369,7 +369,7 @@ function EdivAssistantSession() {
                   id="ediv-assistant-title"
                   className="truncate text-sm font-semibold text-evo-textMain"
                 >
-                  Aprender com a Ediv
+                  Aprender com a Escola do Dividendo
                 </h2>
                 <p className="mt-0.5 text-xs text-evo-textSec">
                   {statusLoading
@@ -520,7 +520,7 @@ function EdivAssistantSession() {
                   {
                     id: 1,
                     role: "assistant",
-                    text: "Posso explicar conceitos financeiros gerais e funções da Ediv. Não tenho acesso à sua carteira nem a cotações ao vivo.",
+                    text: "Posso explicar conceitos financeiros gerais e funções da Escola do Dividendo. Não tenho acesso à sua carteira nem a cotações ao vivo.",
                   },
                 ]);
                 setDraft("");
@@ -583,7 +583,7 @@ function EdivAssistantSession() {
               Não envie senhas, CPF, dados bancários ou informações da
               corretora.{" "}
               {generative
-                ? "A Ediv não guarda este histórico."
+                ? "A Escola do Dividendo não guarda este histórico."
                 : "As mensagens ficam apenas nesta página."}
             </p>
           </form>
@@ -594,7 +594,7 @@ function EdivAssistantSession() {
         ref={buttonRef}
         type="button"
         onClick={() => setOpen((value) => !value)}
-        aria-label={open ? "Fechar ajuda da Ediv" : "Abrir ajuda da Ediv"}
+        aria-label={open ? "Fechar ajuda da Escola do Dividendo" : "Abrir ajuda da Escola do Dividendo"}
         aria-expanded={open}
         aria-controls={open ? "ediv-assistant-panel" : undefined}
         className={`fixed right-4 z-[61] flex h-14 items-center gap-2 rounded-full border border-evo-accent/30 bg-evo-primary px-4 text-sm font-semibold text-evo-textMain shadow-lg shadow-black/30 transition hover:-translate-y-0.5 hover:bg-evo-primaryHover focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-evo-accent sm:right-6 ${buttonPosition}`}

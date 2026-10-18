@@ -124,7 +124,7 @@ try {
   await check("Servidor abre a home, sem tela vazia ou overlay", async () => {
     await page.goto(root);
     await expect(page.locator("h1")).toBeVisible();
-    await expect(page.locator("body")).toContainText("Ediv Finance");
+    await expect(page.locator("body")).toContainText("Escola do Dividendo");
     await noOverflow(page);
     await page.screenshot({
       path: ".test-artifacts/home-desktop.png",
@@ -870,7 +870,7 @@ try {
     await fixture.clearLimits();
     await page.goto(root + "/app/aprender");
     await page
-      .getByRole("button", { name: "Abrir ajuda da Ediv", exact: true })
+      .getByRole("button", { name: "Abrir ajuda da Escola do Dividendo", exact: true })
       .click();
     await page.getByRole("button", { name: "Usar IA", exact: true }).click();
     await page.getByRole("dialog").getByRole("checkbox").check();

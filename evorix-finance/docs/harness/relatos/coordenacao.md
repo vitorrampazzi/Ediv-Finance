@@ -368,3 +368,30 @@ registra a limitação, sem atribuir aprovação independente inexistente.
 
 Próximo passo: publicar integração na main com expected_sha, acompanhar Vercel
 e conferir artefato/controles no domínio sem gerar eventos de teste em produção.
+
+## Rodada6 — marca pública Escola do Dividendo (17/10/2026)
+
+Solicitação: substituir Ediv Finance/Ediv pela marca Escola do Dividendo.
+Aceitação: marca consistente em cabeçalho/rodapé, auth, ajuda/tour, conteúdo,
+metadados e e-mails; sem repetição no cabeçalho do e-mail; mobile320 legível.
+
+Arquivos: index.html/site-pages.mjs, SiteChrome/AuthShell/DashboardLayout,
+GettingStarted/GuidedTour/EdivAssistant e textos home/páginas/lib, server
+assistant/auth/mail/index, README/guia e expectativa textual tests/browser.mjs.
+Imagem social anterior continha Ediv Finance rasterizado: nova imagem editada
+via ImageGen em public/og-escola-do-dividendo.png (1731x909), metadados apontam
+para URL nova para evitar cache antigo. Arquivo original preservado. Nome de
+export de dados atualizado para escola-do-dividendo-meus-dados.json.
+Identificadores técnicos de componentes, eventos, CSS, storage, banco, paths de
+logos e repositório legados preservados por compatibilidade; sem migração.
+
+Verificação:76/76 npm test, lint completo e build Node22 passaram. Chrome local
+fixtures4185: cabeçalho desktop mostra marca nova, título SSR correto, login320
+com marca completa legível e página inicial scrollWidth320/innerWidth320.
+Revisão React: somente textos/aria alterados; hooks, semântica e navegação
+preservados. SMTP real não exercitado. Sem testes no banco/GA de produção.
+
+Rodada5 já publicada na main43b9a75bb5928e3b3678d7955b4fd8683aa88b53 e Vercel
+success confirmado. ID GA4 G-M8REFJ819V configurado e métrica otimizada OFF;
+nenhum evento artificial enviado. Guia docs/ANALYTICS-E-PRIVACIDADE.md.
+Próximo passo: publicar marca na main com expected_sha e conferir deploy público.

@@ -37,7 +37,7 @@ export const helpTopics: HelpTopic[] = [
     id: "sugestao",
     title: "Ideias e sugestões",
     description: "Ajude a melhorar as pesquisas e a escola.",
-    suggestedSubject: "Sugestão para a Ediv Finance",
+    suggestedSubject: "Sugestão para a Escola do Dividendo",
   },
 ];
 
@@ -138,7 +138,7 @@ export const supportAnswers: SupportAnswer[] = [
     question: "Onde altero minha senha ou encerro os acessos?",
     paragraphs: [
       "Abra Conta e segurança para alterar a senha ou encerrar todas as sessões. A alteração da senha pede a senha atual e encerra os acessos existentes; depois, você entra novamente.",
-      "Se esqueceu a senha, use a recuperação na tela de entrada. Escolha uma senha própria para a Ediv e não a compartilhe nas conversas com a equipe.",
+      "Se esqueceu a senha, use a recuperação na tela de entrada. Escolha uma senha própria para a Escola do Dividendo e não a compartilhe nas conversas com a equipe.",
     ],
     link: { label: "Abrir Conta e segurança", to: "/app/configuracoes" },
   },

@@ -4,7 +4,7 @@ export const guidedTourSteps = [
     route: "/app",
     title: "Bem-vindo! Escolha como prefere estudar",
     description:
-      "Vamos conhecer a Escola do Dividendo juntos. A Ediv começa no tema escuro. Experimente o botão abaixo para escolher entre claro e escuro antes de continuar. Sua escolha fica neste navegador.",
+      "Vamos conhecer a Escola do Dividendo juntos. A Escola do Dividendo começa no tema escuro. Experimente o botão abaixo para escolher entre claro e escuro antes de continuar. Sua escolha fica neste navegador.",
   },
   {
     target: "inicio",

@@ -18,7 +18,7 @@ const questions = [
     "As pesquisas publicadas aparecem no ranking. Quando a lista está em demonstração, as empresas e os valores são fictícios.",
   ],
   [
-    "O que encontro na Ediv?",
+    "O que encontro na Escola do Dividendo?",
     "Pesquisas por empresa, dados de ações e aulas sobre dividendos. No ranking, abra uma empresa para ler os detalhes da pesquisa.",
   ],
   [
@@ -47,7 +47,7 @@ export function GettingStarted({ compact = false }: GettingStartedProps) {
       >
         <div className="flex flex-wrap items-end justify-between gap-x-6 gap-y-2">
           <div>
-            <p className="edition-label">Na Ediv</p>
+            <p className="edition-label">Na Escola do Dividendo</p>
             <h2
               id="getting-started-heading"
               className="mt-2 text-xl font-semibold sm:text-2xl"
@@ -123,7 +123,7 @@ export function GettingStarted({ compact = false }: GettingStartedProps) {
     >
       <div>
         <p className="text-xs font-semibold uppercase tracking-widest text-evo-accent">
-          Na Ediv
+          Na Escola do Dividendo
         </p>
         <h2 className="mt-2 text-2xl font-semibold">Por onde começar</h2>
         <p className="mt-3 max-w-2xl text-sm leading-relaxed text-evo-textSec">

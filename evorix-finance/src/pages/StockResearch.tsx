@@ -495,14 +495,14 @@ function MemberStockResearch() {
               <div>
                 <dt className="text-evo-textSec">Publicação</dt>
                 <dd className="mt-2 break-words">
-                  {demo ? "Demonstração da Ediv Finance" : ranking.title}
+                  {demo ? "Demonstração da Escola do Dividendo" : ranking.title}
                 </dd>
               </div>
               <div>
                 <dt className="text-evo-textSec">Responsável</dt>
                 <dd className="mt-2 break-words">
                   {demo
-                    ? "Conteúdo demonstrativo da Ediv"
+                    ? "Conteúdo demonstrativo da Escola do Dividendo"
                     : ranking.authorName || "Ainda não informado"}
                 </dd>
               </div>
