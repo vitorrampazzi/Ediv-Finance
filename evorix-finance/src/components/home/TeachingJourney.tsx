@@ -9,9 +9,9 @@ const teachingSteps = [
     title: "Comece pelo negócio.",
     text: "Veja o que a empresa vende, quem paga por isso e como a receita se transforma em resultado.",
     detail:
-      "Nas análises, consulte o setor e os indicadores. Na pesquisa, leia o contexto que acompanha os números.",
+      "No ranking, abra a pesquisa da empresa para consultar o negócio, os indicadores publicados e o contexto que acompanha os números.",
     action: "Conhecer as empresas",
-    path: "/mercado",
+    path: "/ranking",
     diagram: "Negócio → receita → resultado",
   },
   {

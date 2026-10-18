@@ -7,7 +7,6 @@ import {
 } from "framer-motion";
 import {
   BookOpen,
-  BarChart3,
   ChevronLeft,
   ChevronRight,
   LogOut,
@@ -53,14 +52,6 @@ const navigation = [
     tour: "ranking",
   },
   {
-    to: "/app/analises",
-    label: "Análises",
-    shortLabel: "Análises",
-    icon: BarChart3,
-    end: false,
-    tour: "analises",
-  },
-  {
     to: "/app/aprender",
     label: "Escola de dividendos",
     shortLabel: "Aprender",
@@ -72,7 +63,6 @@ const navigation = [
 
 const pageTitles: Record<string, string> = {
   "/app": "Início",
-  "/app/analises": "Análises",
   "/app/ranking": "Ranking de previsões",
   "/app/aprender": "Aprender",
   "/app/conversas": "Dúvidas e suporte",
@@ -531,7 +521,7 @@ function MobileNavigation() {
     <LayoutGroup id="account-mobile">
       <nav
         aria-label="Navegação móvel"
-        className="ediv-mobile-navigation fixed inset-x-0 bottom-0 z-30 grid grid-cols-4 px-1 pb-[env(safe-area-inset-bottom)] pt-1 lg:hidden"
+        className="ediv-mobile-navigation fixed inset-x-0 bottom-0 z-30 grid grid-cols-3 px-1 pb-[env(safe-area-inset-bottom)] pt-1 lg:hidden"
       >
         {navigation.map(({ to, shortLabel, icon: Icon, end, tour }) => (
           <NavLink

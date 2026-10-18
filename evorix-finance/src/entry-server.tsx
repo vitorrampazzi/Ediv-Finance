@@ -4,7 +4,6 @@ import { AuthProvider } from "./context/AuthProvider";
 import { FavoritesProvider } from "./context/FavoritesProvider";
 import { PublicLayout } from "./components/SiteChrome";
 import { Home } from "./pages/Home";
-import { Analises } from "./pages/analises";
 import { Aprender, type LearningData } from "./pages/Aprender";
 import { Glossario } from "./pages/Glossario";
 import { RankingAccessLanding } from "./components/RankingAccessLanding";
@@ -17,7 +16,6 @@ import { qaEnvironment } from "./lib/features";
 export function render(path: string, learning: LearningData) {
   const pages: Record<string, React.ReactNode> = {
     "/": <Home />,
-    "/mercado": <Analises publicView />,
     "/ranking": <RankingAccessLanding />,
     "/aprender": <Aprender initialContent={learning} />,
     "/glossario": <Glossario initialTerms={learning.glossary} />,

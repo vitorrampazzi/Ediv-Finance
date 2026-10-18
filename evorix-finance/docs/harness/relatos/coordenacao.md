@@ -395,3 +395,69 @@ Rodada5 já publicada na main43b9a75bb5928e3b3678d7955b4fd8683aa88b53 e Vercel
 success confirmado. ID GA4 G-M8REFJ819V configurado e métrica otimizada OFF;
 nenhum evento artificial enviado. Guia docs/ANALYTICS-E-PRIVACIDADE.md.
 Próximo passo: publicar marca na main com expected_sha e conferir deploy público.
+
+Publicação da marca: main b33a7567b0582ec9546bdf460090d803873eb1a3, atualização
+atômica expected_sha43b9a75.33 arquivos incluindo imagem social. Manifesto de
+publicação passou a incluir explicitamente site-pages.mjs e guia do desenvolvedor.
+Suíte76/76 repetida após alteração final do nome do arquivo exportado: passou.
+Vercel em andamento; conferir domínio oficial antes da entrega final.
+
+Entrega concluída: Vercel success confirmado para b33a756, domínio oficial mostra
+marca nova e título Pesquisa e metodologia | Escola do Dividendo; DOM sem nome
+antigo, og:image aponta para nova imagem. Sessão existente autenticada redirecionou
+home para /app corretamente; não fiz login/cadastro/alteração de conta em produção.
+Captura escola-do-dividendo-publicado.png na pasta de visualizações desta sessão.
+Prévia4185 encerrada, viewport restaurado, abas temporárias fechadas; painel GA
+existente e página pública marcada como entrega. Próximo passo: acompanhar dados
+reais consentidos no GA; nenhum evento artificial foi enviado para validar coleta.
+
+## Rodada7 — MVP centrado em ranking e educação (18/10/2026)
+
+Pedido: retirar a área geral de Análises/catálogo de ações do site inteiro,
+preservando ranking, pesquisa da empresa, educação e demais funcionalidades.
+Aceitação: menus público/logado/mobile, home, atalhos, ajuda, introdução guiada,
+metadados/SSR/sitemap e pré-carregamento sem catálogo; links antigos funcionais;
+sem consultas de destaques em segundo plano; ranking→empresa e aulas preservados.
+
+Implementação pela coordenação, sem nova sessão/subagente. Removidos5 arquivos
+exclusivos: pages/analises.tsx, MarketAssetList, market-list.css,
+HomeMarketHighlights e useMarketAssets. App mantém apenas redirecionamentos
+legados; Vercel308 /mercado→/ranking e /app/analises→/app/ranking. Removidos imports
+SSR/lazy/prefetch, página pública/indexação e elegibilidade Analytics dessas rotas.
+SiteHeader/Footer, DashboardLayout, PublicHome, AccountHomeContent, GettingStarted,
+RankingPreview, TeachingJourney/PublicHeroPanel, ajuda, assistente experimental,
+metodologia, cadastro indisponível e mensagens atualizados. Índice público2colunas;
+menu móvel3itens: Início, Ranking, Aprender. Não apagar o conceito educacional de
+análise de empresas, nem os módulos de balanço/DRE/etc do ranking.
+
+Tour agora5 etapas; mantém chave local legada e lê versão1 (6 etapas), mapeando
+análise/aprender para aprender e conta para conta. Registros concluídos permanecem
+concluídos; estados ativos são escritos em versão2. Login comum segue sem gatilho.
+Helper de destinos legados em site-pages compartilhado com auth/onboarding e API
+para limpar filtros antigos em links de confirmação/retorno. Sem banco/migração.
+Infraestrutura server/market e APIs legadas preservadas para outras funções;
+nenhum catálogo ou destaques carregados pelo frontend do MVP.
+
+Verificações reais:
+- npm test Node22:79/79 passou (3 novos casos: links retirados, destinos, migração).
+  Primeira execução do caso novo esperava escrita em registro concluído, mas
+  persist só grava tour ativo: corrigida expectativa, preservando semântica.
+- npm run lint completo passou; lint focado após correção final passou.
+- npm run build Node22 passou;8 páginas públicas. SSR não contém chamadas/links
+  do catálogo; sitemap e dist sem /mercado, JS sem /api/market/assets.
+- Chrome local4186 com fixtures, sem banco: home pública sem destaques/links;
+  início logado sem gatilho de tour, menu móvel3; tour1→5 direto ranking→aulas,
+  conclusão retorna ranking?visual=demo; empresa DEMO1 abriu pesquisa e aulas
+  abriram conteúdo; reload não reabriu tour. Claro/escuro e320px/desktop conferidos.
+- Auditoria local contagem de catálogo=0 e2 redirects308 corretos; rodada7-audit.mjs
+  também verifica HTML e bundle. Primeiro acesso CLI local bloqueado pelo sandbox;
+  executado com permissão de rede local e passou. Nenhum teste em produção/DB.
+- Encontrada tabela sr-only com min-content alargando pesquisa DEMO em320px.
+  RankingFundamentals usa wrapper sr-only em torno da tabela para preservar leitura
+  acessível sem alargar página. Conferência após build/reload:scrollWidth320/innerWidth320.
+  CSS morto de destaques removido. Revisão React: hooks/navegação protegida/foco
+  preservados, sem nova dependência e sem busca de dados da área retirada.
+- Testes de integração/browser completos com MySQL/SMTP não executados: apenas
+  suíte unitária/contratos e browser com fixtures. APIs legadas não alteradas.
+
+Próximo passo: publicar main com expected_sha b33a756 e verificar deploy/menus.

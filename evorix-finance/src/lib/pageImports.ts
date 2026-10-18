@@ -6,7 +6,6 @@ export const pageImports = {
   home: () => import("../pages/Home"),
   memberHome: () => import("../pages/MemberHome"),
   dashboard: () => import("../layouts/DashboardLayout"),
-  analises: () => import("../pages/analises"),
   ranking: () => import("../pages/IncomeRanking"),
   stockResearch: () => import("../pages/StockResearch"),
   aprender: () => import("../pages/Aprender"),

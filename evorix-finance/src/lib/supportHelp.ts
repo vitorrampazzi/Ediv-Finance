@@ -74,16 +74,6 @@ export const supportAnswers: SupportAnswer[] = [
     },
   },
   {
-    id: "diferenca-analises",
-    topicId: "pesquisa",
-    question: "Qual é a diferença entre Ranking e Análises?",
-    paragraphs: [
-      "O Ranking reúne os cenários da pesquisa publicada e abre o caderno de cada empresa. Análises permite explorar ações brasileiras e os dados de mercado disponíveis no site.",
-      "Ao comparar números entre as páginas, confira a fonte, a data e a referência de cada informação: uma pesquisa publicada pode usar uma referência diferente da cotação exibida em Análises.",
-    ],
-    link: { label: "Abrir Análises", to: "/app/analises" },
-  },
-  {
     id: "exemplos-ranking",
     topicId: "pesquisa",
     question: "Como identifico uma pesquisa de demonstração?",

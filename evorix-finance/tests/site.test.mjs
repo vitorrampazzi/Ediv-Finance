@@ -1,7 +1,13 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
-import { publicPages, pageMetadata, accountPaths } from "../site-pages.mjs";
+import {
+  publicPages,
+  pageMetadata,
+  accountPaths,
+  retiredPages,
+  retiredPageDestination,
+} from "../site-pages.mjs";
 
 test("home apresenta dividendos e pesquisa de ações nos metadados", () => {
   const home = pageMetadata("/");
@@ -28,6 +34,31 @@ test("metadados públicos são únicos e contas/QA não são indexáveis", () =>
     assert.equal(pageMetadata(path).noindex, true);
     assert.equal(pageMetadata(path).canonical, null);
   }
+});
+
+test("catálogo retirado não é indexável e links antigos redirecionam para ranking", async () => {
+  const config = JSON.parse(
+    await readFile(new URL("../vercel.json", import.meta.url), "utf8"),
+  );
+  for (const [source, destination] of Object.entries(retiredPages)) {
+    assert.equal(publicPages[source], undefined);
+    assert.equal(pageMetadata(source).noindex, true);
+    assert.equal(retiredPageDestination(source + "/"), destination);
+    assert.ok(
+      config.redirects.some(
+        (rule) =>
+          rule.source === source &&
+          rule.destination === destination &&
+          rule.permanent,
+      ),
+    );
+    assert.equal(
+      config.rewrites.some((rule) => rule.source === source),
+      false,
+    );
+  }
+  assert.equal(retiredPageDestination("/ranking"), null);
+  assert.equal(retiredPageDestination("/app/ranking/acao/DEMO1"), null);
 });
 test("rotas desconhecidas não são reescritas para HTML com status 200", async () => {
   const config = JSON.parse(

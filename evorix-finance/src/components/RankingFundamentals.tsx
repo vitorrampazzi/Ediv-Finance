@@ -186,23 +186,25 @@ export function RankingFundamentals({
                 </div>
               ))}
             </div>
-            <table className="sr-only">
-              <caption>Receita líquida fictícia em milhões de reais</caption>
-              <thead>
-                <tr>
-                  <th>Período</th>
-                  <th>Receita</th>
-                </tr>
-              </thead>
-              <tbody>
-                {revenueHistory.map((point) => (
-                  <tr key={point.period}>
-                    <td>{point.period}</td>
-                    <td>{point.value}</td>
+            <div className="sr-only">
+              <table>
+                <caption>Receita líquida fictícia em milhões de reais</caption>
+                <thead>
+                  <tr>
+                    <th>Período</th>
+                    <th>Receita</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {revenueHistory.map((point) => (
+                    <tr key={point.period}>
+                      <td>{point.period}</td>
+                      <td>{point.value}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </section>
         )}
         <div className="grid gap-3 md:grid-cols-2">

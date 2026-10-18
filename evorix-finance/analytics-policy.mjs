@@ -10,7 +10,6 @@ export function validMeasurementId(value) {
 
 const pages = {
   "/": "Página inicial",
-  "/mercado": "Mercado de ações",
   "/ranking": "Ranking de ações",
   "/aprender": "Escola de dividendos",
   "/glossario": "Glossário",
@@ -18,7 +17,6 @@ const pages = {
   "/metodologia": "Metodologia",
   "/app": "Início da escola",
   "/app/ranking": "Ranking de ações",
-  "/app/analises": "Análises de ações",
   "/app/aprender": "Escola de dividendos",
 };
 

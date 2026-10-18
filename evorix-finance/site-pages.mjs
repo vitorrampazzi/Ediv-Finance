@@ -5,11 +5,6 @@ export const publicPages = {
     description:
       "Estude dividendos e leia pesquisas de ações na Escola do Dividendo. Entenda o negócio, os cenários e os riscos de cada empresa, com aulas e exemplos.",
   },
-  "/mercado": {
-    title: "Mercado de ações | Escola do Dividendo",
-    description:
-      "Explore ações brasileiras. Consulte cotações, conheça empresas e aprenda a interpretar os dados do mercado.",
-  },
   "/ranking": {
     title: "Ranking de ações | Escola do Dividendo",
     description:
@@ -56,6 +51,16 @@ export const accountPaths = [
 export function normalizedPath(path) {
   return path === "/" ? path : path.replace(/\/+$/, "");
 }
+// Keep saved links usable after retiring the standalone stock catalogue.
+export const retiredPages = {
+  "/mercado": "/ranking",
+  "/app/analises": "/app/ranking",
+};
+export function retiredPageDestination(path) {
+  return Object.hasOwn(retiredPages, normalizedPath(path))
+    ? retiredPages[normalizedPath(path)]
+    : null;
+}
 export function pageMetadata(path, qa = false) {
   const metadata = publicPages[normalizedPath(path)];
   return {
@@ -64,7 +69,8 @@ export function pageMetadata(path, qa = false) {
       (normalizedPath(path) === "/app"
         ? "Início | Escola do Dividendo"
         : "Escola do Dividendo"),
-    description: metadata?.description || "Acesse sua conta na Escola do Dividendo.",
+    description:
+      metadata?.description || "Acesse sua conta na Escola do Dividendo.",
     canonical: metadata ? siteOrigin + normalizedPath(path) : null,
     noindex: qa || !metadata,
   };

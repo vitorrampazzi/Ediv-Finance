@@ -4,7 +4,7 @@ export const guidedTourSteps = [
     route: "/app",
     title: "Bem-vindo! Escolha como prefere estudar",
     description:
-      "Vamos conhecer a Escola do Dividendo juntos. A Escola do Dividendo começa no tema escuro. Experimente o botão abaixo para escolher entre claro e escuro antes de continuar. Sua escolha fica neste navegador.",
+      "Vamos conhecer o ranking e as aulas. O site começa no tema escuro. Experimente o botão abaixo para escolher entre claro e escuro antes de continuar. Sua escolha fica neste navegador.",
   },
   {
     target: "inicio",
@@ -19,13 +19,6 @@ export const guidedTourSteps = [
     title: "Abra a pesquisa de uma empresa",
     description:
       "No Ranking, clique no nome de uma empresa para ler a pesquisa. As colunas resumem balanço, DRE, fluxo de caixa e outros módulos. Na demonstração, empresas e valores são fictícios. Confira sempre as premissas, os riscos e a versão publicada.",
-  },
-  {
-    target: "analises",
-    route: "/app/analises",
-    title: "Explore os dados das ações",
-    description:
-      "Em Análises, busque uma empresa e consulte as cotações e os indicadores disponíveis. Confira as fontes e as datas: dados de mercado podem ter atraso e não substituem a leitura da pesquisa.",
   },
   {
     target: "aprender",

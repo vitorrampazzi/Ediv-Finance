@@ -53,12 +53,6 @@ const usefulLinks: {
     icon: ChartNoAxesCombined,
   },
   {
-    title: "Análises",
-    description: "Ativos e informações de mercado",
-    to: "/app/analises",
-    icon: Search,
-  },
-  {
     title: "Escola de dividendos",
     description: "Aulas e exercícios",
     to: "/app/aprender",
@@ -88,8 +82,6 @@ function helpDestination(to: string, publicView: boolean): string {
   if (!publicView) return to;
   if (to.startsWith("/app/ranking"))
     return to.replace("/app/ranking", "/ranking");
-  if (to.startsWith("/app/analises"))
-    return to.replace("/app/analises", "/mercado");
   if (to.startsWith("/app/aprender"))
     return to.replace("/app/aprender", "/aprender");
   if (to.startsWith("/app/")) return authLink("entrar", to);

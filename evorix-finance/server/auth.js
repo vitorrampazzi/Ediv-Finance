@@ -14,6 +14,7 @@ import { pool } from "./database.js";
 import { MysqlLimitStore } from "./limit-store.js";
 import { withPasswordWork } from "./password-work.js";
 import { passwordPolicyHint } from "../password-policy.mjs";
+import { retiredPageDestination } from "../site-pages.mjs";
 import {
   registerSchema,
   loginSchema,
@@ -129,16 +130,10 @@ function safeNext(value) {
   try {
     const url = new URL(value, config.appBaseUrl);
     if (url.origin !== new URL(config.appBaseUrl).origin) return null;
+    const retired = retiredPageDestination(url.pathname);
+    if (retired) return retired;
     if (
-      ![
-        "/ranking",
-        "/aprender",
-        "/mercado",
-        "/assessoria",
-        "/suporte",
-        "/app",
-        "/",
-      ].some(
+      !["/ranking", "/aprender", "/assessoria", "/suporte", "/app", "/"].some(
         (path) =>
           url.pathname === path ||
           (path === "/app" && url.pathname.startsWith("/app/")),

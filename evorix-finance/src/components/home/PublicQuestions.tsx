@@ -63,8 +63,8 @@ export function PublicQuestions() {
               <p>
                 Não. O caderno de exemplo usa empresas e números fictícios para
                 apresentar o formato das pesquisas. Ele aparece com o rótulo
-                “Demonstração · dados fictícios”. As ações do bloco de mercado
-                são consultadas na brapi.dev.
+                “Demonstração · dados fictícios”. As pesquisas publicadas pela
+                equipe são apresentadas separadamente no ranking.
               </p>
             </div>
           </details>

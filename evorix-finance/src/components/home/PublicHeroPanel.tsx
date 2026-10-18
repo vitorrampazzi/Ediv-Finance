@@ -12,7 +12,7 @@ const topics = [
     steps: ["Negócio", "Receita", "Resultado"],
     icons: ["building", "bars", "chart"],
     action: "Conhecer as empresas",
-    path: "/mercado",
+    path: "/ranking",
     questions: [
       ["Receita", "O que a empresa vende"],
       ["Resultado", "O que sobra após os custos"],

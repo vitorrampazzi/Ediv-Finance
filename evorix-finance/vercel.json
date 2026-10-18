@@ -9,10 +9,6 @@
       "destination": "/api/handler?__path=:vercelPath*"
     },
     {
-      "source": "/mercado",
-      "destination": "/mercado/index.html"
-    },
-    {
       "source": "/ranking",
       "destination": "/ranking/index.html"
     },
@@ -98,6 +94,18 @@
           "value": "camera=(), microphone=(), geolocation=(), payment=(), browsing-topics=()"
         }
       ]
+    }
+  ],
+  "redirects": [
+    {
+      "source": "/mercado",
+      "destination": "/ranking",
+      "permanent": true
+    },
+    {
+      "source": "/app/analises",
+      "destination": "/app/ranking",
+      "permanent": true
     }
   ]
 }

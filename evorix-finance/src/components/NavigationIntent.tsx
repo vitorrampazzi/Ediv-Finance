@@ -10,7 +10,6 @@ const attemptedImports = new Set<PageImporter>();
 
 const publicPages: Record<string, PageImporter> = {
   "/": pageImports.home,
-  "/mercado": pageImports.analises,
   "/ranking": pageImports.ranking,
   "/aprender": pageImports.aprender,
   "/glossario": pageImports.glossario,
@@ -27,7 +26,6 @@ const publicPages: Record<string, PageImporter> = {
 
 const memberPages: Record<string, PageImporter> = {
   "/app": pageImports.memberHome,
-  "/app/analises": pageImports.analises,
   "/app/ranking": pageImports.ranking,
   "/app/carteira": pageImports.ranking,
   "/app/favoritos": pageImports.ranking,

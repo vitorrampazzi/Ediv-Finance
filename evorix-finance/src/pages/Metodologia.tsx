@@ -38,9 +38,9 @@ export function Metodologia() {
           por trás da pesquisa.
         </h1>
         <p className="mt-5 max-w-2xl text-sm leading-7 text-evo-textSec">
-          A Escola do Dividendo reúne pesquisas de ações e conteúdo sobre dividendos. Aqui você
-          entende como as publicações são organizadas, quais informações
-          procurar e como acompanhar suas versões.
+          A Escola do Dividendo reúne pesquisas de ações e conteúdo sobre
+          dividendos. Aqui você entende como as publicações são organizadas,
+          quais informações procurar e como acompanhar suas versões.
         </p>
       </header>
       <section aria-labelledby="research-flow-title">
@@ -99,8 +99,8 @@ export function Metodologia() {
         <p className="mt-4 max-w-3xl text-sm leading-7 text-evo-textSec">
           O ranking exibe os cenários e a ordem informados pelo responsável pela
           publicação. Consulte os métodos de cálculo, as premissas e as fontes
-          na pesquisa correspondente. As cotações da brapi complementam a
-          consulta aos dados de mercado.
+          na pesquisa correspondente. Confira a data de referência de cada
+          informação antes de comparar os cenários.
         </p>
         {loading ? (
           <p role="status" className="mt-5 text-sm text-evo-textSec">

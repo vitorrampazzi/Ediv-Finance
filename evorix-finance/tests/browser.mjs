@@ -519,7 +519,6 @@ try {
           "/entrar",
           "/ranking",
           "/aprender",
-          "/mercado",
           "/assessoria",
           "/metodologia",
           "/suporte",
@@ -870,7 +869,10 @@ try {
     await fixture.clearLimits();
     await page.goto(root + "/app/aprender");
     await page
-      .getByRole("button", { name: "Abrir ajuda da Escola do Dividendo", exact: true })
+      .getByRole("button", {
+        name: "Abrir ajuda da Escola do Dividendo",
+        exact: true,
+      })
       .click();
     await page.getByRole("button", { name: "Usar IA", exact: true }).click();
     await page.getByRole("dialog").getByRole("checkbox").check();

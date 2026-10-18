@@ -1,9 +1,22 @@
 # Contexto compartilhado
 
-Atualizado em 17/10/2026. Este documento registra fatos conferidos no repositório;
+Atualizado em 18/10/2026. Este documento registra fatos conferidos no repositório;
 revalide comportamento no código antes de mudar contratos.
 
 ## Objetivo atual
+
+### Rodada7 — MVP ranking e educação (18/10/2026)
+
+Usuário retirou a área geral de Análises/catálogo de ações do site inteiro.
+Preservar ranking, pesquisa de empresa do ranking, aulas, conta, suporte,
+administração e demais funções existentes. Remover menus, atalhos, destaques
+de cotações na home pública/logada, ajuda, pré-carregamento e indexação do catálogo.
+Endereços antigos redirecionam ao ranking; destino de autenticação/tour também.
+Tour passa a5 etapas, migrando registros antigos sem reabrir guias concluídos.
+Sem consultas de catálogo no MVP, nem mudanças de banco/migração. Infraestrutura
+de mercado de funções legadas do backend preservada. Coordenação implementa
+e valida com testes, SSR e Chrome local isolado; publicação main autorizada.
+
 
 ### Rodada6 — marca Escola do Dividendo (17/10/2026)
 
@@ -216,3 +229,7 @@ Evidências e critérios detalhados: `relatos/interface.md` e `relatos/backend.m
 A revisão inicial é estática, sem aprovação de segurança completa ou reprodução em browser.
 O harness passou em 4/4 testes; as duas sessões confirmaram leitura e gravação
 do mesmo quadro e liberaram suas reservas após os diagnósticos.
+
+Rodada6 concluída: main b33a7567b0582ec9546bdf460090d803873eb1a3, Vercel
+success e marca/metadados conferidos no domínio oficial.76 testes/lint/build
+Node22 aprovados; desktop/320px conferidos em fixtures isoladas. Sem migração.

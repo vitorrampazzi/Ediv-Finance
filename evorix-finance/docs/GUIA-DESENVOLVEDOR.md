@@ -1,14 +1,14 @@
 # Escola do Dividendo — guia para desenvolvimento e apresentação
 
-Atualizado em 9 de outubro de 2026.
+Atualizado em 18 de outubro de 2026.
 
 ## O que estamos construindo
 
 Uma plataforma de educação sobre ações e dividendos, apoiada em pesquisas de um
 profissional de mercado. O caminho principal é **ranking → pesquisa da empresa →
 aprendizado**. A escola explica os indicadores e as premissas; o ranking organiza
-os cenários fornecidos pela equipe. A API de mercado fornece preços e catálogo,
-mas não cria as previsões.
+os cenários fornecidos pela equipe. O catálogo geral de ações (Análises) e os
+destaques de cotações foram retirados do MVP.
 
 A versão atual trabalha com ações ordinárias, preferenciais e units. Carteira,
 visão geral de patrimônio e favoritos foram retirados da navegação do produto.
@@ -93,10 +93,12 @@ Vídeos são incorporados de YouTube/Vimeo após o clique no player. Não coloca
 arquivos de vídeo no Git. Para publicar capítulos novos, atualizar o catálogo e
 o conteúdo do servidor, preservando os IDs existentes. Ver [VIDEOS-CURSO.md](VIDEOS-CURSO.md).
 
-### Mercado, ajuda e confiança
+### Página inicial, ajuda e confiança
 
-- `src/pages/Home.tsx`, `src/pages/analises.tsx`, `useMarketAssets` e
-  `server/market.js`: catálogo de ações, consulta ao provedor e tentativa de recarregar.
+- `src/pages/Home.tsx` e `src/pages/MemberHome.tsx`: entrada para ranking e aulas.
+- Endereços antigos `/mercado` e `/app/analises` levam ao ranking.
+- `server/market.js` permanece como infraestrutura legada para funções antigas;
+  o site não carrega o catálogo nem faz consultas de destaques na página inicial.
 - `src/components/PageState.tsx`: estados de erro/vazio/carregamento compartilhados.
 - `src/pages/Transparencia.tsx`, `Conversas.tsx`, `server/support.js`: central de
   dúvidas e conversas. Usuário vê as próprias; Analista/Administrador gerenciam o atendimento.

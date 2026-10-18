@@ -5,7 +5,6 @@ import { useAuth } from "../../context/authContext";
 import { authLink } from "../../lib/authDestination";
 import { RankingPreview } from "../RankingPreview";
 import { GettingStarted } from "../GettingStarted";
-import { HomeMarketHighlights } from "../HomeMarketHighlights";
 
 export function HomeContent({
   member = false,
@@ -34,7 +33,7 @@ export function HomeContent({
           </h1>
           <p className="mt-3 max-w-xl text-sm leading-6 text-evo-textSec sm:mt-5 sm:text-base">
             {awaitingRegistration && !user
-              ? "Explore as ações e a primeira aula enquanto preparamos a abertura dos cadastros."
+              ? "Conheça o ranking e a primeira aula enquanto preparamos a abertura dos cadastros."
               : member
                 ? "Abra a pesquisa de uma empresa ou continue suas aulas."
                 : "Na Escola do Dividendo, você lê pesquisas de ações e estuda as empresas que distribuem lucros."}
@@ -86,38 +85,6 @@ export function HomeContent({
       </section>
 
       <RankingHighlights />
-      <section
-        id="mercado"
-        className="scroll-mt-24 border-y border-evo-border bg-evo-bgSec"
-      >
-        <div
-          className={`mx-auto max-w-7xl py-6 md:py-8 ${member ? "px-4 md:px-6" : "px-4 sm:px-5 md:px-8"}`}
-        >
-          <div className="flex flex-wrap items-center justify-between gap-2 sm:gap-5">
-            <div className="flex min-w-0 items-start gap-4">
-              <div className="min-w-0">
-                <p className="edition-label mb-2">Mercado</p>
-                <h2 className="display-title text-2xl sm:text-3xl">
-                  Ações em destaque
-                </h2>
-                <p className="mt-1 text-sm text-evo-textSec">
-                  Maiores altas percentuais da sessão disponível.
-                </p>
-              </div>
-            </div>
-            <Link
-              to={user ? "/app/analises" : "/mercado"}
-              className="inline-flex min-h-11 shrink-0 items-center gap-2 text-sm font-medium text-evo-accent sm:rounded-lg sm:border sm:border-evo-border sm:px-4 sm:text-evo-textMain sm:hover:bg-evo-card"
-            >
-              Explorar análises <ArrowRight size={15} aria-hidden="true" />
-            </Link>
-          </div>
-          <HomeMarketHighlights />
-          <p className="mt-4 text-xs text-evo-textSec">
-            Fonte: brapi.dev · Ações brasileiras.
-          </p>
-        </div>
-      </section>
       <GettingStarted compact />
     </>
   );

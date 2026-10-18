@@ -1,7 +1,6 @@
 import { ArrowRight, BookOpen } from "lucide-react";
 import { Link } from "react-router-dom";
 import { authLink } from "../../lib/authDestination";
-import { HomeMarketHighlights } from "../HomeMarketHighlights";
 import { PublicHeroBrand } from "./PublicHeroBrand";
 import { TeachingJourney } from "./TeachingJourney";
 import { ResearchSample } from "./ResearchSample";
@@ -78,37 +77,11 @@ export function PublicHome({
         </div>
         <nav className="ph-container ph-page-index" aria-label="Nesta página">
           <a href="#caderno-de-exemplo">Pesquisas de ações</a>
-          <a href="#mercado">Análises de empresas</a>
           <a href="#como-a-ediv-ensina">Educação em dividendos</a>
         </nav>
       </section>
       <TeachingJourney />
       <ResearchSample />
-      <section
-        id="mercado"
-        className="ph-section ph-market"
-        aria-labelledby="ph-market-title"
-        data-ph-reveal
-      >
-        <div className="ph-container">
-          <div className="ph-section-heading">
-            <div>
-              <p className="edition-label">Mercado</p>
-              <h2 id="ph-market-title" className="display-title">
-                Ações em destaque
-              </h2>
-              <p>Maiores altas percentuais da sessão disponível.</p>
-            </div>
-            <Link className="ph-text-link" to="/mercado">
-              Explorar análises <ArrowRight size={16} aria-hidden="true" />
-            </Link>
-          </div>
-          <div className="ph-market-data">
-            <HomeMarketHighlights />
-          </div>
-          <p className="ph-source">Fonte: brapi.dev · Ações brasileiras.</p>
-        </div>
-      </section>
       <ReadingChecklist />
       <LearningTerms />
       <PublicQuestions />

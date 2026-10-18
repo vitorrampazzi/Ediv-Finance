@@ -58,7 +58,7 @@ Campanhas UTM, identificadores de anúncio e referências desconhecidas são
 descartados; esta versão não oferece atribuição detalhada de campanhas.
 
 Rotas de login/cadastro/confirmação/recuperação, perfil, configurações, suporte,
-administração e rotas desconhecidas não são medidas. Localhost, previews,
+administração, as antigas /mercado e /app/analises e rotas desconhecidas não são medidas. Localhost, previews,
 QA e contas ADMIN/ANALYST não enviam dados, mesmo com permissão local.
 Os consentimentos `ad_storage`, `ad_user_data` e `ad_personalization` ficam
 negados; Google Signals e personalização de anúncios são desabilitados no código.

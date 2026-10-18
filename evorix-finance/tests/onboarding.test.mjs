@@ -157,3 +157,47 @@ test("other tabs reconcile completion without mixing account state", () => {
   assert.equal(notified, 1);
   assert.equal(second.get(user).active, false);
 });
+
+test("retired catalogue destinations go to ranking without stale search filters", () => {
+  assert.equal(
+    cleanOnboardingDestination("/mercado?busca=PETR4#mercado"),
+    "/ranking",
+  );
+  assert.equal(
+    cleanOnboardingDestination("/app/analises/?busca=PETR4"),
+    "/app/ranking",
+  );
+});
+
+test("six-step introductions migrate to five steps without reopening completed tours", () => {
+  for (const [oldStep, newStep] of [
+    [0, 0],
+    [2, 2],
+    [3, 3],
+    [4, 3],
+    [5, 4],
+  ]) {
+    for (const completed of [true, false]) {
+      const storage = storageFixture();
+      const key = onboardingStoragePrefix + encodeURIComponent(user.id);
+      storage.values.set(
+        key,
+        JSON.stringify({
+          version: 1,
+          step: oldStep,
+          completed,
+          returnTo: "/app/analises?busca=PETR4",
+        }),
+      );
+      const store = createOnboardingStore(storage);
+      const state = store.get(user, "/app", true);
+      assert.equal(state.active, !completed);
+      assert.equal(state.step, newStep);
+      assert.equal(state.returnTo, "/app/ranking");
+      store.persist(user);
+      if (!completed)
+        assert.equal(JSON.parse(storage.values.get(key)).version, 2);
+      assert.equal(createOnboardingStore(storage).get(user).active, !completed);
+    }
+  }
+});

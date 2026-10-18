@@ -1,11 +1,4 @@
-import {
-  ArrowRight,
-  BarChart3,
-  BookOpen,
-  Menu,
-  TrendingUp,
-  X,
-} from "lucide-react";
+import { ArrowRight, BookOpen, Menu, TrendingUp, X } from "lucide-react";
 import type { ReactNode } from "react";
 import { useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
@@ -33,11 +26,6 @@ export function SiteHeader({
       to: user ? "/app/ranking" : "/ranking",
       label: "Ranking de previsões",
       Icon: TrendingUp,
-    },
-    {
-      to: user ? "/app/analises" : "/mercado",
-      label: "Análises de ações",
-      Icon: BarChart3,
     },
     {
       to: user ? "/app/aprender" : "/aprender",
@@ -267,11 +255,6 @@ export function SiteFooter({
                   to={user ? "/app" : "/"}
                 >
                   Início
-                </Link>
-              </li>
-              <li>
-                <Link className="hover:text-evo-textMain" to="/mercado">
-                  Análises de ações
                 </Link>
               </li>
               <li>

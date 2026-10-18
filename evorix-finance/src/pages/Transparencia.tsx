@@ -138,7 +138,7 @@ export function Privacidade() {
     <section className="mx-auto max-w-4xl space-y-8 px-5 py-12">
       <header>
         <p className="text-sm text-evo-accent">
-          Transparência · versão de 17/10/2026
+          Transparência · versão de 18/10/2026
         </p>
         <h1 className="mt-2 text-3xl font-bold">
           Privacidade e uso da plataforma
@@ -147,7 +147,7 @@ export function Privacidade() {
       {[
         [
           "O que a Escola do Dividendo oferece",
-          "A Escola do Dividendo oferece pesquisas de ações e educação sobre dividendos. Você pode ler cenários por empresa, estudar indicadores, consultar cotações e acompanhar sua formação.",
+          "A Escola do Dividendo oferece pesquisas de ações e educação sobre dividendos. Você pode ler cenários por empresa, estudar os indicadores publicados e acompanhar sua formação.",
         ],
         [
           "Dados da sua conta",
@@ -155,7 +155,7 @@ export function Privacidade() {
         ],
         [
           "Fornecedores e transmissão",
-          "O aplicativo é hospedado na Vercel e usa MySQL gerenciado para os dados. E-mails de confirmação e recuperação passam pelo serviço transacional configurado. Consultas de mercado enviam tickers ao provedor de cotações. Estes fornecedores podem tratar dados fora do Brasil conforme seus serviços.",
+          "O aplicativo é hospedado na Vercel e usa MySQL gerenciado para os dados. E-mails de confirmação e recuperação passam pelo serviço transacional configurado. O catálogo geral de ações e seus destaques de cotações foram retirados do site. Estes fornecedores podem tratar dados fora do Brasil conforme seus serviços.",
         ],
         ...(assistantEnabled
           ? [

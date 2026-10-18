@@ -81,9 +81,9 @@ function getLocalAnswer(question: string): LocalAnswer {
     )
   ) {
     return {
-      text: "A página Mercado apresenta as cotações retornadas pelo provedor disponível. Confira a fonte e os horários exibidos junto aos dados. Quando não houver preço disponível, o site identifica essa condição.",
-      href: "/mercado",
-      linkLabel: "Ver mercado",
+      text: "O MVP reúne ranking e educação. No ranking, abra a pesquisa de uma empresa e confira a data de referência, as premissas e os riscos dos valores publicados. O site não oferece uma lista geral de cotações.",
+      href: "/ranking",
+      linkLabel: "Consultar ranking",
     };
   }
 
@@ -117,7 +117,7 @@ function getLocalAnswer(question: string): LocalAnswer {
     )
   ) {
     return {
-      text: "Você pode criar uma conta gratuitamente para acessar o painel e registrar operações manuais. Não informe aqui sua senha, CPF, dados bancários ou credenciais da corretora.",
+      text: "Você pode criar uma conta gratuitamente para ler as pesquisas e acompanhar as aulas. Não informe aqui sua senha, CPF, dados bancários ou credenciais da corretora.",
       href: "/cadastro",
       linkLabel: "Criar conta",
     };
@@ -130,8 +130,8 @@ function getLocalAnswer(question: string): LocalAnswer {
   ) {
     return {
       text: "Não posso avaliar se um ativo é adequado para você nem recomendar compra ou venda. Posso explicar recursos do site e conceitos gerais; decisões de investimento dependem dos seus objetivos, riscos e de orientação profissional apropriada.",
-      href: "/mercado",
-      linkLabel: "Explorar informações do mercado",
+      href: "/ranking",
+      linkLabel: "Ler as pesquisas",
     };
   }
 
@@ -594,7 +594,11 @@ function EdivAssistantSession() {
         ref={buttonRef}
         type="button"
         onClick={() => setOpen((value) => !value)}
-        aria-label={open ? "Fechar ajuda da Escola do Dividendo" : "Abrir ajuda da Escola do Dividendo"}
+        aria-label={
+          open
+            ? "Fechar ajuda da Escola do Dividendo"
+            : "Abrir ajuda da Escola do Dividendo"
+        }
         aria-expanded={open}
         aria-controls={open ? "ediv-assistant-panel" : undefined}
         className={`fixed right-4 z-[61] flex h-14 items-center gap-2 rounded-full border border-evo-accent/30 bg-evo-primary px-4 text-sm font-semibold text-evo-textMain shadow-lg shadow-black/30 transition hover:-translate-y-0.5 hover:bg-evo-primaryHover focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-evo-accent sm:right-6 ${buttonPosition}`}

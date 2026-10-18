@@ -16,9 +16,6 @@ const DashboardLayout = lazy(() =>
     default: module.DashboardLayout,
   })),
 );
-const Analises = lazy(() =>
-  pageImports.analises().then((module) => ({ default: module.Analises })),
-);
 const Assessoria = lazy(() =>
   pageImports.assessoria().then((module) => ({
     default: module.Assessoria,
@@ -137,7 +134,10 @@ function App() {
               <Route element={<PublicLayout />}>
                 <Route path="/" element={<Home />} />
                 <Route path="/glossario" element={<Glossario />} />
-                <Route path="/mercado" element={<Analises publicView />} />
+                <Route
+                  path="/mercado"
+                  element={<Navigate to="/ranking" replace />}
+                />
                 <Route path="/ranking" element={<IncomeRanking />} />
                 <Route
                   path="/ranking/acao/:ticker"
@@ -181,7 +181,10 @@ function App() {
                       element={<Conversas teamView />}
                     />
                   </Route>
-                  <Route path="analises" element={<Analises />} />
+                  <Route
+                    path="analises"
+                    element={<Navigate to="/app/ranking" replace />}
+                  />
                   <Route path="ranking" element={<IncomeRanking />} />
                   <Route
                     path="ranking/acao/:ticker"

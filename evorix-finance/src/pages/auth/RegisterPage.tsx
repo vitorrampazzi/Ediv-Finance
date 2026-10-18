@@ -142,8 +142,8 @@ export function RegisterPage() {
           <Link className="action w-full" to="/aprender">
             Explorar primeira aula
           </Link>
-          <Link className="action-secondary w-full" to="/mercado">
-            Ver o mercado
+          <Link className="action-secondary w-full" to="/ranking">
+            Conhecer o ranking
           </Link>
         </div>
       ) : (

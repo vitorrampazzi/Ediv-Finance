@@ -86,26 +86,23 @@ for (const path of [
     return { status: response.status };
   });
 }
-await check("Produção: catálogo real contém somente ações/units", async () => {
-  const response = await get(
-    "/api/market/assets?type=stock&page=1&limit=8&sortBy=volume&sortOrder=desc&search=",
-  );
-  assert.equal(response.status, 200);
-  const data = await response.json();
-  assert.ok(data.assets.length > 0);
-  assert.ok(data.total >= data.assets.length);
-  for (const item of data.assets) {
-    assert.equal(item.type, "stock");
-    assert.ok(!item.subType || ["stock", "unit"].includes(item.subType));
-    assert.ok(Number(item.price) >= 0);
-  }
-  return {
-    status: response.status,
-    count: data.assets.length,
-    total: data.total,
-    source: "brapi.dev",
-  };
-});
+for (const [source, destination] of [
+  ["/mercado", "/ranking"],
+  ["/app/analises", "/app/ranking"],
+]) {
+  await check("Produção: endereço legado " + source, async () => {
+    const response = await fetch(root + source, {
+      redirect: "manual",
+      signal: AbortSignal.timeout(30000),
+    });
+    assert.ok([301, 308].includes(response.status));
+    assert.equal(
+      new URL(response.headers.get("location"), root).pathname,
+      destination,
+    );
+    return { status: response.status, destination };
+  });
+}
 await check(
   "Produção: aula pública e demais conteúdos protegidos",
   async () => {

@@ -1,9 +1,4 @@
-import {
-  BookOpen,
-  Building2,
-  ChartNoAxesCombined,
-  ArrowRight,
-} from "lucide-react";
+import { BookOpen, ChartNoAxesCombined, ArrowRight } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useAuth } from "../context/authContext";
 import { authLink } from "../lib/authDestination";
@@ -19,7 +14,7 @@ const questions = [
   ],
   [
     "O que encontro na Escola do Dividendo?",
-    "Pesquisas por empresa, dados de ações e aulas sobre dividendos. No ranking, abra uma empresa para ler os detalhes da pesquisa.",
+    "Ranking com pesquisas por empresa e aulas sobre dividendos. No ranking, abra uma empresa para ler os detalhes da pesquisa.",
   ],
   [
     "Por que preciso confirmar meu e-mail?",
@@ -70,12 +65,6 @@ export function GettingStarted({ compact = false }: GettingStartedProps) {
               text: "No ranking, abra a empresa para ler as premissas e os riscos do cenário.",
               action: "Ranking de previsões",
               to: user ? "/app/ranking" : "/ranking",
-            },
-            {
-              title: "Compare as ações",
-              text: "Consulte as cotações e os indicadores disponíveis nas análises.",
-              action: "Análises de ações",
-              to: user ? "/app/analises" : "/mercado",
             },
             {
               title: "Estude dividendos",
@@ -129,7 +118,7 @@ export function GettingStarted({ compact = false }: GettingStartedProps) {
         <p className="mt-3 max-w-2xl text-sm leading-relaxed text-evo-textSec">
           Comece pela pesquisa de uma empresa ou por uma aula sobre dividendos.
         </p>
-        <div className="mt-6 grid gap-4 md:grid-cols-3">
+        <div className="mt-6 grid gap-4 md:grid-cols-2">
           {[
             {
               Icon: ChartNoAxesCombined,
@@ -137,13 +126,6 @@ export function GettingStarted({ compact = false }: GettingStartedProps) {
               text: "No ranking, abra uma empresa para consultar o cenário e as premissas da pesquisa.",
               to: user ? "/app/ranking" : authLink("cadastro", "/app/ranking"),
               action: user ? "Abrir ranking" : "Criar conta grátis",
-            },
-            {
-              Icon: Building2,
-              title: "Compare as ações",
-              text: "Consulte as cotações e os indicadores disponíveis nas análises.",
-              to: user ? "/app/analises" : "/mercado",
-              action: "Explorar análises",
             },
             {
               Icon: BookOpen,

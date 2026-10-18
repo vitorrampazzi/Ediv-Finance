@@ -1,3 +1,5 @@
+import { retiredPageDestination } from "../../site-pages.mjs";
+
 export function safeAuthDestination(value: unknown): string {
   if (
     typeof value !== "string" ||
@@ -10,16 +12,10 @@ export function safeAuthDestination(value: unknown): string {
   try {
     const url = new URL(value, "https://ediv.invalid");
     if (url.origin !== "https://ediv.invalid") return "/app";
+    const retired = retiredPageDestination(url.pathname);
+    if (retired) return retired;
     if (
-      ![
-        "/ranking",
-        "/aprender",
-        "/mercado",
-        "/assessoria",
-        "/suporte",
-        "/app",
-        "/",
-      ].some(
+      !["/ranking", "/aprender", "/assessoria", "/suporte", "/app", "/"].some(
         (path) =>
           url.pathname === path ||
           (path === "/app" && url.pathname.startsWith("/app/")) ||

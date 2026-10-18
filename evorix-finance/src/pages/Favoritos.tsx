@@ -73,7 +73,7 @@ export const Favoritos = () => {
             lista.
           </p>
           <Link
-            to="/app/analises"
+            to="/app/ranking"
             className="mt-2 inline-flex min-h-10 items-center gap-1.5 font-medium text-evo-accent"
           >
             Ver cotações <ArrowRight size={16} />
@@ -143,7 +143,7 @@ export const Favoritos = () => {
                 Sua lista de acompanhamento
               </h2>
               <Link
-                to="/app/analises"
+                to="/app/ranking"
                 className="inline-flex min-h-11 items-center gap-2 text-sm font-medium text-evo-accent"
               >
                 Encontrar ativos <ArrowRight size={16} aria-hidden="true" />

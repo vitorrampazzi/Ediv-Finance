@@ -223,30 +223,34 @@ try {
     },
   );
   await check(
-    "Falha do catálogo não é apresentada como zero resultados; retry funciona",
+    "MVP preserva ranking e aulas, sem catálogo nem chamadas de destaques",
     async () => {
-      await page.route("**/api/market/assets?**", (route) =>
-        route.fulfill({
-          status: 503,
-          contentType: "application/json",
-          body: JSON.stringify({ error: "Falha simulada de catálogo" }),
-        }),
-      );
-      await page.goto(root + "/app/analises");
-      await expect(page.getByRole("alert")).toContainText("Falha simulada");
-      await expect(page.getByRole("status")).toContainText(
-        "Resultados indisponíveis",
-      );
-      await expect(
-        page.getByRole("button", { name: "Próxima", exact: true }),
-      ).toBeDisabled();
-      await page.unroute("**/api/market/assets?**");
-      await page
-        .getByRole("button", { name: "Tentar novamente", exact: true })
-        .click();
-      await expect(
-        page.getByRole("heading", { name: "PETR4", exact: true }),
-      ).toBeVisible();
+      const catalogueRequests = [];
+      const record = (request) => {
+        if (request.url().includes("/api/market/assets"))
+          catalogueRequests.push(request.url());
+      };
+      page.on("request", record);
+      try {
+        await page.goto(root + "/app");
+        await expect(
+          page.getByRole("heading", { name: "Sua mesa de pesquisa." }),
+        ).toBeVisible();
+        await expect(
+          page.getByRole("link", { name: "Análises", exact: true }),
+        ).toHaveCount(0);
+        await expect(
+          page.getByRole("heading", { name: "Ações em destaque" }),
+        ).toHaveCount(0);
+        await page.goto(root + "/app/analises");
+        await expect(page).toHaveURL(root + "/app/ranking");
+        await expect(
+          page.getByRole("link", { name: "Análises", exact: true }),
+        ).toHaveCount(0);
+        assert.deepEqual(catalogueRequests, []);
+      } finally {
+        page.off("request", record);
+      }
     },
   );
   await check(

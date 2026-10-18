@@ -34,7 +34,6 @@ export async function prerender() {
   const pageCss = {
     "/": /^Home-[\w-]+\.css$/,
     "/aprender": /^Aprender-[\w-]+\.css$/,
-    "/mercado": /^analises-[\w-]+\.css$/,
   };
   const pageStyles = (path) =>
     cssFiles

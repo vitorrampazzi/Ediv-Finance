@@ -9,7 +9,7 @@ e `npm run test:harness` para validar reservas e atualizações. O [fluxo](docs/
 explica como reservar arquivos, registrar entregas e atualizar as outras sessões.
 Os chats compartilham os arquivos deste diretório; cada chat mantém seu próprio histórico.
 
-A React/Vite application with a Node.js/Express API and MySQL persistence. The public home page includes stock analysis backed by brapi.dev. The `/app` area requires a verified account and brings together research rankings, company research pages, learning, and support.
+A React/Vite application with a Node.js/Express API and MySQL persistence. The MVP focuses on research rankings and dividend education; the standalone stock catalogue and quote highlights have been retired. The `/app` area requires a verified account and brings together research rankings, company research pages, learning, and support.
 
 Escola do Dividendo is an education and stock research platform. The `/ranking` route introduces the ranking; viewing the list requires a verified account. Analysts and Administrators create research in the editor or import CSV/Excel (.xlsx) files, review a preview, and publish versioned research with history.
 
@@ -83,6 +83,8 @@ To apply migrations to the configured Aiven managed database, use `npm run db:mi
 - `POST /api/auth/login` — authenticates the user and creates a server-side session.
 - `GET /api/auth/me` — returns only the current session's basic account data.
 - `POST /api/auth/logout` — revokes the database session and clears the cookie.
+Legacy market infrastructure remains for older backend features; it is not linked or fetched by the MVP UI.
+
 - `GET /api/market/assets?type=stock&search=PETR&page=1` — lists common shares, preferred shares, and units, with search and pagination.
 - `GET /api/market/quotes?symbols=PETR4,ITUB4` — returns brapi.dev quotes, limited to eight assets per call.
 - `GET /api/rankings` — lists the most recently imported projections and indicates whether the session can publish.

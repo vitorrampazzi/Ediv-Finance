@@ -63,7 +63,7 @@ export function registrationAvailability() {
       : !config.registrationEnabled ||
           (challengeRequired && !challengeConfigured)
         ? "Novos cadastros estão temporariamente indisponíveis. Quem já confirmou a conta pode continuar entrando normalmente."
-        : "Novos cadastros estão em preparação enquanto configuramos a confirmação por e-mail. Você já pode explorar o mercado, a primeira aula e o glossário. Quem tem conta confirmada pode continuar entrando normalmente.",
+        : "Novos cadastros estão em preparação enquanto configuramos a confirmação por e-mail. Você já pode conhecer o ranking, a primeira aula e o glossário. Quem tem conta confirmada pode continuar entrando normalmente.",
   };
 }
 

@@ -1,7 +1,8 @@
 // Only the signup journey requests an introduction. An ordinary login never
 // starts one, regardless of account age. Completion is local to this browser.
+import { retiredPageDestination } from "./site-pages.mjs";
 export const onboardingStoragePrefix = "ediv-introduction-v1:";
-export const onboardingStepCount = 6;
+export const onboardingStepCount = 5;
 
 export function onboardingEligible(user) {
   return Boolean(user?.id && user.emailVerified);
@@ -17,9 +18,11 @@ export function cleanOnboardingDestination(value) {
     return "/app";
   try {
     const url = new URL(value, "https://ediv.invalid");
+    const retired = retiredPageDestination(url.pathname);
+    if (retired) return retired;
     if (
       url.origin !== "https://ediv.invalid" ||
-      !/^(?:\/app(?:\/[^?#]*)?|\/ranking(?:\/acao\/[A-Za-z0-9._-]{1,16})?|\/aprender|\/mercado|\/assessoria|\/suporte|\/)\/?$/.test(
+      !/^(?:\/app(?:\/[^?#]*)?|\/ranking(?:\/acao\/[A-Za-z0-9._-]{1,16})?|\/aprender|\/assessoria|\/suporte|\/)\/?$/.test(
         url.pathname,
       )
     )
@@ -61,16 +64,23 @@ export function createOnboardingStore(storage) {
       persisted = false;
     }
     if (!storage) persisted = false;
+    // Version1 had an extra catalogue step at index3. Keep completed tours
+    // completed, and resume active tours at learning/account after removing it.
+    const step =
+      record?.version === 1 && record.step >= 3
+        ? Math.max(3, record.step - 1)
+        : record?.step;
     const valid =
-      record?.version === 1 &&
+      [1, 2].includes(record?.version) &&
       typeof record.completed === "boolean" &&
       Number.isInteger(record.step) &&
-      record.step >= 0 &&
-      record.step < onboardingStepCount &&
+      Number.isInteger(step) &&
+      step >= 0 &&
+      step < onboardingStepCount &&
       typeof record.returnTo === "string";
     const state = Object.freeze({
       active: valid ? !record.completed : requested && onboardingEligible(user),
-      step: valid ? record.step : 0,
+      step: valid ? step : 0,
       returnTo: cleanOnboardingDestination(
         valid ? record.returnTo : destination,
       ),
@@ -88,7 +98,7 @@ export function createOnboardingStore(storage) {
       storage.setItem(
         key(user.id),
         JSON.stringify({
-          version: 1,
+          version: 2,
           step: state.step,
           completed: !state.active,
           returnTo: state.returnTo,

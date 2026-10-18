@@ -22,8 +22,8 @@ const topics = [
     steps: ["Negócio", "Receita", "Resultados"],
     icons: [Building2, TrendingUp, ChartNoAxesCombined],
     action: "Conhecer as empresas",
-    publicPath: "/mercado",
-    memberPath: "/app/analises",
+    publicPath: "/ranking",
+    memberPath: "/app/ranking",
   },
   {
     label: "Pesquisa",

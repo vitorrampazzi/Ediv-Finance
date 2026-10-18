@@ -104,6 +104,8 @@ test("sensitive paths, query, fragments and unknown destinations are not measure
     "/app/admin",
     "/app/atendimentos",
     "/suporte",
+    "/mercado",
+    "/app/analises",
     "/api/auth/me",
     "//foreign.invalid",
     "/ranking?email=private",
