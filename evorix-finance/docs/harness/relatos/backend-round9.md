@@ -148,3 +148,12 @@ Entrega em revisão, reservas liberadas; aguardar resultado dos gates integrados
   corrigidos para `getByRole("heading", { name: "Sua mesa de pesquisa.",
   exact: true })`, preservando as assertivas de visibilidade. Syntax Node22
   dos dois runners e harness check passaram. Produto não alterado.
+- Após falha reproduzida na CI, login pendente passou a esperar a mensagem real
+  `Confirme seu e-mail antes de entrar`, em vez de `/confirmad/i`. O cenário
+  aguarda o POST login e exige401 com `EMAIL_NOT_VERIFIED`, além de preservar
+  a assertiva de URL em `/entrar`. Conferidos os demais textos de confirmação,
+  reset, erro de senha atual, status de publicação/comparação e resposta local
+  contra UI/API; não confirmada outra divergência textual. LoginJourney usa
+  destino explícito `/app/aprender` sem sinal de tour; ausência de tratamento
+  do tour nesse helper não é um bloqueio comprovado. Syntax Node22, ESLint
+  do runner e harness check passaram; suíte browser completa depende da CI.

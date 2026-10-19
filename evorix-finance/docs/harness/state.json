@@ -3,9 +3,9 @@
   "workspace": "C:/Users/vitor/.codex/worktrees/11a6/Evorix-finance/evorix-finance",
   "sessions": {
     "coordenacao": {
-      "phase": "trabalhando",
-      "summary": "Correções pré-lançamento: consentimento, integração e validação; dados/conteúdo externos excluídos",
-      "updatedAt": "2026-10-19T01:22:51.581Z",
+      "phase": "revisao",
+      "summary": "95 testes/lint/build aprovados; CI MySQL integração passou, browser/restore em execução no PR3",
+      "updatedAt": "2026-10-19T01:37:27.028Z",
       "claims": [
         "analytics-policy.mjs",
         "tests/analytics.test.mjs",
@@ -22,7 +22,8 @@
         ".test-artifacts/round9-ci-summary.json",
         ".test-artifacts/round9-preview.log",
         ".test-artifacts/round9-preview-error.log",
-        ".test-artifacts/round9-browser-summary.json"
+        ".test-artifacts/round9-browser-summary.json",
+        "tests/run-browser.mjs"
       ]
     },
     "interface": {
@@ -33,8 +34,8 @@
     },
     "backend": {
       "phase": "revisao",
-      "summary": "3seletores título home corrigidos nomeexato; assertivas mantidas; syntaxNode22/harnessOK; pronto próximoCI",
-      "updatedAt": "2026-10-19T01:33:07.056Z",
+      "summary": "Loginpendente texto alinhado+401EMAIL_NOT_VERIFIED; demaistextos conferidos; syntax/ESLint/harnessOK; prontoCI",
+      "updatedAt": "2026-10-19T01:37:16.984Z",
       "claims": []
     }
   }

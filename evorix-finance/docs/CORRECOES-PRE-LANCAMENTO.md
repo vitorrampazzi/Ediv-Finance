@@ -21,8 +21,8 @@ bloqueadores por decisão do responsável. Os exemplos devem continuar identific
 O teste de regressão do consentimento reproduziu três falhas antes da correção.
 Depois dela, os 14 testes de Analytics passaram, incluindo revogação sem escrita,
 foco repetido, escolha em memória, expiração e recusa recebida de outra aba.
-Os 83 testes unitários existentes mais essas regressões passaram no primeiro
-checkpoint. A contagem final e os gates completos serão registrados na entrega.
+O primeiro checkpoint totalizou 83 testes unitários aprovados, já incluindo essas
+regressões. A contagem final e os gates completos serão registrados na entrega.
 
 O checkpoint integrado passou em 94 testes, lint e build com oito rotas públicas
 pré-renderizadas. A primeira CI desta rodada (`39185256419`) passou também em

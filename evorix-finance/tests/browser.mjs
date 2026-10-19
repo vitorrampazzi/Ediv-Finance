@@ -218,8 +218,18 @@ try {
     },
   );
   await check("Login da conta pendente é recusado", async () => {
+    const pendingLogin = page.waitForResponse(
+      (response) =>
+        response.url().endsWith("/api/auth/login") &&
+        response.request().method() === "POST",
+    );
     await loginJourney();
-    await expect(page.getByRole("alert")).toContainText(/confirmad/i);
+    const response = await pendingLogin;
+    assert.equal(response.status(), 401);
+    assert.equal((await response.json()).code, "EMAIL_NOT_VERIFIED");
+    await expect(page.getByRole("alert")).toContainText(
+      /Confirme seu e-mail antes de entrar/i,
+    );
     assert.match(page.url(), /\/entrar/);
   });
   await check(

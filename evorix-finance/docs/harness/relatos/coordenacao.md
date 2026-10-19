@@ -551,3 +551,17 @@ docs/CORRECOES-PRE-LANCAMENTO.md.
 Em andamento: snapshot em branch de validação, CI completa e browser local;
 main só avança após evidências e correções adicionais necessárias. Pendências
 operacionais/jurídicas não serão declaradas resolvidas sem comprovação.
+
+Complemento de validação:
+- Backend revisou independentemente o consentimento:14/14 regressões aprovadas,
+  sem defeito confirmado no escopo. Expiração em reconcile e memória sem promessa
+  de sobreviver reload são limites explícitos.
+- Unidade final95/95, lint e build/SSR8rotas novamente aprovados após ajuste do
+  cartão LearningJourney. Interface executou2/2 cenários quota/blocked no Chrome
+  local com API simulada, incluindo navegação SPA, retry e reload; sem SQL.
+- CI inicial39185256419 aprovou integraçãoSQL/sessões e revelou isolamento de
+  cooldown entre casos browser. Complemento isola checks/larguras, atualiza nomes
+  acessíveis antigos e conserva assertivas. CI39185865120 em andamento no PR3,
+  commit e6d9a54332e743d73522dbf89db02e6e1490c18f. Nenhum avanço da main ainda.
+- Leitura pública única de /api/auth/availability retornou availabletrue,
+  challengefalse. Não prova entrega SMTP e não criou conta nem enviou e-mail.

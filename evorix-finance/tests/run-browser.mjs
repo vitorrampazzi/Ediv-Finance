@@ -24,8 +24,6 @@ for (const suite of suites) {
     child.once("error", reject);
     child.once("exit", (code) => resolve(code ?? 1));
   });
-  if (code !== 0) {
-    process.exitCode = code;
-    break;
-  }
+  // A failed suite must not hide the results of the other isolated suites.
+  if (code !== 0) process.exitCode = 1;
 }
