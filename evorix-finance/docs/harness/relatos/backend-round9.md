@@ -131,3 +131,20 @@ Entrega em revisão, reservas liberadas; aguardar resultado dos gates integrados
   após exercício, recarga e outra sessão. A barra de LearningJourney tem outro
   nome acessível e não é o alvo destes cenários. Syntax Node22 e harness passaram;
   execução real dos cenários aguarda CI MySQL descartável.
+
+### Revisão estática adicional dos seletores
+
+- Divergência confirmada: `tests/browser.mjs:589` espera o título antigo
+  `Sua escola de ações e dividendos`; `/app` usa MemberHome e o h1 atual de
+  AccountHomeContent é `Sua mesa de pesquisa.`. O mesmo nome antigo está em
+  `tests/session.browser.mjs:52` e `:141`. Coordenação informada dos três usos;
+  nenhum teste editado nesta revisão solicitada como leitura.
+- Conferidos os nomes dos fluxos conta/recuperação/configurações, pesquisa,
+  exercícios, suporte, editor e administração contra os componentes atuais.
+  Não confirmada outra divergência de seletor nesses trechos. O passo numerado
+  `2. Cenário` continua existindo no editor; não deve ser retirado por suposição.
+- Revisão estática não equivale à execução browser; gates continuam na CI.
+- Após autorização explícita da coordenação, os três seletores acima foram
+  corrigidos para `getByRole("heading", { name: "Sua mesa de pesquisa.",
+  exact: true })`, preservando as assertivas de visibilidade. Syntax Node22
+  dos dois runners e harness check passaram. Produto não alterado.

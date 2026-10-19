@@ -33,8 +33,8 @@
     },
     "backend": {
       "phase": "revisao",
-      "summary": "4seletores progressbar Aprender atualizados; assertivas0/1 preservadas; syntax/harnessOK; CIbrowser pendente",
-      "updatedAt": "2026-10-19T01:30:10.421Z",
+      "summary": "3seletores título home corrigidos nomeexato; assertivas mantidas; syntaxNode22/harnessOK; pronto próximoCI",
+      "updatedAt": "2026-10-19T01:33:07.056Z",
       "claims": []
     }
   }

@@ -49,7 +49,7 @@ async function login(page, account) {
   await page.getByRole("button", { name: "Entrar", exact: true }).click();
   await page.waitForURL((url) => url.pathname === "/app");
   await expect(
-    page.getByRole("heading", { name: /Sua escola de ações e dividendos/ }),
+    page.getByRole("heading", { name: "Sua mesa de pesquisa.", exact: true }),
   ).toBeVisible();
 }
 
@@ -138,7 +138,7 @@ try {
       await page.waitForURL((url) => url.pathname === "/app");
       await page.reload();
       await expect(
-        page.getByRole("heading", { name: /Sua escola de ações e dividendos/ }),
+        page.getByRole("heading", { name: "Sua mesa de pesquisa.", exact: true }),
       ).toBeVisible();
     },
   );

@@ -586,7 +586,7 @@ try {
     await page.waitForURL("**/app");
     await expect(
       page
-        .getByRole("heading", { name: /Sua escola de ações e dividendos/i })
+        .getByRole("heading", { name: "Sua mesa de pesquisa.", exact: true })
         .first(),
     ).toBeVisible();
   });
