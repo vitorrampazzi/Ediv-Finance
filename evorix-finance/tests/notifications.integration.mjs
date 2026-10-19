@@ -48,19 +48,21 @@ try {
         const url = new URL(req.url, "http://127.0.0.1");
         Object.defineProperty(req, "query", {
           configurable: true,
-          value: { ...Object.fromEntries(url.searchParams), vercelPath: "notifications" },
+          value: { __path: "notifications", ...Object.fromEntries(url.searchParams), vercelPath: "notifications" },
         });
         handler(req, res);
       });
       await new Promise((resolve) => server.listen(0, "127.0.0.1", resolve));
       try {
-        const root = `http://127.0.0.1:${server.address().port}/api/handler?__path=notifications`;
-        for (const [suffix, status] of [["", 200], ["&cursor=1", 200], ["&cursor=invalid", 400], ["&cursor=1&cursor=2", 400], ["&unexpected=1", 400]]) {
-          const response = await fetch(root + suffix, { headers: { Cookie: a.cookie } });
-          const body = await response.json();
-          assert.equal(response.status, status, JSON.stringify(body));
-          if (status === 200) assert.ok(Array.isArray(body.notifications));
-          else assert.equal(body.error, "Cursor inválido.");
+        for (const path of ["/api/handler?__path=notifications", "/api/notifications?"]) {
+          const root = `http://127.0.0.1:${server.address().port}${path}`;
+          for (const [suffix, status] of [["", 200], ["&cursor=1", 200], ["&cursor=invalid", 400], ["&cursor=1&cursor=2", 400], ["&unexpected=1", 400]]) {
+            const response = await fetch(root + suffix, { headers: { Cookie: a.cookie } });
+            const body = await response.json();
+            assert.equal(response.status, status, JSON.stringify(body));
+            if (status === 200) assert.ok(Array.isArray(body.notifications));
+            else assert.equal(body.error, "Cursor inválido.");
+          }
         }
       } finally {
         server.closeAllConnections();
