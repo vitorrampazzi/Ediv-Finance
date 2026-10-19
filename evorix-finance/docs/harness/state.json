@@ -29,8 +29,8 @@
     },
     "interface": {
       "phase": "revisao",
-      "summary": "Viewport1px: erro real reproduzido no componente; clamp1linha+regressão; Chrome2/2 lint/tsc OK",
-      "updatedAt": "2026-10-19T06:25:22.609Z",
+      "summary": "Regressão viewport exige URL/fontes visível/zero erros; indicador P3 registrado; syntax/lint OK",
+      "updatedAt": "2026-10-19T06:31:04.829Z",
       "claims": []
     },
     "backend": {

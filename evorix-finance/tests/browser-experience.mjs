@@ -382,7 +382,8 @@ try {
           exact: true,
         });
         await sources.click();
-        await expect(sources).toHaveAttribute("aria-current", "location");
+        await expect(smallPage).toHaveURL(/#fontes$/);
+        await expect(smallPage.locator("#fontes")).toBeVisible();
         assert.deepEqual(observerErrors, []);
       } finally {
         await isolated.close();

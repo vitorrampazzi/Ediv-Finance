@@ -591,3 +591,18 @@ reexecutados nesta etapa; coordenação agrupará o complemento na próxima CI.
 - A CI6 não guardou stack do PageError; este é um defeito real reproduzido com
   mesma classe de erro, mas não prova qual evento reduziu a altura naquela run.
   Coordenação melhora diagnóstico e executará CI7/SQL/backup completos.
+
+### Alinhamento final da regressão após CI7
+
+Coordenação informou zero pageerrors nas três suítes,30/30 do browser principal,
+18/18 cenários anteriores de experiência e7/7 de sessão. Apenas a nova assertiva
+de aria-current do cenário de viewport falhou na pesquisa completa: ao final do
+documento a seção Fontes pode não alcançar a linha de leitura e o indicador volta
+à seção anterior. Registrado como limite **P3 do indicador ativo**, fora do erro
+do construtor; não houve nova alteração no componente.
+
+A pedido da coordenação, o teste agora exige URL terminada em `#fontes`, seção
+`#fontes` visível e zero erros após resize. Preserva a verificação de viewport1px
+e a navegação funcional, sem exigir um estado adicional do indicador. Syntax
+Node22, ESLint do runner e harness passaram. Suite completa/SQL/backup aguardam
+próxima CI; não foram reexecutados localmente nesta etapa.
