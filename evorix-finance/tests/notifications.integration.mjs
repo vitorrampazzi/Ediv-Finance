@@ -1,5 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
+import { createServer } from "node:http";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 
 assert.equal(process.env.EDIV_TEST_MYSQL_DISPOSABLE, "true");
@@ -41,6 +42,31 @@ try {
       }
     });
     const initial = await list(a);
+    await t.test("adaptador Vercel remove parâmetros internos sem perder o cursor", async () => {
+      const { default: handler } = await import("../api/handler.js");
+      const server = createServer((req, res) => {
+        const url = new URL(req.url, "http://127.0.0.1");
+        Object.defineProperty(req, "query", {
+          configurable: true,
+          value: { ...Object.fromEntries(url.searchParams), vercelPath: "notifications" },
+        });
+        handler(req, res);
+      });
+      await new Promise((resolve) => server.listen(0, "127.0.0.1", resolve));
+      try {
+        const root = `http://127.0.0.1:${server.address().port}/api/handler?__path=notifications`;
+        for (const [suffix, status] of [["", 200], ["&cursor=1", 200], ["&cursor=invalid", 400], ["&cursor=1&cursor=2", 400], ["&unexpected=1", 400]]) {
+          const response = await fetch(root + suffix, { headers: { Cookie: a.cookie } });
+          const body = await response.json();
+          assert.equal(response.status, status, JSON.stringify(body));
+          if (status === 200) assert.ok(Array.isArray(body.notifications));
+          else assert.equal(body.error, "Cursor inválido.");
+        }
+      } finally {
+        server.closeAllConnections();
+        await new Promise((resolve) => server.close(resolve));
+      }
+    });
     const created = await request(analyst, "/api/rankings", {
       method: "POST",
       raw: "ticker;empresa;potencial_percentual;preco_alvo;horizonte_meses;tese;riscos\nPETR4;Empresa QA;20;12;12;Tese;Risco",

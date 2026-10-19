@@ -8,6 +8,8 @@ export default function handler(req, res) {
     incomingUrl.searchParams.delete('__path');
     const query = incomingUrl.searchParams.toString();
     req.url = `/api/${apiPath.replace(/^\/+/, '')}${query ? `?${query}` : ''}`;
+    // Let Express parse the cleaned URL instead of Vercel's cached rewrite query.
+    delete req.query;
   }
 
   return app(req, res);
