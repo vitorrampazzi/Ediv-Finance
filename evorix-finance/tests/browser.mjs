@@ -68,7 +68,14 @@ async function context(account, viewport = { width: 1366, height: 900 }) {
     ]);
   }
   result.on("page", (page) => {
-    page.on("pageerror", (error) => errors.push(error.message));
+    page.on("pageerror", (error) => {
+      errors.push(error.message);
+      console.error(
+        "BROWSER_PAGE_ERROR",
+        page.url(),
+        error.stack || error.message,
+      );
+    });
   });
   return result;
 }

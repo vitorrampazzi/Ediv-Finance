@@ -29,8 +29,8 @@
     },
     "interface": {
       "phase": "revisao",
-      "summary": "Log completo+PAGE_ERRORS e unroute em finally; 2/2 self-checks, syntax/lint/harness OK",
-      "updatedAt": "2026-10-19T01:44:06.886Z",
+      "summary": "Viewport1px: erro real reproduzido no componente; clamp1linha+regressão; Chrome2/2 lint/tsc OK",
+      "updatedAt": "2026-10-19T06:25:22.609Z",
       "claims": []
     },
     "backend": {

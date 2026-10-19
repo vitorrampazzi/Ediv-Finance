@@ -564,3 +564,30 @@ reexecutados nesta etapa; coordenação agrupará o complemento na próxima CI.
   lançava cedo demais no segundo cenário; corrigido para falhar com rota ativa.
 - Syntax Node22, ESLint do runner e harness check passaram. Nenhuma alteração
   de produto, SQL/browser real ou deploy nesta etapa; CI completa com coordenação.
+
+### Complemento — IntersectionObserver com viewport mínimo
+
+- Aceitação: o componente real de navegação da pesquisa não lança exceção com
+  viewport de1px e retoma seleção de seção após resize normal.
+- Causa reproduzida: ResearchSectionNav calculava readingLine=-1 para altura1
+  (ou -2 para altura0), gerando rootMargin `--1px`/`--2px`. Unidades já eram px;
+  o sinal duplicado tornava o valor inválido. Correção de uma linha limita a
+  altura disponível a zero antes do Math.min; cálculos normais não mudam.
+- `tests/browser-experience.mjs`: contexto isolado do membro, pesquisa real da
+  fixture, viewport360x1, ausência de pageerror, resize1366x900 e seleção de
+  Fontes e versão. Assertiva global de erros preservada. Nenhum outro componente
+  de observação ou runner reservado à coordenação alterado.
+- Chrome headless local executou o componente REAL servido pelo Vite em HTML
+  mínimo sem API/SQL. Interceptação do módulo restaurou só a expressão antiga:
+  erro nativo reproduzido e margem `--1px` capturada. Código corrigido: sem erro,
+  observador construído, resize e aria-current da navegação corretos. **2/2**.
+  Harness diagnóstico em `.test-artifacts/interface-round9/check-research-nav.mjs`
+  e `research-nav.html`, fora do produto/publicação; browser e servidor encerrados.
+- A mensagem do Chrome local usa “absolute length units or percent”, equivalente
+  ao “pixels or percent” da CI. O regex do diagnóstico foi ajustado a essa versão;
+  não foi alterado nenhum tratamento de erros do produto ou assertiva da CI.
+- Syntax do teste, ESLint dos dois arquivos, TypeScript Node22 e harness passaram.
+  Reaplicada revisão React: nenhuma mudança de hooks/listeners/cleanup.
+- A CI6 não guardou stack do PageError; este é um defeito real reproduzido com
+  mesma classe de erro, mas não prova qual evento reduziu a altura naquela run.
+  Coordenação melhora diagnóstico e executará CI7/SQL/backup completos.

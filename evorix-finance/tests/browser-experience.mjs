@@ -350,6 +350,46 @@ try {
     },
   );
   await check(
+    "Navegação da pesquisa aceita viewport mínimo e recupera a leitura após resize",
+    async () => {
+      const isolated = await context(fixture.accounts.a);
+      try {
+        const smallPage = await isolated.newPage();
+        const observerErrors = [];
+        smallPage.on("pageerror", (error) =>
+          observerErrors.push(error.message),
+        );
+        await smallPage.setViewportSize({ width: 360, height: 1 });
+        await smallPage.goto(
+          root +
+            `/app/ranking/acao/PETR4?visual=real&publication=${publicationId}`,
+        );
+        const navigation = smallPage.getByRole("navigation", {
+          name: "Seções da pesquisa",
+          exact: true,
+        });
+        await navigation.waitFor({ state: "attached" });
+        await smallPage.evaluate(
+          () =>
+            new Promise((resolve) => {
+              requestAnimationFrame(() => requestAnimationFrame(resolve));
+            }),
+        );
+        assert.deepEqual(observerErrors, []);
+        await smallPage.setViewportSize({ width: 1366, height: 900 });
+        const sources = navigation.getByRole("link", {
+          name: "Fontes e versão",
+          exact: true,
+        });
+        await sources.click();
+        await expect(sources).toHaveAttribute("aria-current", "location");
+        assert.deepEqual(observerErrors, []);
+      } finally {
+        await isolated.close();
+      }
+    },
+  );
+  await check(
     "MVP preserva ranking e aulas, sem catálogo nem chamadas de destaques",
     async () => {
       const catalogueRequests = [];
