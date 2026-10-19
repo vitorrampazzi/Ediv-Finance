@@ -157,3 +157,19 @@ Entrega em revisão, reservas liberadas; aguardar resultado dos gates integrados
   destino explícito `/app/aprender` sem sinal de tour; ausência de tratamento
   do tour nesse helper não é um bloqueio comprovado. Syntax Node22, ESLint
   do runner e harness check passaram; suíte browser completa depende da CI.
+
+### Dreno após evidência de corrida na CI
+
+- CI39186207829 revelou reset com request ativa entre cenários. Guard ganhou
+  consultas internas `isIdle()` e `waitForIdle(timeoutMs)`; nenhuma rota HTTP,
+  alteração de limites ou liberação forçada de requisições. Reset ativo segue
+  recusado; apenas finish/close liberam a contagem.
+- Fixture verifica schema isolado, usa prazo total de5s para drenar e apagar os
+  contadores SQL. Se nova request iniciar durante DELETE, repete dreno/DELETE
+  dentro do mesmo prazo. Após DELETE, isIdle e resets cache/guard são síncronos,
+  sem await entre checagem final e reset. Carga que não drena falha explicitamente.
+- Novo teste cobre prazo esgotado, reset ainda recusado após timeout, espera
+  até todas as respostas finish/close e reset apenas após ociosidade.
+- Node22:4/4 testes request-admission passaram. ESLint dos três arquivos,
+  syntax da fixture e harness check passaram. SQL/browser aguardam nova CI;
+  sem ambiente MySQL local para executar a fixture nesta sessão.

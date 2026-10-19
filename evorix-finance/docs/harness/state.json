@@ -28,14 +28,14 @@
     },
     "interface": {
       "phase": "revisao",
-      "summary": "A04 E2E quota/blocked 2/2 Chrome local; corrigida promessa falsa LearningJourney; lint/tsc/syntax OK",
-      "updatedAt": "2026-10-19T01:31:30.662Z",
+      "summary": "Log completo+PAGE_ERRORS e unroute em finally; 2/2 self-checks, syntax/lint/harness OK",
+      "updatedAt": "2026-10-19T01:44:06.886Z",
       "claims": []
     },
     "backend": {
       "phase": "revisao",
-      "summary": "Loginpendente texto alinhado+401EMAIL_NOT_VERIFIED; demaistextos conferidos; syntax/ESLint/harnessOK; prontoCI",
-      "updatedAt": "2026-10-19T01:37:16.984Z",
+      "summary": "Dreno fixture5s entregue: race SQL rechecada semawait antes reset;4testes+lint/syntax/harnessOK; CIpendente",
+      "updatedAt": "2026-10-19T01:44:10.820Z",
       "claims": []
     }
   }

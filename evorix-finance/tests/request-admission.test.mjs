@@ -68,6 +68,31 @@ test("32 solicitações ativas continuam protegidas e reset recusa trabalho em v
   assert.equal(res.code, 200);
 });
 
+test("dreno aguarda finish/close, tem prazo e não libera requisição ativa", async () => {
+  const guard = createRequestAdmission();
+  assert.equal(guard.isIdle(), true);
+  await guard.waitForIdle();
+  const first = response();
+  const second = response();
+  guard({ securityIpKey: "first" }, first, () => {});
+  guard({ securityIpKey: "second" }, second, () => {});
+  assert.equal(guard.isIdle(), false);
+  await assert.rejects(guard.waitForIdle(5), /Tempo esgotado/);
+  assert.throws(() => guard.reset(), /terminarem/);
+  let drained = false;
+  const waiting = guard.waitForIdle().then(() => {
+    drained = true;
+  });
+  first.emit("finish");
+  await Promise.resolve();
+  assert.equal(drained, false);
+  assert.equal(guard.isIdle(), false);
+  second.emit("close");
+  await waiting;
+  assert.equal(guard.isIdle(), true);
+  guard.reset();
+});
+
 test("chaves de rajada têm teto5000 e vencidas são removidas antes de admitir novas", () => {
   let time = 0;
   const guard = createRequestAdmission({ now: () => time });

@@ -22,7 +22,7 @@ async function check(name, work) {
     console.info("PASS:", name);
   } catch (error) {
     checks.push({ name, status: "failed", error: error.message });
-    console.error("FAIL:", name, error.message.split("\n")[0]);
+    console.error("FAIL:", name, error.stack || error.message);
     for (const [index, page] of browser
       .contexts()
       .flatMap((context) => context.pages())
@@ -390,13 +390,16 @@ try {
           body: JSON.stringify({ error: "Falha simulada de aulas" }),
         }),
       );
-      await page.goto(root + "/app/aprender");
-      await expect(page.getByRole("alert")).toContainText(
-        "Falha simulada de aulas",
-      );
-      await page.unroute("**/api/learning");
+      try {
+        await page.goto(root + "/app/aprender");
+        await expect(page.getByRole("alert")).toContainText(
+          "Falha simulada de aulas",
+        );
+      } finally {
+        await page.unroute("**/api/learning");
+      }
       await page
-        .getByRole("button", { name: "Tentar carregar novamente", exact: true })
+        .getByRole("button", { name: "Tentar novamente", exact: true })
         .click();
       await expect(page.locator("#classroom-title")).toContainText(
         lessons[0].title,
@@ -419,17 +422,20 @@ try {
           body: JSON.stringify({ error: "Falha simulada ao salvar" }),
         }),
       );
-      await page
-        .getByRole("button", {
-          name: lessons[0].choices[lessons[0].answer],
-          exact: true,
-        })
-        .click();
-      await expect(page.getByRole("alert")).toContainText(
-        "Falha simulada ao salvar",
-      );
-      await expect(progress(page)).toHaveAttribute("aria-valuenow", "0");
-      await page.unroute("**/api/learning/progress/ranking");
+      try {
+        await page
+          .getByRole("button", {
+            name: lessons[0].choices[lessons[0].answer],
+            exact: true,
+          })
+          .click();
+        await expect(page.getByRole("alert")).toContainText(
+          "Falha simulada ao salvar",
+        );
+        await expect(progress(page)).toHaveAttribute("aria-valuenow", "0");
+      } finally {
+        await page.unroute("**/api/learning/progress/ranking");
+      }
       await page
         .getByRole("button", { name: "Tentar salvar novamente", exact: true })
         .click();
@@ -787,7 +793,7 @@ try {
       ).toBeVisible();
       await expect(page.getByText("27,5%", { exact: true })).toBeVisible();
       await expect(
-        page.getByText(/R\$\s*42,75/, { exact: true }),
+        page.locator("header dl dd").filter({ hasText: /^R\$\s*42,75$/ }),
       ).toBeVisible();
     },
   );
@@ -796,6 +802,7 @@ try {
     async () => assert.deepEqual(errors, []),
   );
 } finally {
+  console.info("PAGE_ERRORS", JSON.stringify(errors));
   await writeFile(
     ".test-artifacts/experience-report.json",
     JSON.stringify(

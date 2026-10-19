@@ -536,3 +536,31 @@ preservar conclusão, permitir gravação e usar retry, recarregar e restaurar.
   Não confundir os dois casos locais com aprovação integral do gate SQL/browser.
 - `node --check tests/browser-experience.mjs`, ESLint do teste e dos dois TSX,
   `tsc -b` com Node22 e harness check passaram; revisão React aplicada.
+
+### Complemento — alinhamento de dois seletores comprovados
+
+Após revisão somente leitura e autorização da coordenação, ajustado apenas
+`tests/browser-experience.mjs`: retry do erro de aulas busca o nome exato atual
+`Tentar novamente`; preço-alvo busca um `dd` do `header dl` com regex ancorada
+para R$42,75, aceitando o espaço de formatação monetária. Assim não seleciona
+o parágrafo narrativo que repete esse valor. Mantidas ambas as assertivas de
+visibilidade e todas as demais verificações. Nenhum código de produto alterado.
+
+Syntax Node22, ESLint do runner e harness check passaram. Browser/SQL não
+reexecutados nesta etapa; coordenação agrupará o complemento na próxima CI.
+
+### Complemento — diagnóstico CI e cleanup das falhas simuladas
+
+- `check()` em browser-experience agora imprime stack/message completo em vez
+  de cortar na primeira linha. `PAGE_ERRORS` com JSON completo é impresso no
+  finally global, mantendo relatório, assertiva final de erros vazios e saída1.
+- Comprovado por fonte: falha antes de unroute deixava a interceptação503 ativa.
+  Os dois trechos de falha simulada (GET aulas e gravação de progresso) agora
+  usam try/finally para remover a própria rota antes de propagar falha. Retry e
+  todas as assertivas existentes preservados; nenhuma exceção ignorada.
+- Self-check Node22 executou os dois corpos reais extraídos com stub de página,
+  lançou falha depois da instalação de cada rota e conferiu tanto propagação
+  do erro quanto unroute: **2/2 passaram**. O primeiro rascunho desse self-check
+  lançava cedo demais no segundo cenário; corrigido para falhar com rota ativa.
+- Syntax Node22, ESLint do runner e harness check passaram. Nenhuma alteração
+  de produto, SQL/browser real ou deploy nesta etapa; CI completa com coordenação.

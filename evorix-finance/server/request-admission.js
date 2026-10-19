@@ -16,11 +16,9 @@ export function createRequestAdmission({ now = Date.now } = {}) {
           if (value.expiresAt <= time) bursts.delete(key);
         if (bursts.size >= maximumKeys) {
           res.setHeader("Retry-After", "2");
-          return res
-            .status(503)
-            .json({
-              error: "O serviço está ocupado. Tente novamente em instantes.",
-            });
+          return res.status(503).json({
+            error: "O serviço está ocupado. Tente novamente em instantes.",
+          });
         }
       }
       burst = { hits: 0, expiresAt: time + windowMs };
@@ -32,20 +30,16 @@ export function createRequestAdmission({ now = Date.now } = {}) {
         "Retry-After",
         String(Math.max(1, Math.ceil((burst.expiresAt - time) / 1000))),
       );
-      return res
-        .status(429)
-        .json({
-          code: "RATE_LIMITED",
-          error: "Muitas solicitações. Aguarde alguns segundos.",
-        });
+      return res.status(429).json({
+        code: "RATE_LIMITED",
+        error: "Muitas solicitações. Aguarde alguns segundos.",
+      });
     }
     if (active >= maximumActive) {
       res.setHeader("Retry-After", "2");
-      return res
-        .status(503)
-        .json({
-          error: "O serviço está ocupado. Tente novamente em instantes.",
-        });
+      return res.status(503).json({
+        error: "O serviço está ocupado. Tente novamente em instantes.",
+      });
     }
     active++;
     let released = false;
@@ -60,6 +54,16 @@ export function createRequestAdmission({ now = Date.now } = {}) {
     res.once("close", release);
     return next();
   };
+  middleware.isIdle = () => active === 0;
+  middleware.waitForIdle = async (timeoutMs = 5000) => {
+    const deadline = Date.now() + timeoutMs;
+    while (!middleware.isIdle()) {
+      const remaining = deadline - Date.now();
+      if (remaining <= 0)
+        throw new Error("Tempo esgotado aguardando solicitações do cenário.");
+      await delay(Math.min(25, remaining));
+    }
+  };
   middleware.reset = () => {
     if (active !== 0)
       throw new Error(
@@ -71,3 +75,4 @@ export function createRequestAdmission({ now = Date.now } = {}) {
 }
 
 export const requestAdmission = createRequestAdmission();
+import { setTimeout as delay } from "node:timers/promises";

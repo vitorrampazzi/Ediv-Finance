@@ -223,7 +223,14 @@ export async function createFixture() {
       const [[current]] = await pool.execute("SELECT DATABASE() AS name");
       if (current.name !== schema)
         throw new Error("O schema ativo não corresponde à fixture.");
-      await pool.execute("DELETE FROM request_limits");
+      const deadline = Date.now() + 5000;
+      do {
+        if (Date.now() >= deadline)
+          throw new Error("O cenário não ficou ocioso em cinco segundos.");
+        await requestAdmission.waitForIdle(deadline - Date.now());
+        await pool.execute("DELETE FROM request_limits");
+        // New requests may start while SQL yields; drain and clear again.
+      } while (!requestAdmission.isIdle());
       MysqlLimitStore.clearLocalCaches();
       requestAdmission.reset();
     }
