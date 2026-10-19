@@ -25,6 +25,7 @@ let vite;
 let browser;
 
 async function check(name, work) {
+  await fixture.clearLimits();
   await work();
   results.push({ name, status: "passed" });
   console.info("PASS:", name);

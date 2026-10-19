@@ -16,6 +16,7 @@ let browser;
 await mkdir(".test-artifacts", { recursive: true });
 async function check(name, work) {
   try {
+    await fixture.clearLimits();
     await work();
     checks.push({ name, status: "passed" });
     console.info("PASS:", name);
@@ -59,7 +60,7 @@ async function context(account, width = 1366) {
 }
 const progress = (page) =>
   page.getByRole("progressbar", {
-    name: "Progresso dos exercícios da trilha",
+    name: "Progresso dos exercícios",
     exact: true,
   });
 try {
@@ -163,6 +164,132 @@ try {
       );
     },
   );
+  for (const failure of ["quota", "blocked"]) {
+    await check(
+      `Visitante mantém progresso na SPA com storage ${failure}, recupera e restaura após reload`,
+      async () => {
+        const isolated = await context(null);
+        try {
+          await isolated.addInitScript((mode) => {
+            if (location.origin === "null") return;
+            const key = "ediv-learning-v1";
+            const recoveryKey = "test-learning-storage-recovered";
+            const getItem = Storage.prototype.getItem;
+            const setItem = Storage.prototype.setItem;
+            let blocked = sessionStorage.getItem(recoveryKey) !== "true";
+            window.__learningStorageFailures = 0;
+            window.__recoverLearningStorage = () => {
+              blocked = false;
+              sessionStorage.setItem(recoveryKey, "true");
+            };
+            Storage.prototype.getItem = function (name) {
+              if (
+                this === localStorage &&
+                name === key &&
+                blocked &&
+                mode === "blocked"
+              ) {
+                window.__learningStorageFailures++;
+                throw new DOMException(
+                  "Leitura bloqueada pelo teste",
+                  "SecurityError",
+                );
+              }
+              return getItem.call(this, name);
+            };
+            Storage.prototype.setItem = function (name, value) {
+              if (this === localStorage && name === key && blocked) {
+                window.__learningStorageFailures++;
+                throw new DOMException(
+                  "Gravação bloqueada pelo teste",
+                  mode === "quota" ? "QuotaExceededError" : "SecurityError",
+                );
+              }
+              return setItem.call(this, name, value);
+            };
+          }, failure);
+          const learner = await isolated.newPage();
+          await learner.goto(root + "/aprender#ranking");
+          await learner
+            .getByRole("button", {
+              name: lessons[0].choices[lessons[0].answer],
+              exact: true,
+            })
+            .click();
+          const warning = learner.getByRole("status").filter({
+            hasText:
+              "Não foi possível ler ou salvar seu progresso neste navegador",
+          });
+          await expect(warning).toBeVisible();
+          await expect(progress(learner)).toHaveAttribute("aria-valuenow", "1");
+          await expect(
+            learner.getByText(
+              "Exercício concluído. Progresso mantido somente nesta sessão.",
+              { exact: true },
+            ),
+          ).toBeVisible();
+          await expect(
+            learner.getByText(/^Progresso salvo neste navegador\.?$/),
+          ).toHaveCount(0);
+          assert.ok(
+            await learner.evaluate(() => window.__learningStorageFailures > 0),
+          );
+
+          await learner.evaluate(() => {
+            window.__learningSpaMarker = "same-document";
+          });
+          await learner
+            .getByRole("contentinfo")
+            .getByRole("link", {
+              name: "Início",
+              exact: true,
+            })
+            .click();
+          await expect(learner).toHaveURL(root + "/");
+          await learner
+            .getByRole("banner")
+            .getByRole("link", {
+              name: "Aprender",
+              exact: true,
+            })
+            .click();
+          await expect(learner).toHaveURL(root + "/aprender");
+          assert.equal(
+            await learner.evaluate(() => window.__learningSpaMarker),
+            "same-document",
+          );
+          await expect(progress(learner)).toHaveAttribute("aria-valuenow", "1");
+          await expect(warning).toBeVisible();
+
+          await learner.evaluate(() => window.__recoverLearningStorage());
+          await warning
+            .getByRole("button", {
+              name: "Tentar salvar progresso",
+              exact: true,
+            })
+            .click();
+          await expect(warning).toHaveCount(0);
+          assert.deepEqual(
+            await learner.evaluate(() =>
+              JSON.parse(localStorage.getItem("ediv-learning-v1")),
+            ),
+            [lessons[0].id],
+          );
+          await learner.reload();
+          await expect(progress(learner)).toHaveAttribute("aria-valuenow", "1");
+          await expect(warning).toHaveCount(0);
+          await expect(
+            learner.getByText(
+              "Exercício concluído. Progresso salvo neste navegador.",
+              { exact: true },
+            ),
+          ).toBeVisible();
+        } finally {
+          await isolated.close();
+        }
+      },
+    );
+  }
   await check("Ranking filtra e limpar filtros recupera a lista", async () => {
     await page.goto(root + "/app/ranking?visual=real");
     await expect(

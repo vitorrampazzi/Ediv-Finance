@@ -112,3 +112,22 @@ Alterados: `server/security-limits.js`, `server/limit-store.js`, `server/app.js`
 
 Coordenação recebeu nomes dos novos testes para npm test/manifesto de publicação.
 Entrega em revisão, reservas liberadas; aguardar resultado dos gates integrados.
+
+### Revisão final dos cenários
+
+- Os três runners browser agora chamam `fixture.clearLimits()` antes de cada
+  caso. A matriz de páginas/resoluções também isola cada largura; os contadores
+  de navegações anteriores não contaminam o cenário seguinte.
+- A regressão de40 escritas faz login explícito e exige200, usando a senha
+  alterada pela jornada anterior; limpa o contador após esse login antes de
+  exigir40 respostas204 e a41ª429. Não depende de cookie presumidamente válido.
+- Syntax check Node22 passou nos quatro arquivos de teste alterados; harness
+  check passou. Browser/SQL seguem pendentes na CI, sem MySQL local.
+- O reset continua recusando solicitações ativas; não foi criado bypass,
+  aumento de limite nem reset acessível por HTTP.
+- Complemento solicitado pela coordenação: quatro seletores de progressbar em
+  `tests/browser.mjs` usam agora o nome exato `Progresso dos exercícios`, conferido
+  em `src/pages/Aprender.tsx`. Continuam verificando valor0 após login e valor1
+  após exercício, recarga e outra sessão. A barra de LearningJourney tem outro
+  nome acessível e não é o alvo destes cenários. Syntax Node22 e harness passaram;
+  execução real dos cenários aguarda CI MySQL descartável.

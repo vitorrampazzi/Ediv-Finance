@@ -19,6 +19,7 @@ const errors = [];
 const root = "http://127.0.0.1:4180";
 await mkdir(".test-artifacts", { recursive: true });
 async function check(name, work) {
+  await fixture.clearLimits();
   await work();
   report.push({ name, status: "passed" });
   console.info("PASS:", name);
@@ -268,7 +269,7 @@ try {
       await page.waitForURL("**/app/aprender");
       await expect(
         page.getByRole("progressbar", {
-          name: "Progresso dos exercícios da trilha",
+          name: "Progresso dos exercícios",
           exact: true,
         }),
       ).toHaveAttribute("aria-valuenow", "0");
@@ -512,6 +513,7 @@ try {
     "Páginas públicas em 360, 768 e 1366 px sem rolagem horizontal",
     async () => {
       for (const width of [360, 768, 1366]) {
+        await fixture.clearLimits();
         await page.setViewportSize({ width, height: 900 });
         for (const path of [
           "/",
@@ -669,14 +671,14 @@ try {
         .click();
       await expect(
         page.getByRole("progressbar", {
-          name: "Progresso dos exercícios da trilha",
+          name: "Progresso dos exercícios",
           exact: true,
         }),
       ).toHaveAttribute("aria-valuenow", "1");
       await page.reload();
       await expect(
         page.getByRole("progressbar", {
-          name: "Progresso dos exercícios da trilha",
+          name: "Progresso dos exercícios",
           exact: true,
         }),
       ).toHaveAttribute("aria-valuenow", "1");
@@ -686,7 +688,7 @@ try {
       await otherPage.goto(root + "/app/aprender#risco");
       await expect(
         otherPage.getByRole("progressbar", {
-          name: "Progresso dos exercícios da trilha",
+          name: "Progresso dos exercícios",
           exact: true,
         }),
       ).toHaveAttribute("aria-valuenow", "1");
@@ -846,6 +848,7 @@ try {
   });
   await check("Área da equipe e ranking mantêm responsividade", async () => {
     for (const width of [360, 768, 1366]) {
+      await fixture.clearLimits();
       await analystPage.setViewportSize({ width, height: 900 });
       for (const path of [
         "/app/ranking",

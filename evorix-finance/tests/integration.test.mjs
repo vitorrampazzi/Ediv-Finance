@@ -873,6 +873,16 @@ try {
     await t.test(
       "limites de produção continuam ativos e o próximo cenário é isolado",
       async () => {
+        assert.equal(
+          (
+            await request(a, "/api/auth/login", {
+              method: "POST",
+              body: { email: a.email, password: password + "-changed" },
+            })
+          ).status,
+          200,
+        );
+        await fixture.clearLimits();
         for (let i = 0; i < 40; i++) {
           assert.equal(
             (await request(a, "/api/favorites/RATE3", { method: "PUT" }))

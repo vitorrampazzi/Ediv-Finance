@@ -502,3 +502,37 @@ auditoria, preservando o contrato de progresso autenticado e o escopo do produto
 
 Próximo passo: coordenação incluir os novos arquivos no manifesto/publicação,
 integrar o teste ao gate e validar os quatro fluxos no browser nos dois temas.
+
+### Complemento — regressão E2E de armazenamento do visitante
+
+Aceitação: concluir a primeira aula com quota excedida ou leitura/gravação
+bloqueadas, informar sessão sem prometer gravação, sair/voltar por links SPA e
+preservar conclusão, permitir gravação e usar retry, recarregar e restaurar.
+
+- `tests/browser-experience.mjs`: dois cenários com contextos isolados e
+  `addInitScript`, falhas limitadas à chave de progresso. Verificam erro realmente
+  injetado, aviso, ausência de confirmação falsa, conclusão, navegação no mesmo
+  documento, retry, valor persistido e restauração. Ignoram páginas sem origem
+  no initScript para não produzir exceções em about:blank/iframes opacos.
+- Preservado `fixture.clearLimits()` que backend acabara de adicionar no check.
+  Helper de progressbar ajustado ao nome acessível atual, `Progresso dos exercícios`.
+  Coordenação avisada dos seletores antigos de browser.mjs, corrigidos pelo backend.
+- A execução encontrou mensagem falsa adicional em `LearningJourney.tsx`:
+  dizia salvo mesmo durante falha. Agora recebe `persisted` de `Aprender.tsx`
+  e usa a mesma distinção da confirmação do quiz. A regressão verifica ausência
+  dessa promessa no documento inteiro durante falha.
+- Revisão de SSR/hook: getServerSnapshot constante evita acesso a window no
+  render do servidor; durante authLoading o store pode ler preferência local,
+  mas não grava nem transfere conclusão para conta. Não demonstrado defeito
+  de SSR ou contaminação de progresso autenticado; nenhum contrato alterado.
+- Runner diagnóstico em `.test-artifacts/interface-round9/run-storage-regression.mjs`
+  executa o MESMO bloco de cenários extraído do arquivo, contra Vite local4193
+  e APIs auth/learning simuladas. Chrome headless: **2/2 passaram**, sem pageerror
+  nem API inesperada. Vite encerrado após execução. Sem SQL ou produção.
+- Primeiras tentativas locais esbarraram na separação de rede do sandbox;
+  execução local autorizada fora do sandbox permitiu o browser. Outra tentativa
+  detectou erro do próprio initScript em origem opaca, corrigido e retestado.
+- Suite completa com MySQL, build integrado e CI final permanecem com coordenação.
+  Não confundir os dois casos locais com aprovação integral do gate SQL/browser.
+- `node --check tests/browser-experience.mjs`, ESLint do teste e dos dois TSX,
+  `tsc -b` com Node22 e harness check passaram; revisão React aplicada.

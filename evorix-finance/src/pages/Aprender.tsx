@@ -465,6 +465,7 @@ function LearningSession({
       )}
       {content && !authLoading && (
         <LearningJourney
+          persisted={Boolean(user) || visitorProgress.persisted}
           lessons={lessons}
           completed={completed}
           isAuthenticated={Boolean(user)}

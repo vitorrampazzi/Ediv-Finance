@@ -27,14 +27,14 @@
     },
     "interface": {
       "phase": "revisao",
-      "summary": "A03/A04/A05/A09 entregues: 6 testes passaram, ESLint e TypeScript OK; browser integrado com coordenação",
-      "updatedAt": "2026-10-19T01:22:47.597Z",
+      "summary": "A04 E2E quota/blocked 2/2 Chrome local; corrigida promessa falsa LearningJourney; lint/tsc/syntax OK",
+      "updatedAt": "2026-10-19T01:31:30.662Z",
       "claims": []
     },
     "backend": {
       "phase": "revisao",
-      "summary": "A02 isolamento completo sembypass+A06CSV+A07limpeza indexada limitados entregues;33 testes Node22 passaram;SQLCI pendente semMySQLlocal",
-      "updatedAt": "2026-10-19T01:24:49.048Z",
+      "summary": "4seletores progressbar Aprender atualizados; assertivas0/1 preservadas; syntax/harnessOK; CIbrowser pendente",
+      "updatedAt": "2026-10-19T01:30:10.421Z",
       "claims": []
     }
   }
