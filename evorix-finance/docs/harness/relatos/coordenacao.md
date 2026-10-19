@@ -565,3 +565,14 @@ Complemento de validação:
   commit e6d9a54332e743d73522dbf89db02e6e1490c18f. Nenhum avanço da main ainda.
 - Leitura pública única de /api/auth/availability retornou availabletrue,
   challengefalse. Não prova entrega SMTP e não criou conta nem enviou e-mail.
+
+- CI39186207829 validou9cenários iniciais de conta,13/18 de experiência e7/7 de
+  sessão no browser. Expôs uma race na limpeza do teste (request ainda ativa),
+  seletores antigos e diagnósticos truncados. Backend adicionou dreno limitado5s
+  com checagem final síncrona, sem afrouxar proteção;96/96 unitários passaram.
+  Interface corrigiu retry/preço e garantiu remoção de falhas simuladas em finally.
+  Suítes independentes agora executam mesmo se outra falhar; saída final segue1.
+  CI complementar inclui logs completos de falha e mantém assertiva zero pageerrors.
+- Prévia Chrome local encerrada: aba1275422170 fechada e PID15696 encerrado após
+  conferir comando, viewport restaurado. Nenhum servidor local desta coordenação
+  permaneceu ativo. Arquivo round9-browser-summary.json resume verificações isoladas.

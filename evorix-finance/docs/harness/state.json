@@ -5,7 +5,7 @@
     "coordenacao": {
       "phase": "revisao",
       "summary": "95 testes/lint/build aprovados; CI MySQL integração passou, browser/restore em execução no PR3",
-      "updatedAt": "2026-10-19T01:37:27.028Z",
+      "updatedAt": "2026-10-19T06:17:42.890Z",
       "claims": [
         "analytics-policy.mjs",
         "tests/analytics.test.mjs",
@@ -23,7 +23,8 @@
         ".test-artifacts/round9-preview.log",
         ".test-artifacts/round9-preview-error.log",
         ".test-artifacts/round9-browser-summary.json",
-        "tests/run-browser.mjs"
+        "tests/run-browser.mjs",
+        "tests/browser.mjs"
       ]
     },
     "interface": {

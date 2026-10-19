@@ -538,7 +538,9 @@ try {
           "/privacidade",
         ]) {
           await page.goto(root + path);
-          await expect(page.locator("h1,h2").first()).toBeVisible();
+          await expect(
+            page.getByRole("main").getByRole("heading").first(),
+          ).toBeVisible();
           try {
             await noOverflow(page);
           } catch (error) {
@@ -867,7 +869,9 @@ try {
         "/app/config",
       ]) {
         await analystPage.goto(root + path);
-        await expect(analystPage.locator("h1,h2").first()).toBeVisible();
+        await expect(
+          analystPage.getByRole("main").getByRole("heading").first(),
+        ).toBeVisible();
         await noOverflow(analystPage);
       }
       if (width === 360)
