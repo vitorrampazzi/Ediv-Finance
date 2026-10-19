@@ -67,7 +67,7 @@ const usefulLinks: {
   {
     title: "Conta e segurança",
     description: "Senha, sessões e seus dados",
-    to: "/app/configuracoes",
+    to: "/app/config",
     icon: Settings2,
   },
   {
@@ -155,7 +155,7 @@ export function SupportHelpCenter({
                 type="button"
                 onClick={() => setQuery("")}
                 aria-label="Limpar busca"
-                className="absolute right-0 top-0 flex min-h-11 w-11 items-center justify-center rounded-r-lg text-evo-textSec hover:text-white"
+                className="absolute right-0 top-0 flex min-h-11 w-11 items-center justify-center rounded-r-lg text-evo-textSec hover:text-evo-textMain"
               >
                 <X size={17} aria-hidden="true" />
               </button>
@@ -239,7 +239,7 @@ export function SupportHelpCenter({
                       {answer.link && (
                         <Link
                           to={helpDestination(answer.link.to, publicView)}
-                          className="inline-flex min-h-11 items-center gap-1.5 font-medium text-evo-accent underline underline-offset-4 hover:text-white"
+                          className="inline-flex min-h-11 items-center gap-1.5 font-medium text-evo-accent underline underline-offset-4 hover:text-evo-textMain"
                         >
                           {answer.link.label}
                           <ArrowUpRight size={15} aria-hidden="true" />
@@ -287,7 +287,7 @@ export function SupportHelpCenter({
                 setActiveTopic("");
                 setShowAll(true);
               }}
-              className="mt-3 min-h-11 text-sm text-evo-textSec underline underline-offset-4 hover:text-white"
+              className="mt-3 min-h-11 text-sm text-evo-textSec underline underline-offset-4 hover:text-evo-textMain"
             >
               Limpar filtros e ver tudo
             </button>
@@ -320,7 +320,7 @@ export function SupportHelpCenter({
                 .filter(
                   (link) =>
                     !publicView ||
-                    !["/app/configuracoes", "/app/perfil"].includes(link.to),
+                    !["/app/config", "/app/perfil"].includes(link.to),
                 )
                 .map((link) => {
                   const Icon = link.icon;

@@ -130,7 +130,7 @@ export const supportAnswers: SupportAnswer[] = [
       "Abra Conta e segurança para alterar a senha ou encerrar todas as sessões. A alteração da senha pede a senha atual e encerra os acessos existentes; depois, você entra novamente.",
       "Se esqueceu a senha, use a recuperação na tela de entrada. Escolha uma senha própria para a Escola do Dividendo e não a compartilhe nas conversas com a equipe.",
     ],
-    link: { label: "Abrir Conta e segurança", to: "/app/configuracoes" },
+    link: { label: "Abrir Conta e segurança", to: "/app/config" },
   },
   {
     id: "dados-conta",
@@ -140,7 +140,7 @@ export const supportAnswers: SupportAnswer[] = [
       "Sim. Em Conta e segurança, você pode baixar seus dados em JSON e solicitar a exclusão da conta. Antes de excluir, faça uma cópia das informações que deseja guardar.",
       "A tela apresenta os efeitos da exclusão e pede sua senha para confirmar. Consulte também a política de privacidade para entender o tratamento dos dados.",
     ],
-    link: { label: "Gerenciar meus dados", to: "/app/configuracoes" },
+    link: { label: "Gerenciar meus dados", to: "/app/config" },
   },
   {
     id: "pagina-erro",

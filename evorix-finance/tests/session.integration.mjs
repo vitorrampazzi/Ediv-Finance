@@ -1,7 +1,8 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { createHash } from "node:crypto";
+import { createHash, randomUUID } from "node:crypto";
 import { createFixture } from "./fixture.mjs";
+import { createAuthCleanup } from "../server/auth-cleanup-policy.js";
 
 // The fixture only creates temporary users in its own disposable schema.
 const fixture = await createFixture();
@@ -28,6 +29,7 @@ async function sessionRow(account) {
 
 try {
   await test("persistência, renovação e encerramento de sessão na API e MySQL isolados", async (t) => {
+    t.beforeEach(() => fixture.clearLimits());
     await t.test(
       "login entrega cookie persistente e sessão de 30 dias",
       async () => {
@@ -116,6 +118,49 @@ try {
           (await request(account, "/api/auth/me")).body.user.id,
           accounts.b.id,
         );
+      },
+    );
+    await t.test(
+      "limpeza oportunista remove expirados e preserva sessões/tokens válidos",
+      async () => {
+        const sessionIds = [randomUUID(), randomUUID()];
+        const tokenIds = [randomUUID(), randomUUID()];
+        for (let index = 0; index < 2; index++) {
+          const expiry =
+            index === 0 ? "2000-01-01 00:00:00.000" : "2099-01-01 00:00:00.000";
+          const tokenHash = createHash("sha256")
+            .update(randomUUID())
+            .digest("hex");
+          await pool.execute(
+            "INSERT INTO user_sessions(id,user_id,token_hash,expires_at) VALUES(?,?,?,?)",
+            [sessionIds[index], accounts.a.id, tokenHash, expiry],
+          );
+          await pool.execute(
+            "INSERT INTO email_verification_tokens(id,user_id,token_hash,expires_at) VALUES(?,?,?,?)",
+            [tokenIds[index], accounts.a.id, tokenHash, expiry],
+          );
+        }
+        const cleanup = createAuthCleanup({
+          execute: (sql) => pool.execute(sql),
+        });
+        assert.equal(await cleanup(), true);
+        const [sessions] = await pool.execute(
+          "SELECT id FROM user_sessions WHERE id IN (?,?)",
+          sessionIds,
+        );
+        const [tokens] = await pool.execute(
+          "SELECT id FROM email_verification_tokens WHERE id IN (?,?)",
+          tokenIds,
+        );
+        assert.deepEqual(
+          sessions.map((row) => row.id),
+          [sessionIds[1]],
+        );
+        assert.deepEqual(
+          tokens.map((row) => row.id),
+          [tokenIds[1]],
+        );
+        assert.equal(await cleanup(), false);
       },
     );
   });

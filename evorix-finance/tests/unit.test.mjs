@@ -191,9 +191,17 @@ test("exportação CSV neutraliza fórmulas em textos", () => {
         "@SOMA(A1)",
         "-texto",
         "-12.5",
+        "-1+2",
+        " -1+2",
+        "-1.5+2",
+        "-1,25",
+        "-0",
       ],
     ]),
   );
   assert.ok(rows[0].slice(0, 4).every((value) => value.startsWith("'")));
   assert.equal(rows[0][4], "-12.5");
+  assert.ok(rows[0].slice(5, 8).every((value) => value.startsWith("'")));
+  assert.equal(rows[0][8], "-1,25");
+  assert.equal(rows[0][9], "-0");
 });

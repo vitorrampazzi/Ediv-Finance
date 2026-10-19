@@ -311,3 +311,194 @@ sem manter regex separada. Definição final será registrada ao receber helper.
 - Browser320px, validação real das rotas/formulários, ambos temas e build final
   pertencem à coordenação. Nenhum teste em produção ou banco por esta sessão.
 - Não foram feitos Git remoto, deploy ou instalação de dependências.
+
+## Auditoria estática do MVP — 18/10/2026 (somente diagnóstico)
+
+Autorização desta rodada: auditar a interface, acessibilidade, navegação, aulas,
+suporte, onboarding e estados/links; não corrigir código, alterar dependências
+ou serviços. AGENTS, contexto, fluxo, quadro e relatos conferidos no diretório
+registrado. Reserva desta sessão: somente este relato.
+
+O catálogo Análises foi retirado intencionalmente. As rotas antigas redirecionam
+ao ranking, o menu atual mantém ranking/escola e o tour atual tem cinco etapas.
+Não considerei a ausência de dados reais do ranking um defeito. Ausência de
+vídeos preparados tem alternativa de leitura explícita e também não foi tratada
+como falha de implementação.
+
+### Achados priorizados
+
+#### AUI-01 — P1: uma revogação de estatísticas pode ser desfeita ao voltar o foco à janela
+
+Evidência: `analytics-policy.mjs:105`–`126` grava a escolha, mantém snapshot em
+memória quando setItem falha e depois substitui esse snapshot por `read()` em
+reconcile. `src/lib/analytics.ts:32`–`45` chama reconcile no evento window focus.
+`src/components/PrivacyConsent.tsx:26`–`29` reaplica o controller ao mudar choice.
+
+Reprodução isolada em Node, com storage falso e nenhum serviço externo:
+
+```text
+choose(granted) salva uma autorização.
+Simular quota/negação somente nas próximas escritas.
+choose(denied) => {choice: "denied", persisted: false}.
+reconcile()   => {choice: "granted", persisted: true}.
+```
+
+O registro antigo continua legível e vence a revogação nova em memória. Na
+integração React, o retorno de granted pode reativar o controller após o foco,
+sem nova permissão do usuário. Com storage totalmente bloqueado, a variação
+reproduzida foi denied → null ao reconciliar; a preferência da sessão se perde
+e o banner pode voltar. A interface anuncia que a escolha vale nesta sessão,
+mas esse caminho não a preserva.
+
+Próxima correção proposta, sem execução nesta auditoria: preservar a escolha
+local não persistida ao reconciliar, especialmente a negativa, impedindo que
+um registro antigo reautorize a medição. Aceitação futura: conceder, falhar a
+escrita ao revogar, disparar foco e confirmar denied/GA desabilitado; conferir
+também storage completamente indisponível e sincronização entre abas.
+
+#### AUI-02 — P2: atalhos de segurança/dados da ajuda levam a uma rota sem página
+
+`src/components/support/SupportHelpCenter.tsx:70` aponta Conta e segurança para
+`/app/configuracoes`. As respostas Trocar senha e Dados da conta em
+`src/lib/supportHelp.ts:133` e `:143` usam o mesmo endereço.
+`src/App.tsx:203` registra somente `/app/config`, e `:211` trata o restante
+como NotFound; não existe alias para `/app/configuracoes`.
+
+Consequência: ao seguir esses três caminhos, o aluno não chega à troca de senha,
+exportação/exclusão ou revogação de sessões. Na ajuda pública, as respostas
+autenticadas também podem gerar login com esse destino inválido. O caminho
+correto existe no menu da conta e em Perfil; o problema é a navegação da ajuda.
+
+Aceitação futura: os três atalhos chegam à tela existente e seus destinos de
+autenticação continuam corretos para visitantes. Diagnóstico por fonte/roteador,
+sem navegação de browser nesta sessão.
+
+#### AUI-03 — P2: conclusão da aula do visitante promete salvamento mesmo quando ele falha
+
+Reconfirmação do antigo I01, ainda presente: `src/pages/Aprender.tsx:237`–`244`
+captura silenciosamente falha de localStorage.setItem. O estado completed é
+atualizado em memória, e o cabeçalho em `:400` e
+`src/components/LearningQuiz.tsx:70`–`76` dizem que o progresso foi salvo neste
+navegador sem receber resultado da persistência.
+
+Gatilho: visitante conclui a primeira aula com armazenamento bloqueado/quota.
+Durante a página aparece a confirmação de salvamento; ao recarregar, a conclusão
+se perde. Não afeta a regra de salvamento autenticado por API identificada nesta
+leitura. Aceitação futura: distinguir conclusão em memória de persistência e
+avisar quando não for possível guardar, mantendo o exercício utilizável.
+
+#### AUI-04 — P2: controles da ajuda mudam para branco sobre fundos claros no hover
+
+`src/components/support/SupportHelpCenter.tsx:158` (Limpar busca), `:242`
+(links das respostas) e `:290` (Limpar filtros) usam hover:text-white, sem trocar
+o fundo para escuro. `src/index.css:37`–`39` define os fundos do modo claro como
+#f7f8f6, #ffffff e #edf1ee. Cálculo estático com essas cores produziu contraste
+do branco de **1,07:1**, **1,00:1** e **1,14:1**, respectivamente.
+
+Consequência: passar o ponteiro nesses textos/ícones torna a ação quase invisível
+no tema claro; no escuro, o branco continua legível. Não é diagnóstico de toda
+a paleta: os testes de tokens passam, mas esse estado ignora os tokens.
+Aceitação futura: manter cor semântica legível no hover e validar as três ações
+no browser nos dois temas, inclusive foco por teclado.
+
+#### AUI-05 — P3: link de login da pesquisa pública perde a seção que o visitante abriu
+
+Reconfirmação do antigo I02: `src/components/RankingAccessLanding.tsx:13`–`15`
+monta next apenas com pathname+search, e passa-o ao AccountGate em `:51`.
+`src/pages/StockResearch.tsx:63` usa esse gate para visitante. Um endereço como
+`/ranking/acao/DEMO1?visual=demo#pesquisa-dre` gera next sem #pesquisa-dre.
+
+Empresa/versão são preservadas, mas a intenção de abrir a DRE/risco/fonte se perde
+após autenticação. O guard de `/app` preserva hash; esse achado é específico do
+gate público da pesquisa. Aceitação futura: preservar hash válido no destino,
+sem alterar a allowlist de autenticação nem os controles de acesso.
+
+### Verificações executadas e resultados
+
+- Leitura de App, chrome/layouts, PageContent/NavigationIntent/error boundary,
+  RequireAuth, auth/recuperação/confirmação, pesquisa/âncoras, aulas/quiz/player,
+  playlist/cursos, ajuda/conversas/hooks, tour/store e consentimento/store.
+- Reprodução de AUI-01 pelo helper real com storage falso em memória: resultado
+  exato registrado acima. Nenhum acesso ao GA, API, conta ou banco.
+- Cálculo estático de contraste dos estados brancos com cores atuais do CSS.
+- Node22: `--test tests/analytics.test.mjs tests/onboarding.test.mjs
+  tests/theme.test.mjs`: **25/25 passaram** (10 analytics,8 onboarding,7 tema).
+  Os testes existentes não exercitam a sequência revogar com escrita falha e
+  reconciliar foco. Sucesso dessas suítes não invalida o achado reproduzido.
+- Não foram adicionados testes, corrigidos arquivos de produto ou instaladas
+  dependências. Não executei build/tsc (podem gerar artefatos), Git ou deploy.
+
+### Aspectos positivos conferidos por fonte
+
+- Retirada do catálogo aparece em rotas/menus/preload; destinos antigos têm
+  redirecionamento explícito. Não há proposta de reintroduzir a funcionalidade.
+- Tour e store usam cinco etapas consistentes; testes cobrem login comum sem
+  abertura, retomada, migração dos seis passos antigos e isolamento por usuário.
+- GuidedTour impede Escape/fundo, usa modal nativo, foco inicial e ciclo de Tab,
+  cleanup de observers/listeners e fallback central. Replay é voluntário.
+- Aulas têm carregamento, retry, sessão expirada, progresso autenticado com
+  erro/tentativa e conteúdo escrito quando não há vídeo. Playlist tem teclas
+  de navegação e seleção indicada; não se marca conclusão só por assistir vídeo.
+- Conversas preservam rascunhos de resposta por thread, bloqueiam mutações
+  simultâneas e mantêm mensagem de envio bem-sucedido quando só a atualização
+  da lista falha; permissões continuam conferidas pela API, fora desta auditoria.
+- Logos são decorativos ao lado do nome, com dimensões fixas e fallback de ticker.
+
+### Não verificado nesta sessão
+
+Browser real, leitores de tela, zoom, touch/teclado efetivos, layout320px,
+contraste composto de todas as transparências, entrega de e-mail/Turnstile,
+players de terceiros, GA/rede/cookies reais, banco/isolamento HTTP entre contas,
+operações da equipe com dados reais e ambiente publicado. A coordenação faz
+a validação de browser; esta auditoria não a duplica nem declara homologação
+integral. Achados AUI-02/03/04/05 têm evidência estática e critérios para
+reprodução posterior; AUI-01 foi reproduzido isoladamente no helper real.
+
+Próxima etapa: coordenação incorporar achados ao relatório consolidado, sem
+correções automáticas. Somente relato/quadro desta sessão foram atualizados.
+
+## Rodada 9 — correções A03/A04/A05/A09
+
+Escopo autorizado pela coordenação: corrigir os quatro achados de interface da
+auditoria, preservando o contrato de progresso autenticado e o escopo do produto.
+
+### Aceitação e decisões
+
+- Ajuda aponta para a rota existente `/app/config` nas respostas e links úteis.
+- Visitante recebe confirmação de gravação somente quando o storage aceita a
+  operação. Falhas de leitura/gravação mostram aviso e ação para tentar salvar.
+  A conclusão permanece em memória durante a navegação nesta sessão do site;
+  recarregar/fechar a página pode perder mudanças não gravadas.
+- Os três estados hover da ajuda usam `text-evo-textMain`, respeitando os tokens
+  dos temas claro e escuro.
+- O gate público do ranking preserva pathname, query e hash no destino de login,
+  sem mudar a sanitização dos destinos de autenticação.
+
+### Arquivos
+
+- `src/lib/supportHelp.ts`, `src/components/support/SupportHelpCenter.tsx`:
+  destinos da ajuda e cores semânticas no hover.
+- `src/components/RankingAccessLanding.tsx`: hash incluído no destino.
+- `src/pages/Aprender.tsx`, `src/components/LearningQuiz.tsx`: confirmação fiel
+  ao estado de persistência e aviso recuperável para visitantes.
+- Novos `visitor-learning-progress.mjs`, `visitor-learning-progress.d.mts`,
+  `src/lib/visitorLearningProgress.ts`: store com snapshot estável, memória
+  compartilhada durante a sessão da SPA, filtro da aula pública e retry explícito.
+  Mantida a chave `ediv-learning-v1`. PUT/DELETE autenticados permanecem iguais.
+- Novo `tests/visitor-learning-progress.test.mjs`: seis testes comportamentais.
+
+### Verificações reais
+
+- Node22: `--test tests/visitor-learning-progress.test.mjs`: **6/6 passaram**.
+  Cobrem restauração/filtro, gravação, storage ausente ou bloqueado, quota,
+  retry, reset com disco antigo, JSON inválido e inscrições/snapshots.
+- ESLint dos seis arquivos TypeScript/TSX alterados: passou, código de saída0.
+- TypeScript `tsc -b` com Node22: passou, código de saída0.
+- Prettier aplicado aos arquivos de implementação e teste desta rodada.
+- `node scripts/harness.mjs check`: passou.
+- Revisão de hooks, snapshot estável, cleanup da inscrição e avisos acessíveis.
+  Browser real e build integrado ficam com a coordenação; não foram executados
+  nesta sessão. Nenhum deploy, migração ou uso de produção.
+
+Próximo passo: coordenação incluir os novos arquivos no manifesto/publicação,
+integrar o teste ao gate e validar os quatro fluxos no browser nos dois temas.

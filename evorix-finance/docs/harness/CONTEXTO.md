@@ -5,6 +5,31 @@ revalide comportamento no código antes de mudar contratos.
 
 ## Objetivo atual
 
+### Rodada9 — correções para lançamento (18/10/2026)
+
+Usuário autorizou reparar os erros mais críticos encontrados na auditoria e
+excluiu como bloqueadores a ausência de dados reais do ranking e do conteúdo
+dos cursos, que ainda receberá do corretor. Preservar sinalização de demonstração.
+Não ampliar o MVP nem criar conteúdo financeiro fictício apresentado como real.
+
+Aceitação: revogação do Analytics não reverte com falha de escrita/foco; testes
+de integração isolam seus contadores sem reduzir limites de produção; CSV
+neutraliza expressões com sinal negativo; ajuda abre a conta correta; progresso
+visitante informa quando só existe na sessão; hover legível e retorno da pesquisa
+preserva seção. Limpeza de autenticação expirada deve funcionar também na Vercel,
+com lotes pequenos, intervalo e falha isolada. Testar unit/lint/build e gates SQL,
+browser e restore em MySQL descartável da CI antes de integrar na main autorizada.
+
+Divisão: coordenação consentimento/integração/validação/publicação; interface
+links/progresso/hover/hash; backend isolamento de limites/CSV/limpeza. Mesmas três
+sessões, sem novos agentes. Parte jurídica segue adiada por decisão anterior;
+não inventar responsável/contato ou afirmar adequação integral à LGPD. Diferenciar
+correção técnica de comprovação externa de entrega SMTP, backup e operação.
+
+Usuário também pediu Ponytail e anthropics/skills, confirmando os links oficiais.
+Instalação local autorizada; ferramentas não são dependências do site. Conferir
+compatibilidade, versões e arquivos; skills novas só disponíveis no próximo turno.
+
 ### Rodada7 — MVP ranking e educação (18/10/2026)
 
 Usuário retirou a área geral de Análises/catálogo de ações do site inteiro.
@@ -233,3 +258,9 @@ do mesmo quadro e liberaram suas reservas após os diagnósticos.
 Rodada6 concluída: main b33a7567b0582ec9546bdf460090d803873eb1a3, Vercel
 success e marca/metadados conferidos no domínio oficial.76 testes/lint/build
 Node22 aprovados; desktop/320px conferidos em fixtures isoladas. Sem migração.
+
+Rodada7 concluída: main a87156dea72a160c0acbc11cb44b111f15b204d4; Vercel
+success confirmado. MVP sem catálogo de Análises, com ranking/pesquisa da empresa,
+aulas e demais funções preservadas.79 testes/lint/build aprovados; Chrome local
+320px/desktop, tour5etapas, migração concluídos e zero buscas do catálogo validados.
+Domínio oficial conferido com navegação nova e endereço legado indo ao ranking.
