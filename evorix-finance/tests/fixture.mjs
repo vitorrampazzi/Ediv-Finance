@@ -181,34 +181,44 @@ export async function createFixture() {
         originHeader = "http://127.0.0.1:4180",
       } = {},
     ) {
-      const response = await nativeFetch(origin + path, {
-        method,
-        headers: {
-          Origin: originHeader,
-          ...(account?.cookie ? { Cookie: account.cookie } : {}),
-          ...(body !== undefined ? { "Content-Type": "application/json" } : {}),
-          ...headers,
-        },
-        ...(raw !== undefined
-          ? { body: raw }
-          : body !== undefined
-            ? { body: JSON.stringify(body) }
-            : {}),
-      });
-      const cookie = response.headers.get("set-cookie");
-      if (account && cookie) account.cookie = cookie.split(";")[0];
-      const text = await response.text();
-      let value;
-      try {
-        value = JSON.parse(text);
-      } catch {
-        value = text;
+      for (let attempt = 0; ; attempt++) {
+        const response = await nativeFetch(origin + path, {
+          method,
+          headers: {
+            Origin: originHeader,
+            ...(account?.cookie ? { Cookie: account.cookie } : {}),
+            ...(body !== undefined ? { "Content-Type": "application/json" } : {}),
+            ...headers,
+          },
+          ...(raw !== undefined
+            ? { body: raw }
+            : body !== undefined
+              ? { body: JSON.stringify(body) }
+              : {}),
+        });
+        const cookie = response.headers.get("set-cookie");
+        if (account && cookie) account.cookie = cookie.split(";")[0];
+        const text = await response.text();
+        let value;
+        try {
+          value = JSON.parse(text);
+        } catch {
+          value = text;
+        }
+        const result = {
+          status: response.status,
+          body: value,
+          headers: response.headers,
+        };
+        // Admission rejects before handlers; business quotas must remain observable.
+        if (response.status !== 429 || value?.code !== "RATE_LIMITED" || attempt === 2)
+          return result;
+        const retryAfter = response.headers.get("retry-after");
+        if (!retryAfter || !/^\d+$/.test(retryAfter)) return result;
+        const delay = Number(retryAfter) * 1000;
+        if (!Number.isSafeInteger(delay) || delay > 2_147_483_547) return result;
+        await new Promise((resolve) => setTimeout(resolve, delay + 100));
       }
-      return {
-        status: response.status,
-        body: value,
-        headers: response.headers,
-      };
     }
     for (const account of Object.values(accounts))
       await request(account, "/api/auth/login", {

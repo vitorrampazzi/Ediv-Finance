@@ -1,11 +1,18 @@
 export class ApiError extends Error {
   readonly status: number;
   readonly code?: string;
-  constructor(message: string, status: number, code?: string) {
+  readonly retryAfterMs?: number;
+  constructor(
+    message: string,
+    status: number,
+    code?: string,
+    retryAfterMs?: number,
+  ) {
     super(message);
     this.name = "ApiError";
     this.status = status;
     this.code = code;
+    this.retryAfterMs = retryAfterMs;
   }
 }
 
@@ -34,7 +41,14 @@ export async function apiRequest<T>(
   }
   const body =
     response.status === 204 ? {} : await response.json().catch(() => ({}));
-  if (!response.ok)
+  if (!response.ok) {
+    const retryAfter = response.headers.get("Retry-After");
+    const retryAfterMs =
+      retryAfter === null
+        ? undefined
+        : /^\d+$/.test(retryAfter.trim())
+          ? Number(retryAfter) * 1000
+          : Math.max(0, Date.parse(retryAfter) - Date.now());
     throw new ApiError(
       body.error ||
         (response.status === 429
@@ -44,6 +58,8 @@ export async function apiRequest<T>(
             : "Não foi possível concluir a solicitação. Tente novamente."),
       response.status,
       typeof body.code === "string" ? body.code : undefined,
+      Number.isFinite(retryAfterMs) ? retryAfterMs : undefined,
     );
+  }
   return body as T;
 }

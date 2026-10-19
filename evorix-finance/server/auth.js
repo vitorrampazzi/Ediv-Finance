@@ -834,6 +834,10 @@ router.get("/export", requireAuthenticatedUser, async (req, res) => {
       "SELECT publication_id,read_at FROM notification_reads WHERE user_id=?",
     ],
     [
+      "notificationEventReads",
+      "SELECT CAST(r.notification_id AS CHAR) AS notification_id,r.read_at,e.type,e.source_id,e.editorial_version,e.title,e.description,e.href,e.created_at FROM notification_event_reads r JOIN notification_events e ON e.id=r.notification_id WHERE r.user_id=?",
+    ],
+    [
       "transactions",
       "SELECT id, side, ticker, asset_name, asset_type, quantity, unit_price, fees, traded_at FROM portfolio_transactions WHERE user_id = ? ORDER BY traded_at, created_at, id",
     ],

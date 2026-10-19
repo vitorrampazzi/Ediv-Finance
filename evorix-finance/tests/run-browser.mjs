@@ -4,10 +4,11 @@ import { fileURLToPath } from "node:url";
 // Separate processes give each suite its own database pool and disposable schema.
 // Run sequentially because the browser suites share the same local Vite port.
 const suites = [
+  "notifications.browser.mjs",
   "browser.mjs",
   "browser-experience.mjs",
   ...(process.env.EDIV_TEST_MYSQL_DISPOSABLE === "true"
-    ? ["session.browser.mjs"]
+    ? ["session.browser.mjs", "notifications.e2e.mjs"]
     : []),
 ];
 for (const suite of suites) {

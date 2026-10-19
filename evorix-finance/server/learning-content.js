@@ -1,3 +1,17 @@
+// shortcut: static catalog mirrors frontend IDs, update both catalogs when courses change.
+export const learningCourses = [
+  {
+    id: "pesquisa",
+    title: "Leia uma análise com autonomia",
+    chapterIds: ["ranking", "risco"],
+  },
+  {
+    id: "dividendos",
+    title: "Da empresa ao dividendo",
+    chapterIds: ["dividendos", "carteira"],
+  },
+];
+
 export const lessons = [
   {
     id: "ranking",

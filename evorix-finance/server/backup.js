@@ -21,6 +21,9 @@ const tables = [
   "learning_progress",
   "ranking_changes",
   "notification_reads",
+  "notification_events",
+  "notification_event_reads",
+  "research_publication_keys",
 ];
 const keyText = process.env.BACKUP_KEY || "";
 if (!/^[a-f0-9]{64}$/i.test(keyText))
@@ -141,6 +144,34 @@ try {
           columns.map((c) => row[c]),
         );
       }
+    }
+    // Old backups have publications/reads but predate the shared event tables.
+    if (
+      [
+        "notification_events",
+        "notification_event_reads",
+        "research_publication_keys",
+      ].some((table) => !Object.hasOwn(data.tables, table))
+    ) {
+      if (
+        ![
+          "notification_events",
+          "notification_event_reads",
+          "research_publication_keys",
+        ].every((table) => names.has(table))
+      )
+        throw new Error(
+          "Aplique as migrações no destino vazio antes de restaurar.",
+        );
+      const migration = await readFile(
+        new URL("./migrations/008_notifications.sql", import.meta.url),
+        "utf8",
+      );
+      for (const statement of migration
+        .split(";")
+        .map((sql) => sql.trim())
+        .filter((sql) => sql.startsWith("INSERT INTO ")))
+        await connection.query(statement);
     }
     await connection.commit();
     console.info(

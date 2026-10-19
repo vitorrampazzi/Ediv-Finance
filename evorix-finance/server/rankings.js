@@ -11,6 +11,10 @@ import {
 import { compareResearch, readEntries } from "./research-diff.js";
 import { researchStatus } from "./research-status.js";
 import {
+  createResearchEvent,
+  researchFingerprint,
+} from "./notification-events.js";
+import {
   fileBody,
   readUpload,
   normalizeHeader,
@@ -340,6 +344,7 @@ router.post(
         .slice(-255);
       const connection = await pool.getConnection();
       let result;
+      let reused = false;
       try {
         await connection.beginTransaction();
         await lockAccessControl(connection);
@@ -353,36 +358,63 @@ router.post(
             error: "Seu acesso à publicação foi alterado. Entre novamente.",
           });
         }
-        const [previous] = await connection.execute(
-          "SELECT entries_json FROM ranking_publications ORDER BY id DESC LIMIT 1",
-        );
-        [result] = await connection.execute(
-          "INSERT INTO ranking_publications (title, author_name, professional_category, professional_registration, source_file_name, entries_json, imported_by) VALUES (?, ?, ?, ?, ?, ?, ?)",
-          [
-            text(metadata.title, 160) || "Ranking de cenários",
-            text(metadata.authorName, 120),
-            text(metadata.professionalCategory, 120),
-            text(metadata.professionalRegistration, 120),
-            fileName,
-            JSON.stringify(entries),
-            req.authenticatedUser.id,
-          ],
-        );
-        const changes = compareResearch(
-          readEntries(previous[0]?.entries_json),
+        const editorial = [
+          text(metadata.title, 160) || "Ranking de cenários",
+          text(metadata.authorName, 120),
+          text(metadata.professionalCategory, 120),
+          text(metadata.professionalRegistration, 120),
+        ];
+        const fingerprint = await researchFingerprint(
+          connection,
+          editorial,
           entries,
         );
-        const tickers = [
-          ...new Set(
-            [...changes.added, ...changes.removed, ...changes.changed].map(
-              (entry) => entry.ticker,
-            ),
-          ),
-        ];
-        await connection.execute(
-          "INSERT INTO ranking_changes(publication_id,changed_tickers) VALUES(?,?)",
-          [String(result.insertId), JSON.stringify(tickers)],
+        const [existing] = await connection.execute(
+          "SELECT CAST(publication_id AS CHAR) AS id FROM research_publication_keys WHERE fingerprint=?",
+          [fingerprint],
         );
+        if (existing.length) {
+          result = { insertId: existing[0].id };
+          reused = true;
+          await createResearchEvent(connection, existing[0].id);
+        } else {
+          const [previous] = await connection.execute(
+            "SELECT entries_json FROM ranking_publications ORDER BY id DESC LIMIT 1",
+          );
+          await connection.execute(
+            "INSERT INTO ranking_publications (title, author_name, professional_category, professional_registration, source_file_name, entries_json, imported_by) VALUES (?, ?, ?, ?, ?, ?, ?)",
+            [
+              ...editorial,
+              fileName,
+              JSON.stringify(entries),
+              req.authenticatedUser.id,
+            ],
+          );
+          const [inserted] = await connection.execute(
+            "SELECT CAST(LAST_INSERT_ID() AS CHAR) AS id",
+          );
+          result = { insertId: inserted[0].id };
+          const changes = compareResearch(
+            readEntries(previous[0]?.entries_json),
+            entries,
+          );
+          const tickers = [
+            ...new Set(
+              [...changes.added, ...changes.removed, ...changes.changed].map(
+                (entry) => entry.ticker,
+              ),
+            ),
+          ];
+          await connection.execute(
+            "INSERT INTO ranking_changes(publication_id,changed_tickers) VALUES(?,?)",
+            [String(result.insertId), JSON.stringify(tickers)],
+          );
+          await connection.execute(
+            "INSERT INTO research_publication_keys(fingerprint,publication_id) VALUES(?,?)",
+            [fingerprint, result.insertId],
+          );
+          await createResearchEvent(connection, result.insertId);
+        }
         await connection.commit();
       } catch (error) {
         await connection.rollback();
@@ -390,9 +422,12 @@ router.post(
       } finally {
         connection.release();
       }
-      return res.status(201).json({
-        message: "Publicação salva. O histórico anterior foi preservado.",
+      return res.status(reused ? 200 : 201).json({
+        message: reused
+          ? "Publicação já existente. Histórico preservado."
+          : "Publicação salva. O histórico anterior foi preservado.",
         publicationId: String(result.insertId),
+        reused,
       });
     } catch (error) {
       if (error instanceof ImportError || error instanceof URIError)

@@ -1,50 +1,41 @@
-import { useEffect, useRef, useState } from "react";
+﻿import { useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { Bell, CheckCheck } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
-import { apiRequest, ApiError } from "../lib/api";
-import { useAuth } from "../context/authContext";
+import { useNotifications } from "../hooks/useNotifications";
 import "./navigation-chrome.css";
-type Data = {
-  unreadCount: number;
-  notifications: {
-    id: string;
-    title: string;
-    createdAt: string;
-    read: boolean;
-    favoriteTickers: string[];
-    href: string;
-  }[];
+
+const typeLabels: Record<string, string> = {
+  research: "Pesquisa",
+  research_published: "Pesquisa",
+  course: "Curso",
+  course_published: "Curso",
+  lesson: "Aula",
+  lesson_published: "Aula",
 };
+
+function notificationDate(value: string) {
+  const normalized = value.includes("T")
+    ? value
+    : value.replace(" ", "T") + "Z";
+  const date = new Date(normalized);
+  return Number.isNaN(date.getTime()) ? null : date;
+}
+
 export function NotificationsMenu() {
-  const { refreshSession } = useAuth();
+  const { data, busy, error, authenticated, refresh, loadMore, mark, retry } =
+    useNotifications();
   const { key: routeKey } = useLocation();
   const [menuRoute, setMenuRoute] = useState<string | null>(null);
-  const open = menuRoute === routeKey;
-  const [data, setData] = useState<Data | null>(null);
-  const [error, setError] = useState("");
-  const [busy, setBusy] = useState(false);
-  const [revision, setRevision] = useState(0);
+  const open = authenticated && menuRoute === routeKey;
   const ref = useRef<HTMLDivElement>(null);
   const trigger = useRef<HTMLButtonElement>(null);
   const reducedMotion = useReducedMotion();
+
   useEffect(() => {
-    const controller = new AbortController();
-    apiRequest<Data>("/api/notifications", { signal: controller.signal })
-      .then((result) => {
-        if (!controller.signal.aborted) {
-          setData(result);
-          setError("");
-        }
-      })
-      .catch((err) => {
-        if (controller.signal.aborted) return;
-        setError(err.message);
-        if (err instanceof ApiError && err.status === 401)
-          void refreshSession().catch(() => {});
-      });
-    return () => controller.abort();
-  }, [open, revision, refreshSession]);
+    if (open) refresh();
+  }, [open, refresh]);
+
   useEffect(() => {
     if (!open) return;
     const close = (event: Event) => {
@@ -68,23 +59,8 @@ export function NotificationsMenu() {
       window.removeEventListener("popstate", closeOnBack);
     };
   }, [open]);
-  async function mark(id?: string) {
-    setBusy(true);
-    setError("");
-    try {
-      await apiRequest("/api/notifications/" + (id ? "read" : "read-all"), {
-        method: "POST",
-        ...(id ? { body: JSON.stringify({ publicationId: id }) } : {}),
-      });
-      setRevision((value) => value + 1);
-    } catch (err) {
-      setError(
-        err instanceof Error ? err.message : "Falha ao marcar notificação.",
-      );
-    } finally {
-      setBusy(false);
-    }
-  }
+
+  if (!authenticated) return null;
   return (
     <div className="relative" ref={ref}>
       <button
@@ -99,9 +75,12 @@ export function NotificationsMenu() {
         onClick={() => setMenuRoute(open ? null : routeKey)}
         className="ediv-chrome-icon relative min-h-11 min-w-11 p-3"
       >
-        <Bell size={20} />
+        <Bell size={20} aria-hidden="true" />
         {Boolean(data?.unreadCount) && (
-          <span className="ediv-notification-count absolute right-0 top-0 rounded-full px-1.5 text-[10px]">
+          <span
+            aria-hidden="true"
+            className="ediv-notification-count absolute right-0 top-0 rounded-full px-1.5 text-[10px]"
+          >
             {Math.min(data?.unreadCount || 0, 99)}
             {(data?.unreadCount || 0) > 99 ? "+" : ""}
           </span>
@@ -111,7 +90,7 @@ export function NotificationsMenu() {
         {open && (
           <motion.section
             id="ediv-notifications"
-            aria-label="Notificações de pesquisas"
+            aria-label="Notificações"
             initial={{
               opacity: 0,
               y: reducedMotion ? 0 : -5,
@@ -130,71 +109,125 @@ export function NotificationsMenu() {
             }}
             className="ediv-chrome-popover ediv-notifications-popover fixed inset-x-4 top-[calc(4.5rem+env(safe-area-inset-top))] z-50 max-h-[calc(100dvh-10rem-env(safe-area-inset-bottom))] overflow-y-auto space-y-3 p-4 md:absolute md:inset-x-auto md:right-0 md:top-auto md:mt-2 md:w-[22rem]"
           >
-            <h2 className="font-semibold">Notificações de pesquisas</h2>
+            <h2 className="font-semibold">Notificações</h2>
             <p className="text-xs text-evo-textSec">
-              Últimas publicações desde seu cadastro.
+              Novas publicações de pesquisas, cursos e aulas.
             </p>
             {error && (
-              <p role="alert" className="notice-error">
-                {error}
+              <div role="alert" className="notice-error">
+                <p>{error}</p>
+                <button
+                  type="button"
+                  disabled={busy}
+                  onClick={retry}
+                  className="min-h-11 underline"
+                >
+                  Tentar novamente
+                </button>
+              </div>
+            )}
+            {busy && (
+              <p role="status" className="text-xs text-evo-textSec">
+                Atualizando notificações…
               </p>
             )}
-            {!data ? (
+            {!data && !busy && !error && (
               <p role="status" className="text-sm">
                 Carregando…
               </p>
-            ) : !data.notifications.length ? (
+            )}
+            {data && !data.notifications.length && (
               <div className="ediv-notification-empty">
                 <CheckCheck size={24} strokeWidth={1.5} aria-hidden="true" />
                 <p className="font-medium">Tudo em dia.</p>
                 <p className="text-sm text-evo-textSec">
-                  Novas pesquisas aparecem por aqui.
+                  Novas publicações aparecem por aqui.
                 </p>
               </div>
-            ) : (
+            )}
+            {data && data.notifications.length > 0 && (
               <>
                 <button
                   type="button"
                   className="min-h-11 text-xs underline"
                   disabled={busy || !data.unreadCount}
-                  onClick={() => void mark()}
+                  onClick={() => mark()}
                 >
                   Marcar todas como lidas
                 </button>
-                <ul className="max-h-80 space-y-2 overflow-auto">
-                  {data.notifications.map((item) => (
-                    <li
-                      key={item.id}
-                      className={`ediv-notification-item p-3 text-sm ${item.read ? "" : "is-unread"}`}
-                    >
-                      <Link
-                        className="ediv-chrome-link block min-h-11 break-words text-evo-accent"
-                        to={item.href}
-                        onClick={() => {
-                          setMenuRoute(null);
-                          void mark(item.id);
-                        }}
+                <ul className="space-y-2">
+                  {data.notifications.map((item) => {
+                    const date = notificationDate(item.createdAt);
+                    return (
+                      <li
+                        key={item.id}
+                        className={`ediv-notification-item p-3 text-sm ${item.read ? "" : "is-unread"}`}
                       >
-                        {item.title}
-                        {!item.read && (
-                          <span className="ediv-notification-new">Nova</span>
-                        )}
-                      </Link>
-                      {item.favoriteTickers.length > 0 && (
-                        <p className="mt-1 text-xs">
-                          Empresas citadas nesta atualização:{" "}
-                          {item.favoriteTickers.join(", ")}
+                        <p className="text-xs text-evo-textSec">
+                          {typeLabels[item.type] || item.type}
                         </p>
-                      )}
-                      <p className="mt-1 text-xs text-evo-textSec">
-                        {new Date(
-                          item.createdAt.replace(" ", "T") + "Z",
-                        ).toLocaleString("pt-BR")}
-                      </p>
-                    </li>
-                  ))}
+                        <Link
+                          className="ediv-chrome-link block min-h-11 break-words text-evo-accent"
+                          to={
+                            item.href.startsWith("/") &&
+                            !item.href.startsWith("//")
+                              ? item.href
+                              : "/app"
+                          }
+                          onClick={() => {
+                            if (!item.read) mark(item.id);
+                            setMenuRoute(null);
+                          }}
+                        >
+                          {item.title}
+                          {!item.read && (
+                            <span className="ediv-notification-new">Nova</span>
+                          )}
+                        </Link>
+                        <p className="mt-1 break-words text-sm text-evo-textSec">
+                          {item.description}
+                        </p>
+                        {item.favoriteTickers.length > 0 && (
+                          <p className="mt-1 text-xs">
+                            Empresas citadas nesta atualização:{" "}
+                            {item.favoriteTickers.join(", ")}
+                          </p>
+                        )}
+                        <p className="mt-1 text-xs text-evo-textSec">
+                          {date ? (
+                            <time dateTime={date.toISOString()}>
+                              {date.toLocaleString("pt-BR")}
+                            </time>
+                          ) : (
+                            "Data indisponível"
+                          )}
+                        </p>
+                        {!item.read && (
+                          <button
+                            type="button"
+                            disabled={busy}
+                            onClick={() => mark(item.id)}
+                            aria-label={`Marcar como lida: ${item.title}`}
+                            className="min-h-11 text-xs underline"
+                          >
+                            Marcar como lida
+                          </button>
+                        )}
+                      </li>
+                    );
+                  })}
                 </ul>
               </>
+            )}
+            {data?.nextCursor && (
+              <button
+                type="button"
+                disabled={busy}
+                onClick={loadMore}
+                className="min-h-11 w-full text-sm underline"
+              >
+                Carregar mais notificações
+              </button>
             )}
           </motion.section>
         )}
