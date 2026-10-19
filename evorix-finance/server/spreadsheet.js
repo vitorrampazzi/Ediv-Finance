@@ -131,7 +131,7 @@ export function csvDownload(rows) {
             if (
               /^\s*[=+@]/.test(text) ||
               /^[\t\r]/.test(text) ||
-              /^\s*-\D/.test(text)
+              (/^\s*-/.test(text) && !/^-\d+(?:[.,]\d+)?$/.test(text))
             )
               text = "'" + text;
             return '"' + text.replace(/"/g, '""') + '"';

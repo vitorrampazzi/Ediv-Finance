@@ -19,6 +19,7 @@ const errors = [];
 const root = "http://127.0.0.1:4180";
 await mkdir(".test-artifacts", { recursive: true });
 async function check(name, work) {
+  await fixture.clearLimits();
   await work();
   report.push({ name, status: "passed" });
   console.info("PASS:", name);
@@ -67,7 +68,14 @@ async function context(account, viewport = { width: 1366, height: 900 }) {
     ]);
   }
   result.on("page", (page) => {
-    page.on("pageerror", (error) => errors.push(error.message));
+    page.on("pageerror", (error) => {
+      errors.push(error.message);
+      console.error(
+        "BROWSER_PAGE_ERROR",
+        page.url(),
+        error.stack || error.message,
+      );
+    });
   });
   return result;
 }
@@ -217,8 +225,18 @@ try {
     },
   );
   await check("Login da conta pendente é recusado", async () => {
+    const pendingLogin = page.waitForResponse(
+      (response) =>
+        response.url().endsWith("/api/auth/login") &&
+        response.request().method() === "POST",
+    );
     await loginJourney();
-    await expect(page.getByRole("alert")).toContainText(/confirmad/i);
+    const response = await pendingLogin;
+    assert.equal(response.status(), 401);
+    assert.equal((await response.json()).code, "EMAIL_NOT_VERIFIED");
+    await expect(page.getByRole("alert")).toContainText(
+      /Confirme seu e-mail antes de entrar/i,
+    );
     assert.match(page.url(), /\/entrar/);
   });
   await check(
@@ -268,7 +286,7 @@ try {
       await page.waitForURL("**/app/aprender");
       await expect(
         page.getByRole("progressbar", {
-          name: "Progresso dos exercícios da trilha",
+          name: "Progresso dos exercícios",
           exact: true,
         }),
       ).toHaveAttribute("aria-valuenow", "0");
@@ -512,6 +530,7 @@ try {
     "Páginas públicas em 360, 768 e 1366 px sem rolagem horizontal",
     async () => {
       for (const width of [360, 768, 1366]) {
+        await fixture.clearLimits();
         await page.setViewportSize({ width, height: 900 });
         for (const path of [
           "/",
@@ -526,7 +545,9 @@ try {
           "/privacidade",
         ]) {
           await page.goto(root + path);
-          await expect(page.locator("h1,h2").first()).toBeVisible();
+          await expect(
+            page.getByRole("main").getByRole("heading").first(),
+          ).toBeVisible();
           try {
             await noOverflow(page);
           } catch (error) {
@@ -584,7 +605,7 @@ try {
     await page.waitForURL("**/app");
     await expect(
       page
-        .getByRole("heading", { name: /Sua escola de ações e dividendos/i })
+        .getByRole("heading", { name: "Sua mesa de pesquisa.", exact: true })
         .first(),
     ).toBeVisible();
   });
@@ -669,14 +690,14 @@ try {
         .click();
       await expect(
         page.getByRole("progressbar", {
-          name: "Progresso dos exercícios da trilha",
+          name: "Progresso dos exercícios",
           exact: true,
         }),
       ).toHaveAttribute("aria-valuenow", "1");
       await page.reload();
       await expect(
         page.getByRole("progressbar", {
-          name: "Progresso dos exercícios da trilha",
+          name: "Progresso dos exercícios",
           exact: true,
         }),
       ).toHaveAttribute("aria-valuenow", "1");
@@ -686,7 +707,7 @@ try {
       await otherPage.goto(root + "/app/aprender#risco");
       await expect(
         otherPage.getByRole("progressbar", {
-          name: "Progresso dos exercícios da trilha",
+          name: "Progresso dos exercícios",
           exact: true,
         }),
       ).toHaveAttribute("aria-valuenow", "1");
@@ -846,6 +867,7 @@ try {
   });
   await check("Área da equipe e ranking mantêm responsividade", async () => {
     for (const width of [360, 768, 1366]) {
+      await fixture.clearLimits();
       await analystPage.setViewportSize({ width, height: 900 });
       for (const path of [
         "/app/ranking",
@@ -854,7 +876,9 @@ try {
         "/app/config",
       ]) {
         await analystPage.goto(root + path);
-        await expect(analystPage.locator("h1,h2").first()).toBeVisible();
+        await expect(
+          analystPage.getByRole("main").getByRole("heading").first(),
+        ).toBeVisible();
         await noOverflow(analystPage);
       }
       if (width === 360)

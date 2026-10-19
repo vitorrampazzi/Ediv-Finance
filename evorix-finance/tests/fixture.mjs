@@ -138,6 +138,8 @@ export async function createFixture() {
     pool = database.pool;
     await database.runMigrations();
     const { app } = await import("../server/app.js");
+    const { requestAdmission } = await import("../server/request-admission.js");
+    const { MysqlLimitStore } = await import("../server/limit-store.js");
     server = await new Promise((resolve) => {
       const instance = app.listen(0, "127.0.0.1", () => resolve(instance));
     });
@@ -214,7 +216,23 @@ export async function createFixture() {
         body: { email: account.email, password },
       });
     async function clearLimits() {
-      await pool.execute("DELETE FROM request_limits");
+      if (database.pool !== pool || !/^ediv_test_[a-f0-9]{12}$/.test(schema))
+        throw new Error(
+          "Limpeza de cenário exige o schema isolado desta fixture.",
+        );
+      const [[current]] = await pool.execute("SELECT DATABASE() AS name");
+      if (current.name !== schema)
+        throw new Error("O schema ativo não corresponde à fixture.");
+      const deadline = Date.now() + 5000;
+      do {
+        if (Date.now() >= deadline)
+          throw new Error("O cenário não ficou ocioso em cinco segundos.");
+        await requestAdmission.waitForIdle(deadline - Date.now());
+        await pool.execute("DELETE FROM request_limits");
+        // New requests may start while SQL yields; drain and clear again.
+      } while (!requestAdmission.isIdle());
+      MysqlLimitStore.clearLocalCaches();
+      requestAdmission.reset();
     }
     return {
       schema,

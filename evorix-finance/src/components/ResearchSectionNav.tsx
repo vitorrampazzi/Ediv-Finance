@@ -56,7 +56,7 @@ export function ResearchSectionNav() {
         ),
       );
       readingLine = Math.min(
-        window.innerHeight - 2,
+        Math.max(0, window.innerHeight - 2),
         Math.ceil(
           Math.max(
             nav.getBoundingClientRect().height + stickyTop + 24,

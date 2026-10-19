@@ -31,6 +31,7 @@ const upload = (raw = csv) => ({
 let first, second, thread, draftId;
 try {
   await test("API real e MySQL em schema isolado", async (t) => {
+    t.beforeEach(() => fixture.clearLimits());
     await t.test("visitantes e origens externas são bloqueados", async () => {
       for (const path of [
         "/api/portfolio",
@@ -867,6 +868,53 @@ try {
         });
         assert.equal(global.status, 429);
         assert.match(global.body.error, /limite diário/);
+      },
+    );
+    await t.test(
+      "limites de produção continuam ativos e o próximo cenário é isolado",
+      async () => {
+        assert.equal(
+          (
+            await request(a, "/api/auth/login", {
+              method: "POST",
+              body: { email: a.email, password: password + "-changed" },
+            })
+          ).status,
+          200,
+        );
+        await fixture.clearLimits();
+        for (let i = 0; i < 40; i++) {
+          assert.equal(
+            (await request(a, "/api/favorites/RATE3", { method: "PUT" }))
+              .status,
+            204,
+          );
+        }
+        const writeLimit = await request(a, "/api/favorites/RATE3", {
+          method: "PUT",
+        });
+        assert.equal(writeLimit.status, 429);
+        assert.equal(writeLimit.body.code, "RATE_LIMITED");
+        await fixture.clearLimits();
+        assert.equal(
+          (await request(a, "/api/favorites/RATE3", { method: "PUT" })).status,
+          204,
+        );
+        await fixture.clearLimits();
+        for (let i = 0; i < 60; i++) {
+          assert.equal(
+            (await request(null, "/api/auth/availability")).status,
+            200,
+          );
+        }
+        const burst = await request(null, "/api/auth/availability");
+        assert.equal(burst.status, 429);
+        assert.equal(burst.body.code, "RATE_LIMITED");
+        await fixture.clearLimits();
+        assert.equal(
+          (await request(null, "/api/auth/availability")).status,
+          200,
+        );
       },
     );
   });

@@ -13,6 +13,7 @@ import {
 import { ApiError, apiRequest } from "../lib/api";
 import { authLink } from "../lib/authDestination";
 import { useAuth } from "../context/authContext";
+import { useVisitorLearningProgress } from "../lib/visitorLearningProgress";
 import { AccountGate } from "../components/AccountGate";
 import { MobileDisclosure } from "../components/MobileDisclosure";
 import { assistantEnabled } from "../lib/features";
@@ -48,20 +49,6 @@ export type LearningData = {
   completed: string[];
 };
 const lessonIds: string[] = learningChapters.map((chapter) => chapter.id);
-function readProgress(): string[] {
-  try {
-    const value = JSON.parse(localStorage.getItem("ediv-learning-v1") || "[]");
-    return Array.isArray(value)
-      ? [
-          ...new Set(
-            value.filter((x) => typeof x === "string" && lessonIds.includes(x)),
-          ),
-        ]
-      : [];
-  } catch {
-    return [];
-  }
-}
 export function Aprender({
   initialContent,
 }: {
@@ -117,9 +104,9 @@ function LearningSession({
     lessonId?: string;
     message: string;
   } | null>(null);
-  const [completed, setCompleted] = useState<string[]>(() =>
-    user ? [] : readProgress().filter((id) => id === "ranking"),
-  );
+  const [accountCompleted, setCompleted] = useState<string[]>([]);
+  const visitorProgress = useVisitorLearningProgress(!user);
+  const completed = user ? accountCompleted : [...visitorProgress.completed];
   const [progressBusy, setProgressBusy] = useState(false);
   const [sessionExpired, setSessionExpired] = useState(false);
   const [resetRequested, setResetRequested] = useState(false);
@@ -234,14 +221,6 @@ function LearningSession({
     location.hash,
     content,
   ]);
-  useEffect(() => {
-    if (user) return;
-    try {
-      localStorage.setItem("ediv-learning-v1", JSON.stringify(completed));
-    } catch {
-      /* Browser storage may be disabled. */
-    }
-  }, [completed, user]);
   async function handleExpiredSession(message: string, lessonId?: string) {
     setSessionExpired(true);
     setProgressError({ lessonId, message });
@@ -265,14 +244,15 @@ function LearningSession({
     if (completed.includes(lesson.id)) return;
     setProgressBusy(true);
     try {
-      if (user)
+      if (user) {
         await apiRequest("/api/learning/progress/" + lesson.id, {
           method: "PUT",
           body: JSON.stringify({ answer }),
         });
-      setCompleted((current) =>
-        current.includes(lesson.id) ? current : [...current, lesson.id],
-      );
+        setCompleted((current) =>
+          current.includes(lesson.id) ? current : [...current, lesson.id],
+        );
+      } else visitorProgress.complete(lesson.id);
     } catch (err) {
       if (err instanceof ApiError && err.status === 401) {
         await handleExpiredSession(
@@ -297,9 +277,10 @@ function LearningSession({
     setProgressBusy(true);
     setProgressError(null);
     try {
-      if (user)
+      if (user) {
         await apiRequest("/api/learning/progress", { method: "DELETE" });
-      setCompleted([]);
+        setCompleted([]);
+      } else visitorProgress.reset();
       setAnswers({});
       setResetRequested(false);
     } catch (err) {
@@ -397,7 +378,9 @@ function LearningSession({
             ·{" "}
             {user
               ? "progresso salvo na sua conta"
-              : "progresso salvo neste navegador"}
+              : visitorProgress.persisted
+                ? "progresso salvo neste navegador"
+                : "progresso mantido somente nesta sessão"}
           </p>
           <a
             className="inline-flex min-h-11 items-center gap-2 text-sm text-evo-accent"
@@ -420,6 +403,25 @@ function LearningSession({
           />
         </div>
       </header>
+      {!user && !visitorProgress.persisted && (
+        <aside
+          className="rounded-lg border border-evo-border bg-evo-card p-4 text-sm text-evo-textSec"
+          role="status"
+        >
+          <p>
+            Não foi possível ler ou salvar seu progresso neste navegador. Suas
+            conclusões continuam nesta sessão do site, mas as mudanças não serão
+            preservadas ao recarregar ou fechar a página.
+          </p>
+          <button
+            type="button"
+            className="action-secondary mt-3"
+            onClick={visitorProgress.persist}
+          >
+            Tentar salvar progresso
+          </button>
+        </aside>
+      )}
       {loading && (
         <div
           role="status"
@@ -463,6 +465,7 @@ function LearningSession({
       )}
       {content && !authLoading && (
         <LearningJourney
+          persisted={Boolean(user) || visitorProgress.persisted}
           lessons={lessons}
           completed={completed}
           isAuthenticated={Boolean(user)}
@@ -613,6 +616,7 @@ function LearningSession({
                 busy={progressBusy}
                 disabled={loading || sessionExpired}
                 authenticated={Boolean(user)}
+                persisted={Boolean(user) || visitorProgress.persisted}
                 error={
                   progressError?.lessonId === selectedLesson.id
                     ? progressError.message

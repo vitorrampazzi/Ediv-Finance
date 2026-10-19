@@ -16,6 +16,7 @@ import { researchDraftRouter } from "./research-drafts.js";
 import { notificationsRouter } from "./notifications.js";
 import { requirePermission } from "./permissions.js";
 import { requireRegistrationChallenge } from "./registration-challenge.js";
+import { cleanupExpiredAuth } from "./auth-cleanup.js";
 import {
   identifyClient,
   requestAdmission,
@@ -111,6 +112,7 @@ app.use("/api", (req, res, next) => {
   return next();
 });
 app.use("/api", apiLimiter, writeLimiter);
+app.use("/api", cleanupExpiredAuth);
 app.post("/api/auth/register", registrationEntryLimiter);
 app.use("/api", (req, res, next) => {
   if (!isSpreadsheetUpload(req)) return next();

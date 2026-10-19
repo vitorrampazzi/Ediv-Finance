@@ -11,7 +11,7 @@ export function RankingAccessLanding({
 }) {
   const location = useLocation();
   const destination = location.pathname.includes("ranking")
-    ? location.pathname + location.search
+    ? location.pathname + location.search + location.hash
     : "/ranking";
   return (
     <section

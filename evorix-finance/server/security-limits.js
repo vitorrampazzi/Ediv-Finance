@@ -68,63 +68,7 @@ export function identifyClient(req, res, next) {
   return next();
 }
 
-const bursts = new Map();
-const BURST_WINDOW = 10_000;
-const BURST_MAXIMUM = 60;
-const MAXIMUM_BURST_KEYS = 5000;
-const MAXIMUM_ACTIVE_REQUESTS = 32;
-let activeRequests = 0;
-
-// This bounded local guard rejects bursts before contacting MySQL. Persistent
-// limits below remain authoritative across separate serverless instances.
-export function requestAdmission(req, res, next) {
-  const now = Date.now();
-  let burst = bursts.get(req.securityIpKey);
-  if (!burst || burst.expiresAt <= now) {
-    if (bursts.size >= MAXIMUM_BURST_KEYS) {
-      for (const [key, value] of bursts) {
-        if (value.expiresAt <= now) bursts.delete(key);
-      }
-      if (bursts.size >= MAXIMUM_BURST_KEYS) {
-        res.setHeader("Retry-After", "2");
-        return res.status(503).json({
-          error: "O serviço está ocupado. Tente novamente em instantes.",
-        });
-      }
-    }
-    burst = { hits: 0, expiresAt: now + BURST_WINDOW };
-    bursts.set(req.securityIpKey, burst);
-  }
-  burst.hits = Math.min(burst.hits + 1, BURST_MAXIMUM + 1);
-  if (burst.hits > BURST_MAXIMUM) {
-    res.setHeader(
-      "Retry-After",
-      String(Math.max(1, Math.ceil((burst.expiresAt - now) / 1000))),
-    );
-    return res.status(429).json({
-      code: "RATE_LIMITED",
-      error: "Muitas solicitações. Aguarde alguns segundos.",
-    });
-  }
-  if (activeRequests >= MAXIMUM_ACTIVE_REQUESTS) {
-    res.setHeader("Retry-After", "2");
-    return res
-      .status(503)
-      .json({ error: "O serviço está ocupado. Tente novamente em instantes." });
-  }
-  activeRequests += 1;
-  let released = false;
-  const release = () => {
-    if (released) return;
-    released = true;
-    activeRequests -= 1;
-    res.removeListener("finish", release);
-    res.removeListener("close", release);
-  };
-  res.once("finish", release);
-  res.once("close", release);
-  return next();
-}
+export { requestAdmission } from "./request-admission.js";
 
 function limiter(prefix, windowMs, limit, options = {}) {
   return rateLimit({

@@ -75,6 +75,7 @@ export function analyticsReferrer(value) {
 
 export function createConsentStore(storage, now = Date.now) {
   let snapshot;
+  let sessionChoice;
   const listeners = new Set();
   function read() {
     let record;
@@ -91,12 +92,15 @@ export function createConsentStore(storage, now = Date.now) {
       Number.isFinite(record.updatedAt) &&
       record.updatedAt <= now() &&
       now() - record.updatedAt < analyticsConsentLifetime;
-    return Object.freeze({ choice: valid ? record.choice : null, persisted });
+    return {
+      state: Object.freeze({ choice: valid ? record.choice : null, persisted }),
+      record: valid ? record : null,
+    };
   }
   const notify = () => listeners.forEach((listener) => listener());
   return {
     get() {
-      return (snapshot ??= read());
+      return (snapshot ??= read().state);
     },
     subscribe(listener) {
       listeners.add(listener);
@@ -104,25 +108,39 @@ export function createConsentStore(storage, now = Date.now) {
     },
     choose(choice) {
       if (!["granted", "denied"].includes(choice)) return;
+      const record = {
+        version: analyticsConsentVersion,
+        choice,
+        updatedAt: now(),
+      };
       let persisted = true;
       try {
         if (!storage) throw Error("Unavailable");
-        storage.setItem(
-          analyticsConsentKey,
-          JSON.stringify({
-            version: analyticsConsentVersion,
-            choice,
-            updatedAt: now(),
-          }),
-        );
+        storage.setItem(analyticsConsentKey, JSON.stringify(record));
       } catch {
         persisted = false;
       }
+      sessionChoice = persisted ? undefined : record;
       snapshot = Object.freeze({ choice, persisted });
       notify();
     },
     reconcile() {
-      snapshot = read();
+      const stored = read();
+      const sessionValid =
+        sessionChoice &&
+        sessionChoice.updatedAt <= now() &&
+        now() - sessionChoice.updatedAt < analyticsConsentLifetime;
+      // A failed write leaves an older record behind. Focus/storage events must
+      // never revive that grant over an explicit revocation in this session.
+      // A concurrent denial may still revoke a session-only grant.
+      const newerDenial =
+        sessionChoice?.choice === "granted" &&
+        stored.record?.choice === "denied" &&
+        stored.record.updatedAt >= sessionChoice.updatedAt;
+      if (!sessionValid || newerDenial) {
+        sessionChoice = undefined;
+        snapshot = stored.state;
+      }
       notify();
     },
   };

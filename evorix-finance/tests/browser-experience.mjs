@@ -16,12 +16,13 @@ let browser;
 await mkdir(".test-artifacts", { recursive: true });
 async function check(name, work) {
   try {
+    await fixture.clearLimits();
     await work();
     checks.push({ name, status: "passed" });
     console.info("PASS:", name);
   } catch (error) {
     checks.push({ name, status: "failed", error: error.message });
-    console.error("FAIL:", name, error.message.split("\n")[0]);
+    console.error("FAIL:", name, error.stack || error.message);
     for (const [index, page] of browser
       .contexts()
       .flatMap((context) => context.pages())
@@ -59,7 +60,7 @@ async function context(account, width = 1366) {
 }
 const progress = (page) =>
   page.getByRole("progressbar", {
-    name: "Progresso dos exercícios da trilha",
+    name: "Progresso dos exercícios",
     exact: true,
   });
 try {
@@ -163,6 +164,132 @@ try {
       );
     },
   );
+  for (const failure of ["quota", "blocked"]) {
+    await check(
+      `Visitante mantém progresso na SPA com storage ${failure}, recupera e restaura após reload`,
+      async () => {
+        const isolated = await context(null);
+        try {
+          await isolated.addInitScript((mode) => {
+            if (location.origin === "null") return;
+            const key = "ediv-learning-v1";
+            const recoveryKey = "test-learning-storage-recovered";
+            const getItem = Storage.prototype.getItem;
+            const setItem = Storage.prototype.setItem;
+            let blocked = sessionStorage.getItem(recoveryKey) !== "true";
+            window.__learningStorageFailures = 0;
+            window.__recoverLearningStorage = () => {
+              blocked = false;
+              sessionStorage.setItem(recoveryKey, "true");
+            };
+            Storage.prototype.getItem = function (name) {
+              if (
+                this === localStorage &&
+                name === key &&
+                blocked &&
+                mode === "blocked"
+              ) {
+                window.__learningStorageFailures++;
+                throw new DOMException(
+                  "Leitura bloqueada pelo teste",
+                  "SecurityError",
+                );
+              }
+              return getItem.call(this, name);
+            };
+            Storage.prototype.setItem = function (name, value) {
+              if (this === localStorage && name === key && blocked) {
+                window.__learningStorageFailures++;
+                throw new DOMException(
+                  "Gravação bloqueada pelo teste",
+                  mode === "quota" ? "QuotaExceededError" : "SecurityError",
+                );
+              }
+              return setItem.call(this, name, value);
+            };
+          }, failure);
+          const learner = await isolated.newPage();
+          await learner.goto(root + "/aprender#ranking");
+          await learner
+            .getByRole("button", {
+              name: lessons[0].choices[lessons[0].answer],
+              exact: true,
+            })
+            .click();
+          const warning = learner.getByRole("status").filter({
+            hasText:
+              "Não foi possível ler ou salvar seu progresso neste navegador",
+          });
+          await expect(warning).toBeVisible();
+          await expect(progress(learner)).toHaveAttribute("aria-valuenow", "1");
+          await expect(
+            learner.getByText(
+              "Exercício concluído. Progresso mantido somente nesta sessão.",
+              { exact: true },
+            ),
+          ).toBeVisible();
+          await expect(
+            learner.getByText(/^Progresso salvo neste navegador\.?$/),
+          ).toHaveCount(0);
+          assert.ok(
+            await learner.evaluate(() => window.__learningStorageFailures > 0),
+          );
+
+          await learner.evaluate(() => {
+            window.__learningSpaMarker = "same-document";
+          });
+          await learner
+            .getByRole("contentinfo")
+            .getByRole("link", {
+              name: "Início",
+              exact: true,
+            })
+            .click();
+          await expect(learner).toHaveURL(root + "/");
+          await learner
+            .getByRole("banner")
+            .getByRole("link", {
+              name: "Aprender",
+              exact: true,
+            })
+            .click();
+          await expect(learner).toHaveURL(root + "/aprender");
+          assert.equal(
+            await learner.evaluate(() => window.__learningSpaMarker),
+            "same-document",
+          );
+          await expect(progress(learner)).toHaveAttribute("aria-valuenow", "1");
+          await expect(warning).toBeVisible();
+
+          await learner.evaluate(() => window.__recoverLearningStorage());
+          await warning
+            .getByRole("button", {
+              name: "Tentar salvar progresso",
+              exact: true,
+            })
+            .click();
+          await expect(warning).toHaveCount(0);
+          assert.deepEqual(
+            await learner.evaluate(() =>
+              JSON.parse(localStorage.getItem("ediv-learning-v1")),
+            ),
+            [lessons[0].id],
+          );
+          await learner.reload();
+          await expect(progress(learner)).toHaveAttribute("aria-valuenow", "1");
+          await expect(warning).toHaveCount(0);
+          await expect(
+            learner.getByText(
+              "Exercício concluído. Progresso salvo neste navegador.",
+              { exact: true },
+            ),
+          ).toBeVisible();
+        } finally {
+          await isolated.close();
+        }
+      },
+    );
+  }
   await check("Ranking filtra e limpar filtros recupera a lista", async () => {
     await page.goto(root + "/app/ranking?visual=real");
     await expect(
@@ -223,6 +350,47 @@ try {
     },
   );
   await check(
+    "Navegação da pesquisa aceita viewport mínimo e recupera a leitura após resize",
+    async () => {
+      const isolated = await context(fixture.accounts.a);
+      try {
+        const smallPage = await isolated.newPage();
+        const observerErrors = [];
+        smallPage.on("pageerror", (error) =>
+          observerErrors.push(error.message),
+        );
+        await smallPage.setViewportSize({ width: 360, height: 1 });
+        await smallPage.goto(
+          root +
+            `/app/ranking/acao/PETR4?visual=real&publication=${publicationId}`,
+        );
+        const navigation = smallPage.getByRole("navigation", {
+          name: "Seções da pesquisa",
+          exact: true,
+        });
+        await navigation.waitFor({ state: "attached" });
+        await smallPage.evaluate(
+          () =>
+            new Promise((resolve) => {
+              requestAnimationFrame(() => requestAnimationFrame(resolve));
+            }),
+        );
+        assert.deepEqual(observerErrors, []);
+        await smallPage.setViewportSize({ width: 1366, height: 900 });
+        const sources = navigation.getByRole("link", {
+          name: "Fontes e versão",
+          exact: true,
+        });
+        await sources.click();
+        await expect(smallPage).toHaveURL(/#fontes$/);
+        await expect(smallPage.locator("#fontes")).toBeVisible();
+        assert.deepEqual(observerErrors, []);
+      } finally {
+        await isolated.close();
+      }
+    },
+  );
+  await check(
     "MVP preserva ranking e aulas, sem catálogo nem chamadas de destaques",
     async () => {
       const catalogueRequests = [];
@@ -263,13 +431,16 @@ try {
           body: JSON.stringify({ error: "Falha simulada de aulas" }),
         }),
       );
-      await page.goto(root + "/app/aprender");
-      await expect(page.getByRole("alert")).toContainText(
-        "Falha simulada de aulas",
-      );
-      await page.unroute("**/api/learning");
+      try {
+        await page.goto(root + "/app/aprender");
+        await expect(page.getByRole("alert")).toContainText(
+          "Falha simulada de aulas",
+        );
+      } finally {
+        await page.unroute("**/api/learning");
+      }
       await page
-        .getByRole("button", { name: "Tentar carregar novamente", exact: true })
+        .getByRole("button", { name: "Tentar novamente", exact: true })
         .click();
       await expect(page.locator("#classroom-title")).toContainText(
         lessons[0].title,
@@ -292,17 +463,20 @@ try {
           body: JSON.stringify({ error: "Falha simulada ao salvar" }),
         }),
       );
-      await page
-        .getByRole("button", {
-          name: lessons[0].choices[lessons[0].answer],
-          exact: true,
-        })
-        .click();
-      await expect(page.getByRole("alert")).toContainText(
-        "Falha simulada ao salvar",
-      );
-      await expect(progress(page)).toHaveAttribute("aria-valuenow", "0");
-      await page.unroute("**/api/learning/progress/ranking");
+      try {
+        await page
+          .getByRole("button", {
+            name: lessons[0].choices[lessons[0].answer],
+            exact: true,
+          })
+          .click();
+        await expect(page.getByRole("alert")).toContainText(
+          "Falha simulada ao salvar",
+        );
+        await expect(progress(page)).toHaveAttribute("aria-valuenow", "0");
+      } finally {
+        await page.unroute("**/api/learning/progress/ranking");
+      }
       await page
         .getByRole("button", { name: "Tentar salvar novamente", exact: true })
         .click();
@@ -660,7 +834,7 @@ try {
       ).toBeVisible();
       await expect(page.getByText("27,5%", { exact: true })).toBeVisible();
       await expect(
-        page.getByText(/R\$\s*42,75/, { exact: true }),
+        page.locator("header dl dd").filter({ hasText: /^R\$\s*42,75$/ }),
       ).toBeVisible();
     },
   );
@@ -669,6 +843,7 @@ try {
     async () => assert.deepEqual(errors, []),
   );
 } finally {
+  console.info("PAGE_ERRORS", JSON.stringify(errors));
   await writeFile(
     ".test-artifacts/experience-report.json",
     JSON.stringify(

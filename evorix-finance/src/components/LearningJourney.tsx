@@ -7,11 +7,13 @@ export function LearningJourney({
   lessons,
   completed,
   isAuthenticated,
+  persisted = true,
   onSelect,
 }: {
   lessons: JourneyLesson[];
   completed: string[];
   isAuthenticated: boolean;
+  persisted?: boolean;
   onSelect: (id: string) => void;
 }) {
   const finished = lessons.filter((lesson) =>
@@ -71,7 +73,9 @@ export function LearningJourney({
         <p className="ediv-learning-progress-note">
           {isAuthenticated
             ? "Progresso salvo na sua conta"
-            : "Progresso salvo neste navegador"}
+            : persisted
+              ? "Progresso salvo neste navegador"
+              : "Progresso mantido somente nesta sessão"}
         </p>
       </div>
       <button

@@ -236,3 +236,82 @@ test("other tabs reconcile a changed choice", () => {
   assert.equal(second.get().choice, "denied");
   assert.equal(notified, 1);
 });
+
+test("failed revocation persistence cannot restore an older grant on focus", () => {
+  const storage = storageFixture();
+  let time = 1000;
+  const store = createConsentStore(storage, () => time);
+  const fixture = controllerFixture();
+  store.choose("granted");
+  fixture.controller.update({ ...store.get(), pathname: "/" });
+  storage.setItem = () => {
+    throw Error("quota");
+  };
+  time++;
+  store.choose("denied");
+  fixture.controller.update({ ...store.get(), pathname: "/" });
+  for (let focus = 0; focus < 3; focus++) {
+    store.reconcile();
+    assert.deepEqual(store.get(), { choice: "denied", persisted: false });
+    fixture.controller.update({ ...store.get(), pathname: "/aprender" });
+  }
+  assert.equal(fixture.disabled.at(-1), true);
+  assert.equal(fixture.pageviews().length, 1);
+  assert.equal(fixture.loads.length, 1);
+});
+
+test("session-only choices survive reconciliation and still expire", () => {
+  let time = 1000;
+  const storage = {
+    getItem() {
+      throw Error("blocked");
+    },
+    setItem() {
+      throw Error("blocked");
+    },
+  };
+  const store = createConsentStore(storage, () => time);
+  for (const choice of ["granted", "denied"]) {
+    store.choose(choice);
+    store.reconcile();
+    assert.deepEqual(store.get(), { choice, persisted: false });
+  }
+  time += analyticsConsentLifetime;
+  store.reconcile();
+  assert.deepEqual(store.get(), { choice: null, persisted: false });
+});
+
+test("a new explicit choice replaces an unsaved revocation", () => {
+  const storage = storageFixture();
+  const store = createConsentStore(storage, () => 1000);
+  store.choose("granted");
+  storage.setItem = () => {
+    throw Error("quota");
+  };
+  store.choose("denied");
+  store.reconcile();
+  assert.equal(store.get().choice, "denied");
+  store.choose("granted");
+  store.reconcile();
+  assert.deepEqual(store.get(), { choice: "granted", persisted: false });
+});
+
+test("a newer denial from another tab overrides a session-only grant", () => {
+  const storage = storageFixture();
+  let time = 1000;
+  const first = createConsentStore(
+    {
+      getItem: storage.getItem,
+      setItem() {
+        throw Error("quota");
+      },
+    },
+    () => time,
+  );
+  first.choose("granted");
+  time++;
+  const second = createConsentStore(storage, () => time);
+  second.choose("denied");
+  first.reconcile();
+  assert.deepEqual(first.get(), { choice: "denied", persisted: true });
+});

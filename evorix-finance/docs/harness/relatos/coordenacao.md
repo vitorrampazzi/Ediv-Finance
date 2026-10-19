@@ -461,3 +461,118 @@ Verificações reais:
   suíte unitária/contratos e browser com fixtures. APIs legadas não alteradas.
 
 Próximo passo: publicar main com expected_sha b33a756 e verificar deploy/menus.
+
+Publicado na main a87156dea72a160c0acbc11cb44b111f15b204d4 com expected_sha
+b33a756.50 arquivos no manifesto, incluindo5 exclusões de código do catálogo.
+Prévia4186 encerrada após validação; viewport restaurado e sem alterações de conta.
+Aguardando Vercel e conferência final dos menus/URLs no domínio oficial.
+
+Entrega concluída: Vercel success em a87156dea72a160c0acbc11cb44b111f15b204d4.
+Domínio oficial /app conferido com sessão existente: menu Início/Ranking/Escola,
+Administração/Atendimentos/suporte preservados, sem links do catálogo, sem Ações
+em destaque e sem tour espontâneo. URL /app/analises redirecionou para
+/app/ranking e exibiu Ranking de previsões. Somente leitura, sem dados de teste
+criados em produção. Captura mvp-ranking-educacao-publicado.png na pasta de
+visualizações da coordenação. Aba de entrega mantida no ranking.
+Quado/relato publicados localmente; próximo passo aguardar conteúdo real do
+ranking e aulas, sem continuar o catálogo retirado. Não há etapa pendente desta rodada.
+
+## Rodada8 — auditoria completa do MVP, somente diagnóstico (18/10/2026)
+
+Usuário forneceu roteiro de auditoria e pediu excluir a ausência de dados reais
+no ranking. Nenhum código de produto, dependência, migração ou serviço foi alterado;
+sem publicação/deploy. Foram escritos relatório, relatos/quadro e artefatos de testes.
+Sessões interface e backend existentes trabalharam em leitura e entregaram relatos;
+não foram criados chats/subagentes/automação. Todos os resultados foram lidos.
+
+Artefato principal: AUDITORIA_MVP_ESCOLA_DO_DIVIDENDO.md,445 linhas,86 itens,
+14 achados/pendências e11 cards com aceitação, evidências, prioridade e esforço.
+Base: main a87156dea72a160c0acbc11cb44b111f15b204d4. Comparação na cópia Git
+isolada confirmou nenhum arquivo de produto alterado; docs/harness são as diferenças.
+Percentual de conclusão demonstrada do MVP33/68=48,5%; críticos21/45=46,7%.
+Itens parciais/NV não contam como concluídos; pós-MVP, duplicatas e dataset real
+separados explicitamente. A pontuação não equivale ao percentual de código pronto.
+
+Verificações desta rodada:
+- Node22.23.3: npm test79/79; lint e build passaram (8SSR). npm audit completo/prod
+  0avisos após tentativa DNS bloqueada e nova consulta autorizada somente leitura.
+- CI do mesmo commit run39167014261/job117791959606: lint/unit/build success;
+  integração failure,9subcasos falhos após429 (6pass,10fail incluindo agrupador).
+  browser/backup skipped. Fonte da fixture e limites indicam colisão de tráfego
+  compartilhado; causa exata/limite e falhas remanescentes requerem isolamento.
+  Não atribuir nove defeitos de produto; não afrouxar limites em produção para CI.
+- Leitura pública de HTTPS:home/privacidade/sitemap200, desconhecida404,
+  mercado308→ranking; HSTS/CSP/headers presentes nas páginas. API pública suporte
+  200 com presença email/horário/nome/categoria/registro falsa (sem divulgar valores).
+- Chrome local4187 com fixtures sem DB: ajuda Conta e segurança abriu404;
+  ranking buscaDEMO2 resultou1linha; setorServiços/ordemnome e linkDRE preservados;
+  DY5%, payout50%, potencial20%, basezero recusada; tecladoEnter funcionou;
+ 320px:scroll320, tablet768:scroll760, desktop1920:scroll1912. Modal preferências
+  abreEnter/fechaEscape, restaura foco/bodyoverflow. Gate público perdehashDRE no next.
+- Consentimento reproduzido no helper real:granted→falha de escrita→denied→reconcile
+  vira granted; controlador fake volta disabledfalse e enfileira segundo pageview.
+  Nenhum evento Google real. CSV -1+2 sem neutralização reproduzido sem planilha.
+- Relatos independentes: interface5achados/25testes e backend4achados/51testes,
+  sobrepostos aos79, não somar. Incluem hover branco, progresso visitante sem prova
+  de salvamento, limpeza só standalone, suporte100limite e CSVlegado. Diferenciados
+  reprodução dinâmica, inspeção e operação externa desconhecida.
+- Fontes oficiais LGPD/ANPD/CVM/W3C/OWASP consultadas; relatório indica revisão
+  jurídica/regulatória e não certificação. Termos anteriormente adiados não criados.
+- Não verificados:SMTP/Turnstile/banco/GAreal/restore/carga/leitor de tela/compliance.
+  Não rodados testes SQL locais por ausência de TARGET_MYSQL_*; CI foi lido, não
+  reexecutado. Sem contas ou dados artificiais criados em produção.
+
+Veredito: continuar validação interna; beta real condicionado a consentimento,
+gates, e-mail/recuperação, backup e responsabilidade/contato; não recomendar público
+amplo agora. Nenhuma restrição decorre da falta dos dados reais do ranking.
+Próximo passo depende de nova solicitação de correção; não implementar nesta auditoria.
+
+## Rodada9 — correções autorizadas para lançamento
+
+Usuário pediu corrigir erros críticos, excluindo falta de dados reais do ranking e
+conteúdo definitivo dos cursos. Mesmas sessões interface/backend acionadas, sem
+novos agentes. Contratos e aceitação em CONTEXTO.md; relatório técnico em
+docs/CORRECOES-PRE-LANCAMENTO.md.
+
+- Coordenação corrigiu analytics-policy.mjs: escolhas não persistidas preservadas
+  em memória durante a validade; registro antigo não reautoriza após revogação.
+  Recusa nova de outra aba prevalece sobre concessão não persistida.
+- Quatro regressões adicionadas a tests/analytics.test.mjs; três falharam antes
+  da correção e todas as14 passaram depois. Sem rede/eventos Google reais.
+- Interface entregou links/progresso/hover/hash, backend entregou rate/CSV/cleanup.
+  Novos helpers e seus testes incluídos no manifesto de publicação e no npm test.
+- Checkpoint Node22:94/94 testes, lint completo e build/8rotas SSR passaram.
+  Banco/browser/restore aguardam CI MySQL8.4 descartável. Sem base SQL local.
+- Prévia local isolada porta4188/PID15696 para verificação Chrome, sem banco.
+- Ponytail5.3.2 instalado pelo Codex CLI; frontend-design e webapp-testing da
+  Anthropic instaladas por skill-installer, com commits registrados no relatório.
+  Nenhuma dependência adicionada ao site. Novas skills carregam no próximo turno.
+
+Em andamento: snapshot em branch de validação, CI completa e browser local;
+main só avança após evidências e correções adicionais necessárias. Pendências
+operacionais/jurídicas não serão declaradas resolvidas sem comprovação.
+
+Complemento de validação:
+- Backend revisou independentemente o consentimento:14/14 regressões aprovadas,
+  sem defeito confirmado no escopo. Expiração em reconcile e memória sem promessa
+  de sobreviver reload são limites explícitos.
+- Unidade final95/95, lint e build/SSR8rotas novamente aprovados após ajuste do
+  cartão LearningJourney. Interface executou2/2 cenários quota/blocked no Chrome
+  local com API simulada, incluindo navegação SPA, retry e reload; sem SQL.
+- CI inicial39185256419 aprovou integraçãoSQL/sessões e revelou isolamento de
+  cooldown entre casos browser. Complemento isola checks/larguras, atualiza nomes
+  acessíveis antigos e conserva assertivas. CI39185865120 em andamento no PR3,
+  commit e6d9a54332e743d73522dbf89db02e6e1490c18f. Nenhum avanço da main ainda.
+- Leitura pública única de /api/auth/availability retornou availabletrue,
+  challengefalse. Não prova entrega SMTP e não criou conta nem enviou e-mail.
+
+- CI39186207829 validou9cenários iniciais de conta,13/18 de experiência e7/7 de
+  sessão no browser. Expôs uma race na limpeza do teste (request ainda ativa),
+  seletores antigos e diagnósticos truncados. Backend adicionou dreno limitado5s
+  com checagem final síncrona, sem afrouxar proteção;96/96 unitários passaram.
+  Interface corrigiu retry/preço e garantiu remoção de falhas simuladas em finally.
+  Suítes independentes agora executam mesmo se outra falhar; saída final segue1.
+  CI complementar inclui logs completos de falha e mantém assertiva zero pageerrors.
+- Prévia Chrome local encerrada: aba1275422170 fechada e PID15696 encerrado após
+  conferir comando, viewport restaurado. Nenhum servidor local desta coordenação
+  permaneceu ativo. Arquivo round9-browser-summary.json resume verificações isoladas.

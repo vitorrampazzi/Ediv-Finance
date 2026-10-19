@@ -3,6 +3,7 @@ import { pool } from "./database.js";
 
 let lastCleanup = 0;
 const MAXIMUM_CACHED_BLOCKS = 1000;
+const instances = new Set();
 
 // A shared MySQL counter keeps limits consistent across Vercel instances.
 export class MysqlLimitStore {
@@ -10,6 +11,7 @@ export class MysqlLimitStore {
     this.prefix = prefix;
     this.localKeys = false;
     this.blocked = new Map();
+    instances.add(this);
   }
   init(options) {
     this.windowMs = options.windowMs;
@@ -78,5 +80,10 @@ export class MysqlLimitStore {
     await pool.execute("DELETE FROM request_limits WHERE bucket = ?", [
       this.bucket(key),
     ]);
+  }
+  static clearLocalCaches() {
+    // No HTTP path exposes this: isolated test fixtures call it after resetting
+    // their disposable SQL counters. Production requests never invoke it.
+    for (const store of instances) store.blocked.clear();
   }
 }

@@ -14,6 +14,7 @@ export function LearningQuiz({
   busy,
   disabled,
   authenticated,
+  persisted = true,
   error,
   onAnswer,
 }: {
@@ -23,6 +24,7 @@ export function LearningQuiz({
   busy: boolean;
   disabled: boolean;
   authenticated: boolean;
+  persisted?: boolean;
   error?: string;
   onAnswer: (answer: number) => void;
 }) {
@@ -72,14 +74,19 @@ export function LearningQuiz({
           role="status"
           className="mt-4 flex items-center gap-2 text-sm text-evo-accent"
         >
-          <CheckCircle2 size={16} aria-hidden="true" /> Exercício concluído e
-          progresso {authenticated ? "salvo na sua conta" : "salvo neste navegador"}.
+          <CheckCircle2 size={16} aria-hidden="true" /> Exercício concluído.
+          {authenticated
+            ? " Progresso salvo na sua conta."
+            : persisted
+              ? " Progresso salvo neste navegador."
+              : " Progresso mantido somente nesta sessão."}
         </p>
       )}
       {error && (
         <div className="notice-error mt-4 space-y-3">
           <p role="alert">
-            {error} Sua resposta está nesta tela, mas a conclusão ainda não foi salva.
+            {error} Sua resposta está nesta tela, mas a conclusão ainda não foi
+            salva.
           </p>
           <button
             type="button"

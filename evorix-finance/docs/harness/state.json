@@ -4,38 +4,39 @@
   "sessions": {
     "coordenacao": {
       "phase": "revisao",
-      "summary": "MVP sem catálogo validado;79 testes/lint/build e Chrome320px/desktop;zero consultas de mercado na home",
-      "updatedAt": "2026-10-18T21:15:27.141Z",
+      "summary": "95 testes/lint/build aprovados; CI MySQL integração passou, browser/restore em execução no PR3",
+      "updatedAt": "2026-10-19T06:17:42.890Z",
       "claims": [
-        "src",
-        "server/auth.js",
-        "server/assistant.js",
-        "server/mail.js",
-        "site-pages.mjs",
-        "site-pages.d.mts",
-        "vercel.json",
-        "scripts/prerender.mjs",
         "analytics-policy.mjs",
-        "onboarding.mjs",
-        "tests",
-        "readme.md",
-        "docs/guia-desenvolvedor.md",
-        "docs/analytics-e-privacidade.md",
-        "docs/harness/contexto.md",
+        "tests/analytics.test.mjs",
         "docs/harness/relatos/coordenacao.md",
-        ".test-artifacts"
+        "docs/harness/contexto.md",
+        "docs/correcoes-pre-lancamento.md",
+        ".test-artifacts/round9-unit.log",
+        ".test-artifacts/round9-lint.log",
+        ".test-artifacts/round9-build.log",
+        ".test-artifacts/release-manifest.mjs",
+        ".test-artifacts/release-manifest.json",
+        "package.json",
+        "visitor-learning-progress.d.mts",
+        ".test-artifacts/round9-ci-summary.json",
+        ".test-artifacts/round9-preview.log",
+        ".test-artifacts/round9-preview-error.log",
+        ".test-artifacts/round9-browser-summary.json",
+        "tests/run-browser.mjs",
+        "tests/browser.mjs"
       ]
     },
     "interface": {
-      "phase": "concluido",
-      "summary": "Senha/login entregues; revisão extra interrompida por limite de uso; coordenação concluiu validação final",
-      "updatedAt": "2026-10-18T00:29:39.509Z",
+      "phase": "revisao",
+      "summary": "Regressão viewport exige URL/fontes visível/zero erros; indicador P3 registrado; syntax/lint OK",
+      "updatedAt": "2026-10-19T06:31:04.829Z",
       "claims": []
     },
     "backend": {
-      "phase": "concluido",
-      "summary": "Política senha/schema5 testes entregues; revisão extra indisponível por limite de uso; integração validada pela coordenação",
-      "updatedAt": "2026-10-18T00:29:39.863Z",
+      "phase": "revisao",
+      "summary": "Dreno fixture5s entregue: race SQL rechecada semawait antes reset;4testes+lint/syntax/harnessOK; CIpendente",
+      "updatedAt": "2026-10-19T01:44:10.820Z",
       "claims": []
     }
   }
