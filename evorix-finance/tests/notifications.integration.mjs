@@ -54,7 +54,12 @@ try {
       });
       await new Promise((resolve) => server.listen(0, "127.0.0.1", resolve));
       try {
-        for (const path of ["/api/handler?__path=notifications", "/api/notifications?"]) {
+        for (const path of [
+          "/api/handler?__path=notifications",
+          "/api/notifications?",
+          "/api/handler?__path=notifications&vercelPath=notifications",
+          "/api/notifications?vercelPath=notifications",
+        ]) {
           const root = `http://127.0.0.1:${server.address().port}${path}`;
           for (const [suffix, status] of [["", 200], ["&cursor=1", 200], ["&cursor=invalid", 400], ["&cursor=1&cursor=2", 400], ["&unexpected=1", 400]]) {
             const response = await fetch(root + suffix, { headers: { Cookie: a.cookie } });
