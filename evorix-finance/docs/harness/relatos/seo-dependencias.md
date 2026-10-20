@@ -49,6 +49,11 @@ Os workflows/Dependabot ficam em .github na raiz Git (pasta pai do aplicativo).
 
 - Grafo de dependências, Dependabot alerts/security updates e Malware alerts
   habilitados no painel. Secret Protection e Push protection já estavam ativos.
+- Regra main salva e reaberta para conferência após confirmação de acesso feita
+  pelo usuário: PR obrigatório, checks quality e dependency-security, branch
+  atualizada, sem bypass de administradores, forcepush ou exclusão. Aprovação de
+  outro revisor não é exigida enquanto houver apenas o mantenedor atual.
+  Evidências locais main-protection.png e github-security-enabled.png.
 - PR4: https://github.com/vitorrampazzi/Ediv-Finance/pull/4.
 - Primeira CI Linux/Node22 de dependências39365806067:success, incluindo instalação
   sem scripts, audit, assinaturas e hashArgon2. A CI geral passou99unitários,
@@ -63,7 +68,13 @@ Os workflows/Dependabot ficam em .github na raiz Git (pasta pai do aplicativo).
   preservando navegação para a publicação correta e leitura persistente.
 - Nova execução remota obrigatória antes do merge; sem bypass da proteção.
 
-## Próximo passo
+## Entrega e operação
 
-Concluir configuração GitHub, CI Linux, publicação, sitemap e validar os estados
-externos. Não houve migração, mudança de credencial nem escrita no banco real.
+Os checks e o resultado de integração/publicação ficam registrados na PR4. A main
+só recebe esta alteração quando as duas verificações estiverem aprovadas. O
+domínio verificado, sitemap processado e alertas GitHub foram confirmados no painel.
+Não houve migração, mudança de credencial nem escrita no banco real. Perfil da
+Empresa permanece indisponível para operação exclusivamente online.
+
+Depois da integração, conferir /llms.txt e /api/health no domínio oficial. Para
+atualizações futuras, usar PRs: a proteção da main também se aplica ao proprietário.

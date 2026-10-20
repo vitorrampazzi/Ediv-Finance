@@ -18,6 +18,8 @@
   de severidades menores permanecem visíveis para análise.
 - Dependabot verifica npm e GitHub Actions semanalmente, abrindo PRs. Atualizações
   minor/patch npm são agrupadas; majors ficam separadas. Não há merge automático.
+- A main exige PR, quality e dependency-security aprovados e branch atualizada,
+  inclusive para administradores; forcepush e exclusão estão bloqueados.
 - Actions existentes usam referências por SHA e tokens de leitura. Os workflows
   não recebem credenciais de produção. Instalações ainda precisam de acesso ao npm.
 
