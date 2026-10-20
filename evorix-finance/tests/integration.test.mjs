@@ -895,6 +895,7 @@ try {
         });
         assert.equal(writeLimit.status, 429);
         assert.equal(writeLimit.body.code, "RATE_LIMITED");
+        assert.ok(writeLimit.headers.has("ratelimit"));
         await fixture.clearLimits();
         assert.equal(
           (await request(a, "/api/favorites/RATE3", { method: "PUT" })).status,
