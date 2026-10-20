@@ -15,7 +15,7 @@ test("llms.txt contém somente links públicos canônicos e descreve o acesso re
     new URL("../public/llms.txt", import.meta.url),
     "utf8",
   );
-  assert.match(content, /^# Escola do Dividendo\n/);
+  assert.match(content, /^# Escola do Dividendo\r?\n/);
   assert.match(content, /exigem autenticação/);
   assert.match(content, /dados fictícios/);
   const links = [...content.matchAll(/\]\((https?:\/\/[^)]+)\)/g)];

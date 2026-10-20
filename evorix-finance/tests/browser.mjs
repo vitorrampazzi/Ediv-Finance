@@ -665,7 +665,7 @@ try {
     async () => {
       await page.getByRole("button", { name: /^Notificações/ }).click();
       await expect(
-        page.getByRole("heading", { name: "Notificações de pesquisas" }),
+        page.getByRole("heading", { name: "Notificações", exact: true }),
       ).toBeVisible();
       await page.locator("#ediv-notifications a").first().click();
       await expect(page).toHaveURL(new RegExp("publication=" + second));

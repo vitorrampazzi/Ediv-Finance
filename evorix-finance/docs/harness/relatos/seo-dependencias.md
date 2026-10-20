@@ -57,7 +57,11 @@ Os workflows/Dependabot ficam em .github na raiz Git (pasta pai do aplicativo).
   aguardava a janela e convertia a resposta esperada em sucesso. Agora preserva
  429 do middleware SQL (headerRateLimit) e permite desabilitar explicitamente
   o retry de admission no teste desse próprio limite. Limites de produção intactos.
-- Regressão SQL local após ajuste:17/17. Reexecução remota em andamento.
+- Regressão SQL local após ajuste:17/17; CI39366458841 também aprovou integração
+  completa e a instalação/Linux. O browser antigo esperava o heading retirado
+  “Notificações de pesquisas”; seletor atualizado para o título atual “Notificações”,
+  preservando navegação para a publicação correta e leitura persistente.
+- Nova execução remota obrigatória antes do merge; sem bypass da proteção.
 
 ## Próximo passo
 
