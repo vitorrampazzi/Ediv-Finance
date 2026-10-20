@@ -908,7 +908,9 @@ try {
             200,
           );
         }
-        const burst = await request(null, "/api/auth/availability");
+        const burst = await request(null, "/api/auth/availability", {
+          retryAdmission: false,
+        });
         assert.equal(burst.status, 429);
         assert.equal(burst.body.code, "RATE_LIMITED");
         await fixture.clearLimits();

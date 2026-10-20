@@ -25,7 +25,7 @@ Os workflows/Dependabot ficam em .github na raiz Git (pasta pai do aplicativo).
 - Instalação limpa isolada em .test-artifacts/dependency-clean com npm ci
   --ignore-scripts:317pacotes instalados, zero vulnerabilidades. Teste do hash
   e lock nesse ambiente:2/2, sem arquivos do node_modules original alterados.
-- npm test:99/99 aprovados. Lint aprovado antes da formatação final dos testes.
+- npm test:99/99 aprovados. Lint e build aprovados, inclusive após a formatação.
 - Node local24.20.0/npm11.19.0; CI/produção usam Node22. Validar em Linux na CI
   antes de integrar à main. Build e resultados remotos serão registrados abaixo.
 
@@ -39,8 +39,25 @@ Os workflows/Dependabot ficam em .github na raiz Git (pasta pai do aplicativo).
 - TXT salvo preservando os seis registros DNS anteriores; Google confirmou
   “Propriedade verificada” pelo provedor de domínio. Não remover o TXT.
 - Evidência local: .test-artifacts/seo-dependencies/search-console-verified.png.
-- Envio do sitemap e solicitação de indexação em andamento; indexação e posições
-  não são garantidas por essas ações.
+- Sitemap enviado e confirmado como “Processado”, com8páginas encontradas.
+  Inspeção da home confirmou “O URL está no Google / A página está indexada”.
+  Não foi consumida outra solicitação de indexação para uma página já indexada.
+  Evidências locais sitemap-processed.png e home-indexed.png na mesma pasta.
+- Perfil da Empresa não criado, conforme elegibilidade confirmada pelo usuário.
+
+## GitHub e CI
+
+- Grafo de dependências, Dependabot alerts/security updates e Malware alerts
+  habilitados no painel. Secret Protection e Push protection já estavam ativos.
+- PR4: https://github.com/vitorrampazzi/Ediv-Finance/pull/4.
+- Primeira CI Linux/Node22 de dependências39365806067:success, incluindo instalação
+  sem scripts, audit, assinaturas e hashArgon2. A CI geral passou99unitários,
+  lint/build e15cenáriosSQL, mas o cenário de limite falhou.
+- Causa da falha: tests/fixture.mjs repetia qualquer429 RATE_LIMITED. O helper
+  aguardava a janela e convertia a resposta esperada em sucesso. Agora preserva
+ 429 do middleware SQL (headerRateLimit) e permite desabilitar explicitamente
+  o retry de admission no teste desse próprio limite. Limites de produção intactos.
+- Regressão SQL local após ajuste:17/17. Reexecução remota em andamento.
 
 ## Próximo passo
 
