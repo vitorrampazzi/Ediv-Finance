@@ -7,7 +7,27 @@ import {
   accountPaths,
   retiredPages,
   retiredPageDestination,
+  siteOrigin,
 } from "../site-pages.mjs";
+
+test("llms.txt contém somente links públicos canônicos e descreve o acesso restrito", async () => {
+  const content = await readFile(
+    new URL("../public/llms.txt", import.meta.url),
+    "utf8",
+  );
+  assert.match(content, /^# Escola do Dividendo\n/);
+  assert.match(content, /exigem autenticação/);
+  assert.match(content, /dados fictícios/);
+  const links = [...content.matchAll(/\]\((https?:\/\/[^)]+)\)/g)];
+  assert.ok(links.length >= 5);
+  for (const [, href] of links) {
+    const url = new URL(href);
+    assert.equal(url.origin, siteOrigin);
+    assert.ok(Object.hasOwn(publicPages, url.pathname));
+    assert.equal(url.search, "");
+    assert.equal(url.hash, "");
+  }
+});
 
 test("home apresenta dividendos e pesquisa de ações nos metadados", () => {
   const home = pageMetadata("/");
