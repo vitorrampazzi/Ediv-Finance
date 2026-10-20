@@ -895,6 +895,7 @@ try {
         });
         assert.equal(writeLimit.status, 429);
         assert.equal(writeLimit.body.code, "RATE_LIMITED");
+        assert.ok(writeLimit.headers.has("ratelimit"));
         await fixture.clearLimits();
         assert.equal(
           (await request(a, "/api/favorites/RATE3", { method: "PUT" })).status,
@@ -907,7 +908,9 @@ try {
             200,
           );
         }
-        const burst = await request(null, "/api/auth/availability");
+        const burst = await request(null, "/api/auth/availability", {
+          retryAdmission: false,
+        });
         assert.equal(burst.status, 429);
         assert.equal(burst.body.code, "RATE_LIMITED");
         await fixture.clearLimits();

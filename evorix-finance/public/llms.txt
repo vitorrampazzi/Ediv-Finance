@@ -1,0 +1,23 @@
+# Escola do Dividendo
+
+> Plataforma de educação sobre ações e dividendos, com aulas, glossário e pesquisas de empresas.
+
+O conteúdo público apresenta a escola e seus materiais educativos. As pesquisas
+completas e as ferramentas da conta exigem autenticação. Exemplos identificados
+como demonstração usam dados fictícios; não são pesquisas publicadas do analista.
+
+## Conheça a escola
+
+- [Início](https://escoladodividendo.com.br/): apresentação da Escola do Dividendo.
+- [Pesquisa e metodologia](https://escoladodividendo.com.br/metodologia): organização das pesquisas, fontes e cenários.
+- [Ranking de ações](https://escoladodividendo.com.br/ranking): apresentação pública e acesso às pesquisas mediante cadastro.
+
+## Aprendizado
+
+- [Aulas sobre dividendos](https://escoladodividendo.com.br/aprender): apresentação dos cursos e primeira aula aberta.
+- [Glossário de investimentos](https://escoladodividendo.com.br/glossario): explicações dos termos usados na escola.
+
+## Ajuda e privacidade
+
+- [Dúvidas e suporte](https://escoladodividendo.com.br/suporte): ajuda sobre o funcionamento do site.
+- [Privacidade](https://escoladodividendo.com.br/privacidade): informações sobre dados e controles da conta.

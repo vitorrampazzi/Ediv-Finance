@@ -179,6 +179,7 @@ export async function createFixture() {
         raw,
         headers = {},
         originHeader = "http://127.0.0.1:4180",
+        retryAdmission = true,
       } = {},
     ) {
       for (let attempt = 0; ; attempt++) {
@@ -211,7 +212,13 @@ export async function createFixture() {
           headers: response.headers,
         };
         // Admission rejects before handlers; business quotas must remain observable.
-        if (response.status !== 429 || value?.code !== "RATE_LIMITED" || attempt === 2)
+        if (
+          response.status !== 429 ||
+          value?.code !== "RATE_LIMITED" ||
+          !retryAdmission ||
+          response.headers.has("ratelimit") ||
+          attempt === 2
+        )
           return result;
         const retryAfter = response.headers.get("retry-after");
         if (!retryAfter || !/^\d+$/.test(retryAfter)) return result;
