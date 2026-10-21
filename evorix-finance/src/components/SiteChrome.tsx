@@ -1,3 +1,4 @@
+import { Tooltip } from "./Tooltip";
 import { ArrowRight, BookOpen, Menu, TrendingUp, X } from "lucide-react";
 import type { ReactNode } from "react";
 import { useEffect, useRef, useState } from "react";
@@ -59,16 +60,16 @@ export function SiteHeader({
   }, [mobileMenuOpen]);
   return (
     <>
-      <a
-        href="#conteudo"
-        className="sr-only z-50 rounded bg-evo-primary px-4 py-2 text-white focus:not-sr-only focus:fixed focus:left-4 focus:top-4"
-      >
-        Pular para o conteúdo
-      </a>
       <header
         ref={headerRef}
         className="ediv-site-header sticky top-0 z-40 pt-[env(safe-area-inset-top)]"
       >
+        <a
+          href="#conteudo"
+          className="sr-only z-50 rounded bg-evo-primary px-4 py-2 text-white focus:not-sr-only focus:fixed focus:left-4 focus:top-4"
+        >
+          Pular para o conteúdo
+        </a>
         <div className="relative mx-auto flex min-h-16 max-w-7xl items-center justify-between gap-3 px-4 py-3 sm:px-5 md:min-h-20 md:px-8">
           <Link
             to={user ? "/app" : "/"}
@@ -143,21 +144,23 @@ export function SiteHeader({
                   <ArrowRight size={14} aria-hidden="true" />
                 )}
               </Link>
-              <button
-                ref={menuButton}
-                type="button"
-                onClick={() => setMenuRoute(mobileMenuOpen ? null : routeKey)}
-                aria-label={mobileMenuOpen ? "Fechar menu" : "Abrir menu"}
-                aria-expanded={mobileMenuOpen}
-                aria-controls="public-mobile-menu"
-                className="ediv-chrome-icon inline-flex h-11 w-11 items-center justify-center"
-              >
-                {mobileMenuOpen ? (
-                  <X size={19} aria-hidden="true" />
-                ) : (
-                  <Menu size={19} aria-hidden="true" />
-                )}
-              </button>
+              <Tooltip content={mobileMenuOpen ? "Fechar menu" : "Abrir menu"}>
+                <button
+                  ref={menuButton}
+                  type="button"
+                  onClick={() => setMenuRoute(mobileMenuOpen ? null : routeKey)}
+                  aria-label={mobileMenuOpen ? "Fechar menu" : "Abrir menu"}
+                  aria-expanded={mobileMenuOpen}
+                  aria-controls="public-mobile-menu"
+                  className="ediv-chrome-icon inline-flex h-11 w-11 items-center justify-center"
+                >
+                  {mobileMenuOpen ? (
+                    <X size={19} aria-hidden="true" />
+                  ) : (
+                    <Menu size={19} aria-hidden="true" />
+                  )}
+                </button>
+              </Tooltip>
             </div>
           </div>
           <AnimatePresence initial={false}>
@@ -338,7 +341,7 @@ export function PublicLayout({ children }: { children?: ReactNode }) {
   return (
     <div className="flex min-h-screen flex-col bg-evo-bgMain text-evo-textMain">
       <SiteHeader showRegistrationAction={!isHome} />
-      <main id="conteudo" className="min-w-0 flex-1">
+      <main id="conteudo" tabIndex={-1} className="min-w-0 flex-1">
         <PageContent>{children ?? <Outlet />}</PageContent>
       </main>
       <SiteFooter showRegistrationLink={!isHome} />

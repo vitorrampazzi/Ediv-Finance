@@ -50,9 +50,16 @@ export function AuthShell({
   );
 }
 
-export function ErrorMessage({ children }: { children: string }) {
+export function ErrorMessage({
+  children,
+  id,
+}: {
+  children: string;
+  id?: string;
+}) {
   return (
     <p
+      id={id}
       role="alert"
       className="mt-4 flex items-start gap-2 rounded-lg border border-evo-red/20 bg-evo-red/5 p-3 text-sm text-evo-red"
     >

@@ -47,6 +47,7 @@ export const Configuracoes = () => {
     }
     if (password !== repeat) {
       setError("As novas senhas precisam ser iguais.");
+      document.getElementById("settings-confirm-password")?.focus();
       return;
     }
     void action(async () => {
@@ -62,11 +63,12 @@ export const Configuracoes = () => {
       <header>
         <h1 className="text-2xl font-bold">Conta e segurança</h1>
         <p className="mt-2 text-sm text-evo-textSec">
-          Controle seu acesso e os dados que você registra na Escola do Dividendo.
+          Controle seu acesso e os dados que você registra na Escola do
+          Dividendo.
         </p>
       </header>
       {error && (
-        <p role="alert" className="notice-error">
+        <p id="settings-error" role="alert" className="notice-error">
           {error}
         </p>
       )}
@@ -82,6 +84,7 @@ export const Configuracoes = () => {
             </label>
             <PasswordInput
               id="settings-current-password"
+              aria-describedby={error ? "settings-error" : undefined}
               visibilityLabel="senha atual"
               containerClassName="mt-2"
               required
@@ -97,7 +100,17 @@ export const Configuracoes = () => {
             </label>
             <PasswordInput
               id="settings-new-password"
-              aria-describedby="settings-password-hint"
+              aria-describedby={[
+                "settings-password-hint",
+                error && "settings-error",
+              ]
+                .filter(Boolean)
+                .join(" ")}
+              aria-invalid={
+                Boolean(
+                  error === passwordPolicyHint && !isValidNewPassword(password),
+                ) || undefined
+              }
               visibilityLabel="nova senha"
               containerClassName="mt-2"
               required
@@ -115,7 +128,14 @@ export const Configuracoes = () => {
             </label>
             <PasswordInput
               id="settings-confirm-password"
+              aria-describedby={error ? "settings-error" : undefined}
               visibilityLabel="confirmação da nova senha"
+              aria-invalid={
+                Boolean(
+                  error === "As novas senhas precisam ser iguais." &&
+                  password !== repeat,
+                ) || undefined
+              }
               containerClassName="mt-2"
               required
               minLength={passwordMinLength}
@@ -197,6 +217,7 @@ export const Configuracoes = () => {
               </label>
               <PasswordInput
                 id="delete-account-password"
+                aria-describedby={error ? "settings-error" : undefined}
                 visibilityLabel="senha para confirmar a exclusão"
                 containerClassName="mt-2"
                 autoComplete="current-password"

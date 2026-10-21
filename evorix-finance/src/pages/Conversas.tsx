@@ -234,6 +234,16 @@ function MemberConversations({ teamView }: { teamView: boolean }) {
                 Assunto
                 <input
                   ref={subjectRef}
+                  aria-describedby={
+                    [
+                      (formError || support.createError) &&
+                        "support-create-error",
+                      subject.length > subjectLimit && "support-subject-error",
+                    ]
+                      .filter(Boolean)
+                      .join(" ") || undefined
+                  }
+                  aria-invalid={subject.length > subjectLimit || undefined}
                   className="field mt-2"
                   required
                   minLength={3}
@@ -245,7 +255,11 @@ function MemberConversations({ teamView }: { teamView: boolean }) {
                 />
               </label>
               {subject.length > subjectLimit && (
-                <p role="alert" className="text-xs text-evo-red">
+                <p
+                  id="support-subject-error"
+                  role="alert"
+                  className="text-xs text-evo-red"
+                >
                   Reduza o assunto para até {subjectLimit} caracteres neste
                   tema.
                 </p>
@@ -253,6 +267,11 @@ function MemberConversations({ teamView }: { teamView: boolean }) {
               <label className="block text-sm font-medium">
                 Sua mensagem
                 <textarea
+                  aria-describedby={
+                    formError || support.createError
+                      ? "support-create-error"
+                      : undefined
+                  }
                   className="field mt-2 min-h-36 py-3"
                   required
                   minLength={2}
@@ -271,7 +290,11 @@ function MemberConversations({ teamView }: { teamView: boolean }) {
                 <span>{body.length}/3.000</span>
               </div>
               {(formError || support.createError) && (
-                <p role="alert" className="notice-error">
+                <p
+                  id="support-create-error"
+                  role="alert"
+                  className="notice-error"
+                >
                   {formError || support.createError}
                 </p>
               )}

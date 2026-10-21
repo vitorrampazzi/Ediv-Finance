@@ -1,3 +1,4 @@
+import { Tooltip } from "./Tooltip";
 import { useId, useRef, useState } from "react";
 import { CompanyLogo } from "./CompanyLogo";
 import {
@@ -309,9 +310,13 @@ export function ResearchEditor({
                   {required ? " *" : " (opcional)"}
                   {maximum >= 2000 ? (
                     <textarea
+                      aria-invalid={
+                        Boolean(error && required && !draft[key].trim()) ||
+                        undefined
+                      }
                       id={`${fieldPrefix}-${key}`}
                       aria-label={label + (required ? " *" : " (opcional)")}
-                      aria-describedby={`${fieldPrefix}-${key}-count`}
+                      aria-describedby={`${fieldPrefix}-${key}-count${error ? ` ${fieldPrefix}-error` : ""}`}
                       className={input + " min-h-32"}
                       maxLength={maximum}
                       value={draft[key]}
@@ -320,9 +325,13 @@ export function ResearchEditor({
                     />
                   ) : (
                     <input
+                      aria-invalid={
+                        Boolean(error && required && !draft[key].trim()) ||
+                        undefined
+                      }
                       id={`${fieldPrefix}-${key}`}
                       aria-label={label + (required ? " *" : " (opcional)")}
-                      aria-describedby={`${fieldPrefix}-${key}-count`}
+                      aria-describedby={`${fieldPrefix}-${key}-count${error ? ` ${fieldPrefix}-error` : ""}`}
                       className={input}
                       required={required}
                       maxLength={maximum}
@@ -469,42 +478,48 @@ export function ResearchEditor({
                         </span>
                       </span>
                       <div className="flex gap-2">
-                        <button
-                          type="button"
-                          disabled={unavailable}
-                          className={button}
-                          aria-label={`Editar ${entry.ticker}`}
-                          onClick={() => edit(index)}
-                        >
-                          <Pencil size={15} aria-hidden="true" />
-                          <span className="hidden sm:inline">Editar</span>
-                        </button>
-                        <button
-                          type="button"
-                          disabled={unavailable}
-                          className={button}
-                          aria-label={`Remover ${entry.ticker} da lista`}
-                          onClick={() =>
-                            confirm({
-                              title: `Remover ${entry.ticker} desta lista?`,
-                              description:
-                                "A empresa será removida do conteúdo local. Essa ação não altera pesquisas publicadas nem o rascunho salvo até você salvar novamente. Se estiver editando esta empresa, seus campos também serão removidos.",
-                              confirmLabel: "Remover da lista",
-                              onConfirm: () => {
-                                onContentChange?.();
-                                setEntries((current) =>
-                                  current.filter((_, item) => item !== index),
-                                );
-                                if (editing === index) resetWorking();
-                                else if (editing !== null && editing > index)
-                                  setEditing(editing - 1);
-                                setMessage("Empresa removida da lista local.");
-                              },
-                            })
-                          }
-                        >
-                          <Trash2 size={15} aria-hidden="true" />
-                        </button>
+                        <Tooltip content={`Editar ${entry.ticker}`}>
+                          <button
+                            type="button"
+                            disabled={unavailable}
+                            className={button}
+                            aria-label={`Editar ${entry.ticker}`}
+                            onClick={() => edit(index)}
+                          >
+                            <Pencil size={15} aria-hidden="true" />
+                            <span className="hidden sm:inline">Editar</span>
+                          </button>
+                        </Tooltip>
+                        <Tooltip content={`Remover ${entry.ticker} da lista`}>
+                          <button
+                            type="button"
+                            disabled={unavailable}
+                            className={button}
+                            aria-label={`Remover ${entry.ticker} da lista`}
+                            onClick={() =>
+                              confirm({
+                                title: `Remover ${entry.ticker} desta lista?`,
+                                description:
+                                  "A empresa será removida do conteúdo local. Essa ação não altera pesquisas publicadas nem o rascunho salvo até você salvar novamente. Se estiver editando esta empresa, seus campos também serão removidos.",
+                                confirmLabel: "Remover da lista",
+                                onConfirm: () => {
+                                  onContentChange?.();
+                                  setEntries((current) =>
+                                    current.filter((_, item) => item !== index),
+                                  );
+                                  if (editing === index) resetWorking();
+                                  else if (editing !== null && editing > index)
+                                    setEditing(editing - 1);
+                                  setMessage(
+                                    "Empresa removida da lista local.",
+                                  );
+                                },
+                              })
+                            }
+                          >
+                            <Trash2 size={15} aria-hidden="true" />
+                          </button>
+                        </Tooltip>
                       </div>
                     </div>
                     {issues.length > 0 ? (
@@ -574,7 +589,11 @@ export function ResearchEditor({
         )}
       </section>
       {error && (
-        <p role="alert" className="notice-error mt-3">
+        <p
+          id={`${fieldPrefix}-error`}
+          role="alert"
+          className="notice-error mt-3"
+        >
           {error}
         </p>
       )}

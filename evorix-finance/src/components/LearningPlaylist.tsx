@@ -1,3 +1,4 @@
+import { Tooltip } from "./Tooltip";
 import { useEffect, useRef, type KeyboardEvent } from "react";
 import {
   CheckCircle2,
@@ -128,24 +129,28 @@ export function LearningPlaylist({
           </p>
         </div>
         <div className="flex shrink-0 gap-1">
-          <button
-            type="button"
-            aria-label="Selecionar aula anterior"
-            disabled={selectedIndex <= 0}
-            onClick={() => selectAdjacent(-1)}
-            className="ediv-learning-navigation-button"
-          >
-            <ChevronLeft size={18} aria-hidden="true" />
-          </button>
-          <button
-            type="button"
-            aria-label="Selecionar próxima aula"
-            disabled={selectedIndex < 0 || selectedIndex >= items.length - 1}
-            onClick={() => selectAdjacent(1)}
-            className="ediv-learning-navigation-button"
-          >
-            <ChevronRight size={18} aria-hidden="true" />
-          </button>
+          <Tooltip content={"Selecionar aula anterior"}>
+            <button
+              type="button"
+              aria-label="Selecionar aula anterior"
+              disabled={selectedIndex <= 0}
+              onClick={() => selectAdjacent(-1)}
+              className="ediv-learning-navigation-button"
+            >
+              <ChevronLeft size={18} aria-hidden="true" />
+            </button>
+          </Tooltip>
+          <Tooltip content={"Selecionar próxima aula"}>
+            <button
+              type="button"
+              aria-label="Selecionar próxima aula"
+              disabled={selectedIndex < 0 || selectedIndex >= items.length - 1}
+              onClick={() => selectAdjacent(1)}
+              className="ediv-learning-navigation-button"
+            >
+              <ChevronRight size={18} aria-hidden="true" />
+            </button>
+          </Tooltip>
         </div>
       </header>
 

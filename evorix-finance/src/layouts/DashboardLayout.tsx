@@ -1,3 +1,4 @@
+import { Tooltip } from "../components/Tooltip";
 import { useEffect, useRef, useState } from "react";
 import {
   AnimatePresence,
@@ -97,35 +98,36 @@ function NavigationLink({
 }) {
   const reducedMotion = useReducedMotion();
   return (
-    <NavLink
-      to={to}
-      data-tour={tour}
-      end={end}
-      title={collapsed ? label : undefined}
-      aria-label={collapsed ? label : undefined}
-      className={({ isActive }) =>
-        `ediv-sidebar-link relative flex min-h-11 items-center gap-3 px-3 py-2.5 text-sm ${collapsed ? "justify-center" : ""} ${isActive ? "is-current" : ""}`
-      }
-    >
-      {({ isActive }) => (
-        <>
-          {isActive && (
-            <motion.span
-              aria-hidden="true"
-              className="ediv-sidebar-indicator"
-              layoutId="sidebar-selection"
-              transition={{
-                type: "spring",
-                bounce: 0,
-                duration: reducedMotion ? 0 : 0.32,
-              }}
-            />
-          )}
-          <Icon size={18} strokeWidth={1.7} aria-hidden="true" />
-          {!collapsed && <span className="font-medium">{label}</span>}
-        </>
-      )}
-    </NavLink>
+    <Tooltip content={collapsed ? label : ""}>
+      <NavLink
+        to={to}
+        data-tour={tour}
+        end={end}
+        aria-label={collapsed ? label : undefined}
+        className={({ isActive }) =>
+          `ediv-sidebar-link relative flex min-h-11 items-center gap-3 px-3 py-2.5 text-sm ${collapsed ? "justify-center" : ""} ${isActive ? "is-current" : ""}`
+        }
+      >
+        {({ isActive }) => (
+          <>
+            {isActive && (
+              <motion.span
+                aria-hidden="true"
+                className="ediv-sidebar-indicator"
+                layoutId="sidebar-selection"
+                transition={{
+                  type: "spring",
+                  bounce: 0,
+                  duration: reducedMotion ? 0 : 0.32,
+                }}
+              />
+            )}
+            <Icon size={18} strokeWidth={1.7} aria-hidden="true" />
+            {!collapsed && <span className="font-medium">{label}</span>}
+          </>
+        )}
+      </NavLink>
+    </Tooltip>
   );
 }
 
@@ -185,20 +187,24 @@ function ProfileMenu({
 
   return (
     <div className="relative" ref={ref}>
-      <button
-        ref={trigger}
-        data-tour="conta"
-        type="button"
-        onClick={() => setMenuRoute(open ? null : routeKey)}
-        aria-label={`${open ? "Fechar" : "Abrir"} menu da conta de ${name}`}
-        aria-expanded={open}
-        aria-controls="demo-profile-links"
-        className="ediv-chrome-icon ediv-account-avatar flex h-11 w-11 items-center justify-center rounded-full"
+      <Tooltip
+        content={`${initials ? initials + " · " : ""}${open ? "Fechar" : "Abrir"} menu da conta de ${name}`}
       >
-        <span aria-hidden="true" className="text-xs font-bold">
-          {initials || <CircleUserRound size={20} />}
-        </span>
-      </button>
+        <button
+          ref={trigger}
+          data-tour="conta"
+          type="button"
+          onClick={() => setMenuRoute(open ? null : routeKey)}
+          aria-label={`${open ? "Fechar" : "Abrir"} menu da conta de ${name}${initials ? " · " + initials : ""}`}
+          aria-expanded={open}
+          aria-controls="demo-profile-links"
+          className="ediv-chrome-icon ediv-account-avatar flex h-11 w-11 items-center justify-center rounded-full"
+        >
+          <span aria-hidden="true" className="text-xs font-bold">
+            {initials || <CircleUserRound size={20} />}
+          </span>
+        </button>
+      </Tooltip>
       <AnimatePresence initial={false}>
         {open && (
           <motion.div
@@ -335,43 +341,51 @@ export const DashboardLayout = () => {
 
   return (
     <div className="account-workspace flex min-h-screen bg-evo-bgMain font-sans text-evo-textMain">
-      <a
-        href="#conteudo"
-        className="sr-only z-50 rounded bg-evo-primary px-4 py-2 text-white focus:not-sr-only focus:fixed focus:left-4 focus:top-4"
-      >
-        Pular para o conteúdo
-      </a>
+      <nav aria-label="Atalho para o conteúdo">
+        <a
+          href="#conteudo"
+          className="sr-only z-50 rounded bg-evo-primary px-4 py-2 text-white focus:not-sr-only focus:fixed focus:left-4 focus:top-4"
+        >
+          Pular para o conteúdo
+        </a>
+      </nav>
       <aside
         className={`ediv-account-sidebar hidden shrink-0 transition-[width] duration-200 motion-reduce:transition-none lg:sticky lg:top-0 lg:flex lg:h-screen lg:min-h-0 lg:flex-col ${collapsed ? "w-20" : "w-60"}`}
       >
         <div className="flex min-h-20 shrink-0 items-center justify-center px-3">
-          <button
-            type="button"
-            onClick={() => setCollapsed((value) => !value)}
-            aria-label={
+          <Tooltip
+            content={
               collapsed ? "Expandir menu lateral" : "Recolher menu lateral"
             }
-            aria-expanded={!collapsed}
-            aria-controls="account-sidebar-navigation"
-            className="ediv-sidebar-logo ediv-chrome-icon group relative flex h-14 w-14 items-center justify-center rounded-xl"
           >
-            <img
-              src="/ediv-logo-clean.png"
-              alt=""
-              aria-hidden="true"
-              className="h-10 w-10 object-contain"
-            />
-            <span
-              aria-hidden="true"
-              className="pointer-events-none absolute -right-1 bottom-0 flex size-6 items-center justify-center rounded-full border border-evo-border bg-evo-bgInset text-evo-accent opacity-0 transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100 motion-reduce:transition-none [@media(hover:none)]:opacity-100"
+            <button
+              type="button"
+              onClick={() => setCollapsed((value) => !value)}
+              aria-label={
+                collapsed ? "Expandir menu lateral" : "Recolher menu lateral"
+              }
+              aria-expanded={!collapsed}
+              aria-controls="account-sidebar-navigation"
+              className="ediv-sidebar-logo ediv-chrome-icon group relative flex h-14 w-14 items-center justify-center rounded-xl"
             >
-              {collapsed ? (
-                <ChevronRight size={15} />
-              ) : (
-                <ChevronLeft size={15} />
-              )}
-            </span>
-          </button>
+              <img
+                src="/ediv-logo-clean.png"
+                alt=""
+                aria-hidden="true"
+                className="h-10 w-10 object-contain"
+              />
+              <span
+                aria-hidden="true"
+                className="pointer-events-none absolute -right-1 bottom-0 flex size-6 items-center justify-center rounded-full border border-evo-border bg-evo-bgInset text-evo-accent opacity-0 transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100 motion-reduce:transition-none [@media(hover:none)]:opacity-100"
+              >
+                {collapsed ? (
+                  <ChevronRight size={15} />
+                ) : (
+                  <ChevronLeft size={15} />
+                )}
+              </span>
+            </button>
+          </Tooltip>
         </div>
         <div
           aria-hidden="true"
@@ -428,17 +442,18 @@ export const DashboardLayout = () => {
           </LayoutGroup>
         </nav>
         <div className="shrink-0 border-t border-evo-border/70 p-4">
-          <NavLink
-            to="/app/conversas"
-            title={collapsed ? "Dúvidas e suporte" : undefined}
-            aria-label={collapsed ? "Dúvidas e suporte" : undefined}
-            className={({ isActive }) =>
-              `ediv-sidebar-link flex min-h-11 items-center gap-3 px-3 text-sm ${collapsed ? "justify-center" : ""} ${isActive ? "is-current" : ""}`
-            }
-          >
-            <Headset size={18} strokeWidth={1.6} aria-hidden="true" />
-            {!collapsed && <span>Dúvidas e suporte</span>}
-          </NavLink>
+          <Tooltip content={collapsed ? "Dúvidas e suporte" : ""}>
+            <NavLink
+              to="/app/conversas"
+              aria-label={collapsed ? "Dúvidas e suporte" : undefined}
+              className={({ isActive }) =>
+                `ediv-sidebar-link flex min-h-11 items-center gap-3 px-3 text-sm ${collapsed ? "justify-center" : ""} ${isActive ? "is-current" : ""}`
+              }
+            >
+              <Headset size={18} strokeWidth={1.6} aria-hidden="true" />
+              {!collapsed && <span>Dúvidas e suporte</span>}
+            </NavLink>
+          </Tooltip>
         </div>
       </aside>
 
@@ -463,14 +478,16 @@ export const DashboardLayout = () => {
             <span data-tour="tema" className="inline-flex">
               <ThemeToggle />
             </span>
-            <Link
-              to="/app/conversas"
-              data-tour="suporte"
-              aria-label="Dúvidas e suporte"
-              className="ediv-chrome-icon inline-flex min-h-11 min-w-11 items-center justify-center"
-            >
-              <Headset size={20} />
-            </Link>
+            <Tooltip content="Dúvidas e suporte">
+              <Link
+                to="/app/conversas"
+                data-tour="suporte"
+                aria-label="Dúvidas e suporte"
+                className="ediv-chrome-icon inline-flex min-h-11 min-w-11 items-center justify-center"
+              >
+                <Headset size={20} />
+              </Link>
+            </Tooltip>
             <NotificationsMenu key={user?.id} />
             {user && (
               <ProfileMenu
@@ -485,6 +502,7 @@ export const DashboardLayout = () => {
 
         <main
           id="conteudo"
+          tabIndex={-1}
           className="w-full min-w-0 flex-1 px-4 pt-4 pb-[calc(5rem+env(safe-area-inset-bottom))] md:px-8 md:pt-10 lg:pb-8"
         >
           <PageContent key={user?.id}>

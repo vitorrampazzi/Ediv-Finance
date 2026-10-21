@@ -1,4 +1,5 @@
-﻿import { useEffect, useRef, useState } from "react";
+import { Tooltip } from "./Tooltip";
+import { useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { Bell, CheckCheck } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
@@ -63,29 +64,33 @@ export function NotificationsMenu() {
   if (!authenticated) return null;
   return (
     <div className="relative" ref={ref}>
-      <button
-        ref={trigger}
-        type="button"
-        aria-label={
+      <Tooltip
+        content={
           "Notificações" +
           (data?.unreadCount ? " · " + data.unreadCount + " não lidas" : "")
         }
-        aria-expanded={open}
-        aria-controls="ediv-notifications"
-        onClick={() => setMenuRoute(open ? null : routeKey)}
-        className="ediv-chrome-icon relative min-h-11 min-w-11 p-3"
       >
-        <Bell size={20} aria-hidden="true" />
-        {Boolean(data?.unreadCount) && (
-          <span
-            aria-hidden="true"
-            className="ediv-notification-count absolute right-0 top-0 rounded-full px-1.5 text-[10px]"
-          >
-            {Math.min(data?.unreadCount || 0, 99)}
-            {(data?.unreadCount || 0) > 99 ? "+" : ""}
-          </span>
-        )}
-      </button>
+        <button
+          ref={trigger}
+          type="button"
+          aria-label={
+            "Notificações" +
+            (data?.unreadCount ? " · " + data.unreadCount + " não lidas" : "")
+          }
+          aria-expanded={open}
+          aria-controls="ediv-notifications"
+          onClick={() => setMenuRoute(open ? null : routeKey)}
+          className="ediv-chrome-icon relative min-h-11 min-w-11 p-3"
+        >
+          <Bell size={20} aria-hidden="true" />
+          {Boolean(data?.unreadCount) && (
+            <span aria-hidden="true" className="ediv-notification-count absolute right-0 top-0 rounded-full px-1.5 text-[10px]">
+              {Math.min(data?.unreadCount || 0, 99)}
+              {(data?.unreadCount || 0) > 99 ? "+" : ""}
+            </span>
+          )}
+        </button>
+      </Tooltip>
       <AnimatePresence initial={false}>
         {open && (
           <motion.section

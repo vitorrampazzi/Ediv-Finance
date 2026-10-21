@@ -1,3 +1,4 @@
+import { Tooltip } from "./Tooltip";
 import { useEffect, useId, useRef, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { X } from "lucide-react";
@@ -20,7 +21,10 @@ export function PrivacyConsent() {
   const dialog = useRef<HTMLDialogElement>(null);
   const id = useId();
   const audienceAllowed =
-    !loading && !sessionError && !qaEnvironment && (!user || user.role === "USER");
+    !loading &&
+    !sessionError &&
+    !qaEnvironment &&
+    (!user || user.role === "USER");
   const available = useAnalyticsAvailable();
 
   useEffect(() => {
@@ -109,14 +113,16 @@ export function PrivacyConsent() {
       >
         <header>
           <h2 id={`${id}-title`}>Preferências de cookies</h2>
-          <button
-            type="button"
-            className="ediv-consent-close"
-            aria-label="Fechar preferências"
-            onClick={() => setOpen(false)}
-          >
-            <X size={20} aria-hidden="true" />
-          </button>
+          <Tooltip content={"Fechar preferências"}>
+            <button
+              type="button"
+              className="ediv-consent-close"
+              aria-label="Fechar preferências"
+              onClick={() => setOpen(false)}
+            >
+              <X size={20} aria-hidden="true" />
+            </button>
+          </Tooltip>
         </header>
         <p id={`${id}-description`}>
           Os recursos necessários mantêm sua sessão, segurança e escolhas neste

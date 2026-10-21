@@ -35,12 +35,20 @@ function RevealedPage({ children }: { children: ReactNode }) {
   const { hash } = useLocation();
   const reducedMotion = useReducedMotion();
   const entryHash = useRef(hash);
+  const content = useRef<HTMLDivElement>(null);
   useLayoutEffect(() => {
-    if (!entryHash.current)
+    if (!entryHash.current) {
       window.scrollTo({ top: 0, left: 0, behavior: "instant" });
+      const heading = content.current?.querySelector<HTMLElement>("h1");
+      if (heading && !document.querySelector("dialog[open]")) {
+        heading.tabIndex = -1;
+        heading.focus({ preventScroll: true });
+      }
+    }
   }, []);
   return (
     <motion.div
+      ref={content}
       className="page-enter min-w-0"
       initial={reducedMotion ? false : { y: 5 }}
       animate={{ y: 0 }}

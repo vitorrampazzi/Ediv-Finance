@@ -46,6 +46,7 @@ export function ForgotPasswordPage() {
         <label className="block text-sm">
           E-mail
           <input
+            aria-describedby={error ? "forgot-error" : undefined}
             className="field mt-2"
             type="email"
             autoComplete="email"
@@ -60,7 +61,7 @@ export function ForgotPasswordPage() {
             {message}
           </p>
         )}
-        {error && <ErrorMessage>{error}</ErrorMessage>}
+        {error && <ErrorMessage id="forgot-error">{error}</ErrorMessage>}
         {devLink && (
           <a className="block break-all text-xs underline" href={devLink}>
             Link local de desenvolvimento

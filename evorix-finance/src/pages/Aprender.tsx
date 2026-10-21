@@ -194,6 +194,12 @@ function LearningSession({
       return;
     const frame = window.requestAnimationFrame(() => {
       const destination = location.pathname + location.search + location.hash;
+      // A newer playlist selection must not be consumed by an older frame.
+      if (
+        selectionIntentRef.current &&
+        selectionIntentRef.current.destination !== destination
+      )
+        return;
       const intent =
         selectionIntentRef.current?.destination === destination
           ? selectionIntentRef.current
@@ -595,7 +601,7 @@ function LearningSession({
                       {selectedLesson.sources.map((source) => (
                         <li key={source.url}>
                           <a
-                            className="underline underline-offset-4"
+                            className="inline-flex min-h-6 items-center text-evo-accent underline underline-offset-4"
                             href={source.url}
                             target="_blank"
                             rel="noreferrer"

@@ -94,6 +94,7 @@ export function LoginPage() {
           </label>
           <input
             id="login-email"
+            aria-describedby={error ? "login-error" : undefined}
             type="email"
             autoComplete="email"
             required
@@ -118,6 +119,7 @@ export function LoginPage() {
           </label>
           <PasswordInput
             id="login-password"
+            aria-describedby={error ? "login-error" : undefined}
             autoComplete="current-password"
             required
             maxLength={128}
@@ -126,7 +128,7 @@ export function LoginPage() {
             className="min-h-11 w-full rounded-lg border border-evo-border bg-evo-bgMain px-3 text-evo-textMain"
           />
         </div>
-        {error && <ErrorMessage>{error}</ErrorMessage>}
+        {error && <ErrorMessage id="login-error">{error}</ErrorMessage>}
         {message && (
           <p
             role="status"

@@ -1,0 +1,18 @@
+.ediv-tooltip-owner {
+  display: contents;
+}
+.ediv-tooltip-content {
+  position: fixed;
+  inset: auto;
+  margin: 0;
+  max-width: min(232px, calc(100vw - 16px));
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--ediv-muted);
+  border-radius: 0.5rem;
+  background: var(--ediv-text);
+  color: var(--ediv-canvas);
+  font:
+    400 0.8125rem/1.5 system-ui,
+    sans-serif;
+  box-shadow: 0 3px 12px rgb(0 0 0 / 20%);
+}
