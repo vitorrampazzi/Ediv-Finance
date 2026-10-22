@@ -2,18 +2,13 @@ import { useState } from "react";
 import { apiRequest } from "../lib/api";
 import { assistantEnabled } from "../lib/features";
 import { CompanyLogo } from "./CompanyLogo";
-import type { RankingFundamentalData } from "./RankingFundamentals";
-export type ResearchEntry = RankingFundamentalData & {
-  rank: number;
-  ticker: string;
-  companyName: string;
-  expectedReturnPercent: string;
-  targetPrice: string | null;
-  horizonMonths: number | null;
-  thesis: string | null;
-  risks: string | null;
-  sector: string | null;
-};
+import type { Entry } from "../lib/ranking";
+import {
+  dividendColumns,
+  dividendValue,
+  formatDividendValue,
+} from "../../dividend-analysis.mjs";
+export type ResearchEntry = Entry;
 const labels: Record<string, string> = {
   rank: "Posição",
   companyName: "Empresa",
@@ -31,7 +26,49 @@ const labels: Record<string, string> = {
   statistics: "Estatísticas",
   referencePeriod: "Período",
   dataSource: "Fonte",
+  dividendAnalysis: "Análise de dividendos",
 };
+const fieldLabel = (field: string) =>
+  dividendColumns.find(
+    (column) => column.key === field.replace(/^dividendAnalysis\./, ""),
+  )?.label ||
+  labels[field] ||
+  field;
+function fieldValue(entry: ResearchEntry, field: string) {
+  if (field === "dividendAnalysis")
+    return (
+      <dl>
+        {dividendColumns
+          .filter(
+            (column) =>
+              !["companyName", "ticker", "sector"].includes(column.key),
+          )
+          .map((column) => (
+            <div key={column.key} className="mt-2">
+              <dt className="font-medium">{column.label}</dt>
+              <dd>
+                {formatDividendValue(
+                  dividendValue(entry, column.key),
+                  column.format,
+                )}
+              </dd>
+            </div>
+          ))}
+      </dl>
+    );
+  const column = dividendColumns.find(
+    (column) => column.key === field.replace(/^dividendAnalysis\./, ""),
+  );
+  if (
+    column &&
+    (entry.dividendAnalysis || field.startsWith("dividendAnalysis."))
+  )
+    return formatDividendValue(dividendValue(entry, column.key), column.format);
+  const value = entry[field as keyof ResearchEntry];
+  return value === null || value === undefined || value === ""
+    ? "Não informado"
+    : String(value);
+}
 const explanations: Record<string, string> = {
   expectedReturnPercent:
     "Compara o preço-alvo com um preço de referência: (alvo / referência − 1) × 100.",
@@ -131,34 +168,35 @@ export function CompanyComparison({
       </div>
       {a && b && a.ticker !== b.ticker && (
         <dl className="mt-5 space-y-3">
-          {Object.entries(labels)
-            .filter(([key]) => key !== "rank")
-            .map(([key, label]) => (
-              <div key={key} className="rounded-lg bg-evo-bgMain p-3">
-                <dt className="text-sm font-semibold">{label}</dt>
-                <dd className="mt-2 grid gap-3 text-sm sm:grid-cols-2">
-                  {[a, b].map((entry) => (
-                    <div key={entry.ticker} className="min-w-0">
-                      <span className="company-identity-inline text-xs text-evo-accent">
-                        {key === "companyName" && (
-                          <CompanyLogo
-                            ticker={entry.ticker}
-                            demo={demo}
-                            size="sm"
-                          />
-                        )}
-                        {entry.ticker}
-                      </span>
-                      <p className="mt-1 whitespace-pre-wrap break-words text-evo-textSec">
-                        {String(
-                          entry[key as keyof ResearchEntry] ?? "Não informado",
-                        ) || "Não informado"}
-                      </p>
+          {(a.dividendAnalysis || b.dividendAnalysis
+            ? dividendColumns.map((column) => [column.key, column.label])
+            : Object.entries(labels).filter(
+                ([key]) => key !== "rank" && key !== "dividendAnalysis",
+              )
+          ).map(([key, label]) => (
+            <div key={key} className="rounded-lg bg-evo-bgMain p-3">
+              <dt className="text-sm font-semibold">{label}</dt>
+              <dd className="mt-2 grid gap-3 text-sm sm:grid-cols-2">
+                {[a, b].map((entry) => (
+                  <div key={entry.ticker} className="min-w-0">
+                    <span className="company-identity-inline text-xs text-evo-accent">
+                      {key === "companyName" && (
+                        <CompanyLogo
+                          ticker={entry.ticker}
+                          demo={demo}
+                          size="sm"
+                        />
+                      )}
+                      {entry.ticker}
+                    </span>
+                    <div className="mt-1 whitespace-pre-wrap break-words text-evo-textSec">
+                      {fieldValue(entry, key)}
                     </div>
-                  ))}
-                </dd>
-              </div>
-            ))}
+                  </div>
+                ))}
+              </dd>
+            </div>
+          ))}
         </dl>
       )}
     </details>
@@ -286,15 +324,14 @@ export function VersionComparison({
               <summary className="min-h-11 cursor-pointer text-sm font-semibold">
                 <span className="company-identity-inline">
                   <CompanyLogo ticker={change.ticker} size="sm" />
-                  {change.ticker} ·{" "}
-                  {change.fields.map((f) => labels[f] || f).join(", ")}
+                  {change.ticker} · {change.fields.map(fieldLabel).join(", ")}
                 </span>
               </summary>
               <dl className="space-y-3">
                 {change.fields.map((field) => (
                   <div key={field}>
                     <dt className="text-sm font-semibold">
-                      {labels[field] || field}
+                      {fieldLabel(field)}
                     </dt>
                     <dd className="grid gap-3 text-xs sm:grid-cols-2">
                       {(["before", "after"] as const).map((side) => (
@@ -305,12 +342,9 @@ export function VersionComparison({
                           <span className="text-evo-accent">
                             {side === "before" ? "Antes" : "Nesta publicação"}
                           </span>
-                          <p className="mt-1 whitespace-pre-wrap break-words">
-                            {String(
-                              change[side][field as keyof ResearchEntry] ??
-                                "Não informado",
-                            ) || "Não informado"}
-                          </p>
+                          <div className="mt-1 whitespace-pre-wrap break-words">
+                            {fieldValue(change[side], field)}
+                          </div>
                         </div>
                       ))}
                     </dd>

@@ -27,6 +27,7 @@ import { useRankingPublication } from "../hooks/useRankingPublication";
 import { rankingDemoEntries } from "../lib/rankingDemo";
 import { researchDemoStories } from "../lib/researchDemo";
 import type { Entry } from "../lib/ranking";
+import { DividendCompanyResearch } from "../components/DividendResearch";
 
 const money = new Intl.NumberFormat("pt-BR", {
   style: "currency",
@@ -216,6 +217,17 @@ function MemberStockResearch() {
     encodeURIComponent(code) +
     "?" +
     backParams.toString();
+  if (entry.dividendAnalysis)
+    return (
+      <DividendCompanyResearch
+        entry={entry}
+        ranking={ranking}
+        backLink={backLink}
+        previous={previous}
+        next={next}
+        companyLink={companyLink}
+      />
+    );
   return (
     <article id="pagina-conteudo" className={page}>
       {backLink}
@@ -250,7 +262,10 @@ function MemberStockResearch() {
               {demo ? "Potencial simulado" : "Potencial informado"}
             </dt>
             <dd className="mt-2 font-numbers text-3xl font-semibold text-evo-accent">
-              {Number(entry.expectedReturnPercent).toLocaleString("pt-BR")}%
+              {entry.expectedReturnPercent === null
+                ? "Não informado"
+                : Number(entry.expectedReturnPercent).toLocaleString("pt-BR") +
+                  "%"}
             </dd>
             <dd>
               <IndicatorHelp field="expectedReturnPercent" />
