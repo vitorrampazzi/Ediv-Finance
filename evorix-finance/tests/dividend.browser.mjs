@@ -8,6 +8,10 @@ import {
   dividendValue,
   formatDividendValue,
 } from "../dividend-analysis.mjs";
+import {
+  dividendComparison,
+  dividendAnnouncementMonths,
+} from "../dividend-insights.mjs";
 
 // UI contract test; workbook audit stays outside the browser bundle. No SQL or publication.
 const realWorkbook = Boolean(process.env.EDIV_WORKBOOK_AUDIT);
@@ -126,6 +130,7 @@ const results = [],
   unknown = [],
   requests = [];
 let browser;
+let probeEntry = null;
 const server = await createServer({
   server: { host: "127.0.0.1", port: 4198, strictPort: true },
 });
@@ -169,7 +174,10 @@ try {
         ),
       );
       data = { message: "Publicação simulada na fixture" };
-    } else if (url.pathname === "/api/rankings") data = publication;
+    } else if (url.pathname === "/api/rankings")
+      data = probeEntry
+        ? { ...publication, entries: [probeEntry], totalEntries: 1 }
+        : publication;
     else if (url.pathname === "/api/rankings/compare")
       data = {
         from: { title: "Antes" },
@@ -211,7 +219,7 @@ try {
   await page.goto(origin + "/app/ranking");
   await page.waitForLoadState("networkidle");
   await run(
-    "Ranking: 90 linhas, 11 colunas exatas, ordem e valores da planilha",
+    "Ranking: 10→20→90/fim com foco e contagem, 11 colunas e ordem exata",
     async () => {
       await expect(page.getByRole("heading", { level: 1 })).toHaveText(
         "Ranking de dividendos",
@@ -224,7 +232,29 @@ try {
           .filter((column) => column.ranking)
           .map((column) => column.label),
       );
-      await expect(table.locator("tbody tr")).toHaveCount(90);
+      await expect(table.locator("tbody tr")).toHaveCount(10);
+      await expect(page.locator("#ranking-count")).toContainText(
+        "10 exibidas de 90 filtradas · 90 ações no total",
+      );
+      await page
+        .getByRole("button", { name: "Ver mais ações", exact: true })
+        .click();
+      await expect(table.locator("tbody tr")).toHaveCount(20);
+      await expect(
+        table.locator("tbody tr").nth(10).getByRole("link"),
+      ).toBeFocused();
+      for (let count = 30; count <= 90; count += 10) {
+        await page
+          .getByRole("button", { name: "Ver mais ações", exact: true })
+          .click();
+        await expect(table.locator("tbody tr")).toHaveCount(count);
+      }
+      await expect(
+        page.getByRole("button", { name: "Ver mais ações", exact: true }),
+      ).toHaveCount(0);
+      await expect(page.locator("#ranking-count")).toContainText(
+        "90 exibidas de 90 filtradas",
+      );
       for (let index = 0; index < entries.length; index++) {
         const row = table.locator("tbody tr").nth(index);
         const cells = await row.locator("th,td").allTextContents();
@@ -260,20 +290,25 @@ try {
     "Filtros: busca, setor e margem; URL antiga não aplica prazo/potencial",
     async () => {
       await page.goto(origin + "/app/ranking?prazo=6&ordem=potential");
-      await expect(page.locator(".dividend-table tbody tr")).toHaveCount(90);
+      await expect(page.locator(".dividend-table tbody tr")).toHaveCount(10);
       await expect(page.getByLabel("Ordenar ranking")).toHaveValue("rank");
       await page.getByLabel("Buscar empresa ou ticker").fill("TIMS3");
       await expect(page.locator(".dividend-table tbody tr")).toHaveCount(1);
       await page.getByLabel("Buscar empresa ou ticker").fill("");
-      await expect(page.locator(".dividend-table tbody tr")).toHaveCount(90);
+      await expect(page.locator(".dividend-table tbody tr")).toHaveCount(10);
       const sector = entries[0].sector;
       await page.getByLabel("Filtrar setor").selectOption(sector);
       await expect(page.locator(".dividend-table tbody tr")).toHaveCount(
-        entries.filter((entry) => entry.sector === sector).length,
+        Math.min(10, entries.filter((entry) => entry.sector === sector).length),
       );
       await page.getByLabel("Filtrar setor").selectOption("");
-      await expect(page.locator(".dividend-table tbody tr")).toHaveCount(90);
+      await expect(page.locator(".dividend-table tbody tr")).toHaveCount(10);
+      await page
+        .getByRole("button", { name: "Ver mais ações", exact: true })
+        .click();
+      await expect(page.locator(".dividend-table tbody tr")).toHaveCount(20);
       await page.getByLabel("Ordenar ranking").selectOption("safety");
+      await expect(page.locator(".dividend-table tbody tr")).toHaveCount(10);
       const expected = [...entries].sort(
         (a, b) =>
           Number(b.dividendAnalysis.safetyMargin) -
@@ -286,6 +321,14 @@ try {
       await expect(
         page.locator(".dividend-table tbody tr").first().locator("td").first(),
       ).toHaveText(entries[0].ticker);
+      await page
+        .getByRole("button", { name: "Ver mais ações", exact: true })
+        .click();
+      await expect(page.locator(".dividend-table tbody tr")).toHaveCount(20);
+      await page.getByLabel("Histórico de publicações").selectOption("1");
+      await expect(page.locator(".dividend-table tbody tr")).toHaveCount(10);
+      await page.getByLabel("Histórico de publicações").selectOption("");
+      await expect(page.locator(".dividend-table tbody tr")).toHaveCount(10);
     },
   );
   await run(
@@ -314,7 +357,100 @@ try {
     },
   );
   await run(
-    "Detalhe: 21 campos por ticker nos 90 ativos; sem tese/preço-alvo/cotação externa",
+    "Dashboard: tooltips exatos, âncoras, gráficos/calendário e ausentes/negativos",
+    async () => {
+      await expect(page.locator(".dividend-comparison")).toHaveCount(3);
+      for (const button of await page.locator(".dividend-chart-row").all()) {
+        const visible = (await button.innerText()).replace(/\s+/g, " ").trim();
+        await expect(button).toHaveAccessibleName(visible);
+      }
+      const exact = formatDividendValue(
+        entries[0].dividendAnalysis.marketValue,
+        "currency",
+      );
+      const compact = page.locator('[data-field="marketValue"] button');
+      await compact.focus();
+      await expect(page.getByRole("tooltip")).toHaveText(exact);
+      await compact.press("Escape");
+      await expect(page.getByRole("tooltip")).toHaveCount(0);
+      await expect(compact).toBeFocused();
+      const bar = page.locator(".dividend-chart-row").first();
+      await bar.focus();
+      await expect(page.getByRole("tooltip")).toContainText("P/L projetado");
+      await bar.press("Escape");
+      const nav = page.getByRole("navigation", { name: "Seções da análise" });
+      await nav
+        .getByRole("link", { name: "Dividendos e distribuição", exact: true })
+        .focus();
+      await page.keyboard.press("Enter");
+      await expect(page.locator("#dividendos")).toBeFocused();
+      const navBounds = await nav.boundingBox();
+      const sectionBounds = await page.locator("#dividendos").boundingBox();
+      assert.ok(
+        navBounds &&
+          sectionBounds &&
+          sectionBounds.y >= navBounds.y + navBounds.height - 2,
+        "Âncora não pode ficar sob a navegação fixa",
+      );
+      probeEntry = {
+        ...entries[0],
+        ticker: "EDGE3",
+        companyName: "Valores de teste",
+        dividendAnalysis: {
+          ...entries[0].dividendAnalysis,
+          projectedPE: "0",
+          averagePE10Years: "-1",
+          referencePrice: null,
+          ceilingPrice: null,
+          safetyMargin: "-1.5",
+          expectedPayout: "1.5",
+          earningsCagr5Years: "-0.2",
+          netDebtToEbitda: "-2",
+          announcementFrequency: "Mensal",
+          announcementMonths: "Indefinido",
+          estimatedGrossDividendYield: "0",
+        },
+      };
+      await page.goto(origin + "/app/ranking/acao/EDGE3?visual=real");
+      await expect(page.locator('[data-insight="pe"] > strong')).toHaveText(
+        "Não informado",
+      );
+      await expect(page.locator('[data-insight="price"] > strong')).toHaveText(
+        "Não informado",
+      );
+      await expect(
+        page.locator('[data-field="expectedPayout"] dd[data-exact-value]'),
+      ).toHaveText("150,00%");
+      await expect(
+        page.locator('[data-field="safetyMargin"] dd[data-exact-value]'),
+      ).toHaveText("-150%");
+      await expect(
+        page.locator('[data-field="netDebtToEbitda"] dd[data-exact-value]'),
+      ).toHaveText("-2");
+      await expect(
+        page.locator(
+          '[data-field="estimatedGrossDividendYield"] dd[data-exact-value]',
+        ),
+      ).toHaveText("0,00%");
+      await expect(
+        page.locator('.dividend-calendar li[data-announced="true"]'),
+      ).toHaveCount(0);
+      await expect(page.locator(".dividend-calendar")).toContainText(
+        "Nenhum mês foi presumido",
+      );
+      const unavailable = page
+        .locator(".dividend-comparison")
+        .filter({ hasText: "Cotação de referência e preço teto" });
+      await expect(unavailable.locator(".dividend-chart-bar")).toHaveCount(0);
+      await expect(unavailable).toContainText("Barras indisponíveis");
+      await expect(
+        page.locator('[data-field="netDebtToEbitda"]'),
+      ).toContainText("não comprova caixa líquido");
+      probeEntry = null;
+    },
+  );
+  await run(
+    "Detalhe: 21 campos em7/5/5/4 por90tickers, valores/fórmulas/calendário exatos",
     async () => {
       for (const entry of entries) {
         await page.goto(
@@ -326,17 +462,61 @@ try {
         await expect(page.locator(".dividend-information > div")).toHaveCount(
           21,
         );
+        const actual = await page
+          .locator(".dividend-information > [data-field]")
+          .evaluateAll((nodes) =>
+            nodes.map((node) => ({
+              key: node.dataset.field,
+              label: (
+                node.querySelector("dt button") || node.querySelector("dt")
+              ).textContent,
+              value: node.querySelector("dd[data-exact-value]").dataset
+                .exactValue,
+            })),
+          );
+        for (const column of dividendColumns)
+          assert.deepEqual(
+            actual.find((item) => item.key === column.key),
+            {
+              key: column.key,
+              label: column.label,
+              value: formatDividendValue(
+                dividendValue(entry, column.key),
+                column.format,
+              ),
+            },
+          );
+        for (const [id, count] of [
+          ["visao-geral", 7],
+          ["valuation", 5],
+          ["dividendos", 5],
+          ["resultados", 4],
+        ]) {
+          await expect(page.locator("#" + id + " [data-field]")).toHaveCount(
+            count,
+          );
+        }
+        await expect(page.locator(".dividend-calendar li")).toHaveCount(12);
         assert.deepEqual(
-          await page.locator(".dividend-information dt").allTextContents(),
-          dividendColumns.map((column) => column.label),
-        );
-        assert.deepEqual(
-          await page.locator(".dividend-information dd").allTextContents(),
-          dividendColumns.map((column) =>
-            formatDividendValue(
-              dividendValue(entry, column.key),
-              column.format,
+          await page
+            .locator('.dividend-calendar li[data-announced="true"]')
+            .evaluateAll((nodes) =>
+              nodes.map(
+                (node) => [...node.parentNode.children].indexOf(node) + 1,
+              ),
             ),
+          dividendAnnouncementMonths(
+            entry.dividendAnalysis.announcementMonths,
+          ) || [],
+        );
+        const computed = dividendComparison(
+          entry.dividendAnalysis.projectedPE,
+          entry.dividendAnalysis.averagePE10Years,
+        );
+        await expect(page.locator('[data-insight="pe"] > strong')).toHaveText(
+          formatDividendValue(
+            computed === null ? null : String(computed),
+            "percent",
           ),
         );
         await expect(page.locator(".research-insight")).toHaveCount(0);
@@ -434,7 +614,7 @@ try {
         const region = page.getByRole("region", {
           name: "Ranking de dividendos por empresa",
         });
-        await expect(region.locator("tbody tr")).toHaveCount(90);
+        await expect(region.locator("tbody tr")).toHaveCount(10);
         await region.focus();
         await page.keyboard.press("ArrowRight");
         await expect

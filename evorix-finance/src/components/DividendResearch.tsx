@@ -10,6 +10,7 @@ import {
 import type { Entry, Ranking } from "../lib/ranking";
 import { CompanyLogo } from "./CompanyLogo";
 import "./dividend-research.css";
+import { DividendDashboard } from "./DividendDashboard";
 
 export function DividendRankingTable({
   entries,
@@ -148,51 +149,7 @@ export function DividendCompanyResearch({
       className="dividend-company mx-auto max-w-6xl px-4 py-6 sm:px-6 md:py-10"
     >
       {backLink}
-      <header className="my-6 sm:my-10">
-        <p className="text-sm text-evo-textSec">
-          Análise de dividendos · {entry.ticker}
-        </p>
-        <div className="company-identity mt-3">
-          <CompanyLogo ticker={entry.ticker} size="lg" loading="eager" />
-          <h1
-            ref={title}
-            tabIndex={-1}
-            className="display-title min-w-0 break-words text-3xl sm:text-5xl"
-          >
-            {entry.companyName}
-          </h1>
-        </div>
-        <p className="mt-4 max-w-3xl text-sm leading-6 text-evo-textSec">
-          Cotação de referência da planilha em{" "}
-          {formatDividendValue(entry.dividendAnalysis?.updatedOn, "date")}. Não
-          é uma cotação ao vivo. O preço teto usa yield de 6,81%, taxa do
-          Tesouro IPCA+ 2037 com juros semestrais indicada na planilha.
-        </p>
-      </header>
-      <section aria-labelledby="dividend-information">
-        <h2 id="dividend-information" className="text-xl font-semibold">
-          Informações completas
-        </h2>
-        <dl className="dividend-information mt-4">
-          {dividendColumns.map((column) => (
-            <div key={column.key}>
-              <dt>{column.label}</dt>
-              <dd
-                className={
-                  column.format === "text" || column.format === "date"
-                    ? undefined
-                    : "font-numbers"
-                }
-              >
-                {formatDividendValue(
-                  dividendValue(entry, column.key),
-                  column.format,
-                )}
-              </dd>
-            </div>
-          ))}
-        </dl>
-      </section>
+      <DividendDashboard entry={entry} titleRef={title} />
       <section
         className="my-7 border-y border-evo-border py-5 text-sm"
         aria-label="Origem dos dados"
