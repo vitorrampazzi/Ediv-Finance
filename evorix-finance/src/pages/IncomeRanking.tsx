@@ -22,6 +22,7 @@ import { MobileDisclosure } from "../components/MobileDisclosure";
 import { ResearchEditor } from "../components/ResearchEditor";
 import { PublicationReview } from "../components/PublicationReview";
 import { ResearchRankingTable } from "../components/ResearchRankingTable";
+import { DividendRankingTable } from "../components/DividendResearch";
 import { userCan } from "../lib/permissions";
 import {
   CompanyComparison,
@@ -75,13 +76,7 @@ function MemberIncomeRanking() {
   const search = (searchParams.get("busca") || "").slice(0, 80);
   const requestedSector = (searchParams.get("setor") || "").slice(0, 120);
   const requestedHorizon = searchParams.get("prazo") || "";
-  const horizon = ["6", "12", "24"].includes(requestedHorizon)
-    ? requestedHorizon
-    : "";
   const requestedSort = searchParams.get("ordem") || "rank";
-  const sort = ["rank", "potential", "name"].includes(requestedSort)
-    ? requestedSort
-    : "rank";
   const [file, setFile] = useState<File | null>(null);
   const [preview, setPreview] = useState<Entry[]>([]);
   const [busy, setBusy] = useState(false);
@@ -104,6 +99,18 @@ function MemberIncomeRanking() {
     : current
       ? ranking.entries
       : noEntries;
+  const dividendMode =
+    !showingDemo && sourceEntries.some((entry) => entry.dividendAnalysis);
+  const horizon =
+    !dividendMode && ["6", "12", "24"].includes(requestedHorizon)
+      ? requestedHorizon
+      : "";
+  const sort = (dividendMode
+    ? ["rank", "safety", "name"]
+    : ["rank", "potential", "name"]
+  ).includes(requestedSort)
+    ? requestedSort
+    : "rank";
   const totalEntries = showingDemo
     ? rankingDemoEntries.length
     : current
@@ -177,9 +184,11 @@ function MemberIncomeRanking() {
             label:
               sort === "name"
                 ? "Nome da empresa"
-                : showingDemo
-                  ? "Maior potencial simulado"
-                  : "Maior potencial informado",
+                : sort === "safety"
+                  ? "Maior margem de segurança"
+                  : showingDemo
+                    ? "Maior potencial simulado"
+                    : "Maior potencial informado",
           },
         ]
       : []),
@@ -199,13 +208,17 @@ function MemberIncomeRanking() {
           (e.horizonMonths !== null && e.horizonMonths <= Number(horizon))),
     )
     .sort((a, b) =>
-      sort === "potential"
-        ? Number(b.expectedReturnPercent) - Number(a.expectedReturnPercent) ||
+      sort === "safety"
+        ? Number(b.dividendAnalysis?.safetyMargin ?? -Infinity) -
+            Number(a.dividendAnalysis?.safetyMargin ?? -Infinity) ||
           a.rank - b.rank
-        : sort === "name"
-          ? a.companyName.localeCompare(b.companyName, "pt-BR") ||
-            a.rank - b.rank
-          : a.rank - b.rank,
+        : sort === "potential"
+          ? Number(b.expectedReturnPercent ?? -Infinity) -
+              Number(a.expectedReturnPercent ?? -Infinity) || a.rank - b.rank
+          : sort === "name"
+            ? a.companyName.localeCompare(b.companyName, "pt-BR") ||
+              a.rank - b.rank
+            : a.rank - b.rank,
     );
   const retryPublication = async () => {
     setLoading(true);
@@ -292,11 +305,13 @@ function MemberIncomeRanking() {
                 : "Pesquisa de ações"}
             </p>
             <h1 className="display-title mt-3 text-3xl sm:text-5xl">
-              Ranking de previsões
+              {dividendMode ? "Ranking de dividendos" : "Ranking de previsões"}
             </h1>
             <p className="mt-3 max-w-3xl text-sm leading-relaxed text-evo-textSec sm:text-base">
               {showingDemo ? (
                 "Abra uma empresa de exemplo para ler a tese e os números."
+              ) : dividendMode ? (
+                "Consulte o resumo da planilha e abra cada empresa para ler as informações completas."
               ) : (
                 <>Leia as previsões e o que sustenta cada cenário.</>
               )}
@@ -346,20 +361,36 @@ function MemberIncomeRanking() {
         title="Como ler o ranking"
         contentClassName="sm:grid sm:grid-cols-3 sm:gap-4"
       >
-        {[
-          [
-            "Entenda a tese",
-            "Abra a empresa para conhecer as premissas que sustentam o cenário.",
-          ],
-          [
-            "Leia os riscos",
-            "Confira o que pode contrariar a previsão antes de comparar percentuais.",
-          ],
-          [
-            "Confira a versão",
-            "Use o prazo, a data e as fontes da publicação para dar contexto aos números.",
-          ],
-        ].map(([title, text]) => (
+        {(dividendMode
+          ? [
+              [
+                "Consulte a referência",
+                "A cotação pertence à planilha e à data de atualização da empresa; não é uma cotação ao vivo.",
+              ],
+              [
+                "Entenda o preço teto",
+                "O teto usa yield de 6,81%, taxa do Tesouro IPCA+ 2037 com juros semestrais indicada na planilha.",
+              ],
+              [
+                "Abra a empresa",
+                "Consulte os 21 campos das informações completas, incluindo payout, dividendos projetados e atualização.",
+              ],
+            ]
+          : [
+              [
+                "Entenda a tese",
+                "Abra a empresa para conhecer as premissas que sustentam o cenário.",
+              ],
+              [
+                "Leia os riscos",
+                "Confira o que pode contrariar a previsão antes de comparar percentuais.",
+              ],
+              [
+                "Confira a versão",
+                "Use o prazo, a data e as fontes da publicação para dar contexto aos números.",
+              ],
+            ]
+        ).map(([title, text]) => (
           <div key={title} className="mb-3 sm:mb-0">
             <div>
               <h2 className="text-sm font-semibold">{title}</h2>
@@ -396,8 +427,10 @@ function MemberIncomeRanking() {
             Área da equipe · preparar nova publicação
           </summary>
           <p className="mt-3 text-sm text-evo-textSec">
-            Primeira aba do Excel ou CSV UTF-8. Até 300 ativos. Revise todos os
-            dados antes de publicar. Cada publicação preserva a versão anterior.
+            Excel com as abas Ranking e Informações Completas para análises de
+            dividendos, ou planilha legada/CSV UTF-8. Até 300 ativos. Revise
+            todos os dados antes de publicar. Cada publicação preserva a versão
+            anterior.
           </p>
           <a
             href="/modelos/ranking.csv"
@@ -407,11 +440,11 @@ function MemberIncomeRanking() {
             Baixar modelo de planilha
           </a>
           <p className="mt-3 text-sm leading-relaxed text-evo-textSec">
-            O modelo inclui balanço patrimonial, DRE, fluxo de caixa,
+            O modelo legado inclui balanço patrimonial, DRE, fluxo de caixa,
             informações da empresa, dívida líquida e estatísticas. Preencha cada
             módulo como texto, com os valores, unidades e datas que deseja
             exibir. Período e fonte também são opcionais. Campos vazios aparecem
-            como não informados.
+            como não informados. Os metadados editoriais também são opcionais.
           </p>
           <div className="mt-4 grid gap-3 sm:grid-cols-2">
             {(
@@ -496,48 +529,63 @@ function MemberIncomeRanking() {
           {preview.length > 0 && (
             <section className="mt-5 space-y-3">
               <h2 className="font-semibold">Prévia · {preview.length} ações</h2>
-              <PublicationReview entries={preview} metadata={metadata} />
-              <div className="max-h-72 overflow-auto rounded-lg border border-evo-border">
-                <table className="w-full min-w-[500px] text-left text-sm">
-                  <caption className="sr-only">Ativos a publicar</caption>
-                  <thead>
-                    <tr>
-                      <th className="p-3">Ativo</th>
-                      <th>Potencial</th>
-                      <th>Prazo</th>
-                      <th>Tese / riscos</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {preview.map((e) => (
-                      <tr key={e.ticker} className="border-t border-evo-border">
-                        <td className="p-3">
-                          <span className="company-identity-inline">
-                            <CompanyLogo ticker={e.ticker} size="sm" />
-                            {e.ticker}
-                          </span>
-                        </td>
-                        <td>{e.expectedReturnPercent}%</td>
-                        <td>{e.horizonMonths ?? "—"}</td>
-                        <td>
-                          <details>
-                            <summary className="cursor-pointer py-3">
-                              Ver tese e riscos
-                            </summary>
-                            <p className="max-w-lg whitespace-pre-wrap p-2">
-                              {e.thesis || "Sem tese"}
-                            </p>
-                            <p className="max-w-lg whitespace-pre-wrap p-2">
-                              {e.risks || "Sem riscos"}
-                            </p>
-                            <RankingFundamentals data={e} />
-                          </details>
-                        </td>
+              <PublicationReview
+                entries={preview}
+                metadata={metadata}
+                sourceFileName={file?.name}
+              />
+              {preview.some((entry) => entry.dividendAnalysis) ? (
+                <DividendRankingTable entries={preview} complete />
+              ) : (
+                <div className="max-h-72 overflow-auto rounded-lg border border-evo-border">
+                  <table className="w-full min-w-[500px] text-left text-sm">
+                    <caption className="sr-only">Ativos a publicar</caption>
+                    <thead>
+                      <tr>
+                        <th className="p-3">Ativo</th>
+                        <th>Potencial</th>
+                        <th>Prazo</th>
+                        <th>Tese / riscos</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+                    </thead>
+                    <tbody>
+                      {preview.map((e) => (
+                        <tr
+                          key={e.ticker}
+                          className="border-t border-evo-border"
+                        >
+                          <td className="p-3">
+                            <span className="company-identity-inline">
+                              <CompanyLogo ticker={e.ticker} size="sm" />
+                              {e.ticker}
+                            </span>
+                          </td>
+                          <td>
+                            {e.expectedReturnPercent === null
+                              ? "Não informado"
+                              : e.expectedReturnPercent + "%"}
+                          </td>
+                          <td>{e.horizonMonths ?? "—"}</td>
+                          <td>
+                            <details>
+                              <summary className="cursor-pointer py-3">
+                                Ver tese e riscos
+                              </summary>
+                              <p className="max-w-lg whitespace-pre-wrap p-2">
+                                {e.thesis || "Sem tese"}
+                              </p>
+                              <p className="max-w-lg whitespace-pre-wrap p-2">
+                                {e.risks || "Sem riscos"}
+                              </p>
+                              <RankingFundamentals data={e} />
+                            </details>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
               <p className="text-xs text-evo-textSec">
                 Dados profissionais não preenchidos aparecerão como não
                 informados. O conteúdo da prévia corresponde ao arquivo
@@ -621,30 +669,39 @@ function MemberIncomeRanking() {
             </label>
           )}
         </div>
-        {!showingDemo && current && (
-          <MobileDisclosure
-            title="Responsável pela publicação"
-            contentClassName="grid gap-3 rounded-xl border border-evo-border bg-evo-card p-4 text-sm sm:grid-cols-3"
-          >
-            <p>
-              Responsável
-              <br />
-              <strong>{ranking.authorName || "Não informado"}</strong>
-            </p>
-            <p>
-              Categoria profissional
-              <br />
-              <strong>{ranking.professionalCategory || "Não informada"}</strong>
-            </p>
-            <p>
-              Registro profissional
-              <br />
-              <strong>
-                {ranking.professionalRegistration || "Não informado"}
-              </strong>
-            </p>
-          </MobileDisclosure>
-        )}
+        {!showingDemo &&
+          current &&
+          (!dividendMode ||
+            Boolean(
+              ranking.authorName ||
+              ranking.professionalCategory ||
+              ranking.professionalRegistration,
+            )) && (
+            <MobileDisclosure
+              title="Responsável pela publicação"
+              contentClassName="grid gap-3 rounded-xl border border-evo-border bg-evo-card p-4 text-sm sm:grid-cols-3"
+            >
+              <p>
+                Responsável
+                <br />
+                <strong>{ranking.authorName || "Não informado"}</strong>
+              </p>
+              <p>
+                Categoria profissional
+                <br />
+                <strong>
+                  {ranking.professionalCategory || "Não informada"}
+                </strong>
+              </p>
+              <p>
+                Registro profissional
+                <br />
+                <strong>
+                  {ranking.professionalRegistration || "Não informado"}
+                </strong>
+              </p>
+            </MobileDisclosure>
+          )}
         <div className="grid min-w-0 gap-3 lg:grid-cols-[minmax(0,1fr)_3fr]">
           <label className="relative flex min-w-0 items-center gap-2 rounded-lg border border-evo-border bg-evo-bgMain px-3">
             <Search size={17} aria-hidden="true" />
@@ -676,17 +733,19 @@ function MemberIncomeRanking() {
                 <option key={s}>{s}</option>
               ))}
             </select>
-            <select
-              aria-label="Filtrar horizonte"
-              className={input}
-              value={horizon}
-              onChange={(e) => changeFilter("prazo", e.target.value)}
-            >
-              <option value="">Todos os prazos</option>
-              <option value="6">Até 6 meses</option>
-              <option value="12">Até 12 meses</option>
-              <option value="24">Até 24 meses</option>
-            </select>
+            {!dividendMode && (
+              <select
+                aria-label="Filtrar horizonte"
+                className={input}
+                value={horizon}
+                onChange={(e) => changeFilter("prazo", e.target.value)}
+              >
+                <option value="">Todos os prazos</option>
+                <option value="6">Até 6 meses</option>
+                <option value="12">Até 12 meses</option>
+                <option value="24">Até 24 meses</option>
+              </select>
+            )}
             <select
               aria-label="Ordenar ranking"
               className={input}
@@ -694,13 +753,21 @@ function MemberIncomeRanking() {
               onChange={(e) => changeFilter("ordem", e.target.value)}
             >
               <option value="rank">
-                {showingDemo ? "Ordem da demonstração" : "Ordem da publicação"}
-              </option>
-              <option value="potential">
                 {showingDemo
-                  ? "Maior potencial simulado"
-                  : "Maior potencial informado"}
+                  ? "Ordem da demonstração"
+                  : dividendMode
+                    ? "Ordem da planilha"
+                    : "Ordem da publicação"}
               </option>
+              {dividendMode ? (
+                <option value="safety">Maior margem de segurança</option>
+              ) : (
+                <option value="potential">
+                  {showingDemo
+                    ? "Maior potencial simulado"
+                    : "Maior potencial informado"}
+                </option>
+              )}
               <option value="name">Nome da empresa</option>
             </select>
           </MobileDisclosure>
@@ -805,8 +872,9 @@ function MemberIncomeRanking() {
           <Card>
             <h3 className="font-semibold">Nenhuma ação corresponde à busca</h3>
             <p className="mt-2 text-sm text-evo-textSec">
-              Tente outro nome ou ticker, amplie o prazo ou consulte todos os
-              setores desta publicação.
+              {dividendMode
+                ? "Tente outro nome ou ticker, ou consulte todos os setores desta publicação."
+                : "Tente outro nome ou ticker, amplie o prazo ou consulte todos os setores desta publicação."}
             </p>
             <button
               type="button"
@@ -817,6 +885,8 @@ function MemberIncomeRanking() {
               pesquisas
             </button>
           </Card>
+        ) : dividendMode ? (
+          <DividendRankingTable entries={entries} researchLink={researchLink} />
         ) : (
           <ResearchRankingTable
             entries={entries}

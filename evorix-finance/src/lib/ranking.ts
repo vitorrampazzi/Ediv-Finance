@@ -1,9 +1,11 @@
 import type { RankingFundamentalData } from "../components/RankingFundamentals";
+import type { DividendAnalysis } from "../../dividend-analysis.mjs";
 export type Entry = RankingFundamentalData & {
   rank: number;
   ticker: string;
   companyName: string;
-  expectedReturnPercent: string;
+  expectedReturnPercent: string | null;
+  dividendAnalysis?: DividendAnalysis | null;
   targetPrice: string | null;
   horizonMonths: number | null;
   thesis: string | null;

@@ -15,6 +15,7 @@ export const researchKeys = [
   "statistics",
   "referencePeriod",
   "dataSource",
+  "dividendAnalysis",
 ];
 export const readEntries = (value) =>
   typeof value === "string" ? JSON.parse(value) : value || [];
@@ -26,9 +27,11 @@ export function compareResearch(before, after) {
   const changed = after.flatMap((entry) => {
     const old = previous.get(entry.ticker);
     if (!old) return [];
-    const fields = researchKeys.filter(
-      (key) =>
-        String(old[key] ?? "").trim() !== String(entry[key] ?? "").trim(),
+    const fields = researchKeys.filter((key) =>
+      key === "dividendAnalysis"
+        ? JSON.stringify(Object.entries(old[key] || {}).sort()) !==
+          JSON.stringify(Object.entries(entry[key] || {}).sort())
+        : String(old[key] ?? "").trim() !== String(entry[key] ?? "").trim(),
     );
     return fields.length
       ? [

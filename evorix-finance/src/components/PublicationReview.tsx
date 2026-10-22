@@ -1,6 +1,7 @@
 import { ClipboardCheck } from "lucide-react";
 import { CompanyLogo } from "./CompanyLogo";
 import type { Entry } from "../lib/ranking";
+import { dividendColumns, dividendValue } from "../../dividend-analysis.mjs";
 import {
   getResearchCoverage,
   researchCoverageFields,
@@ -16,10 +17,67 @@ type PublicationMetadata = {
 export function PublicationReview({
   entries,
   metadata,
+  sourceFileName,
 }: {
   entries: Entry[];
   metadata: PublicationMetadata;
+  sourceFileName?: string;
 }) {
+  if (entries.some((entry) => entry.dividendAnalysis)) {
+    const missing = entries
+      .map((entry) => ({
+        entry,
+        columns: dividendColumns.filter((column) => {
+          const value = dividendValue(entry, column.key);
+          return value === null || value === undefined || value === "";
+        }),
+      }))
+      .filter((item) => item.columns.length);
+    return (
+      <section
+        aria-label="Revisão do conteúdo a publicar"
+        className="rounded-xl border border-evo-border bg-evo-bgMain p-4"
+      >
+        <h3 className="font-semibold">Confira antes de publicar</h3>
+        <p className="mt-2 text-sm text-evo-textSec">
+          {entries.length} empresas com análise de dividendos. O ranking mostra
+          11 colunas; as informações completas mostram os 21 campos da planilha.
+        </p>
+        {sourceFileName && (
+          <p className="mt-3 break-words text-sm">Origem: {sourceFileName}</p>
+        )}
+        {metadata.title.trim() && (
+          <p className="mt-2 break-words text-sm">
+            Título: {metadata.title.trim()}
+          </p>
+        )}
+        <p className="mt-3 text-sm text-evo-textSec">
+          Cotação de referência da planilha, sem atualização ao vivo. Preço teto
+          e margem de segurança não são preço-alvo ou potencial de retorno.
+        </p>
+        {missing.length > 0 && (
+          <details className="mt-3 text-sm">
+            <summary className="min-h-11 cursor-pointer py-3">
+              Ver campos não informados · {missing.length} empresas
+            </summary>
+            <ul>
+              {missing.map(({ entry, columns }) => (
+                <li key={entry.ticker} className="mt-2 break-words">
+                  {entry.ticker}:{" "}
+                  {columns.map((column) => column.label).join(" · ")}
+                </li>
+              ))}
+            </ul>
+          </details>
+        )}
+        <p className="mt-3 text-xs text-evo-textSec">
+          Valores ausentes serão apresentados como não informados. Confira os
+          números, unidades e datas na prévia; a publicação preserva as versões
+          anteriores.
+        </p>
+      </section>
+    );
+  }
   const coverage = entries.map((entry) => ({
     entry,
     ...getResearchCoverage(entry),

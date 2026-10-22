@@ -1,6 +1,6 @@
 import express from "express";
 import { unzipSync } from "fflate";
-import { readSheet } from "read-excel-file/node";
+import readWorkbook, { readSheet } from "read-excel-file/node";
 
 export const fileBody = express.raw({
   type: [
@@ -58,7 +58,7 @@ export function parseCsv(text) {
     throw new ImportError("Use até 1.000 linhas e 40 colunas.");
   return rows;
 }
-export async function readUpload(req) {
+export async function readUpload(req, { allSheets = false } = {}) {
   // Some Node hosting adapters preparse textual bodies before Express runs.
   const body =
     typeof req.body === "string" &&
@@ -83,16 +83,29 @@ export async function readUpload(req) {
           return false;
         },
       });
-      const rows = await readSheet(body, { parseNumber: (value) => value });
-      if (rows.length > 1001 || rows.some((row) => row.length > 40))
-        throw new ImportError("Use até 1.000 linhas e 40 colunas.");
-      return rows.map((row) =>
-        row.map((cell) =>
-          cell instanceof Date
-            ? cell.toISOString().slice(0, 10)
-            : String(cell ?? ""),
-        ),
-      );
+      const convert = (rows) => {
+        if (rows.length > 1001 || rows.some((row) => row.length > 40))
+          throw new ImportError("Use até 1.000 linhas e 40 colunas.");
+        return rows.map((row) =>
+          row.map((cell) =>
+            cell instanceof Date
+              ? cell.toISOString().slice(0, 10)
+              : String(cell ?? ""),
+          ),
+        );
+      };
+      if (allSheets) {
+        const sheets = await readWorkbook(body, {
+          parseNumber: (value) => value,
+        });
+        return {
+          sheets: sheets.map(({ sheet, data }) => ({
+            sheet,
+            data: convert(data),
+          })),
+        };
+      }
+      return convert(await readSheet(body, { parseNumber: (value) => value }));
     } catch (error) {
       if (error instanceof ImportError) throw error;
       throw new ImportError(

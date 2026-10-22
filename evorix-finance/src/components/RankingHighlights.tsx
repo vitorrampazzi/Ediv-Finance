@@ -4,17 +4,14 @@ import { apiRequest, ApiError } from "../lib/api";
 import { rankingDemoEntries } from "../lib/rankingDemo";
 import { useAuth } from "../context/authContext";
 import { CompanyLogo } from "./CompanyLogo";
+import type { Entry } from "../lib/ranking";
+import { formatDividendValue } from "../../dividend-analysis.mjs";
 
 type Publication = {
   id: string | null;
   title: string;
   updatedAt: string | null;
-  entries: {
-    ticker: string;
-    companyName: string;
-    expectedReturnPercent: string;
-    horizonMonths: number | null;
-  }[];
+  entries: Entry[];
 };
 
 export function RankingHighlights() {
@@ -28,7 +25,9 @@ function MemberRankingHighlights() {
   const [publication, setPublication] = useState<Publication | null>(null);
   const [error, setError] = useState("");
   const showingDemo = Boolean(publication && !publication.entries.length);
-  const entries = showingDemo ? rankingDemoEntries : publication?.entries || [];
+  const entries: Entry[] = showingDemo
+    ? rankingDemoEntries
+    : publication?.entries || [];
   useEffect(() => {
     const controller = new AbortController();
     apiRequest<Publication>("/api/rankings", { signal: controller.signal })
@@ -68,6 +67,8 @@ function MemberRankingHighlights() {
           <p className="mt-2 max-w-2xl text-sm text-evo-textSec">
             {showingDemo ? (
               "Abra uma empresa de exemplo para conhecer o formato da pesquisa."
+            ) : entries.some((entry) => entry.dividendAnalysis) ? (
+              "Consulte as análises de dividendos e a referência da planilha de cada empresa."
             ) : (
               <>Leia a tese e confira o prazo de cada cenário.</>
             )}
@@ -134,14 +135,33 @@ function MemberRankingHighlights() {
                 </div>
                 <p className="col-start-2 row-start-1 text-right font-numbers text-xl">
                   <span className="mb-1 block font-sans text-xs text-evo-textSec">
-                    {showingDemo ? "Potencial simulado" : "Potencial informado"}
+                    {entry.dividendAnalysis
+                      ? "Margem de segurança"
+                      : showingDemo
+                        ? "Potencial simulado"
+                        : "Potencial informado"}
                   </span>
-                  {Number(entry.expectedReturnPercent).toLocaleString("pt-BR")}%
+                  {entry.dividendAnalysis
+                    ? formatDividendValue(
+                        entry.dividendAnalysis.safetyMargin,
+                        "percentInteger",
+                      )
+                    : entry.expectedReturnPercent === null
+                      ? "Não informado"
+                      : Number(entry.expectedReturnPercent).toLocaleString(
+                          "pt-BR",
+                        ) + "%"}
                 </p>
                 <p className="col-start-2 row-start-2 mt-1 text-right text-xs text-evo-textSec">
-                  {entry.horizonMonths
-                    ? entry.horizonMonths + " meses"
-                    : "Prazo não informado"}
+                  {entry.dividendAnalysis
+                    ? "Referência: " +
+                      formatDividendValue(
+                        entry.dividendAnalysis.updatedOn,
+                        "date",
+                      )
+                    : entry.horizonMonths
+                      ? entry.horizonMonths + " meses"
+                      : "Prazo não informado"}
                 </p>
                 <span className="col-span-2 mt-2 text-xs text-evo-accent sm:col-span-1 sm:col-start-3 sm:row-span-2 sm:row-start-1 sm:mt-0 sm:text-sm">
                   {showingDemo ? "Abrir exemplo" : "Ler pesquisa"}
