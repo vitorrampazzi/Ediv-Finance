@@ -252,7 +252,9 @@ function MemberStockResearch() {
             <dd className="mt-2 font-numbers text-3xl font-semibold text-evo-accent">
               {Number(entry.expectedReturnPercent).toLocaleString("pt-BR")}%
             </dd>
-            <IndicatorHelp field="expectedReturnPercent" />
+            <dd>
+              <IndicatorHelp field="expectedReturnPercent" />
+            </dd>
           </div>
           <div>
             <dt className="text-xs text-evo-textSec">
@@ -263,7 +265,9 @@ function MemberStockResearch() {
                 ? money.format(Number(entry.targetPrice))
                 : "Não informado"}
             </dd>
-            <IndicatorHelp field="targetPrice" />
+            <dd>
+              <IndicatorHelp field="targetPrice" />
+            </dd>
           </div>
           <div>
             <dt className="text-xs text-evo-textSec">Horizonte do cenário</dt>
@@ -272,7 +276,9 @@ function MemberStockResearch() {
                 ? entry.horizonMonths + " meses"
                 : "Não informado"}
             </dd>
-            <IndicatorHelp field="horizonMonths" />
+            <dd>
+              <IndicatorHelp field="horizonMonths" />
+            </dd>
           </div>
         </dl>
       </header>

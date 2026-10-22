@@ -175,5 +175,14 @@ test("both palettes retain readable semantic text against main surfaces", () => 
         );
       }
     }
+    for (const background of ["canvas", "surface", "inset"]) {
+      const ratio =
+        (Math.max(tokens["control-border"], tokens[background]) + 0.05) /
+        (Math.min(tokens["control-border"], tokens[background]) + 0.05);
+      assert.ok(
+        ratio >= 3,
+        `control-border/${background}: ${ratio.toFixed(2)}`,
+      );
+    }
   }
 });

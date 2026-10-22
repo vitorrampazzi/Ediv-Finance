@@ -1,3 +1,4 @@
+import { Tooltip } from "./Tooltip";
 import { useEffect, useRef, useState } from "react";
 import {
   Bot,
@@ -380,17 +381,19 @@ function EdivAssistantSession() {
                 </p>
               </div>
             </div>
-            <button
-              type="button"
-              onClick={() => {
-                setOpen(false);
-                buttonRef.current?.focus();
-              }}
-              aria-label="Fechar assistente"
-              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg text-evo-textSec hover:bg-white/5 hover:text-evo-textMain focus-visible:outline focus-visible:outline-2 focus-visible:outline-evo-green"
-            >
-              <X size={18} aria-hidden="true" />
-            </button>
+            <Tooltip content={"Fechar assistente"}>
+              <button
+                type="button"
+                onClick={() => {
+                  setOpen(false);
+                  buttonRef.current?.focus();
+                }}
+                aria-label="Fechar assistente"
+                className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg text-evo-textSec hover:bg-white/5 hover:text-evo-textMain focus-visible:outline focus-visible:outline-2 focus-visible:outline-evo-green"
+              >
+                <X size={18} aria-hidden="true" />
+              </button>
+            </Tooltip>
           </header>
 
           <div
@@ -406,7 +409,7 @@ function EdivAssistantSession() {
                 className={`flex ${message.role === "user" ? "justify-end" : "justify-start"}`}
               >
                 <div
-                  className={`max-w-[90%] break-words rounded-2xl px-3.5 py-3 ${message.role === "user" ? "rounded-br-md bg-evo-primary text-evo-textMain" : "rounded-bl-md border border-evo-border bg-evo-card text-evo-textMain"}`}
+                  className={`max-w-[90%] break-words rounded-2xl px-3.5 py-3 ${message.role === "user" ? "rounded-br-md bg-evo-primary text-white" : "rounded-bl-md border border-evo-border bg-evo-card text-evo-textMain"}`}
                 >
                   <p className="whitespace-pre-wrap text-sm leading-relaxed">
                     {message.text}
@@ -565,19 +568,21 @@ function EdivAssistantSession() {
                 disabled={busy || (generative && statusLoading)}
                 className="min-h-10 min-w-0 flex-1 bg-transparent text-base sm:text-sm text-evo-textMain outline-none placeholder:text-evo-textSec"
               />
-              <button
-                type="submit"
-                disabled={
-                  !draft.trim() ||
-                  busy ||
-                  (generative && statusLoading) ||
-                  (generative && !privacyAccepted)
-                }
-                aria-label="Enviar pergunta"
-                className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-evo-primary text-evo-textMain transition hover:bg-evo-primaryHover disabled:cursor-not-allowed disabled:opacity-40"
-              >
-                <Send size={17} aria-hidden="true" />
-              </button>
+              <Tooltip content={"Enviar pergunta"}>
+                <button
+                  type="submit"
+                  disabled={
+                    !draft.trim() ||
+                    busy ||
+                    (generative && statusLoading) ||
+                    (generative && !privacyAccepted)
+                  }
+                  aria-label="Enviar pergunta"
+                  className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-evo-primary text-white transition hover:bg-evo-primaryHover disabled:cursor-not-allowed disabled:opacity-40"
+                >
+                  <Send size={17} aria-hidden="true" />
+                </button>
+              </Tooltip>
             </div>
             <p className="mt-2 px-1 text-[10px] leading-relaxed text-evo-textSec">
               Não envie senhas, CPF, dados bancários ou informações da
@@ -601,7 +606,7 @@ function EdivAssistantSession() {
         }
         aria-expanded={open}
         aria-controls={open ? "ediv-assistant-panel" : undefined}
-        className={`fixed right-4 z-[61] flex h-14 items-center gap-2 rounded-full border border-evo-accent/30 bg-evo-primary px-4 text-sm font-semibold text-evo-textMain shadow-lg shadow-black/30 transition hover:-translate-y-0.5 hover:bg-evo-primaryHover focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-evo-accent sm:right-6 ${buttonPosition}`}
+        className={`fixed right-4 z-[61] flex h-14 items-center gap-2 rounded-full border border-evo-accent/30 bg-evo-primary px-4 text-sm font-semibold text-white shadow-lg shadow-black/30 transition hover:-translate-y-0.5 hover:bg-evo-primaryHover focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-evo-accent sm:right-6 ${buttonPosition}`}
       >
         {open ? (
           <X size={19} aria-hidden="true" />

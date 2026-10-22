@@ -71,7 +71,7 @@ export const Assessoria = () => (
       />
       <div className="relative z-10 grid gap-8 md:grid-cols-[1fr_auto] md:items-center">
         <div className="max-w-3xl">
-          <span className="inline-flex items-center gap-2 rounded-full border border-yellow-500/20 bg-yellow-500/10 px-3 py-1 text-xs font-medium text-yellow-300">
+          <span className="inline-flex items-center gap-2 rounded-full border border-evo-accent/30 bg-evo-accent/10 px-3 py-1 text-xs font-medium text-evo-accent">
             <Clock3 size={14} aria-hidden="true" /> Pré-lançamento · R$
             29,90/mês
           </span>
@@ -117,12 +117,12 @@ export const Assessoria = () => (
         <p className="text-xs font-semibold uppercase tracking-[.18em] text-evo-accent">
           O que estamos planejando
         </p>
-        <h3
+        <h2
           id="benefits-title"
           className="mt-2 text-xl font-bold text-evo-textMain"
         >
           Benefícios para acompanhar suas finanças
-        </h3>
+        </h2>
         <p className="mt-1 text-sm text-evo-textSec">
           A disponibilidade de cada item será confirmada na oferta final do
           plano.
@@ -134,7 +134,7 @@ export const Assessoria = () => (
             <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-evo-accent/10 text-evo-accent">
               <Icon size={20} aria-hidden="true" />
             </span>
-            <h4 className="font-semibold text-evo-textMain">{title}</h4>
+            <h3 className="font-semibold text-evo-textMain">{title}</h3>
             <p className="text-sm leading-relaxed text-evo-textSec">
               {description}
             </p>
@@ -149,9 +149,9 @@ export const Assessoria = () => (
           <p className="text-xs font-semibold uppercase tracking-[.18em] text-evo-accent">
             Assinatura Escola do Dividendo
           </p>
-          <h3 className="mt-2 text-xl font-bold">
+          <h2 className="mt-2 text-xl font-bold">
             Acompanhamento por R$ 29,90 ao mês
-          </h3>
+          </h2>
           <p className="mt-2 text-sm leading-relaxed text-evo-textSec">
             A proposta reúne canal de dúvidas, acompanhamento educativo da
             carteira e encontros temáticos. Os limites de cada benefício serão
@@ -184,9 +184,9 @@ export const Assessoria = () => (
           <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-evo-green/10 text-evo-green">
             <ShieldCheck size={20} aria-hidden="true" />
           </span>
-          <h3 className="mt-3 text-lg font-semibold">
+          <h2 className="mt-3 text-lg font-semibold">
             Transparência antes da contratação
-          </h3>
+          </h2>
           <p className="mt-2 text-sm leading-relaxed text-evo-textSec">
             Vamos publicar estes detalhes e as credenciais profissionais antes
             de oferecer o serviço.

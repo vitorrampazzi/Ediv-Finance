@@ -151,9 +151,9 @@ export function RankingFundamentals({
           <section className="rounded-lg border border-evo-border bg-evo-bgMain p-4 sm:p-5">
             <div className="flex flex-wrap items-start justify-between gap-2">
               <div>
-                <h4 className="text-sm font-semibold">
+                <h3 className="text-sm font-semibold">
                   Evolução da receita líquida
-                </h4>
+                </h3>
                 <p className="mt-1 text-xs text-evo-textSec">
                   Valores simulados em R$ milhões
                 </p>
@@ -224,7 +224,7 @@ export function RankingFundamentals({
                   className="mt-0.5 shrink-0 text-evo-accent"
                   aria-hidden="true"
                 />
-                <h4 className="text-sm font-semibold">{label}</h4>
+                <h3 className="text-sm font-semibold">{label}</h3>
               </div>
               <IndicatorHelp field={key} />
               {demo && data[key] ? (

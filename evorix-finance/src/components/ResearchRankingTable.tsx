@@ -76,7 +76,6 @@ export function ResearchRankingTable({
                     <Link
                       to={destination}
                       className="research-table-company-link"
-                      aria-label={`Abrir pesquisa de ${entry.companyName} (${entry.ticker})`}
                     >
                       <CompanyLogo
                         ticker={entry.ticker}
@@ -84,11 +83,12 @@ export function ResearchRankingTable({
                         size="sm"
                       />
                       <span className="research-table-company-copy">
-                        <strong>{entry.ticker}</strong>
+                        <strong>{entry.ticker}</strong>{" "}
                         <span title={entry.companyName}>
                           {entry.companyName}
                         </span>
                       </span>
+                      <span className="sr-only">. Abrir pesquisa</span>
                     </Link>
                   </th>
                   {researchModules.map(({ key, label }) => {
@@ -99,8 +99,11 @@ export function ResearchRankingTable({
                           <Link
                             to={researchModuleLink(destination, key)}
                             className="research-table-module-link"
-                            aria-label={`${label} de ${entry.companyName} (${entry.ticker}): ${summary.map((item) => [item.label, item.value].filter(Boolean).join(": ")).join("; ")}. Abrir módulo${demo ? ". Valores fictícios" : ""}`}
                           >
+                            <span className="sr-only">
+                              {label} de {entry.companyName} ({entry.ticker}).{" "}
+                              {demo ? "Valores fictícios. " : ""}
+                            </span>
                             <span className="research-table-summary">
                               {summary.map((item, index) => (
                                 <span

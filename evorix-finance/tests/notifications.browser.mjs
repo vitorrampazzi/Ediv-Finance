@@ -244,6 +244,12 @@ try {
           assert.ok(geometry.actions.every((action) => action.left >= 0 && action.right <= width && action.height >= 44));
           await mkdir(new URL("../.test-artifacts/notifications/", import.meta.url), { recursive: true });
           await page.screenshot({ path: fileURLToPath(new URL(`../.test-artifacts/notifications/harness-${width}.png`, import.meta.url)), animations: "disabled" });
+          await expect(page.getByRole("tooltip")).toBeVisible();
+          await page.keyboard.press("Escape");
+          await page.clock.runFor(500);
+          await expect(page.getByRole("tooltip")).toHaveCount(0);
+          await expect(page.getByRole("button", { name: /Notifica/ })).toBeFocused();
+          await expect(page.getByRole("button", { name: /Notifica/ })).toHaveAttribute("aria-expanded", "true");
           await page.keyboard.press("Escape");
           await page.clock.runFor(500);
           await expect(page.getByRole("button", { name: /Notifica/ })).toBeFocused();

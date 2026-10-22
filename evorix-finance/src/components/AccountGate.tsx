@@ -29,7 +29,7 @@ export function AccountGate({
           <p className="text-[11px] font-semibold uppercase tracking-wider text-evo-accent">
             Conta gratuita
           </p>
-          <h3 className="mt-1 font-semibold">{title}</h3>
+          <h2 className="mt-1 font-semibold">{title}</h2>
           <p className="mt-2 text-sm leading-relaxed text-evo-textSec">
             {description}
           </p>

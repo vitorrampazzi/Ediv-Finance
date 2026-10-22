@@ -294,7 +294,7 @@ try {
     await page.goto(root + "/app/ranking?visual=real");
     await expect(
       page.getByRole("link", {
-        name: "Abrir pesquisa de Empresa de teste A (PETR4)",
+        name: /^PETR4 Empresa de teste A\s*\. Abrir pesquisa$/,
         exact: true,
       }),
     ).toBeVisible();
@@ -313,7 +313,7 @@ try {
       .click();
     await expect(
       page.getByRole("link", {
-        name: "Abrir pesquisa de Empresa de teste A (PETR4)",
+        name: /^PETR4 Empresa de teste A\s*\. Abrir pesquisa$/,
         exact: true,
       }),
     ).toBeVisible();
@@ -515,8 +515,10 @@ try {
       await first.press("ArrowRight");
       await expect(page).toHaveURL(/aula=risco/);
       await expect(page.locator('[data-playlist-item="risco"]')).toBeFocused();
+      const after = await page.evaluate(() => window.scrollY);
       assert.ok(
-        Math.abs((await page.evaluate(() => window.scrollY)) - before) <= 4,
+        Math.abs(after - before) <= 4,
+        `Playlist scroll: ${before} -> ${after}`,
       );
       await page.goBack();
       await expect(page.locator("#classroom-title")).toContainText(
@@ -822,7 +824,7 @@ try {
       await page.goto(root + "/app/ranking?visual=real");
       await page
         .getByRole("link", {
-          name: "Abrir pesquisa de Empresa fictícia Excel (VALE3)",
+          name: /^VALE3 Empresa fictícia Excel\s*\. Abrir pesquisa$/,
           exact: true,
         })
         .click();

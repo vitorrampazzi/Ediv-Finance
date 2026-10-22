@@ -1,3 +1,4 @@
+import { Tooltip } from "../components/Tooltip";
 import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { ShieldCheck, Users, Search, RefreshCw, X } from "lucide-react";
@@ -159,14 +160,16 @@ function AccessEditor({
           </h2>
           <p className="break-all text-sm text-evo-textSec">{account.email}</p>
         </div>
-        <button
-          aria-label="Fechar edição de acesso"
-          className={button}
-          disabled={busy}
-          onClick={onCancel}
-        >
-          <X size={18} />
-        </button>
+        <Tooltip content={"Fechar edição de acesso"}>
+          <button
+            aria-label="Fechar edição de acesso"
+            className={button}
+            disabled={busy}
+            onClick={onCancel}
+          >
+            <X size={18} />
+          </button>
+        </Tooltip>
       </div>
       {!review ? (
         <form

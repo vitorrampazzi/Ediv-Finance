@@ -33,6 +33,7 @@ export function ResetPasswordPage() {
     }
     if (password !== confirmation) {
       setError("As senhas precisam ser iguais.");
+      document.getElementById("reset-password-confirmation")?.focus();
       return;
     }
     setBusy(true);
@@ -82,7 +83,14 @@ export function ResetPasswordPage() {
             </label>
             <PasswordInput
               id="reset-password"
-              aria-describedby="reset-password-hint"
+              aria-describedby={["reset-password-hint", error && "reset-error"]
+                .filter(Boolean)
+                .join(" ")}
+              aria-invalid={
+                Boolean(
+                  error === passwordPolicyHint && !isValidNewPassword(password),
+                ) || undefined
+              }
               visibilityLabel="nova senha"
               containerClassName="mt-2"
               required
@@ -100,6 +108,13 @@ export function ResetPasswordPage() {
             </label>
             <PasswordInput
               id="reset-password-confirmation"
+              aria-describedby={error ? "reset-error" : undefined}
+              aria-invalid={
+                Boolean(
+                  error === "As senhas precisam ser iguais." &&
+                  password !== confirmation,
+                ) || undefined
+              }
               visibilityLabel="confirmação da senha"
               containerClassName="mt-2"
               required
@@ -110,7 +125,7 @@ export function ResetPasswordPage() {
               onChange={(e) => setConfirmation(e.target.value)}
             />
           </div>
-          {error && <ErrorMessage>{error}</ErrorMessage>}
+          {error && <ErrorMessage id="reset-error">{error}</ErrorMessage>}
           <button className="action" disabled={busy}>
             {busy ? "Salvando…" : "Alterar senha"}
           </button>

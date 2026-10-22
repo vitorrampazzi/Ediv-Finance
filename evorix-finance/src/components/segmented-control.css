@@ -4,7 +4,7 @@
   padding: 4px;
   border: 1px solid var(--ediv-line, var(--ediv-border));
   border-radius: 12px;
-  background: rgb(0 0 0 / 14%);
+  background: var(--ediv-subtle);
 }
 .ediv-segmented button {
   position: relative;

@@ -130,7 +130,7 @@ try {
       await page.waitForURL((url) => url.pathname === "/app");
       await expect(
         page.getByRole("button", {
-          name: "Abrir menu da conta de Teste a",
+          name: "Abrir menu da conta de Teste a · TA",
           exact: true,
         }),
       ).toBeVisible();
@@ -147,7 +147,7 @@ try {
   await secondTab.goto(root + "/app");
   await expect(
     secondTab.getByRole("button", {
-      name: "Abrir menu da conta de Teste a",
+      name: "Abrir menu da conta de Teste a · TA",
       exact: true,
     }),
   ).toBeVisible();
@@ -176,7 +176,7 @@ try {
       await secondTab.waitForURL((url) => url.pathname === "/app");
       await expect(
         secondTab.getByRole("button", {
-          name: "Abrir menu da conta de Teste b",
+          name: "Abrir menu da conta de Teste b · TB",
           exact: true,
         }),
       ).toBeVisible();
@@ -215,7 +215,7 @@ try {
         .click();
       await expect(
         page.getByRole("button", {
-          name: "Abrir menu da conta de Teste b",
+          name: "Abrir menu da conta de Teste b · TB",
           exact: true,
         }),
       ).toBeVisible();

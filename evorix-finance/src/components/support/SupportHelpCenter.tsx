@@ -1,3 +1,4 @@
+import { Tooltip } from "../Tooltip";
 import { useId, useState } from "react";
 import { Link } from "react-router-dom";
 import {
@@ -151,14 +152,16 @@ export function SupportHelpCenter({
               maxLength={160}
             />
             {query && (
-              <button
-                type="button"
-                onClick={() => setQuery("")}
-                aria-label="Limpar busca"
-                className="absolute right-0 top-0 flex min-h-11 w-11 items-center justify-center rounded-r-lg text-evo-textSec hover:text-evo-textMain"
-              >
-                <X size={17} aria-hidden="true" />
-              </button>
+              <Tooltip content={"Limpar busca"}>
+                <button
+                  type="button"
+                  onClick={() => setQuery("")}
+                  aria-label="Limpar busca"
+                  className="absolute right-0 top-0 flex min-h-11 w-11 items-center justify-center rounded-r-lg text-evo-textSec hover:text-evo-textMain"
+                >
+                  <X size={17} aria-hidden="true" />
+                </button>
+              </Tooltip>
             )}
           </div>
         </div>

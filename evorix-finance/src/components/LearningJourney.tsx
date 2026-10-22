@@ -30,7 +30,7 @@ export function LearningJourney({
 
   return (
     <section
-      aria-labelledby="learning-journey-title"
+      aria-label="Sua trilha de aprendizado"
       className="ediv-learning-journey"
     >
       <div className="ediv-learning-journey-copy">

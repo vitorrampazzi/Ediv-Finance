@@ -1,3 +1,4 @@
+import { Tooltip } from "./Tooltip";
 import { useEffect, useId, useRef, useState } from "react";
 import { ArrowLeft, ArrowRight, CheckCircle2, Clock3 } from "lucide-react";
 import { approvedVideoEmbed } from "../lib/learningCatalog";
@@ -124,26 +125,30 @@ export function LearningCourseCarousel({
           role="group"
           aria-label="Navegar pelos minicursos"
         >
-          <button
-            type="button"
-            onClick={() => scrollCourses(-1)}
-            disabled={!bounds.previous}
-            aria-label="Ver minicursos anteriores"
-            aria-controls={carouselId}
-            className="ediv-learning-navigation-button"
-          >
-            <ArrowLeft size={18} aria-hidden="true" />
-          </button>
-          <button
-            type="button"
-            onClick={() => scrollCourses(1)}
-            disabled={!bounds.next}
-            aria-label="Ver próximos minicursos"
-            aria-controls={carouselId}
-            className="ediv-learning-navigation-button"
-          >
-            <ArrowRight size={18} aria-hidden="true" />
-          </button>
+          <Tooltip content={"Ver minicursos anteriores"}>
+            <button
+              type="button"
+              onClick={() => scrollCourses(-1)}
+              disabled={!bounds.previous}
+              aria-label="Ver minicursos anteriores"
+              aria-controls={carouselId}
+              className="ediv-learning-navigation-button"
+            >
+              <ArrowLeft size={18} aria-hidden="true" />
+            </button>
+          </Tooltip>
+          <Tooltip content={"Ver próximos minicursos"}>
+            <button
+              type="button"
+              onClick={() => scrollCourses(1)}
+              disabled={!bounds.next}
+              aria-label="Ver próximos minicursos"
+              aria-controls={carouselId}
+              className="ediv-learning-navigation-button"
+            >
+              <ArrowRight size={18} aria-hidden="true" />
+            </button>
+          </Tooltip>
         </div>
       </div>
       <div
@@ -253,7 +258,7 @@ export function LearningCourseCarousel({
                         ? "Revisar minicurso"
                         : count > 0
                           ? "Continuar minicurso"
-                          : "Começar minicurso"}
+                          : "Abrir minicurso"}
                       <ArrowRight size={16} aria-hidden="true" />
                     </button>
                   )}

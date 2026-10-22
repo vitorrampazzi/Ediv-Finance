@@ -157,6 +157,7 @@ export function RegisterPage() {
             </label>
             <input
               id="register-name"
+              aria-describedby={error ? "register-error" : undefined}
               type="text"
               autoComplete="name"
               required
@@ -176,6 +177,7 @@ export function RegisterPage() {
             </label>
             <input
               id="register-email"
+              aria-describedby={error ? "register-error" : undefined}
               type="email"
               autoComplete="email"
               required
@@ -194,7 +196,17 @@ export function RegisterPage() {
             </label>
             <PasswordInput
               id="register-password"
-              aria-describedby="register-password-hint"
+              aria-describedby={[
+                "register-password-hint",
+                error && "register-error",
+              ]
+                .filter(Boolean)
+                .join(" ")}
+              aria-invalid={
+                Boolean(
+                  error === passwordPolicyHint && !isValidNewPassword(password),
+                ) || undefined
+              }
               autoComplete="new-password"
               required
               minLength={passwordMinLength}
@@ -212,7 +224,7 @@ export function RegisterPage() {
               onToken={setChallengeToken}
             />
           )}
-          {error && <ErrorMessage>{error}</ErrorMessage>}
+          {error && <ErrorMessage id="register-error">{error}</ErrorMessage>}
           <button
             type="submit"
             disabled={busy || Boolean(challenge?.required && !challengeToken)}

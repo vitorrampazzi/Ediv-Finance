@@ -208,7 +208,14 @@ function App() {
                   </Route>
                 </Route>
               </Route>
-              <Route path="*" element={<NotFound />} />
+              <Route
+                path="*"
+                element={
+                  <PublicLayout>
+                    <NotFound />
+                  </PublicLayout>
+                }
+              />
             </Routes>
           </Suspense>
         </PageErrorBoundary>
@@ -227,7 +234,7 @@ function NotFound() {
   return (
     <section className="mx-auto flex min-h-[50vh] max-w-xl flex-col items-center justify-center gap-4 text-center">
       <p className="font-numbers text-sm text-evo-accent">404</p>
-      <h2 className="text-2xl font-bold">Página não encontrada</h2>
+      <h1 className="text-2xl font-bold">Página não encontrada</h1>
       <p className="text-sm leading-relaxed text-evo-textSec">
         O endereço pode estar incorreto ou a página pode ter sido removida.
       </p>
