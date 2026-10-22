@@ -1,5 +1,5 @@
 import { useRankingPublication } from "../hooks/useRankingPublication";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { Link, useLocation, useSearchParams } from "react-router-dom";
 import {
   BookOpen,
@@ -73,6 +73,8 @@ function MemberIncomeRanking() {
     current,
   } = useRankingPublication(publication);
   const [message, setMessage] = useState("");
+  const resultsRef = useRef<HTMLDivElement>(null);
+  const [pagination, setPagination] = useState({ key: "", limit: 10 });
   const search = (searchParams.get("busca") || "").slice(0, 80);
   const requestedSector = (searchParams.get("setor") || "").slice(0, 120);
   const requestedHorizon = searchParams.get("prazo") || "";
@@ -237,6 +239,29 @@ function MemberIncomeRanking() {
       setLoading(false);
       setLoadedFor(requestKey);
     }
+  };
+  const paginationKey = JSON.stringify([
+    search,
+    sector,
+    horizon,
+    sort,
+    publication,
+    showingDemo,
+    ranking.id,
+  ]);
+  const visibleLimit = pagination.key === paginationKey ? pagination.limit : 10;
+  if (pagination.key !== paginationKey)
+    setPagination({ key: paginationKey, limit: 10 });
+  const visibleEntries = entries.slice(0, visibleLimit);
+  const showMore = () => {
+    setPagination({ key: paginationKey, limit: visibleLimit + 10 });
+    requestAnimationFrame(() => {
+      resultsRef.current
+        ?.querySelector<HTMLElement>(
+          `tbody tr:nth-child(${visibleLimit + 1}) a`,
+        )
+        ?.focus({ preventScroll: true });
+    });
   };
   const sendFile = async (publish: boolean) => {
     if (!file) return;
@@ -798,18 +823,19 @@ function MemberIncomeRanking() {
         )}
         <div className="flex flex-wrap items-center justify-between gap-2">
           <p
+            id="ranking-count"
             role="status"
             aria-live="polite"
             className="text-xs text-evo-textSec"
           >
             {loading && !showingDemo
               ? "Carregando pesquisas…"
-              : `${entries.length} de ${totalEntries} `}
+              : `${visibleEntries.length} exibidas de ${entries.length} filtradas · ${totalEntries} `}
             {loading && !showingDemo
               ? ""
               : showingDemo
-                ? "empresas de exemplo"
-                : "ações"}
+                ? "empresas de exemplo no total"
+                : "ações no total"}
           </p>
           {(hasFilters || sort !== "rank") && (
             <button
@@ -886,13 +912,31 @@ function MemberIncomeRanking() {
             </button>
           </Card>
         ) : dividendMode ? (
-          <DividendRankingTable entries={entries} researchLink={researchLink} />
+          <div ref={resultsRef} id="ranking-results">
+            <DividendRankingTable
+              entries={visibleEntries}
+              researchLink={researchLink}
+            />
+          </div>
         ) : (
-          <ResearchRankingTable
-            entries={entries}
-            demo={showingDemo}
-            researchLink={researchLink}
-          />
+          <div ref={resultsRef} id="ranking-results">
+            <ResearchRankingTable
+              entries={visibleEntries}
+              demo={showingDemo}
+              researchLink={researchLink}
+            />
+          </div>
+        )}
+        {!loading && !error && visibleEntries.length < entries.length && (
+          <button
+            type="button"
+            className={button}
+            aria-controls="ranking-results"
+            aria-describedby="ranking-count"
+            onClick={showMore}
+          >
+            Ver mais ações
+          </button>
         )}
       </section>
       {!showingDemo && current && ranking.sourceFileName && (
