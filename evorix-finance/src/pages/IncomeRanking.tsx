@@ -444,7 +444,7 @@ function MemberIncomeRanking() {
             informações da empresa, dívida líquida e estatísticas. Preencha cada
             módulo como texto, com os valores, unidades e datas que deseja
             exibir. Período e fonte também são opcionais. Campos vazios aparecem
-            como não informados.
+            como não informados. Os metadados editoriais também são opcionais.
           </p>
           <div className="mt-4 grid gap-3 sm:grid-cols-2">
             {(
@@ -458,7 +458,7 @@ function MemberIncomeRanking() {
               <label key={key} className="text-sm">
                 {
                   [
-                    "Título da publicação (opcional)",
+                    "Título da publicação",
                     "Nome profissional (opcional)",
                     "Categoria profissional (opcional)",
                     "Registro profissional (opcional)",
