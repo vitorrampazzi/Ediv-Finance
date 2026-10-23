@@ -227,11 +227,23 @@ try {
       const table = page
         .getByRole("region", { name: "Ranking de dividendos por empresa" })
         .locator("table");
-      await expect(table.locator("thead th")).toHaveText(
+      assert.deepEqual(
+        await table
+          .locator("thead th")
+          .evaluateAll((nodes) => nodes.map((node) => node.dataset.column)),
         dividendColumns
           .filter((column) => column.ranking)
-          .map((column) => column.label),
+          .map((column) => column.key),
       );
+      await page.mouse.move(0, 0);
+      for (const column of dividendColumns.filter((column) => column.ranking)) {
+        const header = table.locator(
+          '[data-column="' + column.key + '"] button',
+        );
+        await header.focus();
+        await expect(page.getByRole("tooltip")).toContainText(column.label);
+        await header.press("Escape");
+      }
       await expect(table.locator("tbody tr")).toHaveCount(10);
       await expect(page.locator("#ranking-count")).toContainText(
         "10 exibidas de 90 filtradas · 90 ações no total",
@@ -370,7 +382,9 @@ try {
         entries[0].dividendAnalysis.marketValue,
         "currency",
       );
-      const compact = page.locator('[data-field="marketValue"] button');
+      const compact = page.locator(
+        '.fc-summary-strip [data-summary="marketValue"] .fc-exact',
+      );
       await compact.focus();
       await expect(page.getByRole("tooltip")).toHaveText(exact);
       await compact.press("Escape");
@@ -384,9 +398,7 @@ try {
       await expect(page.getByRole("tooltip")).toContainText("P/L projetado");
       await bar.press("Escape");
       const nav = page.getByRole("navigation", { name: "Seções da análise" });
-      await nav
-        .getByRole("link", { name: "Dividendos e distribuição", exact: true })
-        .focus();
+      await nav.getByRole("link", { name: "Dividendos", exact: true }).focus();
       await page.keyboard.press("Enter");
       await expect(page.locator("#dividendos")).toBeFocused();
       const navBounds = await nav.boundingBox();
@@ -438,24 +450,29 @@ try {
         ),
       ).toHaveText("0,00%");
       await expect(
-        page.locator('.dividend-calendar li[data-announced="true"]'),
+        page.locator('.fc-calendar li[data-announced="true"]'),
       ).toHaveCount(0);
-      await expect(page.locator(".dividend-calendar")).toContainText(
+      await expect(page.locator(".fc-calendar")).toContainText(
         "Nenhum mês foi presumido",
       );
       const unavailable = page
         .locator(".dividend-comparison")
         .filter({ hasText: "Cotação de referência e preço teto" });
-      await expect(unavailable.locator(".dividend-chart-bar")).toHaveCount(0);
-      await expect(unavailable).toContainText("Barras indisponíveis");
-      await expect(
-        page.locator('[data-field="netDebtToEbitda"]'),
-      ).toContainText("não comprova caixa líquido");
+      await expect(unavailable.locator(".recharts-bar-rectangle")).toHaveCount(
+        0,
+      );
+      await expect(unavailable).toContainText("Comparação indisponível");
+      const debt = page.locator('[data-field="netDebtToEbitda"] dt button');
+      await debt.focus();
+      await expect(page.getByRole("tooltip")).toContainText(
+        "não comprova caixa líquido",
+      );
+      await debt.press("Escape");
       probeEntry = null;
     },
   );
   await run(
-    "Detalhe: 21 campos em7/5/5/4 por90tickers, valores/fórmulas/calendário exatos",
+    "Detalhe: 21 campos em5categorias por90tickers, valores/fórmulas/calendário exatos",
     async () => {
       for (const entry of entries) {
         await page.goto(
@@ -491,20 +508,16 @@ try {
               ),
             },
           );
-        for (const [id, count] of [
-          ["visao-geral", 7],
-          ["valuation", 5],
-          ["dividendos", 5],
-          ["resultados", 4],
-        ]) {
-          await expect(page.locator("#" + id + " [data-field]")).toHaveCount(
-            count,
-          );
+        for (const [index, count] of [6, 1, 3, 5, 3].entries()) {
+          await expect(
+            page.locator(".fc-category").nth(index).locator(".fc-metric"),
+          ).toHaveCount(count);
         }
-        await expect(page.locator(".dividend-calendar li")).toHaveCount(12);
+        await expect(page.locator(".dividend-section-nav a")).toHaveCount(6);
+        await expect(page.locator(".fc-calendar li")).toHaveCount(12);
         assert.deepEqual(
           await page
-            .locator('.dividend-calendar li[data-announced="true"]')
+            .locator('.fc-calendar li[data-announced="true"]')
             .evaluateAll((nodes) =>
               nodes.map(
                 (node) => [...node.parentNode.children].indexOf(node) + 1,

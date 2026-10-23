@@ -17,47 +17,47 @@ const audit = process.env.EDIV_WORKBOOK_AUDIT
 const entries = process.env.EDIV_RANKING_ENTRIES
   ? JSON.parse(await readFile(process.env.EDIV_RANKING_ENTRIES, "utf8"))
   : audit
-  ? audit.sheets[0].data.slice(1).map((row, index) => {
-      const values = row.map(({ value }) => value);
-      return {
+    ? audit.sheets[0].data.slice(1).map((row, index) => {
+        const values = row.map(({ value }) => value);
+        return {
+          rank: index + 1,
+          companyName: values[0],
+          ticker: values[1],
+          sector: values[2],
+          dividendAnalysis: Object.fromEntries(
+            dividendColumns
+              .slice(3)
+              .map((column, i) => [
+                column.key,
+                values[i + 3] == null
+                  ? null
+                  : column.format === "date"
+                    ? String(values[i + 3]).slice(0, 10)
+                    : String(values[i + 3]),
+              ]),
+          ),
+        };
+      })
+    : Array.from({ length: 90 }, (_, index) => ({
         rank: index + 1,
-        companyName: values[0],
-        ticker: values[1],
-        sector: values[2],
+        ticker: "TEST" + index,
+        companyName: "Empresa de teste " + index,
+        sector: "Setor de teste",
         dividendAnalysis: Object.fromEntries(
           dividendColumns
             .slice(3)
-            .map((column, i) => [
+            .map((column) => [
               column.key,
-              values[i + 3] == null
-                ? null
-                : column.format === "date"
-                  ? String(values[i + 3]).slice(0, 10)
-                  : String(values[i + 3]),
+              column.format === "date"
+                ? "2026-10-20"
+                : column.key === "announcementMonths"
+                  ? "mar abr jun set dez"
+                  : column.format === "text"
+                    ? "5x por ano"
+                    : "1",
             ]),
         ),
-      };
-    })
-  : Array.from({ length: 90 }, (_, index) => ({
-      rank: index + 1,
-      ticker: "TEST" + index,
-      companyName: "Empresa de teste " + index,
-      sector: "Setor de teste",
-      dividendAnalysis: Object.fromEntries(
-        dividendColumns
-          .slice(3)
-          .map((column) => [
-            column.key,
-            column.format === "date"
-              ? "2026-10-20"
-              : column.key === "announcementMonths"
-                ? "mar abr jun set dez"
-                : column.format === "text"
-                  ? "5x por ano"
-                  : "1",
-          ]),
-      ),
-    }));
+      }));
 const completePublication = {
   id: "27",
   title: "Ranking publicado de teste",
@@ -340,9 +340,7 @@ try {
           entry.companyName,
         );
         await expect(page.getByRole("heading", { level: 1 })).toBeFocused();
-        await expect(
-          page.locator(".dividend-overview-cards > div"),
-        ).toHaveCount(6);
+        await expect(page.locator(".fc-summary-strip > div")).toHaveCount(6);
         await expect(
           page.locator(".dividend-information > [data-field]"),
         ).toHaveCount(21);
@@ -363,21 +361,18 @@ try {
               column.format,
             ),
           );
-        for (const [id, count] of [
-          ["visao-geral", 7],
-          ["valuation", 5],
-          ["dividendos", 5],
-          ["resultados", 4],
-        ])
-          await expect(page.locator("#" + id + " [data-field]")).toHaveCount(
-            count,
-          );
-        await expect(
-          page.locator(".dividend-price-panel .dividend-comparison"),
-        ).toHaveCount(1);
+        for (const [index, count] of [6, 1, 3, 5, 3].entries()) {
+          await expect(
+            page.locator(".fc-category").nth(index).locator(".fc-metric"),
+          ).toHaveCount(count);
+        }
+        await expect(page.locator(".dividend-section-nav a")).toHaveCount(6);
+        await expect(page.locator("#cotacao .dividend-comparison")).toHaveCount(
+          1,
+        );
         assert.ok(
           await page
-            .locator(".dividend-price-panel")
+            .locator("#cotacao")
             .evaluate((node) =>
               Boolean(
                 node.compareDocumentPosition(
@@ -386,7 +381,7 @@ try {
               ),
             ),
         );
-        await expect(page.locator(".dividend-calendar li")).toHaveCount(12);
+        await expect(page.locator(".fc-calendar li")).toHaveCount(12);
       }
       for (const button of await page.locator(".dividend-chart-row").all()) {
         await expect(button).toHaveAccessibleName(
@@ -403,10 +398,10 @@ try {
         fullPage: true,
       });
       await page
-        .locator(".dividend-dashboard-header")
+        .locator(".fc-company-identity")
         .screenshot({ path: output + "/company-header.png" });
       await page
-        .locator(".dividend-price-panel")
+        .locator("#cotacao")
         .screenshot({ path: output + "/company-primary-comparison.png" });
     },
   );
@@ -440,9 +435,7 @@ try {
         await page.goto(
           origin + "/app/ranking/acao/" + entries[0].ticker + "?publication=27",
         );
-        await expect(
-          page.locator(".dividend-overview-cards > div"),
-        ).toHaveCount(6);
+        await expect(page.locator(".fc-summary-strip > div")).toHaveCount(6);
         await page.evaluate(
           (theme) => (document.documentElement.dataset.theme = theme),
           theme,
@@ -461,7 +454,7 @@ try {
         });
         const nav = page.getByRole("navigation", { name: "Seções da análise" });
         await nav
-          .getByRole("link", { name: "Dividendos e distribuição", exact: true })
+          .getByRole("link", { name: "Dividendos", exact: true })
           .focus();
         await page.keyboard.press("Enter");
         await expect(page.locator("#dividendos")).toBeFocused();
@@ -475,9 +468,10 @@ try {
     output + "/results.json",
     JSON.stringify(
       {
-        fixture: audit || process.env.EDIV_RANKING_ENTRIES
-          ? "Audited workbook in local API stubs"
-          : "Synthetic90 in local API stubs",
+        fixture:
+          audit || process.env.EDIV_RANKING_ENTRIES
+            ? "Audited workbook in local API stubs"
+            : "Synthetic90 in local API stubs",
         results,
         errors,
         unknown,
