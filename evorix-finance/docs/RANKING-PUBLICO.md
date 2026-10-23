@@ -6,14 +6,21 @@ publicação salva é a única fonte: não há dados oficiais embutidos no bundl
 cópia de registros, nova importação, migração ou alteração da metodologia.
 
 O endpoint seleciona apenas id, título, data e entradas da última publicação.
-A resposta usa whitelist de posição, ticker, empresa, setor e dos 18 indicadores
-de dividendos já existentes. Autoria, documentos profissionais, nome do arquivo,
+A resposta ordena por posição e limita a três empresas. Usa whitelist de posição,
+ticker, empresa e somente três indicadores: Dividend Yield bruto estimado
+(estimatedGrossDividendYield), P/L projetado (projectedPE) e margem de segurança
+(safetyMargin). totalEntries informa apenas o tamanho da prévia. Parâmetros de
+página, limite, campos ou versão não ampliam a resposta.
+Autoria, documentos profissionais, nome do arquivo,
 rascunhos, histórico, tese, riscos e controles administrativos ficam de fora.
 As rotas completas, comparações e gravações continuam exigindo autenticação e
 as permissões existentes. Os limites gerais da API continuam ativos.
 
-A ordem corresponde à posição gravada na publicação. A home começa com dez
-linhas e acrescenta dez por clique até acabar. Não há classificação por retorno,
+A ordem corresponde à posição gravada na publicação. A home mostra somente três
+empresas e um convite ao cadastro gratuito. O CTA usa o cadastro existente com
+destino /app/ranking; login e confirmação preservam esse destino. A área
+autenticada mantém dez linhas iniciais e mais dez por clique até acabar.
+Não há classificação por retorno,
 recomendação nova nem substituição de ausências por zero. Carregamento, ausência
 de publicação e erro têm estados próprios; erro permite tentar novamente.
 Nenhum estado usa empresas demonstrativas como fallback.
@@ -41,7 +48,8 @@ históricos fictícios nem controles de períodos que não teriam dados reais.
 Calendário mostra os meses habituais de anúncio, sem prometer pagamento.
 
 Validação desta etapa é focal: serializer público com sentinelas privadas,
-integração anônima/privada na suíte existente, paginação/links/estados e
+integração anônima/privada na suíte existente, limite3/3 na API e UI,
+paginação autenticada/links/cadastro/estados e
 comportamento do dashboard. Os checks obrigatórios quality e dependency-security
 precisam passar no commit final antes de integrar por PR. Não certifica auditoria
 WCAG completa, leitores reais, todos os navegadores ou cotações em tempo real.

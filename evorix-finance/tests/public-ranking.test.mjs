@@ -1,7 +1,11 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { publicRanking } from "../server/public-ranking.js";
-import { dividendColumns } from "../dividend-analysis.mjs";
+const metricKeys = [
+  "estimatedGrossDividendYield",
+  "projectedPE",
+  "safetyMargin",
+];
 
 test("publicação pública não expõe metadados, texto privado ou campos desconhecidos", () => {
   const privateFields = {
@@ -28,7 +32,8 @@ test("publicação pública não expõe metadados, texto privado ou campos desco
         sector: "Setor",
         ...privateFields,
         dividendAnalysis: {
-          expectedPayout: "1.06",
+          safetyMargin: "0.41",
+          projectedPE: "8.6999999999999993",
           estimatedGrossDividendYield: "0.115",
           totalShares: "104995666.67",
           netDebtToEbitda: "-2.5",
@@ -50,33 +55,30 @@ test("publicação pública não expõe metadados, texto privado ou campos desco
     "rank",
     "ticker",
     "companyName",
-    "sector",
     "dividendAnalysis",
   ]);
-  assert.deepEqual(
-    Object.keys(result.entries[0].dividendAnalysis),
-    dividendColumns.slice(3).map(({ key }) => key),
-  );
+  assert.deepEqual(Object.keys(result.entries[0].dividendAnalysis), metricKeys);
   assert.equal(JSON.stringify(result).includes("PRIVATE_"), false);
   assert.equal(result.id, "9007199254740993");
   for (const [key, value] of Object.entries({
-    expectedPayout: "1.06",
+    safetyMargin: "0.41",
+    projectedPE: "8.6999999999999993",
     estimatedGrossDividendYield: "0.115",
-    totalShares: "104995666.67",
-    netDebtToEbitda: "-2.5",
-    referencePrice: "0",
   }))
     assert.equal(result.entries[0].dividendAnalysis[key], value);
-  assert.equal(result.entries[0].dividendAnalysis.updatedOn, null);
+  assert.equal(result.entries[0].dividendAnalysis.updatedOn, undefined);
 });
 
-test("ordena por rank sem truncar nem modificar a publicação e aceita JSON do banco", () => {
+test("limita a três por rank sem modificar a publicação e aceita JSON do banco", () => {
   const entries = Array.from({ length: 90 }, (_, index) => ({
     rank: 90 - index,
     ticker: "REAL" + index,
     companyName: "Empresa" + index,
     sector: null,
-    dividendAnalysis: { marketValue: "46038142480.980003" },
+    dividendAnalysis: {
+      projectedPE: "8.6999999999999993",
+      marketValue: "PRIVATE_METRIC",
+    },
   }));
   const before = structuredClone(entries);
   const result = publicRanking({
@@ -85,14 +87,14 @@ test("ordena por rank sem truncar nem modificar a publicação e aceita JSON do 
     created_at: null,
     entries_json: entries,
   });
-  assert.equal(result.totalEntries, 90);
+  assert.equal(result.totalEntries, 3);
   assert.deepEqual(
     result.entries.map(({ rank }) => rank),
-    Array.from({ length: 90 }, (_, i) => i + 1),
+    [1, 2, 3],
   );
   assert.equal(
-    result.entries[0].dividendAnalysis.marketValue,
-    "46038142480.980003",
+    result.entries[0].dividendAnalysis.projectedPE,
+    "8.6999999999999993",
   );
   assert.deepEqual(entries, before);
   assert.deepEqual(
@@ -125,13 +127,13 @@ test("métricas ausentes ou de tipo indevido viram null sem incluir objetos priv
         ticker: "REAL3",
         companyName: "Real",
         dividendAnalysis: {
-          marketValue: { secret: "PRIVATE" },
-          expectedPayout: 1.06,
+          projectedPE: { secret: "PRIVATE" },
+          safetyMargin: 1.06,
         },
       },
     ],
   });
-  assert.equal(result.entries[0].sector, null);
+  assert.equal(result.entries[0].sector, undefined);
   assert.ok(
     Object.values(result.entries[0].dividendAnalysis).every(
       (value) => value === null,
