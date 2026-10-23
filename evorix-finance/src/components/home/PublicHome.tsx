@@ -76,12 +76,12 @@ export function PublicHome({
           </div>
         </div>
         <nav className="ph-container ph-page-index" aria-label="Nesta página">
-          <a href="#caderno-de-exemplo">Pesquisas de ações</a>
+          <a href="#caderno-de-exemplo">Ranking de ações</a>
           <a href="#como-a-ediv-ensina">Educação em dividendos</a>
         </nav>
       </section>
-      <TeachingJourney />
       <ResearchSample />
+      <TeachingJourney />
       <ReadingChecklist />
       <LearningTerms />
       <PublicQuestions />

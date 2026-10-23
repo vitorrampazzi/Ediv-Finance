@@ -48,23 +48,23 @@ export function PublicQuestions() {
             </summary>
             <div className="ph-faq-expand">
               <p>
-                É a lista de cenários publicados pela equipe. Cada pesquisa pode
-                reunir potencial, preço-alvo, prazo, tese e riscos, além de
-                dados sobre a empresa. Abra uma empresa para ler os detalhes.
+                É a lista de empresas da publicação mais recente da equipe, na
+                ordem original da pesquisa. A tabela apresenta os indicadores da
+                planilha; a cotação corresponde à sua data de referência.
               </p>
             </div>
           </details>
           <details className="ph-faq-item">
             <summary>
-              As empresas do exemplo são reais?
+              As empresas do ranking são reais?
               <ChevronDown size={18} aria-hidden="true" />
             </summary>
             <div className="ph-faq-expand">
               <p>
-                Não. O caderno de exemplo usa empresas e números fictícios para
-                apresentar o formato das pesquisas. Ele aparece com o rótulo
-                “Demonstração · dados fictícios”. As pesquisas publicadas pela
-                equipe são apresentadas separadamente no ranking.
+                Sim. A home mostra as empresas e os indicadores da pesquisa
+                publicada pela equipe. Os valores refletem a data da planilha,
+                não cotações ao vivo. Abra uma empresa para acessar a análise
+                completa com sua conta.
               </p>
             </div>
           </details>

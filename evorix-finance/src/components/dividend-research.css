@@ -108,9 +108,16 @@
   min-width: 0;
 }
 .dividend-dashboard-header {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.5fr);
+  align-items: start;
+  gap: 2rem;
+}
+.dividend-header-identity {
   display: flex;
   align-items: flex-start;
   gap: 1rem;
+  min-width: 0;
 }
 .dividend-identity-fields {
   flex: 1;
@@ -135,13 +142,56 @@
   gap: 1rem;
   margin: 1.5rem 0;
 }
+.dividend-overview-cards {
+  margin: 0;
+  gap: 0.9rem 1.25rem;
+}
+.dividend-overview-cards .dividend-metric-explanation {
+  display: none;
+}
+.dividend-summary-metric {
+  min-width: 0;
+  padding-block: 0.6rem;
+  border-bottom: 1px solid var(--ediv-line);
+}
+.dividend-summary-metric dd {
+  margin-top: 0.6rem;
+  font-size: 1.25rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
 .dividend-overview-cards .dividend-metric,
 .dividend-metric-grid .dividend-metric {
   min-width: 0;
   padding: 1.2rem;
-  border: 1px solid var(--ediv-line);
-  border-radius: 0.75rem;
-  background: var(--ediv-panel, var(--ediv-inset));
+  border-bottom: 1px solid var(--ediv-line);
+}
+.dividend-overview-cards .dividend-metric {
+  padding: 0.6rem 0;
+}
+.dividend-metric-grid {
+  column-gap: 2rem;
+  row-gap: 0;
+}
+.dividend-metric-grid .dividend-metric {
+  padding: 1rem 0;
+}
+.dividend-price-panel {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
+  gap: 1.25rem;
+  padding-block: 1.25rem 2rem;
+  border-bottom: 1px solid var(--ediv-line);
+}
+.dividend-price-panel .dividend-signed {
+  margin: 0;
+  align-self: stretch;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+.dividend-valuation-details .dividend-charts-grid {
+  grid-template-columns: minmax(0, 1fr);
 }
 .dividend-metric dd[data-exact-value] {
   margin-top: 0.65rem;
@@ -324,6 +374,11 @@
   margin-top: 0.5rem;
 }
 @media (max-width: 767px) {
+  .dividend-dashboard-header,
+  .dividend-price-panel {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 1.25rem;
+  }
   .dividend-overview-cards,
   .dividend-metric-grid,
   .dividend-charts-grid,
@@ -341,5 +396,12 @@
   }
   .dividend-dashboard-header {
     gap: 0.7rem;
+  }
+  .dividend-overview-cards {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .dividend-overview-cards .dividend-metric dd[data-exact-value],
+  .dividend-summary-metric dd {
+    font-size: 1.2rem;
   }
 }

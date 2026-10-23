@@ -11,15 +11,21 @@ import type { Entry, Ranking } from "../lib/ranking";
 import { CompanyLogo } from "./CompanyLogo";
 import "./dividend-research.css";
 import { DividendDashboard } from "./DividendDashboard";
+export type DividendTableEntry = Pick<
+  Entry,
+  "rank" | "ticker" | "companyName" | "sector" | "dividendAnalysis"
+>;
 
 export function DividendRankingTable({
   entries,
   researchLink,
   complete = false,
+  showRank = false,
 }: {
-  entries: Entry[];
+  entries: DividendTableEntry[];
   researchLink?: (ticker: string) => string;
   complete?: boolean;
+  showRank?: boolean;
 }) {
   const id = useId();
   const columns = complete
@@ -59,10 +65,11 @@ export function DividendRankingTable({
             {complete
               ? "Informações completas a publicar"
               : "Ranking de dividendos"}{" "}
-            · {columns.length} colunas
+            · {columns.length + (showRank ? 1 : 0)} colunas
           </caption>
           <thead>
             <tr>
+              {showRank && <th scope="col">Posição</th>}
               {columns.map((column) => (
                 <th scope="col" key={column.key}>
                   {column.label}
@@ -73,6 +80,7 @@ export function DividendRankingTable({
           <tbody>
             {entries.map((entry) => (
               <tr key={entry.ticker}>
+                {showRank && <td className="font-numbers">{entry.rank}</td>}
                 {columns.map((column) => {
                   const value = formatDividendValue(
                     dividendValue(entry, column.key),

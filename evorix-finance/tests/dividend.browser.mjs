@@ -359,6 +359,8 @@ try {
   await run(
     "Dashboard: tooltips exatos, âncoras, gráficos/calendário e ausentes/negativos",
     async () => {
+      // Isolate keyboard hints from the pointer left over by the previous journey.
+      await page.mouse.move(0, 0);
       await expect(page.locator(".dividend-comparison")).toHaveCount(3);
       for (const button of await page.locator(".dividend-chart-row").all()) {
         const visible = (await button.innerText()).replace(/\s+/g, " ").trim();
@@ -374,7 +376,10 @@ try {
       await compact.press("Escape");
       await expect(page.getByRole("tooltip")).toHaveCount(0);
       await expect(compact).toBeFocused();
-      const bar = page.locator(".dividend-chart-row").first();
+      const bar = page
+        .locator(".dividend-chart-row")
+        .filter({ hasText: "P/L projetado" })
+        .first();
       await bar.focus();
       await expect(page.getByRole("tooltip")).toContainText("P/L projetado");
       await bar.press("Escape");
@@ -459,9 +464,9 @@ try {
             entry.ticker +
             "?visual=real&publication=2",
         );
-        await expect(page.locator(".dividend-information > div")).toHaveCount(
-          21,
-        );
+        await expect(
+          page.locator(".dividend-information > [data-field]"),
+        ).toHaveCount(21);
         const actual = await page
           .locator(".dividend-information > [data-field]")
           .evaluateAll((nodes) =>
@@ -632,9 +637,9 @@ try {
         await page.goto(
           origin + "/app/ranking/acao/TIMS3?visual=real&publication=2",
         );
-        await expect(page.locator(".dividend-information > div")).toHaveCount(
-          21,
-        );
+        await expect(
+          page.locator(".dividend-information > [data-field]"),
+        ).toHaveCount(21);
         await page.evaluate(
           (theme) => (document.documentElement.dataset.theme = theme),
           theme,

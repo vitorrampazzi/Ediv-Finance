@@ -200,13 +200,9 @@ function ComparisonChart({
             key={item.label}
             content={item.label + ": " + formatted + " · " + unit}
           >
-            <button
-              type="button"
-              className="dividend-chart-row"
-            >
+            <button type="button" className="dividend-chart-row">
               <span className="dividend-chart-row-label">
-                {item.label}{" "}
-                <strong>{formatted}</strong>
+                {item.label} <strong>{formatted}</strong>
               </span>
               <span className="dividend-chart-track" aria-hidden="true">
                 {available && (
@@ -355,9 +351,63 @@ export function DividendDashboard({
   );
   return (
     <div className="dividend-dashboard">
+      <section
+        id="visao-geral"
+        tabIndex={-1}
+        aria-labelledby="overview-title"
+        className="dividend-dashboard-section"
+      >
+        <h2 id="overview-title" className="sr-only">
+          Visão geral
+        </h2>
+        <header className="dividend-dashboard-header">
+          <div className="dividend-header-identity">
+            <CompanyLogo ticker={entry.ticker} size="lg" loading="eager" />
+            <dl className="dividend-identity-fields dividend-information">
+              <Metric entry={entry} field="companyName">
+                <h1 ref={titleRef} tabIndex={-1} className="display-title">
+                  {entry.companyName}
+                </h1>
+              </Metric>
+              {(["ticker", "sector", "updatedOn"] as const).map(field)}
+            </dl>
+          </div>
+          <dl className="dividend-overview-cards dividend-information">
+            <Metric entry={entry} field="referencePrice" />
+            {(
+              [
+                {
+                  key: "ceilingPrice",
+                  label: "Preço Teto",
+                  format: "currency",
+                },
+                {
+                  key: "estimatedGrossDividendYield",
+                  label: "DY bruto estimado",
+                  format: "percent",
+                },
+                {
+                  key: "safetyMargin",
+                  label: "Margem de segurança",
+                  format: "percentInteger",
+                },
+              ] as const
+            ).map(({ key, label, format }) => (
+              <div key={key} className="dividend-summary-metric">
+                <dt>{label}</dt>
+                <dd>{formatDividendValue(data[key], format)}</dd>
+              </div>
+            ))}
+            <Metric entry={entry} field="marketValue" compact />
+            <Metric entry={entry} field="totalShares" compact />
+          </dl>
+        </header>
+      </section>
       <nav className="dividend-section-nav" aria-label="Seções da análise">
         {[
-          ...sections.map(({ id, title }) => ({ id, title })),
+          ...[sections[0], sections[2], sections[1], sections[3]].map(
+            ({ id, title }) => ({ id, title }),
+          ),
           { id: "insights", title: "Insights da ação" },
         ].map(({ id, title }) => (
           <a
@@ -374,64 +424,18 @@ export function DividendDashboard({
         ))}
       </nav>
       <section
-        id="visao-geral"
-        tabIndex={-1}
-        aria-labelledby="overview-title"
-        className="dividend-dashboard-section"
+        className="dividend-price-panel"
+        aria-label="Cotação de referência e preço teto"
       >
-        <h2 id="overview-title" className="sr-only">
-          Visão geral
-        </h2>
-        <header className="dividend-dashboard-header">
-          <CompanyLogo ticker={entry.ticker} size="lg" loading="eager" />
-          <dl className="dividend-identity-fields dividend-information">
-            <Metric entry={entry} field="companyName">
-              <h1 ref={titleRef} tabIndex={-1} className="display-title">
-                {entry.companyName}
-              </h1>
-            </Metric>
-            {(["ticker", "sector", "updatedOn"] as const).map(field)}
-          </dl>
-        </header>
-        <dl className="dividend-overview-cards dividend-information">
-          <Metric entry={entry} field="referencePrice" />
-          <Metric entry={entry} field="marketValue" compact />
-          <Metric entry={entry} field="totalShares" compact />
-        </dl>
-      </section>
-      <section
-        id="valuation"
-        tabIndex={-1}
-        aria-labelledby="valuation-title"
-        className="dividend-dashboard-section"
-      >
-        <div className="dividend-section-heading">
-          <h2 id="valuation-title">Valuation e margem de segurança</h2>
-          <p>Referências da planilha, sem classificação de compra ou venda.</p>
-        </div>
-        <dl className="dividend-metric-grid dividend-information">
-          {sections[1].keys.map(field)}
-        </dl>
-        <div className="dividend-charts-grid">
-          <ComparisonChart
-            title="P/L projetado e média de 10 anos"
-            unit="P/L em vezes"
-            format="number"
-            items={[
-              { label: "P/L projetado", value: data.projectedPE },
-              { label: "P/L médio", value: data.averagePE10Years },
-            ]}
-          />
-          <ComparisonChart
-            title="Cotação de referência e preço teto"
-            unit="Reais por ação"
-            format="currency"
-            items={[
-              { label: "Cotação de referência", value: data.referencePrice },
-              { label: "Preço teto", value: data.ceilingPrice },
-            ]}
-          />
-        </div>
+        <ComparisonChart
+          title="Cotação de referência e preço teto"
+          unit="Reais por ação"
+          format="currency"
+          items={[
+            { label: "Cotação de referência", value: data.referencePrice },
+            { label: "Preço teto", value: data.ceilingPrice },
+          ]}
+        />
         <SignedIndicator
           label="Margem de segurança da planilha"
           value={data.safetyMargin}
@@ -470,6 +474,31 @@ export function DividendDashboard({
           A marca de 100% representa o lucro estimado, não um limite ou meta de
           payout. Valores acima de 100% ou negativos permanecem visíveis.
         </p>
+      </section>
+      <section
+        id="valuation"
+        tabIndex={-1}
+        aria-labelledby="valuation-title"
+        className="dividend-dashboard-section dividend-valuation-details"
+      >
+        <div className="dividend-section-heading">
+          <h2 id="valuation-title">Valuation e margem de segurança</h2>
+          <p>Referências da planilha, sem classificação de compra ou venda.</p>
+        </div>
+        <dl className="dividend-metric-grid dividend-information">
+          {sections[1].keys.map(field)}
+        </dl>
+        <div className="dividend-charts-grid">
+          <ComparisonChart
+            title="P/L projetado e média de 10 anos"
+            unit="P/L em vezes"
+            format="number"
+            items={[
+              { label: "P/L projetado", value: data.projectedPE },
+              { label: "P/L médio", value: data.averagePE10Years },
+            ]}
+          />
+        </div>
       </section>
       <section
         id="resultados"

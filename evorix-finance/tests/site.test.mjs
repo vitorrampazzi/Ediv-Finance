@@ -18,6 +18,8 @@ test("llms.txt contém somente links públicos canônicos e descreve o acesso re
   assert.match(content, /^# Escola do Dividendo\r?\n/);
   assert.match(content, /exigem autenticação/);
   assert.match(content, /dados fictícios/);
+  assert.match(content, /ranking real/);
+  assert.match(content, /sem atualização ao vivo/);
   const links = [...content.matchAll(/\]\((https?:\/\/[^)]+)\)/g)];
   assert.ok(links.length >= 5);
   for (const [, href] of links) {
