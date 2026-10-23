@@ -359,6 +359,8 @@ try {
   await run(
     "Dashboard: tooltips exatos, âncoras, gráficos/calendário e ausentes/negativos",
     async () => {
+      // Isolate keyboard hints from the pointer left over by the previous journey.
+      await page.mouse.move(0, 0);
       await expect(page.locator(".dividend-comparison")).toHaveCount(3);
       for (const button of await page.locator(".dividend-chart-row").all()) {
         const visible = (await button.innerText()).replace(/\s+/g, " ").trim();
