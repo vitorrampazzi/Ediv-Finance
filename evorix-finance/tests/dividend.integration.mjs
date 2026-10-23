@@ -141,15 +141,15 @@ try {
         const publicEntry = publicResult.body.entries[0];
         assert.deepEqual(
           Object.keys(publicEntry).sort(),
-          [
-            "rank",
-            "ticker",
-            "companyName",
-            "sector",
-            "dividendAnalysis",
-          ].sort(),
+          ["rank", "ticker", "companyName", "dividendAnalysis"].sort(),
         );
-        for (const column of dividendColumns.slice(3))
+        for (const column of dividendColumns.filter(({ key }) =>
+          [
+            "estimatedGrossDividendYield",
+            "projectedPE",
+            "safetyMargin",
+          ].includes(key),
+        ))
           assert.equal(
             publicEntry.dividendAnalysis[column.key],
             row[column.key],
@@ -183,7 +183,7 @@ try {
         assert.equal(publicLatest.body.id, second);
         assert.equal(
           publicLatest.body.entries[0].dividendAnalysis.expectedPayout,
-          "1.07",
+          undefined,
         );
         const comparison = await request(
           a,
@@ -205,6 +205,60 @@ try {
         assert.equal(
           original.body.entries[0].dividendAnalysis.expectedPayout,
           "1.06",
+        );
+      },
+    );
+    await t.test(
+      "public preview cannot enumerate the full ranking or request more metrics",
+      async () => {
+        const entries = Array.from({ length: 90 }, (_, index) => ({
+          rank: 90 - index,
+          ticker: "TEST" + index,
+          companyName: "Fixture " + index,
+          thesis: "PRIVATE_THESIS",
+          dividendAnalysis: {
+            estimatedGrossDividendYield: "0.115",
+            projectedPE: "8.6999999999999993",
+            safetyMargin: "0.41",
+            marketValue: "PRIVATE_METRIC",
+            expectedPayout: "PRIVATE_METRIC",
+          },
+        }));
+        await pool.execute(
+          "INSERT INTO ranking_publications(title,source_file_name,entries_json,imported_by) VALUES(?,?,?,?)",
+          [
+            "Fixture de proteção",
+            "PRIVATE_FILE",
+            JSON.stringify(entries),
+            analyst.id,
+          ],
+        );
+        for (const query of [
+          "",
+          "?limit=90&offset=3",
+          "?page=2&fields=*&publication=" + first,
+        ]) {
+          const result = await request(null, "/api/rankings/public" + query);
+          assert.equal(result.status, 200);
+          assert.equal(result.body.totalEntries, 3);
+          assert.deepEqual(
+            result.body.entries.map((entry) => entry.rank),
+            [1, 2, 3],
+          );
+          for (const entry of result.body.entries)
+            assert.deepEqual(Object.keys(entry.dividendAnalysis), [
+              "estimatedGrossDividendYield",
+              "projectedPE",
+              "safetyMargin",
+            ]);
+          assert.equal(JSON.stringify(result.body).includes("PRIVATE_"), false);
+        }
+        const member = await request(a, "/api/rankings");
+        assert.equal(member.status, 200);
+        assert.equal(member.body.entries.length, 90);
+        assert.equal(
+          member.body.entries[0].dividendAnalysis.marketValue,
+          "PRIVATE_METRIC",
         );
       },
     );

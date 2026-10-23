@@ -41,7 +41,8 @@ históricos fictícios nem controles de períodos que não teriam dados reais.
 Calendário mostra os meses habituais de anúncio, sem prometer pagamento.
 
 Validação desta etapa é focal: serializer público com sentinelas privadas,
-integração anônima/privada na suíte existente, paginação/links/estados e
+integração anônima/privada na suíte existente, limite3/3 na API e UI,
+paginação autenticada/links/cadastro/estados e
 comportamento do dashboard. Os checks obrigatórios quality e dependency-security
 precisam passar no commit final antes de integrar por PR. Não certifica auditoria
 WCAG completa, leitores reais, todos os navegadores ou cotações em tempo real.

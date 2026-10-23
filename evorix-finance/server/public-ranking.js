@@ -1,15 +1,19 @@
-import { dividendColumns } from "../dividend-analysis.mjs";
 import { readEntries } from "./research-diff.js";
 
-const metricKeys = dividendColumns.slice(3).map(({ key }) => key);
+const metricKeys = [
+  "estimatedGrossDividendYield",
+  "projectedPE",
+  "safetyMargin",
+];
 
 export function publicRanking(row) {
-  const entries = readEntries(row?.entries_json)
+  const entries = [...readEntries(row?.entries_json)]
+    .sort((a, b) => a.rank - b.rank)
+    .slice(0, 3)
     .map((entry) => ({
       rank: entry.rank,
       ticker: entry.ticker,
       companyName: entry.companyName,
-      sector: entry.sector ?? null,
       dividendAnalysis: Object.fromEntries(
         metricKeys.map((key) => [
           key,
@@ -18,8 +22,7 @@ export function publicRanking(row) {
             : null,
         ]),
       ),
-    }))
-    .sort((a, b) => a.rank - b.rank);
+    }));
   return {
     id: row ? String(row.id) : null,
     title: row?.title ?? "Ranking de dividendos",

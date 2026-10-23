@@ -28,20 +28,89 @@
   font-size: 0.8125rem;
   color: var(--ediv-muted);
 }
-.ph-ranking-controls {
+.ph-ranking-preview {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1.5rem;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.ph-ranking-company {
+  min-width: 0;
+  border-top: 2px solid var(--ediv-accent);
+  padding: 1.25rem 0;
+}
+.ph-ranking-company-link {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  min-height: 2.75rem;
+}
+.ph-ranking-company-link > span:not(.company-logo):not(.sr-only) {
+  display: grid;
+  gap: 0.3rem;
+  min-width: 0;
+}
+.ph-ranking-company-link strong {
+  font-size: 1.125rem;
+  overflow-wrap: anywhere;
+}
+.ph-ranking-company-link span span,
+.ph-ranking-company dt {
+  font-size: 0.8125rem;
+  color: var(--ediv-muted);
+}
+.ph-ranking-company dl {
+  margin-top: 1.5rem;
+}
+.ph-ranking-company dl > div {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 1rem;
+  border-top: 1px solid var(--ph-border, var(--ediv-line));
+  padding-block: 0.75rem;
+}
+.ph-ranking-company dd {
+  margin: 0;
+  white-space: nowrap;
+  font-size: 1.125rem;
+}
+.ph-ranking-unlock {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 1rem;
-  flex-wrap: wrap;
-  margin-top: 1.25rem;
+  gap: 2rem;
+  border-top: 1px solid var(--ph-border, var(--ediv-line));
+  margin-top: 1rem;
+  padding-top: 2rem;
 }
-.ph-ranking-controls p {
+.ph-ranking-unlock h3 {
+  font-size: clamp(1.5rem, 3vw, 2rem);
+}
+.ph-ranking-unlock p {
   color: var(--ediv-muted);
-  font-size: 0.8125rem;
+  max-width: 65ch;
+  margin-top: 0.75rem;
+  font-size: 0.9375rem;
+  line-height: 1.7;
 }
-.ph-public-ranking .dividend-table-region {
-  background: var(--ediv-canvas);
+.ph-ranking-unlock-actions {
+  display: grid;
+  gap: 1rem;
+  flex-shrink: 0;
+  text-align: center;
+}
+@media (max-width: 767px) {
+  .ph-ranking-preview {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0.5rem;
+  }
+  .ph-ranking-unlock {
+    align-items: stretch;
+    flex-direction: column;
+  }
 }
 .ph-sample-label {
   margin: 1.5rem 0 0.85rem;

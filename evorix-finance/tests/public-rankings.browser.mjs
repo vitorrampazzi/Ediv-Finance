@@ -3,6 +3,7 @@ import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { createServer } from "vite";
 import { chromium } from "playwright";
 import { expect } from "playwright/test";
+import { publicRanking } from "../server/public-ranking.js";
 import {
   dividendColumns,
   dividendValue,
@@ -13,7 +14,9 @@ import {
 const audit = process.env.EDIV_WORKBOOK_AUDIT
   ? JSON.parse(await readFile(process.env.EDIV_WORKBOOK_AUDIT, "utf8"))
   : null;
-const entries = audit
+const entries = process.env.EDIV_RANKING_ENTRIES
+  ? JSON.parse(await readFile(process.env.EDIV_RANKING_ENTRIES, "utf8"))
+  : audit
   ? audit.sheets[0].data.slice(1).map((row, index) => {
       const values = row.map(({ value }) => value);
       return {
@@ -55,15 +58,21 @@ const entries = audit
           ]),
       ),
     }));
-const publication = {
+const completePublication = {
   id: "27",
   title: "Ranking publicado de teste",
   updatedAt: "2026-10-22T12:32:01Z",
   totalEntries: entries.length,
   entries,
 };
+const publication = publicRanking({
+  id: "27",
+  title: completePublication.title,
+  created_at: completePublication.updatedAt,
+  entries_json: entries,
+});
 const privatePublication = {
-  ...publication,
+  ...completePublication,
   canManage: false,
   authorName: null,
   professionalCategory: null,
@@ -199,7 +208,7 @@ try {
   page.on("pageerror", (error) => errors.push(error.message));
   await page.goto(origin);
   await run(
-    "Home: loading explícito e10ações reais,12colunas/posição/logos/ordem",
+    "Home: três empresas reais, três KPIs, ordem e cadastro por teclado",
     async () => {
       const section = page.locator("#caderno-de-exemplo");
       await expect(section.getByRole("status")).toHaveText(
@@ -213,67 +222,53 @@ try {
           body: JSON.stringify(publication),
         });
       pending = [];
-      await expect(section.locator("tbody tr")).toHaveCount(10);
-      await expect(section.locator("thead th")).toHaveText([
-        "Posição",
-        ...dividendColumns
-          .filter((column) => column.ranking)
-          .map((column) => column.label),
-      ]);
-      for (let i = 0; i < 10; i++) {
-        const row = section.locator("tbody tr").nth(i);
-        const cells = await row.locator("th,td").allTextContents();
-        assert.equal(cells[0], String(entries[i].rank));
-        assert.ok(cells[1].includes(entries[i].companyName));
-        assert.deepEqual(
-          cells.slice(2),
-          dividendColumns
-            .filter((column) => column.ranking && column.key !== "companyName")
-            .map((column) =>
-              formatDividendValue(
-                dividendValue(entries[i], column.key),
-                column.format,
-              ),
-            ),
+      const cards = section.locator(".ph-ranking-company");
+      await expect(cards).toHaveCount(3);
+      for (let i = 0; i < 3; i++) {
+        await expect(cards.nth(i).getByRole("heading")).toContainText(
+          entries[i].companyName,
         );
-        assert.equal(await row.locator(".company-logo").count(), 1);
+        await expect(cards.nth(i).locator(".company-logo")).toHaveCount(1);
+        const keys = [
+          "estimatedGrossDividendYield",
+          "projectedPE",
+          "safetyMargin",
+        ];
+        await expect(cards.nth(i).locator("dt")).toHaveText(
+          keys.map((key) => dividendColumns.find((c) => c.key === key).label),
+        );
+        await expect(cards.nth(i).locator("dd")).toHaveText(
+          keys.map((key) =>
+            formatDividendValue(
+              entries[i].dividendAnalysis[key],
+              dividendColumns.find((c) => c.key === key).format,
+            ),
+          ),
+        );
       }
-      await expect(section).not.toContainText("Potencial simulado");
-      await expect(section).not.toContainText("Demonstração");
+      await expect(
+        section.getByRole("button", { name: "Ver mais ações", exact: true }),
+      ).toHaveCount(0);
+      await expect(section).not.toContainText(entries[3].companyName);
+      const cta = section.getByRole("link", {
+        name: "Criar conta gratuita",
+        exact: true,
+      });
+      await expect(cta).toHaveAttribute(
+        "href",
+        "/cadastro?next=%2Fapp%2Franking",
+      );
+      await cta.press("Enter");
+      await expect(page).toHaveURL(/\/cadastro\?next=/);
+      await expect(page.getByLabel("Nome", { exact: true })).toBeVisible();
+      await page.goto(origin);
     },
   );
-  await run("Ver mais:10→20→90/fim, contador e foco previsíveis", async () => {
-    const section = page.locator("#caderno-de-exemplo");
-    const more = section.getByRole("button", {
-      name: "Ver mais ações",
-      exact: true,
-    });
-    await more.focus();
-    await more.press("Enter");
-    await expect(section.locator("tbody tr")).toHaveCount(20);
-    await expect(
-      section.locator("tbody tr").nth(10).getByRole("link"),
-    ).toBeFocused();
-    await expect(page.locator("#public-ranking-count")).toHaveText(
-      "20 de 90 ações exibidas",
-    );
-    for (let count = 30; count <= 90; count += 10) {
-      await more.click();
-      await expect(section.locator("tbody tr")).toHaveCount(count);
-    }
-    await expect(more).toHaveCount(0);
-    await expect(page.locator("#public-ranking-count")).toHaveText(
-      "90 de 90 ações exibidas",
-    );
-    await expect(
-      section.locator("tbody tr").last().locator("td").nth(1),
-    ).toHaveText(entries[89].ticker);
-  });
   await run(
     "Link público preserva ticker/publicação no destino autenticado",
     async () => {
       const link = page
-        .locator("#public-ranking-results .dividend-company-link")
+        .locator("#public-ranking-results .ph-ranking-company-link")
         .first();
       await expect(link).toHaveAttribute(
         "href",
@@ -289,28 +284,51 @@ try {
       assert.equal(privateReads, 0);
     },
   );
-  await run("Home: vazio sem fake, erro com retry e retorno a10", async () => {
-    mode = "empty";
-    await page.goto(origin);
-    await expect(page.locator("#caderno-de-exemplo")).toContainText(
-      "O ranking ainda não tem uma publicação disponível",
-    );
-    await expect(page.locator("#public-ranking-results")).toHaveCount(0);
-    mode = "error";
-    await page.reload();
-    await expect(page.getByRole("alert")).toContainText(
-      "Ranking temporariamente indisponível",
-    );
-    await expect(page.locator("#public-ranking-results")).toHaveCount(0);
-    mode = "ready";
-    await page
-      .getByRole("button", { name: "Tentar carregar ranking novamente" })
-      .click();
-    await expect(page.locator("#public-ranking-results tbody tr")).toHaveCount(
-      10,
-    );
-  });
+  await run(
+    "Home: vazio sem fake, erro com retry e retorno a três",
+    async () => {
+      mode = "empty";
+      await page.goto(origin);
+      await expect(page.locator("#caderno-de-exemplo")).toContainText(
+        "O ranking ainda não tem uma publicação disponível",
+      );
+      await expect(page.locator("#public-ranking-results")).toHaveCount(0);
+      mode = "error";
+      await page.reload();
+      await expect(page.getByRole("alert")).toContainText(
+        "Ranking temporariamente indisponível",
+      );
+      await expect(page.locator("#public-ranking-results")).toHaveCount(0);
+      mode = "ready";
+      await page
+        .getByRole("button", { name: "Tentar carregar ranking novamente" })
+        .click();
+      await expect(
+        page.locator("#public-ranking-results .ph-ranking-company"),
+      ).toHaveCount(3);
+    },
+  );
   signedIn = true;
+  await run(
+    "Conta mantém ranking completo, filtros e paginação10+10",
+    async () => {
+      await page.goto(origin + "/app/ranking");
+      const table = page.locator(".dividend-table tbody tr");
+      await expect(table).toHaveCount(10);
+      const more = page.getByRole("button", {
+        name: "Ver mais ações",
+        exact: true,
+      });
+      await more.press("Enter");
+      await expect(table).toHaveCount(20);
+      await expect(table.nth(10).getByRole("link")).toBeFocused();
+      for (let count = 30; count <= 90; count += 10) {
+        await more.click();
+        await expect(table).toHaveCount(count);
+      }
+      await expect(more).toHaveCount(0);
+    },
+  );
   await run(
     "Empresa: seis resumos, comparativo principal e21campos/3tickers",
     async () => {
@@ -404,16 +422,8 @@ try {
           theme,
         );
         await expect(
-          page.locator("#public-ranking-results tbody tr"),
-        ).toHaveCount(10);
-        const region = page
-          .locator("#public-ranking-results")
-          .getByRole("region");
-        await region.focus();
-        await page.keyboard.press("ArrowRight");
-        await expect
-          .poll(() => region.evaluate((node) => node.scrollLeft))
-          .toBeGreaterThan(0);
+          page.locator("#public-ranking-results .ph-ranking-company"),
+        ).toHaveCount(3);
         assert.ok(
           await page.evaluate(
             () => document.documentElement.scrollWidth <= innerWidth + 1,
@@ -465,7 +475,7 @@ try {
     output + "/results.json",
     JSON.stringify(
       {
-        fixture: audit
+        fixture: audit || process.env.EDIV_RANKING_ENTRIES
           ? "Audited workbook in local API stubs"
           : "Synthetic90 in local API stubs",
         results,
