@@ -2,6 +2,47 @@
   border-block: 1px solid var(--ph-border, var(--ediv-line));
   background: var(--ediv-inset);
 }
+.ph-public-ranking .ph-container {
+  min-width: 0;
+}
+.ph-ranking-state {
+  margin-top: 1.5rem;
+  padding: 1.25rem 0;
+  color: var(--ediv-muted);
+  font-size: 0.9375rem;
+}
+.ph-ranking-state button {
+  margin-top: 0.75rem;
+  min-height: 2.75rem;
+}
+.ph-ranking-publication {
+  margin-block: 1.5rem 1rem;
+}
+.ph-ranking-publication h3 {
+  font-size: 1rem;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+.ph-ranking-publication p {
+  margin-top: 0.4rem;
+  font-size: 0.8125rem;
+  color: var(--ediv-muted);
+}
+.ph-ranking-controls {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-top: 1.25rem;
+}
+.ph-ranking-controls p {
+  color: var(--ediv-muted);
+  font-size: 0.8125rem;
+}
+.ph-public-ranking .dividend-table-region {
+  background: var(--ediv-canvas);
+}
 .ph-sample-label {
   margin: 1.5rem 0 0.85rem;
   color: var(--ediv-muted);

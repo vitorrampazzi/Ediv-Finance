@@ -16,7 +16,7 @@
     "db:provision:qa": "node --env-file=.env.aiven server/provision-qa.js",
     "build": "node scripts/build.mjs",
     "lint": "eslint .",
-    "test": "node --test tests/unit.test.mjs tests/site.test.mjs tests/portfolio-insights.test.mjs tests/session.test.mjs tests/harness.test.mjs tests/theme.test.mjs tests/company-logo.test.mjs tests/research-modules.test.mjs tests/research-module-summary.test.mjs tests/onboarding.test.mjs tests/password-policy.test.mjs tests/analytics.test.mjs tests/visitor-learning-progress.test.mjs tests/request-admission.test.mjs tests/auth-cleanup.test.mjs tests/dependencies.test.mjs tests/dividend-import.test.mjs tests/company-workbook.test.mjs tests/dividend-insights.test.mjs",
+    "test": "node --test tests/unit.test.mjs tests/site.test.mjs tests/portfolio-insights.test.mjs tests/session.test.mjs tests/harness.test.mjs tests/theme.test.mjs tests/company-logo.test.mjs tests/research-modules.test.mjs tests/research-module-summary.test.mjs tests/onboarding.test.mjs tests/password-policy.test.mjs tests/analytics.test.mjs tests/visitor-learning-progress.test.mjs tests/request-admission.test.mjs tests/auth-cleanup.test.mjs tests/dependencies.test.mjs tests/dividend-import.test.mjs tests/company-workbook.test.mjs tests/dividend-insights.test.mjs tests/public-ranking.test.mjs",
     "harness:status": "node scripts/harness.mjs status",
     "harness:check": "node scripts/harness.mjs check",
     "test:harness": "node --test tests/harness.test.mjs",

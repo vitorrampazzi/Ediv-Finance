@@ -1,4 +1,5 @@
 import { parseRankingUpload } from "./dividend-import.js";
+import { publicRanking } from "./public-ranking.js";
 import { Router } from "express";
 import { rateLimit } from "express-rate-limit";
 import { pool } from "./database.js";
@@ -72,6 +73,12 @@ router.get("/compare", requireAuthenticatedUser, async (req, res) => {
       readEntries(after.entries_json),
     ),
   });
+});
+router.get("/public", async (_req, res) => {
+  const [rows] = await pool.execute(
+    "SELECT id,title,created_at,entries_json FROM ranking_publications ORDER BY id DESC LIMIT 1",
+  );
+  return res.json(publicRanking(rows[0]));
 });
 router.get("/", requireAuthenticatedUser, async (req, res) => {
   const user = req.authenticatedUser;
