@@ -236,6 +236,7 @@ try {
           .map((column) => column.key),
       );
       await page.mouse.move(0, 0);
+      await page.keyboard.press("Tab");
       for (const column of dividendColumns.filter((column) => column.ranking)) {
         const header = table.locator(
           '[data-column="' + column.key + '"] button',
@@ -373,7 +374,8 @@ try {
     async () => {
       // Isolate keyboard hints from the pointer left over by the previous journey.
       await page.mouse.move(0, 0);
-      await expect(page.locator(".dividend-comparison")).toHaveCount(3);
+      await page.keyboard.press("Tab");
+      await expect(page.locator(".dividend-comparison")).toHaveCount(4);
       for (const button of await page.locator(".dividend-chart-row").all()) {
         const visible = (await button.innerText()).replace(/\s+/g, " ").trim();
         await expect(button).toHaveAccessibleName(visible);

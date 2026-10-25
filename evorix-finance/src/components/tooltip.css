@@ -5,6 +5,7 @@
   position: fixed;
   inset: auto;
   margin: 0;
+  width: max-content;
   max-width: min(232px, calc(100vw - 16px));
   padding: 0.5rem 0.75rem;
   border: 1px solid var(--ediv-muted);

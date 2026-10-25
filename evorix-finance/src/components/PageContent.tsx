@@ -1,6 +1,6 @@
 import { Suspense, useLayoutEffect, useRef } from "react";
 import type { ReactNode } from "react";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigationType } from "react-router-dom";
 import { motion, useReducedMotion } from "framer-motion";
 import { PageErrorBoundary } from "./PageErrorBoundary";
 
@@ -32,15 +32,23 @@ export function PageLoading() {
 // This mounts after the lazy route is ready. Query/hash changes keep the same
 // page instance, its forms, filters, videos and lesson position.
 function RevealedPage({ children }: { children: ReactNode }) {
-  const { hash } = useLocation();
+  const { hash, pathname } = useLocation();
+  const navigationType = useNavigationType();
   const reducedMotion = useReducedMotion();
   const entryHash = useRef(hash);
+  const announceRoute = useRef(
+    navigationType !== "POP" || (pathname !== "/" && pathname !== "/app"),
+  );
   const content = useRef<HTMLDivElement>(null);
   useLayoutEffect(() => {
     if (!entryHash.current) {
       window.scrollTo({ top: 0, left: 0, behavior: "instant" });
       const heading = content.current?.querySelector<HTMLElement>("h1");
-      if (heading && !document.querySelector("dialog[open]")) {
+      if (
+        announceRoute.current &&
+        heading &&
+        !document.querySelector("dialog[open]")
+      ) {
         heading.tabIndex = -1;
         heading.focus({ preventScroll: true });
       }
