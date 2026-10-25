@@ -383,6 +383,8 @@ try {
         );
         await expect(page.locator(".fc-calendar li")).toHaveCount(12);
       }
+      await page.mouse.move(0, 0);
+      await page.keyboard.press("Tab");
       for (const button of await page.locator(".dividend-chart-row").all()) {
         await expect(button).toHaveAccessibleName(
           (await button.innerText()).replace(/\s+/g, " ").trim(),

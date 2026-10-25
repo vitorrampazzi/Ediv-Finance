@@ -511,6 +511,12 @@ button:disabled {
   outline-offset: 3px;
 }
 
+/* Route announcements are not interactive controls or keyboard tab stops. */
+.page-enter
+  :is(h1, h2, h3, h4, h5, h6)[tabindex="-1"]:not([role]):focus-visible {
+  outline: none;
+}
+
 .font-numbers {
   font-variant-numeric: tabular-nums;
   font-feature-settings: "tnum";

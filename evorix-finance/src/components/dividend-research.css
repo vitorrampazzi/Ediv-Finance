@@ -1,4 +1,5 @@
 .dividend-table {
+  --dividend-company-width: 224px;
   min-width: 0;
   max-width: 100%;
 }
@@ -20,9 +21,13 @@
   outline-offset: 3px;
 }
 .dividend-table table {
+  width: calc(
+    var(--dividend-table-width) - 224px + var(--dividend-company-width)
+  );
   min-width: 100%;
   table-layout: fixed;
-  border-collapse: collapse;
+  border-collapse: separate;
+  border-spacing: 0;
   font-size: 0.8125rem;
   line-height: 1.5;
 }
@@ -106,6 +111,34 @@
 .dividend-table tbody tr:hover {
   background: var(--ediv-inset);
 }
+.dividend-table [data-column="companyName"] {
+  position: sticky;
+  left: 0;
+  z-index: 2;
+  background: var(--ediv-canvas);
+  border-right: 1px solid var(--ediv-line);
+  box-shadow: 5px 0 7px -7px var(--ediv-text);
+}
+.dividend-table thead [data-column="companyName"] {
+  z-index: 3;
+  background: var(--ediv-inset);
+}
+.dividend-table tbody tr:hover [data-column="companyName"] {
+  background: var(--ediv-inset);
+}
+.dividend-company-link small,
+.company-identity-inline small {
+  display: block;
+  color: var(--ediv-muted);
+  font-size: 0.6875rem;
+  margin-top: 0.2rem;
+  text-decoration: none;
+}
+.dividend-table .company-identity-inline {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+}
 .dividend-company-link {
   display: flex;
   align-items: center;
@@ -118,4 +151,28 @@
 }
 .dividend-company-link > span {
   min-width: 0;
+}
+@media (max-width: 767px) {
+  .dividend-table {
+    --dividend-company-width: 144px;
+  }
+  .dividend-table [data-column="companyName"] {
+    padding-inline: 0.5rem;
+  }
+  .dividend-company-link {
+    gap: 0.4rem;
+    font-size: 0.75rem;
+    line-height: 1.4;
+    overflow-wrap: anywhere;
+  }
+  .dividend-company-link .company-logo {
+    width: 24px;
+    height: 24px;
+    flex: 0 0 24px;
+  }
+  .dividend-table .company-identity-inline {
+    gap: 0.4rem;
+    font-size: 0.75rem;
+    overflow-wrap: anywhere;
+  }
 }

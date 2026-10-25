@@ -1,5 +1,5 @@
 import { useId, useLayoutEffect, useRef } from "react";
-import type { ReactNode } from "react";
+import type { CSSProperties, ReactNode } from "react";
 import { Link } from "react-router-dom";
 import { ArrowLeft, ArrowRight, Info } from "lucide-react";
 import {
@@ -77,7 +77,10 @@ export function DividendRankingTable({
     ),
   ];
   return (
-    <div className="dividend-table">
+    <div
+      className="dividend-table"
+      style={{ "--dividend-table-width": tableWidth + "px" } as CSSProperties}
+    >
       <p id={id} className="dividend-table-hint">
         {complete
           ? "Informações completas da planilha."
@@ -100,13 +103,18 @@ export function DividendRankingTable({
         tabIndex={0}
         className="dividend-table-region"
       >
-        <table style={{ width: tableWidth }}>
+        <table>
           <colgroup>
             {showRank && <col style={{ width: 72 }} />}
             {columns.map((column) => (
               <col
                 key={column.key}
-                style={{ width: columnWidths[column.key] ?? 176 }}
+                style={{
+                  width:
+                    column.key === "companyName"
+                      ? "var(--dividend-company-width)"
+                      : (columnWidths[column.key] ?? 176),
+                }}
               />
             ))}
           </colgroup>
@@ -178,6 +186,7 @@ export function DividendRankingTable({
                           <CompanyLogo ticker={entry.ticker} size="sm" />
                           <span>
                             {value}
+                            <small aria-hidden="true">{entry.ticker}</small>
                             <span className="sr-only">
                               {" "}
                               · {entry.ticker} · Abrir informações completas
@@ -187,7 +196,10 @@ export function DividendRankingTable({
                       ) : (
                         <span className="company-identity-inline">
                           <CompanyLogo ticker={entry.ticker} size="sm" />
-                          {value}
+                          <span>
+                            {value}
+                            <small>{entry.ticker}</small>
+                          </span>
                         </span>
                       )}
                     </th>
@@ -238,7 +250,7 @@ export function DividendCompanyResearch({
   return (
     <article
       id="pagina-conteudo"
-      className="dividend-company mx-auto max-w-6xl px-4 py-6 sm:px-6 md:py-10"
+      className="dividend-company mx-auto max-w-[90rem] px-4 py-6 sm:px-6 md:py-8"
     >
       {backLink}
       <DividendDashboard entry={entry} titleRef={title} />

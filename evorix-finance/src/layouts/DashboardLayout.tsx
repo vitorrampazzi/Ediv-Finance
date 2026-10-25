@@ -277,7 +277,8 @@ function ProfileMenu({
                 onClick={() => setMenuRoute(null)}
                 className="flex min-h-11 items-center gap-3 rounded-lg px-3 text-sm text-evo-textSec"
               >
-                Início da Escola do Dividendo
+                <House size={16} aria-hidden="true" /> Início da Escola do
+                Dividendo
               </Link>
               <Link
                 to="/app/config"

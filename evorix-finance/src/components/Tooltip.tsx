@@ -23,7 +23,12 @@ export function Tooltip({
     const control =
       target.closest<HTMLElement>("button, a[href]") ||
       target.querySelector<HTMLElement>("button, a[href]");
-    if (!control || control.matches(":disabled")) return;
+    if (
+      !control ||
+      control.matches(":disabled") ||
+      control.getAttribute("aria-expanded") === "true"
+    )
+      return;
     trigger.current = control;
     const bounds = control.getBoundingClientRect();
     setPosition({
@@ -83,7 +88,8 @@ export function Tooltip({
         bounds.right <= 0 ||
         bounds.left >= window.innerWidth ||
         !(
-          document.activeElement === control ||
+          (document.activeElement === control &&
+            control.matches(":focus-visible")) ||
           control.matches(":hover") ||
           hint.current?.matches(":hover")
         )
@@ -106,7 +112,11 @@ export function Tooltip({
   return (
     <span
       className="ediv-tooltip-owner"
-      onFocus={(event) => show(event.target)}
+      onFocus={(event) => {
+        if (event.target.matches(":focus-visible")) show(event.target);
+      }}
+      onPointerDownCapture={() => setPosition(null)}
+      onClickCapture={() => setPosition(null)}
       onBlur={(event) => {
         if (
           !(
@@ -127,7 +137,10 @@ export function Tooltip({
             event.relatedTarget instanceof Node &&
             event.currentTarget.contains(event.relatedTarget)
           ) &&
-          document.activeElement !== trigger.current
+          !(
+            document.activeElement === trigger.current &&
+            trigger.current?.matches(":focus-visible")
+          )
         )
           setPosition(null);
       }}
