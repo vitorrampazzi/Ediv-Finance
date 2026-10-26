@@ -303,14 +303,20 @@ function Overview() {
                   <div className="mx-auto h-5 w-px bg-fmk-ink" />
                 </div>
                 <div
-                  className="absolute -top-0.5 -translate-x-1/2 whitespace-nowrap font-fmk-mono text-[11px] text-fmk-ink"
-                  style={{ left: `${trackPos}%` }}
+                  className="absolute -top-0.5 whitespace-nowrap font-fmk-mono text-[11px] text-fmk-ink"
+                  style={{
+                    left: `${trackPos}%`,
+                    transform: `translateX(-${trackPos}%)`,
+                  }}
                 >
                   {brl(company.price)}
                 </div>
                 <div
-                  className="absolute top-8 -translate-x-full whitespace-nowrap font-fmk-mono text-[11px] text-fmk-amber"
-                  style={{ left: `${ceilingPos}%` }}
+                  className="absolute top-8 whitespace-nowrap font-fmk-mono text-[11px] text-fmk-amber"
+                  style={{
+                    left: `${ceilingPos}%`,
+                    transform: `translateX(-${ceilingPos}%)`,
+                  }}
                 >
                   teto {brl(company.teto)}
                 </div>

@@ -342,7 +342,7 @@ try {
         );
         await expect(page.getByRole("heading", { level: 1 })).toBeFocused();
         await expect(
-          page.locator(".figma-stock .fmk-stats [data-summary]"),
+          page.locator(".figma-stock header .fmk-stats [data-summary]"),
         ).toHaveCount(5);
         for (const [label, key] of [
           ["Cotação de referência", "referencePrice"],
@@ -353,7 +353,9 @@ try {
         ]) {
           const column = dividendColumns.find((column) => column.key === key);
           await expect(
-            page.locator(`.fmk-stats [data-summary="${label}"]`),
+            page.locator(
+              `.figma-stock header .fmk-stats [data-summary="${label}"]`,
+            ),
           ).toContainText(
             formatDividendValue(dividendValue(entry, key), column.format),
           );
@@ -492,16 +494,29 @@ try {
           origin + "/app/ranking/acao/" + entries[0].ticker + "?publication=27",
         );
         await expect(
-          page.locator(".figma-stock .fmk-stats [data-summary]"),
+          page.locator(".figma-stock header .fmk-stats [data-summary]"),
         ).toHaveCount(5);
+        await page.evaluate(() => document.fonts.ready);
         await page.evaluate(
           (theme) => (document.documentElement.dataset.theme = theme),
           theme,
         );
+        const layout = await page.evaluate(() => ({
+          width: innerWidth,
+          scrollWidth: document.documentElement.scrollWidth,
+          overflowing: Array.from(document.querySelectorAll(".figma-stock *"))
+            .filter(
+              (node) => node.getBoundingClientRect().right > innerWidth + 1,
+            )
+            .map((node) => ({
+              tag: node.tagName,
+              class: node.className,
+              text: node.textContent.slice(0, 100),
+            })),
+        }));
         assert.ok(
-          await page.evaluate(
-            () => document.documentElement.scrollWidth <= innerWidth + 1,
-          ),
+          layout.scrollWidth <= layout.width + 1,
+          JSON.stringify(layout),
         );
         await page.screenshot({
           path: output + "/company-320-" + theme + ".png",
