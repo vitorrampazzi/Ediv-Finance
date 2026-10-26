@@ -1,4 +1,6 @@
 @import "tailwindcss";
+@import "./components/stock-make/stock-make.css";
+@source "./components/stock-make";
 @config "../tailwind.config.js";
 
 :root {

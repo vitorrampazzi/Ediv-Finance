@@ -9,6 +9,7 @@ import {
   dividendValue,
   formatDividendValue,
 } from "../dividend-analysis.mjs";
+import { dividendAnnouncementMonths } from "../dividend-insights.mjs";
 
 // Local UI contract fixture; the full workbook is never imported into client code.
 const audit = process.env.EDIV_WORKBOOK_AUDIT
@@ -330,7 +331,7 @@ try {
     },
   );
   await run(
-    "Empresa: seis resumos, comparativo principal e21campos/3tickers",
+    "Empresa: cinco resumos, sete históricos indisponíveis e21campos/3tickers",
     async () => {
       for (const entry of entries.slice(0, 3)) {
         await page.goto(
@@ -340,36 +341,72 @@ try {
           entry.companyName,
         );
         await expect(page.getByRole("heading", { level: 1 })).toBeFocused();
-        await expect(page.locator(".fc-summary-strip > div")).toHaveCount(6);
         await expect(
-          page.locator(".dividend-information > [data-field]"),
-        ).toHaveCount(21);
+          page.locator(".figma-stock .fmk-stats [data-summary]"),
+        ).toHaveCount(5);
+        for (const [label, key] of [
+          ["Cotação de referência", "referencePrice"],
+          ["DY bruto estimado", "estimatedGrossDividendYield"],
+          ["P/L projetado", "projectedPE"],
+          ["Preço-teto", "ceilingPrice"],
+          ["Margem de segurança", "safetyMargin"],
+        ]) {
+          const column = dividendColumns.find((column) => column.key === key);
+          await expect(
+            page.locator(`.fmk-stats [data-summary="${label}"]`),
+          ).toContainText(
+            formatDividendValue(dividendValue(entry, key), column.format),
+          );
+        }
+        await expect(page.locator(".figma-stock [data-field]")).toHaveCount(21);
         const fields = await page
-          .locator(".dividend-information > [data-field]")
+          .locator(".figma-stock [data-field]")
           .evaluateAll((nodes) =>
             nodes.map((node) => ({
               key: node.dataset.field,
-              value: node.querySelector("dd[data-exact-value]").dataset
-                .exactValue,
+              value:
+                node.querySelector("[data-exact-value]").dataset.exactValue,
+              visibleValue: node
+                .querySelector("[data-exact-value]")
+                .textContent.replace(/^[▲▼]\s*/, "")
+                .trim(),
             })),
           );
-        for (const column of dividendColumns)
-          assert.equal(
-            fields.find((item) => item.key === column.key).value,
-            formatDividendValue(
-              dividendValue(entry, column.key),
-              column.format,
-            ),
+        for (const column of dividendColumns) {
+          const expected = formatDividendValue(
+            dividendValue(entry, column.key),
+            column.format,
           );
-        for (const [index, count] of [6, 1, 3, 5, 3].entries()) {
+          const field = fields.find((item) => item.key === column.key);
+          assert.equal(field.value, expected);
+          assert.equal(field.visibleValue, expected);
+        }
+        for (const [index, count] of [5, 5, 3, 1, 3].entries()) {
           await expect(
-            page.locator(".fc-category").nth(index).locator(".fc-metric"),
+            page
+              .locator("#indicadores h3")
+              .nth(index)
+              .locator("..")
+              .locator("[data-field]"),
           ).toHaveCount(count);
         }
-        await expect(page.locator(".dividend-section-nav a")).toHaveCount(6);
-        await expect(page.locator("#cotacao .dividend-comparison")).toHaveCount(
-          1,
+        await expect(
+          page
+            .getByRole("navigation", { name: "Seções da análise" })
+            .getByRole("link"),
+        ).toHaveCount(7);
+        await expect(
+          page.locator("#cotacao .fmk-chart-empty[role=status]"),
+        ).toHaveCount(1);
+        await expect(page.locator("#cotacao .fmk-chart-empty")).toContainText(
+          "Histórico de cotações indisponível",
         );
+        await expect(
+          page.locator(".figma-stock .fmk-chart-empty[role=status]"),
+        ).toHaveCount(7);
+        await expect(
+          page.locator(".figma-stock .recharts-wrapper"),
+        ).toHaveCount(0);
         assert.ok(
           await page
             .locator("#cotacao")
@@ -381,14 +418,31 @@ try {
               ),
             ),
         );
-        await expect(page.locator(".fc-calendar li")).toHaveCount(12);
+        await expect(page.locator("#dividendos [data-month]")).toHaveCount(12);
+        assert.deepEqual(
+          await page
+            .locator('#dividendos [data-month][data-announced="true"]')
+            .evaluateAll((nodes) =>
+              nodes.map((node) => Number(node.dataset.month)),
+            ),
+          dividendAnnouncementMonths(
+            entry.dividendAnalysis.announcementMonths,
+          ) || [],
+        );
       }
       await page.mouse.move(0, 0);
       await page.keyboard.press("Tab");
-      for (const button of await page.locator(".dividend-chart-row").all()) {
-        await expect(button).toHaveAccessibleName(
-          (await button.innerText()).replace(/\s+/g, " ").trim(),
-        );
+      const summaryLabels = [
+        "Cotação de referência",
+        "DY bruto estimado",
+        "P/L projetado",
+        "Preço-teto",
+        "Margem de segurança",
+      ];
+      for (const label of summaryLabels) {
+        const button = page
+          .locator(".fmk-stats")
+          .getByRole("button", { name: `O que é ${label}?`, exact: true });
         await button.focus();
         await expect(page.getByRole("tooltip")).toBeVisible();
         await button.press("Escape");
@@ -400,11 +454,11 @@ try {
         fullPage: true,
       });
       await page
-        .locator(".fc-company-identity")
+        .locator(".figma-stock header")
         .screenshot({ path: output + "/company-header.png" });
-      await page
-        .locator("#cotacao")
-        .screenshot({ path: output + "/company-primary-comparison.png" });
+      await page.locator("#cotacao").screenshot({
+        path: output + "/company-price-history-unavailable.png",
+      });
     },
   );
   await run(
@@ -437,7 +491,9 @@ try {
         await page.goto(
           origin + "/app/ranking/acao/" + entries[0].ticker + "?publication=27",
         );
-        await expect(page.locator(".fc-summary-strip > div")).toHaveCount(6);
+        await expect(
+          page.locator(".figma-stock .fmk-stats [data-summary]"),
+        ).toHaveCount(5);
         await page.evaluate(
           (theme) => (document.documentElement.dataset.theme = theme),
           theme,
