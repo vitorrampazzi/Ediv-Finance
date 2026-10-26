@@ -10,6 +10,7 @@ import {
 } from "../dividend-analysis.mjs";
 import {
   dividendComparison,
+  dividendNumber,
   dividendAnnouncementMonths,
 } from "../dividend-insights.mjs";
 
@@ -134,6 +135,56 @@ let probeEntry = null;
 const server = await createServer({
   server: { host: "127.0.0.1", port: 4198, strictPort: true },
 });
+async function assertPublicationCharts(page, entry) {
+  const groups = {
+    price: ["referencePrice", "ceilingPrice"],
+    dividends: ["projectedGrossDividendPerShare", "estimatedEps"],
+    eps: ["estimatedEps"],
+    profit: ["estimatedNetIncome"],
+    cagr: ["earningsCagr5Years"],
+    debt: ["netDebtToEbitda"],
+    valuation: ["projectedPE", "averagePE10Years"],
+  };
+  await expect(
+    page.locator(".figma-stock figure.fmk-publication-chart"),
+  ).toHaveCount(7);
+  for (const [id, keys] of Object.entries(groups)) {
+    const figure = page.locator(
+      `figure.fmk-publication-chart[data-publication-chart="${id}"]`,
+    );
+    await expect(figure).toHaveCount(1);
+    const hasNumbers = keys.some(
+      (key) => dividendNumber(dividendValue(entry, key)) !== null,
+    );
+    const expected = keys.map((key) => ({
+      key,
+      value: formatDividendValue(
+        dividendValue(entry, key),
+        dividendColumns.find((column) => column.key === key).format,
+      ),
+    }));
+    const alternatives = figure.locator("[data-chart-value]");
+    await expect(alternatives).toHaveCount(expected.length);
+    assert.deepEqual(
+      await alternatives.evaluateAll((nodes) =>
+        nodes.map((node) => ({
+          key: node.dataset.chartValue,
+          value: node.dataset.exactValue,
+        })),
+      ),
+      expected,
+    );
+    for (const { key, value } of expected)
+      await expect(figure.locator(`[data-chart-value="${key}"]`)).toContainText(
+        value,
+      );
+    await expect(figure.locator(".recharts-wrapper")).toHaveCount(
+      hasNumbers ? 1 : 0,
+    );
+    if (!hasNumbers)
+      await expect(figure.getByRole("status")).toBeVisible();
+  }
+}
 const run = async (name, work) => {
   await work();
   results.push(name);
@@ -375,35 +426,7 @@ try {
       // Isolate keyboard hints from the pointer left over by the previous journey.
       await page.mouse.move(0, 0);
       await page.keyboard.press("Tab");
-      await expect(
-        page.locator(".figma-stock .fmk-chart-empty[role=status]"),
-      ).toHaveCount(7);
-      await expect(page.locator(".figma-stock .recharts-wrapper")).toHaveCount(
-        0,
-      );
-      for (const title of [
-        "Histórico de cotações indisponível",
-        "Histórico de proventos indisponível",
-        "Rentabilidade histórica indisponível",
-        "Histórico de lucro por ação indisponível",
-        "Evolução financeira indisponível",
-        "Histórico de crescimento indisponível",
-        "Histórico de endividamento indisponível",
-      ])
-        await expect(
-          page.locator(".fmk-chart-empty").getByText(title, { exact: true }),
-        ).toBeVisible();
-      for (const label of [
-        "Período do gráfico de cotação",
-        "Período de rentabilidade",
-      ]) {
-        const controls = page
-          .getByRole("group", { name: label, exact: true })
-          .getByRole("button");
-        assert.ok(await controls.count());
-        for (const control of await controls.all())
-          await expect(control).toBeDisabled();
-      }
+      await assertPublicationCharts(page, entries[0]);
       const tip = page
         .locator(".fmk-stats")
         .getByRole("button", { name: "O que é P/L projetado?", exact: true });
@@ -472,9 +495,7 @@ try {
       await expect(page.locator("#dividendos")).toContainText(
         "Nenhum mês foi presumido",
       );
-      await expect(page.locator(".figma-stock .recharts-wrapper")).toHaveCount(
-        0,
-      );
+      await assertPublicationCharts(page, probeEntry);
       const debt = page.locator('[data-field="netDebtToEbitda"] button');
       await debt.focus();
       await expect(page.getByRole("tooltip")).toContainText(
@@ -483,6 +504,14 @@ try {
       await debt.press("Escape");
       await expect(page.getByRole("tooltip")).toHaveCount(0);
       await expect(debt).toBeFocused();
+      probeEntry = {
+        ...probeEntry,
+        dividendAnalysis: Object.fromEntries(
+          Object.keys(probeEntry.dividendAnalysis).map((key) => [key, null]),
+        ),
+      };
+      await page.goto(origin + "/app/ranking/acao/EDGE3?visual=real");
+      await assertPublicationCharts(page, probeEntry);
       probeEntry = null;
     },
   );

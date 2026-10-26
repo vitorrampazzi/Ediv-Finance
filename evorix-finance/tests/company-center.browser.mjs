@@ -7,7 +7,7 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { expect } from "playwright/test";
 
 // This focused runner needs the coordinator's read-only local preview, never production.
-const origin = process.env.EDIV_CENTER_ORIGIN || "http://127.0.0.1:4321";
+const origin = process.env.EDIV_CENTER_ORIGIN || "http://127.0.0.1:4331";
 assert.equal(new URL(origin).hostname, "127.0.0.1");
 const output =
   process.env.EDIV_CENTER_OUTPUT || ".test-artifacts/company-center-browser";
