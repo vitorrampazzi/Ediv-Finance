@@ -375,30 +375,45 @@ try {
       // Isolate keyboard hints from the pointer left over by the previous journey.
       await page.mouse.move(0, 0);
       await page.keyboard.press("Tab");
-      await expect(page.locator(".dividend-comparison")).toHaveCount(4);
-      for (const button of await page.locator(".dividend-chart-row").all()) {
-        const visible = (await button.innerText()).replace(/\s+/g, " ").trim();
-        await expect(button).toHaveAccessibleName(visible);
+      await expect(
+        page.locator(".figma-stock .fmk-chart-empty[role=status]"),
+      ).toHaveCount(7);
+      await expect(page.locator(".figma-stock .recharts-wrapper")).toHaveCount(
+        0,
+      );
+      for (const title of [
+        "Histórico de cotações indisponível",
+        "Histórico de proventos indisponível",
+        "Rentabilidade histórica indisponível",
+        "Histórico de lucro por ação indisponível",
+        "Evolução financeira indisponível",
+        "Histórico de crescimento indisponível",
+        "Histórico de endividamento indisponível",
+      ])
+        await expect(
+          page.locator(".fmk-chart-empty").getByText(title, { exact: true }),
+        ).toBeVisible();
+      for (const label of [
+        "Período do gráfico de cotação",
+        "Período de rentabilidade",
+      ]) {
+        const controls = page
+          .getByRole("group", { name: label, exact: true })
+          .getByRole("button");
+        assert.ok(await controls.count());
+        for (const control of await controls.all())
+          await expect(control).toBeDisabled();
       }
-      const exact = formatDividendValue(
-        entries[0].dividendAnalysis.marketValue,
-        "currency",
+      const tip = page
+        .locator(".fmk-stats")
+        .getByRole("button", { name: "O que é P/L projetado?", exact: true });
+      await tip.focus();
+      await expect(page.getByRole("tooltip")).toHaveText(
+        "Preço dividido pelo lucro por ação projetado: quantos anos de lucro, no ritmo projetado, o preço representa.",
       );
-      const compact = page.locator(
-        '.fc-summary-strip [data-summary="marketValue"] .fc-exact',
-      );
-      await compact.focus();
-      await expect(page.getByRole("tooltip")).toHaveText(exact);
-      await compact.press("Escape");
+      await tip.press("Escape");
       await expect(page.getByRole("tooltip")).toHaveCount(0);
-      await expect(compact).toBeFocused();
-      const bar = page
-        .locator(".dividend-chart-row")
-        .filter({ hasText: "P/L projetado" })
-        .first();
-      await bar.focus();
-      await expect(page.getByRole("tooltip")).toContainText("P/L projetado");
-      await bar.press("Escape");
+      await expect(tip).toBeFocused();
       const nav = page.getByRole("navigation", { name: "Seções da análise" });
       await nav.getByRole("link", { name: "Dividendos", exact: true }).focus();
       await page.keyboard.press("Enter");
@@ -431,45 +446,43 @@ try {
         },
       };
       await page.goto(origin + "/app/ranking/acao/EDGE3?visual=real");
-      await expect(page.locator('[data-insight="pe"] > strong')).toHaveText(
-        "Não informado",
-      );
-      await expect(page.locator('[data-insight="price"] > strong')).toHaveText(
-        "Não informado",
+      await expect(page.locator("#entenda")).toContainText(
+        "Comparação indisponível sem bases positivas.",
       );
       await expect(
-        page.locator('[data-field="expectedPayout"] dd[data-exact-value]'),
+        page.locator("#visao-geral").getByRole("status"),
+      ).toContainText("Comparação indisponível");
+      await expect(
+        page.locator('[data-field="expectedPayout"] [data-exact-value]'),
       ).toHaveText("150,00%");
       await expect(
-        page.locator('[data-field="safetyMargin"] dd[data-exact-value]'),
+        page.locator('[data-field="safetyMargin"] [data-exact-value]'),
       ).toHaveText("-150%");
       await expect(
-        page.locator('[data-field="netDebtToEbitda"] dd[data-exact-value]'),
+        page.locator('[data-field="netDebtToEbitda"] [data-exact-value]'),
       ).toHaveText("-2");
       await expect(
         page.locator(
-          '[data-field="estimatedGrossDividendYield"] dd[data-exact-value]',
+          '[data-field="estimatedGrossDividendYield"] [data-exact-value]',
         ),
       ).toHaveText("0,00%");
       await expect(
-        page.locator('.fc-calendar li[data-announced="true"]'),
+        page.locator('#dividendos [data-month][data-announced="true"]'),
       ).toHaveCount(0);
-      await expect(page.locator(".fc-calendar")).toContainText(
+      await expect(page.locator("#dividendos")).toContainText(
         "Nenhum mês foi presumido",
       );
-      const unavailable = page
-        .locator(".dividend-comparison")
-        .filter({ hasText: "Cotação de referência e preço teto" });
-      await expect(unavailable.locator(".recharts-bar-rectangle")).toHaveCount(
+      await expect(page.locator(".figma-stock .recharts-wrapper")).toHaveCount(
         0,
       );
-      await expect(unavailable).toContainText("Comparação indisponível");
-      const debt = page.locator('[data-field="netDebtToEbitda"] dt button');
+      const debt = page.locator('[data-field="netDebtToEbitda"] button');
       await debt.focus();
       await expect(page.getByRole("tooltip")).toContainText(
         "não comprova caixa líquido",
       );
       await debt.press("Escape");
+      await expect(page.getByRole("tooltip")).toHaveCount(0);
+      await expect(debt).toBeFocused();
       probeEntry = null;
     },
   );
@@ -483,19 +496,24 @@ try {
             entry.ticker +
             "?visual=real&publication=2",
         );
-        await expect(
-          page.locator(".dividend-information > [data-field]"),
-        ).toHaveCount(21);
+        await expect(page.locator(".figma-stock [data-field]")).toHaveCount(21);
         const actual = await page
-          .locator(".dividend-information > [data-field]")
+          .locator(".figma-stock [data-field]")
           .evaluateAll((nodes) =>
             nodes.map((node) => ({
               key: node.dataset.field,
-              label: (
-                node.querySelector("dt button") || node.querySelector("dt")
-              ).textContent,
-              value: node.querySelector("dd[data-exact-value]").dataset
-                .exactValue,
+              label:
+                node.querySelector("dt")?.textContent ||
+                node
+                  .querySelector("button")
+                  .getAttribute("aria-label")
+                  .slice("O que é ".length, -1),
+              value:
+                node.querySelector("[data-exact-value]").dataset.exactValue,
+              visibleValue: node
+                .querySelector("[data-exact-value]")
+                .textContent.replace(/^[▲▼]\s*/, "")
+                .trim(),
             })),
           );
         for (const column of dividendColumns)
@@ -508,22 +526,32 @@ try {
                 dividendValue(entry, column.key),
                 column.format,
               ),
+              visibleValue: formatDividendValue(
+                dividendValue(entry, column.key),
+                column.format,
+              ),
             },
           );
-        for (const [index, count] of [6, 1, 3, 5, 3].entries()) {
+        for (const [index, count] of [5, 5, 3, 1, 3].entries()) {
           await expect(
-            page.locator(".fc-category").nth(index).locator(".fc-metric"),
+            page
+              .locator("#indicadores h3")
+              .nth(index)
+              .locator("..")
+              .locator("[data-field]"),
           ).toHaveCount(count);
         }
-        await expect(page.locator(".dividend-section-nav a")).toHaveCount(6);
-        await expect(page.locator(".fc-calendar li")).toHaveCount(12);
+        await expect(
+          page
+            .getByRole("navigation", { name: "Seções da análise" })
+            .getByRole("link"),
+        ).toHaveCount(7);
+        await expect(page.locator("#dividendos [data-month]")).toHaveCount(12);
         assert.deepEqual(
           await page
-            .locator('.fc-calendar li[data-announced="true"]')
+            .locator('#dividendos [data-month][data-announced="true"]')
             .evaluateAll((nodes) =>
-              nodes.map(
-                (node) => [...node.parentNode.children].indexOf(node) + 1,
-              ),
+              nodes.map((node) => Number(node.dataset.month)),
             ),
           dividendAnnouncementMonths(
             entry.dividendAnalysis.announcementMonths,
@@ -533,11 +561,27 @@ try {
           entry.dividendAnalysis.projectedPE,
           entry.dividendAnalysis.averagePE10Years,
         );
-        await expect(page.locator('[data-insight="pe"] > strong')).toHaveText(
-          formatDividendValue(
-            computed === null ? null : String(computed),
-            "percent",
-          ),
+        const difference =
+          computed === null
+            ? null
+            : (computed > 0 ? "+" : "") +
+              (computed * 100).toLocaleString("pt-BR", {
+                minimumFractionDigits: 1,
+                maximumFractionDigits: 1,
+              }) +
+              "%";
+        const peColumn = dividendColumns.find(
+          ({ key }) => key === "projectedPE",
+        );
+        const averageColumn = dividendColumns.find(
+          ({ key }) => key === "averagePE10Years",
+        );
+        await expect(
+          page.locator("#entenda").getByRole("tabpanel"),
+        ).toContainText(
+          computed === null
+            ? "Comparação indisponível sem bases positivas."
+            : `P/L projetado ${formatDividendValue(entry.dividendAnalysis.projectedPE, peColumn.format)}, média ${formatDividendValue(entry.dividendAnalysis.averagePE10Years, averageColumn.format)}: diferença relativa ${difference}.`,
         );
         await expect(page.locator(".research-insight")).toHaveCount(0);
         assert.equal(
@@ -652,9 +696,7 @@ try {
         await page.goto(
           origin + "/app/ranking/acao/TIMS3?visual=real&publication=2",
         );
-        await expect(
-          page.locator(".dividend-information > [data-field]"),
-        ).toHaveCount(21);
+        await expect(page.locator(".figma-stock [data-field]")).toHaveCount(21);
         await page.evaluate(
           (theme) => (document.documentElement.dataset.theme = theme),
           theme,
@@ -700,7 +742,7 @@ try {
       await expect(page.getByRole("heading", { level: 1 })).toContainText(
         "Horizonte",
       );
-      await expect(page.locator(".dividend-information")).toHaveCount(0);
+      await expect(page.locator(".figma-stock")).toHaveCount(0);
       await expect(
         page.getByText("Potencial simulado", { exact: true }).first(),
       ).toBeVisible();
