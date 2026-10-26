@@ -40,20 +40,36 @@ Calendário apresenta somente meses habituais de **anúncio**, sem inventar data
 de pagamento. Nome, ticker, atuação, data, cotação, lucro, dividendos e indicadores
 vêm da publicação selecionada, sem DEMO3 ou cadastro corporativo fictício.
 
-## Gráficos e limites das fontes
+## Gráficos alimentados pela publicação
 
-Operacionais com o snapshot atual: gauge de cotação/teto, indicadores numéricos
-e calendário de meses habituais. Não há séries autorizadas na base para cotações,
-proventos históricos, LPA trimestral, evolução financeira, crescimento histórico,
-endividamento histórico ou ação versus Ibovespa/CDI/IFIX.
+Os sete espaços agora renderizam barras com os indicadores reais de cada Entry:
 
-Essas sete áreas mantêm o espaço dos gráficos originais com estado indisponível;
-seletores e legendas ficam desativados enquanto não há série real. Não são
-geradas séries aleatórias, interpoladas ou extraídas de AGF/Suno. Cotação pontual
-em cache não constitui histórico. CAGR agregado não vira uma curva anual.
-Os componentes Recharts originais permanecem aproveitados, mas nenhum gráfico
-histórico renderiza uma série inventada. Novas fontes exigirão contrato e
-metodologia próprios antes da alimentação desses componentes.
+| Gráfico | Campos e unidade |
+| --- | --- |
+| Cotação e preço-teto | Cotação da pesquisa e teto; R$ por ação |
+| Dividendo e lucro por ação | DPA bruto projetado e LPA estimado; R$ por ação |
+| Lucro por ação | LPA estimado; R$ por ação |
+| Lucro líquido | Lucro total estimado; R$ (eixo compacto, valor completo na tabela) |
+| Crescimento | CAGR informado dos lucros em cinco anos; % ao ano |
+| Endividamento | Dívida líquida/EBITDA; vezes |
+| P/L e média histórica | P/L projetado e P/L médio de dez anos; vezes |
+
+A média de P/L e o CAGR são referências reais do passado fornecidas na planilha.
+São agregados, sem reconstruir lucros por ano, preços diários ou pagamentos.
+Os gráficos não afirmam retorno acumulado nem cotação ao vivo. Projeções são
+identificadas como estimativas e não pagamentos/resultados realizados.
+
+Cada figura informa unidade, ticker, fonte e data; mantém valores exatos na
+alternativa tabular e dicas por mouse/teclado/Escape. Números negativos aparecem
+abaixo de zero, zero não é ausência, e null permanece Não informado na tabela,
+sem virar zero no desenho. Se todos os valores da figura estão ausentes, o
+estado indisponível continua acessível. Os 21 campos completos são preservados.
+
+Os componentes históricos do ZIP permanecem conservados, mas não recebem séries
+simuladas. Períodos históricos e benchmarks continuam desativados. Não existe
+fonte histórica autorizada na base; a consulta pública TIMS3 na API existente
+retornou 401 sem token. O usuário confirmou o uso da planilha por enquanto.
+Nenhuma API nova, plano pago, credencial ou alteração de servidor foi introduzida.
 
 ## Fidelidade e diferenças deliberadas
 
@@ -75,7 +91,7 @@ ZIP intactas. A instrumentação/configuração do Make não foi executada.
 
 `tests/figma-stock.browser.mjs`: runner focal local, três tickers, 21 campos,
 fontes realmente carregadas, sete âncoras, explicações por mouse/teclado/Escape,
-sete larguras em dois temas, ausentes/zero/negativos/payout acima de 100% e amostra
+320 e 1440 px nos dois temas, ausentes/zero/negativos/payout acima de 100% e amostra
 pública 3×3. Requer prévias locais de referência e produto, nunca produção.
 
 `tests/company-center.browser.mjs` mantém verificações de ranking/22 colunas
@@ -85,3 +101,13 @@ paginação, com seletores atualizados para o port. TypeScript, lint, testes e b
 devem passar, seguidos de QA independente da versão identificada. Relatos do
 harness registram resultados reais; este documento não declara testes futuros
 como aprovados. Não há certificação global de WCAG ou teste de leitores reais.
+
+### Correção de gráficos — 26/10/2026
+
+A mudança anterior preservava a composição, mas os históricos vazios deixavam os
+sete espaços sem séries. A correção usa os indicadores da publicação para
+comparações e projeções, mantendo o design, as fontes e a metodologia. A revisão
+focal desta mudança cobre três tickers, 21 campos e sete figuras, 320/1440 nos
+dois temas e todos os valores ausentes. Os runners CI mantêm os 90 detalhes,
+proteções de acesso e paginação. A matriz completa da integração original não
+foi repetida por não haver alteração global, de fonte, de layout ou de rota.

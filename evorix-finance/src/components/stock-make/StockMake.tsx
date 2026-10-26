@@ -899,7 +899,7 @@ function StockPage({
             id="cotacao"
             n="02"
             title="Cotação"
-            lede="Evolução do preço com referências de preço e metodologia identificada."
+            lede="Cotação de referência comparada ao preço-teto da pesquisa, sem simular uma evolução temporal."
           />
           <PriceChart />
         </section>
@@ -914,7 +914,7 @@ function StockPage({
             id="dividendos"
             n="03"
             title="Dividendos"
-            lede="Proventos realizados e projetados, histórico por período e meses habituais de anúncio."
+            lede="Dividendo projetado comparado ao lucro estimado por ação e meses habituais de anúncio."
           />
           <div className="fmk-stats mb-12 grid grid-cols-2 gap-x-6 gap-y-6 md:grid-cols-5">
             <Stat label="DY estimado" tip="Dividendo projetado ÷ cotação.">
@@ -957,18 +957,18 @@ function StockPage({
             id="resultados"
             n="05"
             title="Resultados"
-            lede="Lucro, receita, crescimento e endividamento. Gráficos prontos para receber séries históricas reais."
+            lede="Lucro estimado, crescimento agregado de cinco anos e endividamento da planilha, com unidades e metodologia."
           />
           <ResultsCharts />
           <div className="mt-16 border-t border-fmk-line pt-8">
             <div className="mb-6 flex flex-wrap items-end justify-between gap-3">
               <div>
                 <h3 className="font-fmk-serif text-2xl">
-                  Rentabilidade comparada
+                  P/L e média histórica
                 </h3>
                 <p className="mt-1 text-sm text-fmk-sub">
-                  Ação e referências no mesmo período, quando houver séries
-                  autorizadas.
+                  P/L projetado frente à média de dez anos da pesquisa; a média
+                  histórica não descreve a trajetória de cada ano.
                 </p>
               </div>
             </div>

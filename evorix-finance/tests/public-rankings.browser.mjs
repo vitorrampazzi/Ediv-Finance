@@ -9,7 +9,10 @@ import {
   dividendValue,
   formatDividendValue,
 } from "../dividend-analysis.mjs";
-import { dividendAnnouncementMonths } from "../dividend-insights.mjs";
+import {
+  dividendAnnouncementMonths,
+  dividendNumber,
+} from "../dividend-insights.mjs";
 
 // Local UI contract fixture; the full workbook is never imported into client code.
 const audit = process.env.EDIV_WORKBOOK_AUDIT
@@ -104,6 +107,56 @@ let browser,
   signedIn = false,
   pending = [],
   privateReads = 0;
+async function assertPublicationCharts(page, entry) {
+  const groups = {
+    price: ["referencePrice", "ceilingPrice"],
+    dividends: ["projectedGrossDividendPerShare", "estimatedEps"],
+    eps: ["estimatedEps"],
+    profit: ["estimatedNetIncome"],
+    cagr: ["earningsCagr5Years"],
+    debt: ["netDebtToEbitda"],
+    valuation: ["projectedPE", "averagePE10Years"],
+  };
+  await expect(
+    page.locator(".figma-stock figure.fmk-publication-chart"),
+  ).toHaveCount(7);
+  for (const [id, keys] of Object.entries(groups)) {
+    const figure = page.locator(
+      `figure.fmk-publication-chart[data-publication-chart="${id}"]`,
+    );
+    await expect(figure).toHaveCount(1);
+    const hasNumbers = keys.some(
+      (key) => dividendNumber(dividendValue(entry, key)) !== null,
+    );
+    const expected = keys.map((key) => ({
+      key,
+      value: formatDividendValue(
+        dividendValue(entry, key),
+        dividendColumns.find((column) => column.key === key).format,
+      ),
+    }));
+    const alternatives = figure.locator("[data-chart-value]");
+    await expect(alternatives).toHaveCount(expected.length);
+    assert.deepEqual(
+      await alternatives.evaluateAll((nodes) =>
+        nodes.map((node) => ({
+          key: node.dataset.chartValue,
+          value: node.dataset.exactValue,
+        })),
+      ),
+      expected,
+    );
+    for (const { key, value } of expected)
+      await expect(figure.locator(`[data-chart-value="${key}"]`)).toContainText(
+        value,
+      );
+    await expect(figure.locator(".recharts-wrapper")).toHaveCount(
+      hasNumbers ? 1 : 0,
+    );
+    if (!hasNumbers)
+      await expect(figure.getByRole("status")).toBeVisible();
+  }
+}
 const run = async (name, work) => {
   await work();
   results.push(name);
@@ -331,7 +384,7 @@ try {
     },
   );
   await run(
-    "Empresa: cinco resumos, sete históricos indisponíveis e21campos/3tickers",
+    "Empresa: cinco resumos, sete gráficos da publicação e21campos/3tickers",
     async () => {
       for (const entry of entries.slice(0, 3)) {
         await page.goto(
@@ -397,18 +450,7 @@ try {
             .getByRole("navigation", { name: "Seções da análise" })
             .getByRole("link"),
         ).toHaveCount(7);
-        await expect(
-          page.locator("#cotacao .fmk-chart-empty[role=status]"),
-        ).toHaveCount(1);
-        await expect(page.locator("#cotacao .fmk-chart-empty")).toContainText(
-          "Histórico de cotações indisponível",
-        );
-        await expect(
-          page.locator(".figma-stock .fmk-chart-empty[role=status]"),
-        ).toHaveCount(7);
-        await expect(
-          page.locator(".figma-stock .recharts-wrapper"),
-        ).toHaveCount(0);
+        await assertPublicationCharts(page, entry);
         assert.ok(
           await page
             .locator("#cotacao")
@@ -459,7 +501,7 @@ try {
         .locator(".figma-stock header")
         .screenshot({ path: output + "/company-header.png" });
       await page.locator("#cotacao").screenshot({
-        path: output + "/company-price-history-unavailable.png",
+        path: output + "/company-publication-price-chart.png",
       });
     },
   );

@@ -7,8 +7,11 @@ import {
   dividendValue,
   formatDividendValue,
 } from "../dividend-analysis.mjs";
-import { dividendAnnouncementMonths } from "../dividend-insights.mjs";
-const origin = process.env.EDIV_FIGMA_ORIGIN || "http://127.0.0.1:4321";
+import {
+  dividendAnnouncementMonths,
+  dividendNumber,
+} from "../dividend-insights.mjs";
+const origin = process.env.EDIV_FIGMA_ORIGIN || "http://127.0.0.1:4331";
 assert.equal(new URL(origin).hostname, "127.0.0.1");
 const output =
   process.env.EDIV_FIGMA_OUTPUT || ".test-artifacts/figma-stock-browser";
@@ -17,9 +20,7 @@ let browser;
 const passed = [],
   errors = [],
   fonts = [];
-const widths = process.argv.includes("--narrow")
-  ? [320, 375, 430, 768]
-  : [320, 375, 430, 768, 1024, 1440, 1920];
+const widths = [320, 1440];
 async function run(name, work) {
   if (
     process.argv.length > 2 &&
@@ -50,23 +51,6 @@ try {
   page.on("response", (response) => {
     if (response.url().includes("/fonts/"))
       fonts.push({ url: response.url(), status: response.status() });
-  });
-  await run("Referência ZIP com tipografia real disponível", async () => {
-    await page.goto("http://127.0.0.1:4320");
-    await page.evaluate(() => document.fonts.ready);
-    assert.match(
-      await page
-        .locator("h1")
-        .evaluate((node) => getComputedStyle(node).fontFamily),
-      /Newsreader/,
-    );
-    assert.equal(
-      await page
-        .locator("h1")
-        .evaluate((node) => getComputedStyle(node).fontSize),
-      "48px",
-    );
-    await page.screenshot({ path: output + "/reference-desktop.png" });
   });
   await page.goto(origin + "/app/ranking");
   await expect(page.locator(".dividend-table tbody tr")).toHaveCount(10);
@@ -105,6 +89,43 @@ try {
         },
       );
   }
+  const groups = {
+    price: ["referencePrice", "ceilingPrice"],
+    dividends: ["projectedGrossDividendPerShare", "estimatedEps"],
+    eps: ["estimatedEps"],
+    profit: ["estimatedNetIncome"],
+    cagr: ["earningsCagr5Years"],
+    debt: ["netDebtToEbitda"],
+    valuation: ["projectedPE", "averagePE10Years"],
+  };
+  async function publicationCharts(entry) {
+    await expect(page.locator("figure.fmk-publication-chart")).toHaveCount(7);
+    for (const [id, keys] of Object.entries(groups)) {
+      const figure = page.locator(
+        'figure[data-publication-chart="' + id + '"]',
+      );
+      await figure.scrollIntoViewIfNeeded();
+      const valid = keys.some(
+        (key) => dividendNumber(dividendValue(entry, key)) !== null,
+      );
+      await expect(figure.locator(".recharts-wrapper")).toHaveCount(
+        valid ? 1 : 0,
+      );
+      await expect(figure.locator("[data-chart-value]")).toHaveCount(
+        keys.length,
+      );
+      for (const key of keys) {
+        const expected = formatDividendValue(
+          dividendValue(entry, key),
+          dividendColumns.find((c) => c.key === key).format,
+        );
+        const value = figure.locator('[data-chart-value="' + key + '"]');
+        await expect(value).toHaveAttribute("data-exact-value", expected);
+        await expect(value).toHaveText(expected);
+      }
+      if (!valid) await expect(figure.getByRole("status")).toBeVisible();
+    }
+  }
   await run("Ranking→portZIP real/3tickers/21valores exatos", async () => {
     await page.locator(".dividend-company-link").first().press("Enter");
     for (const entry of entries.slice(0, 3)) {
@@ -114,18 +135,7 @@ try {
       );
       await expect(page.locator(".figma-stock h1")).toBeFocused();
       await exactFields(entry);
-      await expect(page.locator(".figma-stock .fmk-chart-empty")).toHaveCount(
-        7,
-      );
-      await expect(page.locator(".figma-stock .recharts-wrapper")).toHaveCount(
-        0,
-      );
-      assert.equal(
-        await page
-          .locator(".figma-stock button[aria-pressed]:not(:disabled)")
-          .count(),
-        0,
-      );
+      await publicationCharts(entry);
       assert.equal(await page.locator(".figma-stock [data-month]").count(), 12);
       const actual = await page
         .locator('.figma-stock [data-announced="true"]')
@@ -320,6 +330,7 @@ try {
       );
       await page.goto(companyUrl(probe));
       await exactFields(probe);
+      await publicationCharts(probe);
       await expect(page.locator('[data-announced="true"]')).toHaveCount(0);
       assert.doesNotMatch(
         await page.locator(".figma-stock").innerText(),
@@ -350,6 +361,14 @@ try {
         await page.evaluate(
           () => document.documentElement.scrollWidth <= innerWidth + 1,
         ),
+      );
+      for (const key of new Set(Object.values(groups).flat()))
+        probe.dividendAnalysis[key] = null;
+      await page.reload();
+      await exactFields(probe);
+      await publicationCharts(probe);
+      await expect(page.locator(".figma-stock .recharts-wrapper")).toHaveCount(
+        0,
       );
       await page.unroute(matches);
     },

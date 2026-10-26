@@ -33,11 +33,177 @@ import {
   gridProps,
 } from "./data";
 import { ChartTip, Legend, Seg, Tag, type LegendItem } from "./ui";
+import { Tooltip as AccessibleTooltip } from "../Tooltip";
+import { dividendColumns, type DividendColumnKey } from "./data";
 
 const TEAL = "var(--fmk-teal)";
 const AMBER = "var(--fmk-amber)";
 const LILAC = "var(--fmk-lilac)";
 const STEEL = "var(--fmk-steel)";
+
+const chartLabels: Partial<Record<DividendColumnKey, string>> = {
+  referencePrice: "Cotação",
+  ceilingPrice: "Teto",
+  projectedGrossDividendPerShare: "DPA proj.",
+  estimatedEps: "LPA est.",
+  estimatedNetIncome: "Lucro est.",
+  earningsCagr5Years: "CAGR 5a",
+  netDebtToEbitda: "Dív./EBITDA",
+  projectedPE: "P/L proj.",
+  averagePE10Years: "P/L 10a",
+};
+const compactNumber = new Intl.NumberFormat("pt-BR", {
+  notation: "compact",
+  maximumFractionDigits: 1,
+});
+
+function PublicationChart({
+  id,
+  title,
+  keys,
+  unit,
+  methodology,
+  height,
+}: {
+  id: string;
+  title: string;
+  keys: DividendColumnKey[];
+  unit: string;
+  methodology: string;
+  height: number;
+}) {
+  const { number, value, company } = useStockData();
+  const rows = keys.map((key, index) => {
+    const amount = number(key);
+    return {
+      key,
+      label: dividendColumns.find((column) => column.key === key)!.label,
+      short: chartLabels[key],
+      amount:
+        amount === null || !Number.isFinite(amount)
+          ? null
+          : key === "earningsCagr5Years"
+            ? amount * 100
+            : amount,
+      formatted: value(key),
+      color: index === 0 ? TEAL : AMBER,
+    };
+  });
+  const data = rows.filter((row) => row.amount !== null);
+  return (
+    <figure className="fmk-publication-chart" data-publication-chart={id}>
+      <div style={{ height }} aria-hidden={data.length ? true : undefined}>
+        {data.length ? (
+          <ResponsiveContainer width="100%" height="100%">
+            <BarChart
+              accessibilityLayer={false}
+              data={data}
+              margin={{ top: 16, right: 8, left: 0, bottom: 0 }}
+              barCategoryGap="28%"
+            >
+              <CartesianGrid {...gridProps} />
+              <XAxis dataKey="short" {...axisProps} interval={0} />
+              <YAxis
+                {...axisProps}
+                axisLine={false}
+                width={52}
+                domain={[
+                  (minimum: number) => Math.min(0, minimum),
+                  (maximum: number) => Math.max(0, maximum) || 1,
+                ]}
+                tickFormatter={(amount: number) => compactNumber.format(amount)}
+              />
+              <ReferenceLine y={0} stroke="var(--fmk-line)" />
+              <Tooltip
+                cursor={{ fill: "var(--fmk-line-soft)" }}
+                position={{ x: 0, y: 0 }}
+                wrapperStyle={{ maxWidth: "100%" }}
+                content={({ active, payload }) => {
+                  const row = payload?.[0]?.payload as
+                    (typeof rows)[number] | undefined;
+                  return active && row ? (
+                    <div
+                      role="tooltip"
+                      className="max-w-xs rounded-md border border-fmk-line bg-fmk-raised px-3 py-2 text-xs text-fmk-ink"
+                      style={{
+                        maxWidth: "min(260px, calc(100vw - 32px))",
+                        overflowWrap: "anywhere",
+                      }}
+                    >
+                      {row.label}: {row.formatted} · {unit}
+                    </div>
+                  ) : null;
+                }}
+              />
+              <Bar
+                dataKey="amount"
+                name={unit}
+                maxBarSize={88}
+                isAnimationActive={false}
+              >
+                {data.map((row) => (
+                  <Cell key={row.key} fill={row.color} />
+                ))}
+              </Bar>
+            </BarChart>
+          </ResponsiveContainer>
+        ) : (
+          <ChartUnavailable title={`${title}: dados indisponíveis`} />
+        )}
+      </div>
+      <figcaption className="mt-3 text-xs leading-relaxed text-fmk-sub">
+        <strong className="font-medium text-fmk-ink">
+          {title} · {unit}.
+        </strong>{" "}
+        {methodology} Fonte: planilha da pesquisa · {company.ticker} ·{" "}
+        {company.updated}.
+      </figcaption>
+      <table className="mt-3 w-full table-fixed text-xs">
+        <caption className="sr-only">
+          {title}: valores e legenda. Use Tab para consultar as dicas.
+        </caption>
+        <tbody>
+          {rows.map((row) => (
+            <tr
+              key={row.key}
+              data-chart-field={row.key}
+              className="border-b border-fmk-line-soft"
+            >
+              <th
+                scope="row"
+                className="w-[56%] py-2 pr-3 text-left font-normal"
+              >
+                <AccessibleTooltip
+                  content={`${row.label}: ${row.formatted}. Unidade: ${unit}. ${methodology}`}
+                >
+                  <button
+                    type="button"
+                    className="min-h-6 text-left text-fmk-sub"
+                  >
+                    <span
+                      aria-hidden="true"
+                      className="mr-2 inline-block size-2"
+                      style={{ backgroundColor: row.color }}
+                    />
+                    {row.label}
+                  </button>
+                </AccessibleTooltip>
+              </th>
+              <td
+                data-chart-value={row.key}
+                data-exact-value={row.formatted}
+                className="py-2 text-right font-fmk-mono text-fmk-ink"
+                style={{ overflowWrap: "anywhere" }}
+              >
+                {row.formatted}
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </figure>
+  );
+}
 
 const Hatch = ({ id, color = TEAL }: { id: string; color?: string }) => (
   <defs>
@@ -97,7 +263,9 @@ export function PriceChart() {
     <div className="fmk-chart-layout grid gap-10 lg:grid-cols-[1fr_300px]">
       <div>
         <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-          <Legend disabled items={items} active={on} onToggle={toggle} />
+          {data.length > 0 && (
+            <Legend disabled items={items} active={on} onToggle={toggle} />
+          )}
           <Seg
             disabled
             label="Período do gráfico de cotação"
@@ -106,9 +274,13 @@ export function PriceChart() {
             onChange={setPeriod}
           />
         </div>
-        <div className="h-[380px] w-full">
+        <p className="mb-3 text-xs text-fmk-dim">
+          Períodos desativados: não há série histórica na planilha. Abaixo,
+          comparação das referências publicadas.
+        </p>
+        <div className="w-full">
           {data.length ? (
-            <ResponsiveContainer>
+            <ResponsiveContainer height={380}>
               <ComposedChart
                 data={data}
                 margin={{ top: 8, right: 0, left: 0, bottom: 0 }}
@@ -177,7 +349,14 @@ export function PriceChart() {
               </ComposedChart>
             </ResponsiveContainer>
           ) : (
-            <ChartUnavailable title="Histórico de cotações indisponível" />
+            <PublicationChart
+              id="price"
+              title="Cotação e preço-teto"
+              keys={["referencePrice", "ceilingPrice"]}
+              unit="R$ por ação"
+              methodology="Comparação das referências da publicação; não é cotação ao vivo nem evolução temporal."
+              height={380}
+            />
           )}
         </div>
         <p className="mt-3 text-xs text-fmk-dim">
@@ -189,7 +368,7 @@ export function PriceChart() {
       <aside className="space-y-6 lg:border-l lg:border-fmk-line lg:pl-8">
         <div>
           <h3 className="font-fmk-mono text-[11px] uppercase tracking-[0.14em] text-fmk-dim">
-            No período · {period}
+            Histórico · indisponível
           </h3>
           <dl className="mt-3 divide-y divide-fmk-line-soft text-sm">
             {[
@@ -276,7 +455,9 @@ export function DividendChart() {
     <div className="fmk-chart-layout grid gap-10 lg:grid-cols-[1fr_360px]">
       <div>
         <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-          <Legend disabled items={items} active={on} onToggle={toggle} />
+          {data.length > 0 && (
+            <Legend disabled items={items} active={on} onToggle={toggle} />
+          )}
           <div className="flex gap-2">
             <Seg
               disabled
@@ -296,9 +477,13 @@ export function DividendChart() {
             )}
           </div>
         </div>
-        <div className="h-[340px]">
+        <p className="mb-3 text-xs text-fmk-dim">
+          Períodos desativados: a planilha não contém pagamentos históricos.
+          Abaixo, projeções consolidadas por ação.
+        </p>
+        <div className="w-full">
           {data.length ? (
-            <ResponsiveContainer>
+            <ResponsiveContainer height={340}>
               <BarChart
                 data={data}
                 margin={{ top: 8, right: 0, left: 0, bottom: 0 }}
@@ -354,7 +539,14 @@ export function DividendChart() {
               </BarChart>
             </ResponsiveContainer>
           ) : (
-            <ChartUnavailable title="Histórico de proventos indisponível" />
+            <PublicationChart
+              id="dividends"
+              title="Dividendo e lucro por ação"
+              keys={["projectedGrossDividendPerShare", "estimatedEps"]}
+              unit="R$ por ação"
+              methodology="Dividendo bruto projetado e lucro por ação estimado; não são pagamentos realizados."
+              height={340}
+            />
           )}
         </div>
         <p className="mt-3 text-xs text-fmk-dim">
@@ -505,7 +697,9 @@ export function PerformanceChart() {
   return (
     <div>
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-        <Legend disabled items={items} active={on} onToggle={toggle} />
+        {data.length > 0 && (
+          <Legend disabled items={items} active={on} onToggle={toggle} />
+        )}
         <Seg
           disabled
           label="Período de rentabilidade"
@@ -514,9 +708,9 @@ export function PerformanceChart() {
           onChange={setPeriod}
         />
       </div>
-      <div className="h-[360px]">
+      <div className="w-full">
         {data.length ? (
-          <ResponsiveContainer>
+          <ResponsiveContainer height={360}>
             <LineChart
               data={data}
               margin={{ top: 8, right: 0, left: 0, bottom: 0 }}
@@ -563,13 +757,19 @@ export function PerformanceChart() {
             </LineChart>
           </ResponsiveContainer>
         ) : (
-          <ChartUnavailable title="Rentabilidade histórica indisponível" />
+          <PublicationChart
+            id="valuation"
+            title="P/L e média histórica"
+            keys={["projectedPE", "averagePE10Years"]}
+            unit="vezes"
+            methodology="P/L projetado frente ao P/L médio de dez anos informado na fonte. A média resume o passado; não é uma curva anual nem retorno acumulado."
+            height={360}
+          />
         )}
       </div>
       <p className="mt-3 text-xs text-fmk-dim">
-        Rentabilidade acumulada depende de preços, proventos e metodologia
-        compatível de cada série. Fonte histórica não disponível nesta
-        publicação.
+        Períodos e benchmarks de retorno estão desativados: a planilha informa
+        apenas o P/L projetado e sua média histórica.
       </p>
     </div>
   );
@@ -607,19 +807,24 @@ export function ResultsCharts() {
   const [lpaOn, lpaToggle] = useToggle(["lpaR", "lpaE"]);
   return (
     <div className="grid gap-x-14 gap-y-12 lg:grid-cols-2">
-      <Panel title="Lucro por ação" sub="R$ por ação · realizado e estimado">
-        <Legend
-          disabled
-          items={[
-            { key: "lpaR", label: "Realizado", color: TEAL },
-            { key: "lpaE", label: "Estimado", color: TEAL, hatch: true },
-          ]}
-          active={lpaOn}
-          onToggle={lpaToggle}
-        />
-        <div className="mt-2 h-[260px]">
+      <Panel
+        title="Lucro por ação"
+        sub="R$ por ação · estimativa da publicação"
+      >
+        {results.length > 0 && (
+          <Legend
+            disabled
+            items={[
+              { key: "lpaR", label: "Realizado", color: TEAL },
+              { key: "lpaE", label: "Estimado", color: TEAL, hatch: true },
+            ]}
+            active={lpaOn}
+            onToggle={lpaToggle}
+          />
+        )}
+        <div className="mt-2">
           {results.length ? (
-            <ResponsiveContainer>
+            <ResponsiveContainer height={260}>
               <BarChart
                 data={results}
                 margin={{ top: 8, right: 0, left: 0, bottom: 0 }}
@@ -659,19 +864,28 @@ export function ResultsCharts() {
               </BarChart>
             </ResponsiveContainer>
           ) : (
-            <ChartUnavailable title="Histórico de lucro por ação indisponível" />
+            <PublicationChart
+              id="eps"
+              title="Lucro por ação estimado"
+              keys={["estimatedEps"]}
+              unit="R$ por ação"
+              methodology="Estimativa consolidada da publicação, sem repartir o resultado em períodos."
+              height={260}
+            />
           )}
         </div>
       </Panel>
 
       <Panel
-        title="Evolução financeira"
-        sub="R$ bilhões · clique na legenda para comparar séries"
+        title="Lucro líquido estimado"
+        sub="R$ totais · estimativa da publicação"
       >
-        <Legend disabled items={evo} active={on} onToggle={toggle} />
-        <div className="mt-2 h-[260px]">
+        {results.length > 0 && (
+          <Legend disabled items={evo} active={on} onToggle={toggle} />
+        )}
+        <div className="mt-2">
           {results.length ? (
-            <ResponsiveContainer>
+            <ResponsiveContainer height={260}>
               <LineChart
                 data={results}
                 margin={{ top: 8, right: 0, left: 0, bottom: 0 }}
@@ -705,7 +919,14 @@ export function ResultsCharts() {
               </LineChart>
             </ResponsiveContainer>
           ) : (
-            <ChartUnavailable title="Evolução financeira indisponível" />
+            <PublicationChart
+              id="profit"
+              title="Lucro líquido estimado"
+              keys={["estimatedNetIncome"]}
+              unit="R$"
+              methodology="Lucro líquido total estimado da fonte; não representa receita ou EBITDA realizado."
+              height={260}
+            />
           )}
         </div>
       </Panel>
@@ -722,9 +943,9 @@ export function ResultsCharts() {
             ao ano · período de cinco anos da fonte
           </span>
         </div>
-        <div className="mt-2 h-[190px]">
+        <div className="mt-2">
           {cagrSeries.length ? (
-            <ResponsiveContainer>
+            <ResponsiveContainer height={190}>
               <LineChart
                 data={cagrSeries}
                 margin={{ top: 8, right: 0, left: 0, bottom: 0 }}
@@ -756,7 +977,14 @@ export function ResultsCharts() {
               </LineChart>
             </ResponsiveContainer>
           ) : (
-            <ChartUnavailable title="Histórico de crescimento indisponível" />
+            <PublicationChart
+              id="cagr"
+              title="Crescimento composto do lucro"
+              keys={["earningsCagr5Years"]}
+              unit="% ao ano"
+              methodology="Taxa agregada de cinco anos informada na fonte; não reconstrói o lucro de cada ano."
+              height={190}
+            />
           )}
         </div>
       </Panel>
@@ -770,9 +998,9 @@ export function ResultsCharts() {
             dado informado na pesquisa
           </span>
         </div>
-        <div className="mt-2 h-[190px]">
+        <div className="mt-2">
           {results.length ? (
-            <ResponsiveContainer>
+            <ResponsiveContainer height={190}>
               <BarChart
                 data={results.filter((r) => r.divEbitda != null)}
                 margin={{ top: 8, right: 0, left: 0, bottom: 0 }}
@@ -805,7 +1033,14 @@ export function ResultsCharts() {
               </BarChart>
             </ResponsiveContainer>
           ) : (
-            <ChartUnavailable title="Histórico de endividamento indisponível" />
+            <PublicationChart
+              id="debt"
+              title="Dívida líquida / EBITDA"
+              keys={["netDebtToEbitda"]}
+              unit="vezes"
+              methodology="Relação consolidada da fonte. Valor negativo isolado não comprova caixa líquido; faltam os sinais separados de dívida e EBITDA."
+              height={190}
+            />
           )}
         </div>
       </Panel>
