@@ -320,9 +320,11 @@ function Overview() {
                 >
                   teto {brl(company.teto)}
                 </div>
-                <div className="absolute left-0 top-8 font-fmk-mono text-[11px] text-fmk-dim">
-                  R$ 0
-                </div>
+                {ceilingPos >= 30 && (
+                  <div className="absolute left-0 top-8 font-fmk-mono text-[11px] text-fmk-dim">
+                    R$ 0
+                  </div>
+                )}
               </div>
             ) : (
               <p role="status" className="h-10 text-sm text-fmk-dim">
