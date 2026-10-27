@@ -345,9 +345,9 @@ try {
       await expect(page.getByRole("option", { name: /potencial/ })).toHaveCount(
         0,
       );
-      assert.match(
+      assert.doesNotMatch(
         await page.locator(".dividend-table-hint").textContent(),
-        /20\/10\/2026/,
+        /\b\d{2}\/\d{2}\/\d{4}\b/,
       );
       assert.match(await table.textContent(), /19,37/);
     },
