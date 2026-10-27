@@ -71,7 +71,7 @@ try {
       await expect(page.locator(".dividend-table tbody tr")).toHaveCount(20);
     },
   );
-  await run("Prévia completa/showRank:22colunas com empresa fixa", async () => {
+  await run("Prévia completa/showRank:21colunas com empresa fixa", async () => {
     const vite = await createServer({
       server: { middlewareMode: true },
       appType: "custom",
@@ -105,7 +105,7 @@ try {
       await page.setViewportSize({ width, height: 950 });
       await expect(
         page.locator("#complete-table-fixture .dividend-table thead th"),
-      ).toHaveCount(22);
+      ).toHaveCount(21);
       const region = page.locator(
         "#complete-table-fixture .dividend-table-region",
       );

@@ -20,13 +20,11 @@ export function ComparativeDividendChart({
   unit,
   items,
   format,
-  referenceDate,
 }: {
   title: string;
   unit: string;
   items: { label: string; value: string | null | undefined }[];
   format: DividendFormat;
-  referenceDate?: string | null;
 }) {
   const id = useId();
   // Keep keyboard selection independent of Recharts' retained hover and blur state.
@@ -59,9 +57,6 @@ export function ComparativeDividendChart({
       <p>{label}</p>
       <strong>{formatDividendValue(value, format)}</strong>
       <p>{unit}</p>
-      <small>
-        Referência da análise: {formatDividendValue(referenceDate, "date")}
-      </small>
     </div>
   );
   return (
@@ -120,7 +115,6 @@ export function ComparativeDividendChart({
         <h3>{title}</h3>
         <p>
           <span>{unit} · comparação pontual</span>
-          <span>Pesquisa · {formatDividendValue(referenceDate, "date")}</span>
         </p>
       </figcaption>
       {available ? (

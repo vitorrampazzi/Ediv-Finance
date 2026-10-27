@@ -154,11 +154,7 @@ function MemberRankingHighlights() {
                 </p>
                 <p className="col-start-2 row-start-2 mt-1 text-right text-xs text-evo-textSec">
                   {entry.dividendAnalysis
-                    ? "Referência: " +
-                      formatDividendValue(
-                        entry.dividendAnalysis.updatedOn,
-                        "date",
-                      )
+                    ? "Pesquisa de dividendos"
                     : entry.horizonMonths
                       ? entry.horizonMonths + " meses"
                       : "Prazo não informado"}

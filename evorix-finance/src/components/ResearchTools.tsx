@@ -28,6 +28,8 @@ const labels: Record<string, string> = {
   dataSource: "Fonte",
   dividendAnalysis: "Análise de dividendos",
 };
+const visibleField = (field: string) =>
+  !["updatedOn", "dividendAnalysis.updatedOn"].includes(field);
 const fieldLabel = (field: string) =>
   dividendColumns.find(
     (column) => column.key === field.replace(/^dividendAnalysis\./, ""),
@@ -41,7 +43,9 @@ function fieldValue(entry: ResearchEntry, field: string) {
         {dividendColumns
           .filter(
             (column) =>
-              !["companyName", "ticker", "sector"].includes(column.key),
+              !["companyName", "ticker", "sector", "updatedOn"].includes(
+                column.key,
+              ),
           )
           .map((column) => (
             <div key={column.key} className="mt-2">
@@ -169,7 +173,9 @@ export function CompanyComparison({
       {a && b && a.ticker !== b.ticker && (
         <dl className="mt-5 space-y-3">
           {(a.dividendAnalysis || b.dividendAnalysis
-            ? dividendColumns.map((column) => [column.key, column.label])
+            ? dividendColumns
+                .filter((column) => column.key !== "updatedOn")
+                .map((column) => [column.key, column.label])
             : Object.entries(labels).filter(
                 ([key]) => key !== "rank" && key !== "dividendAnalysis",
               )
@@ -324,11 +330,15 @@ export function VersionComparison({
               <summary className="min-h-11 cursor-pointer text-sm font-semibold">
                 <span className="company-identity-inline">
                   <CompanyLogo ticker={change.ticker} size="sm" />
-                  {change.ticker} · {change.fields.map(fieldLabel).join(", ")}
+                  {change.ticker} ·{" "}
+                  {change.fields
+                    .filter(visibleField)
+                    .map(fieldLabel)
+                    .join(", ")}
                 </span>
               </summary>
               <dl className="space-y-3">
-                {change.fields.map((field) => (
+                {change.fields.filter(visibleField).map((field) => (
                   <div key={field}>
                     <dt className="text-sm font-semibold">
                       {fieldLabel(field)}

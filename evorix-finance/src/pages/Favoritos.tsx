@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import { ArrowDown, ArrowRight, ArrowUp, Clock3, Star } from "lucide-react";
+import { ArrowDown, ArrowRight, ArrowUp, Star } from "lucide-react";
 import { Link } from "react-router-dom";
 import { OrbitCoins } from "../components/OrbitCoins";
 import { useFavoritos } from "../hooks/useFavoritos";
@@ -179,7 +179,7 @@ export const Favoritos = () => {
                 return (
                   <li
                     key={ticker}
-                    className="favorite-card-enter grid grid-cols-[minmax(0,1fr)_auto_2.75rem] items-center gap-x-3 gap-y-3 py-5 transition-colors hover:bg-evo-bgSec/30 md:grid-cols-[minmax(0,1.2fr)_minmax(8rem,.7fr)_minmax(8rem,.7fr)_minmax(10rem,1fr)_3rem] md:gap-x-5 md:py-6"
+                    className="favorite-card-enter grid grid-cols-[minmax(0,1fr)_auto_2.75rem] items-center gap-x-3 gap-y-3 py-5 transition-colors hover:bg-evo-bgSec/30 md:grid-cols-[minmax(0,1.2fr)_minmax(8rem,.7fr)_minmax(8rem,.7fr)_3rem] md:gap-x-5 md:py-6"
                     style={{ animationDelay: `${Math.min(index, 8) * 65}ms` }}
                   >
                     <div className="company-identity col-start-1 row-start-1 min-w-0">
@@ -222,19 +222,7 @@ export const Favoritos = () => {
                         </>
                       )}
                     </p>
-                    <p className="col-start-1 row-start-2 text-[11px] leading-relaxed text-evo-textSec md:col-start-4 md:row-start-1 md:text-right">
-                      <Clock3
-                        size={12}
-                        className="mr-1 inline"
-                        aria-hidden="true"
-                      />
-                      {quote?.marketTime
-                        ? new Date(quote.marketTime).toLocaleString("pt-BR")
-                        : quote?.checkedAt
-                          ? `Consulta ao provedor ${new Date(quote.checkedAt).toLocaleString("pt-BR")}`
-                          : "Horário indisponível"}
-                    </p>
-                    <div className="col-start-3 row-start-1 flex justify-end md:col-start-5">
+                    <div className="col-start-3 row-start-1 flex justify-end md:col-start-4">
                       <button
                         type="button"
                         aria-label={`Remover ${ticker} dos favoritos`}

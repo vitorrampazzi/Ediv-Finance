@@ -390,7 +390,7 @@ function MemberIncomeRanking() {
           ? [
               [
                 "Consulte a referência",
-                "A cotação pertence à planilha e à data de atualização da empresa; não é uma cotação ao vivo.",
+                "A cotação é uma referência da planilha; não é uma cotação ao vivo.",
               ],
               [
                 "Entenda o preço teto",
@@ -398,7 +398,7 @@ function MemberIncomeRanking() {
               ],
               [
                 "Abra a empresa",
-                "Consulte os 21 campos das informações completas, incluindo payout, dividendos projetados e atualização.",
+                "Consulte os 20 campos das informações completas, incluindo payout e dividendos projetados.",
               ],
             ]
           : [

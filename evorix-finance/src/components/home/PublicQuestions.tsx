@@ -50,7 +50,7 @@ export function PublicQuestions() {
               <p>
                 É a lista de empresas da publicação mais recente da equipe, na
                 ordem original da pesquisa. A tabela apresenta os indicadores da
-                planilha; a cotação corresponde à sua data de referência.
+                planilha; não é uma cotação ao vivo.
               </p>
             </div>
           </details>

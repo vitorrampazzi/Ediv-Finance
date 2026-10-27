@@ -1,6 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { createFixture } from "./fixture.mjs";
+import { zipSync, strToU8 } from "fflate";
 const fixture = await createFixture();
 const { accounts, pool, request, password, state } = fixture;
 const { admin, analyst, a, b } = accounts;
@@ -134,6 +135,49 @@ try {
             (u) => !("password_hash" in u) && !("password" in u),
           ),
         );
+      },
+    );
+    await t.test(
+      "SQL metacharacters remain literal filters and forged XLSX returns only a safe JSON error",
+      async () => {
+        const filtered = await request(
+          admin,
+          "/api/admin/users?q=" + encodeURIComponent("' OR 1=1 --"),
+        );
+        assert.equal(filtered.status, 200);
+        assert.equal(filtered.body.total, 0);
+        assert.deepEqual(filtered.body.users, []);
+        const payload = Buffer.from(
+          zipSync({
+            "xl/worksheets/sheet1.xml": strToU8("x".repeat(5_000_001)),
+          }),
+        );
+        for (let offset = 0; offset + 46 < payload.length; offset++) {
+          const signature = payload.readUInt32LE(offset);
+          if (signature === 0x04034b50)
+            payload.writeUInt32LE(1024, offset + 22);
+          if (signature === 0x02014b50)
+            payload.writeUInt32LE(1024, offset + 24);
+        }
+        for (const [account, path, status] of [
+          [analyst, "/api/rankings/preview", 400],
+          [a, "/api/portfolio/import/preview", 409],
+        ]) {
+          const result = await request(account, path, {
+            method: "POST",
+            raw: payload,
+            headers: {
+              "Content-Type":
+                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+              "X-File-Name": "size-check.xlsx",
+              "X-Publication-Meta": meta,
+            },
+          });
+          assert.equal(result.status, status);
+          assert.deepEqual(result.body, {
+            error: "A planilha descompactada excede o limite permitido.",
+          });
+        }
       },
     );
     await t.test(

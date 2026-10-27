@@ -148,8 +148,7 @@ export const explanations: Partial<Record<DividendColumnKey, string>> = {
   averagePE10Years: "Média dos últimos dez anos informada na pesquisa.",
   peDeviation:
     "Desvio do P/L informado na planilha, preservado sem substituir por outro cálculo.",
-  referencePrice:
-    "Cotação de referência na data da pesquisa; não é preço ao vivo.",
+  referencePrice: "Cotação de referência da planilha; não é preço ao vivo.",
   ceilingPrice:
     "Preço teto da fonte. Premissa histórica de yield de 6,81% do Tesouro IPCA+ 2037 com juros semestrais, não taxa de mercado atual.",
   safetyMargin:

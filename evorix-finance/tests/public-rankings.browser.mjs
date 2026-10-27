@@ -392,7 +392,7 @@ try {
     },
   );
   await run(
-    "Empresa: cinco resumos, sete gráficos da publicação e21campos/3tickers",
+    "Empresa: cinco resumos, sete gráficos da publicação e20campos/3tickers",
     async () => {
       for (const entry of entries.slice(0, 3)) {
         await page.goto(
@@ -421,7 +421,7 @@ try {
             formatDividendValue(dividendValue(entry, key), column.format),
           );
         }
-        await expect(page.locator(".figma-stock [data-field]")).toHaveCount(21);
+        await expect(page.locator(".figma-stock [data-field]")).toHaveCount(20);
         const fields = await page
           .locator(".figma-stock [data-field]")
           .evaluateAll((nodes) =>
@@ -435,7 +435,9 @@ try {
                 .trim(),
             })),
           );
-        for (const column of dividendColumns) {
+        for (const column of dividendColumns.filter(
+          (column) => column.key !== "updatedOn",
+        )) {
           const expected = formatDividendValue(
             dividendValue(entry, column.key),
             column.format,

@@ -327,7 +327,7 @@ export function SiteFooter({
 
         <div className="mt-8 border-t border-evo-border pt-5">
           <p className="text-sm text-evo-textSec">
-            © {new Date().getFullYear()} Escola do Dividendo. · Versão beta
+            © {new Date().getFullYear()} Escola do Dividendo.
           </p>
         </div>
       </div>
