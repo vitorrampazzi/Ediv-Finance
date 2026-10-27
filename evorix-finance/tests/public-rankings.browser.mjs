@@ -638,7 +638,8 @@ try {
         await expect(period).toHaveAttribute("aria-pressed", "true");
         const plot = price.locator('svg[role="application"]');
         await plot.focus();
-        await page.keyboard.press("ArrowRight");
+        for (let index = 0; index < 5; index++)
+          await page.keyboard.press("ArrowLeft");
         await expect(price.getByRole("tooltip")).toBeVisible();
         const history = stockHistory("TIMS3");
         await expect(price.getByRole("tooltip")).toContainText(
