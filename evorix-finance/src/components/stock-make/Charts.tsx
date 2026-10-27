@@ -33,7 +33,6 @@ import {
   gridProps,
 } from "./data";
 import { ChartTip, Legend, Seg, type LegendItem } from "./ui";
-import { Tooltip as AccessibleTooltip } from "../Tooltip";
 import { dividendColumns, type DividendColumnKey } from "./data";
 
 const TEAL = "var(--fmk-teal)";
@@ -61,17 +60,15 @@ function PublicationChart({
   title,
   keys,
   unit,
-  methodology,
   height,
 }: {
   id: string;
   title: string;
   keys: DividendColumnKey[];
   unit: string;
-  methodology: string;
   height: number;
 }) {
-  const { number, value, company } = useStockData();
+  const { number, value } = useStockData();
   const rows = keys.map((key, index) => {
     const amount = number(key);
     return {
@@ -91,11 +88,12 @@ function PublicationChart({
   const data = rows.filter((row) => row.amount !== null);
   return (
     <figure className="fmk-publication-chart" data-publication-chart={id}>
-      <div style={{ height }} aria-hidden={data.length ? true : undefined}>
+      <div style={{ height }}>
         {data.length ? (
           <ResponsiveContainer width="100%" height="100%">
             <BarChart
-              accessibilityLayer={false}
+              accessibilityLayer
+              title={title}
               data={data}
               margin={{ top: 16, right: 8, left: 0, bottom: 0 }}
               barCategoryGap="28%"
@@ -150,56 +148,26 @@ function PublicationChart({
           <ChartUnavailable title={`${title}: dados indisponíveis`} />
         )}
       </div>
-      <figcaption className="mt-3 text-xs leading-relaxed text-fmk-sub">
-        <strong className="font-medium text-fmk-ink">
-          {title} · {unit}.
-        </strong>{" "}
-        {methodology} Fonte: planilha da pesquisa · {company.ticker} ·{" "}
-        {company.updated}.
+      <figcaption className="sr-only">
+        {title} · {unit}
       </figcaption>
-      <table className="mt-3 w-full table-fixed text-xs">
-        <caption className="sr-only">
-          {title}: valores e legenda. Use Tab para consultar as dicas.
-        </caption>
-        <tbody>
-          {rows.map((row) => (
-            <tr
-              key={row.key}
-              data-chart-field={row.key}
-              className="border-b border-fmk-line-soft"
-            >
-              <th
-                scope="row"
-                className="w-[56%] py-2 pr-3 text-left font-normal"
-              >
-                <AccessibleTooltip
-                  content={`${row.label}: ${row.formatted}. Unidade: ${unit}. ${methodology}`}
-                >
-                  <button
-                    type="button"
-                    className="min-h-6 text-left text-fmk-sub"
-                  >
-                    <span
-                      aria-hidden="true"
-                      className="mr-2 inline-block size-2"
-                      style={{ backgroundColor: row.color }}
-                    />
-                    {row.label}
-                  </button>
-                </AccessibleTooltip>
-              </th>
-              <td
-                data-chart-value={row.key}
-                data-exact-value={row.formatted}
-                className="py-2 text-right font-fmk-mono text-fmk-ink"
-                style={{ overflowWrap: "anywhere" }}
-              >
-                {row.formatted}
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+      <div className="sr-only">
+        <table>
+          <caption>
+            {title} · {unit}
+          </caption>
+          <tbody>
+            {rows.map((row) => (
+              <tr key={row.key} data-chart-field={row.key}>
+                <th scope="row">{row.label}</th>
+                <td data-chart-value={row.key} data-exact-value={row.formatted}>
+                  {row.formatted}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </figure>
   );
 }
@@ -235,14 +203,13 @@ export function PriceChart() {
     );
   return (
     <>
-      <HistoryFeedback empty="Sem fechamentos históricos aprovados. Referências pontuais da planilha abaixo." />
+      <HistoryFeedback empty="Sem histórico disponível." />
       {!history.loading && (
         <PublicationChart
           id="price"
           title="Cotação e preço-teto"
           keys={["referencePrice", "ceilingPrice"]}
           unit="R$ por ação"
-          methodology="Referências pontuais da planilha, sem série temporal nem cotação ao vivo."
           height={380}
         />
       )}
@@ -260,14 +227,13 @@ export function DividendChart() {
     );
   return (
     <>
-      <HistoryFeedback empty="Sem eventos históricos aprovados. Projeções pontuais da planilha abaixo." />
+      <HistoryFeedback empty="Sem histórico disponível." />
       {!history.loading && (
         <PublicationChart
           id="dividends"
           title="Dividendo e lucro por ação"
           keys={["projectedGrossDividendPerShare", "estimatedEps"]}
           unit="R$ por ação"
-          methodology="Dividendo bruto projetado e lucro por ação estimado da planilha, não pagamentos realizados."
           height={340}
         />
       )}
@@ -314,7 +280,7 @@ export function DividendCalendar() {
           </div>
           <div className="grid grid-cols-[44px_repeat(12,1fr)] items-center gap-1.5 py-[3px]">
             <span className="font-fmk-mono text-[10px] text-fmk-sub">
-              Fonte
+              Meses
             </span>
             {MONTH_FULL.map((m, i) => (
               <span
@@ -334,15 +300,8 @@ export function DividendCalendar() {
           </div>
         </div>
       </div>
-      <p className="mt-4 text-sm leading-relaxed text-fmk-sub">
-        Meses habituais da fonte:{" "}
-        <strong className="font-medium text-fmk-ink">
-          {value("announcementMonths")}
-        </strong>
-        .{" "}
-        {months
-          ? "Indicação de anúncios, sem confirmar pagamentos ou um próximo evento."
-          : "Nenhum mês foi presumido a partir da frequência."}
+      <p className="mt-4 text-sm text-fmk-sub">
+        Meses habituais: {value("announcementMonths")}
       </p>
     </div>
   );
@@ -430,15 +389,10 @@ export function PerformanceChart() {
             title="P/L e média histórica"
             keys={["projectedPE", "averagePE10Years"]}
             unit="vezes"
-            methodology="P/L projetado frente ao P/L médio de dez anos informado na fonte. A média resume o passado; não é uma curva anual nem retorno acumulado."
             height={360}
           />
         )}
       </div>
-      <p className="mt-3 text-xs text-fmk-dim">
-        Períodos e benchmarks de retorno estão desativados: a planilha informa
-        apenas o P/L projetado e sua média histórica.
-      </p>
     </div>
   );
 }
@@ -537,7 +491,6 @@ export function ResultsCharts() {
               title="Lucro por ação estimado"
               keys={["estimatedEps"]}
               unit="R$ por ação"
-              methodology="Estimativa consolidada da publicação, sem repartir o resultado em períodos."
               height={260}
             />
           )}
@@ -592,7 +545,6 @@ export function ResultsCharts() {
               title="Lucro líquido estimado"
               keys={["estimatedNetIncome"]}
               unit="R$"
-              methodology="Lucro líquido total estimado da fonte; não representa receita ou EBITDA realizado."
               height={260}
             />
           )}
@@ -650,7 +602,6 @@ export function ResultsCharts() {
               title="Crescimento composto do lucro"
               keys={["earningsCagr5Years"]}
               unit="% ao ano"
-              methodology="Taxa agregada de cinco anos informada na fonte; não reconstrói o lucro de cada ano."
               height={190}
             />
           )}
@@ -706,7 +657,6 @@ export function ResultsCharts() {
               title="Dívida líquida / EBITDA"
               keys={["netDebtToEbitda"]}
               unit="vezes"
-              methodology="Relação consolidada da fonte. Valor negativo isolado não comprova caixa líquido; faltam os sinais separados de dívida e EBITDA."
               height={190}
             />
           )}
@@ -723,10 +673,6 @@ function ChartUnavailable({ title }: { title: string }) {
       role="status"
     >
       <p className="font-fmk-serif text-xl text-fmk-sub">{title}</p>
-      <p className="mt-2 max-w-xs text-xs leading-relaxed text-fmk-dim">
-        A publicação fornece indicadores consolidados. Períodos e séries ficam
-        indisponíveis até existir uma fonte histórica autorizada.
-      </p>
     </div>
   );
 }

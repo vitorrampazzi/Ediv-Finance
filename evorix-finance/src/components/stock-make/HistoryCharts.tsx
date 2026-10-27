@@ -11,7 +11,6 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import { Tooltip as AccessibleTooltip } from "../Tooltip";
 import {
   groupDividends,
   formatHistoricalDividend,
@@ -49,7 +48,7 @@ export function HistoryFeedback({ empty }: { empty: string }) {
         {loading
           ? "Carregando histórico desta empresa…"
           : error
-            ? `Histórico indisponível. ${error}`
+            ? `Não foi possível carregar o gráfico. ${error}`
             : empty}
       </p>
       {error && (
@@ -61,127 +60,6 @@ export function HistoryFeedback({ empty }: { empty: string }) {
           Tentar novamente
         </button>
       )}
-    </div>
-  );
-}
-
-function Source({
-  history,
-  children,
-}: {
-  history: StockHistory;
-  children: React.ReactNode;
-}) {
-  return (
-    <figcaption className="mt-3 text-xs leading-relaxed text-fmk-dim">
-      {children} Fonte:{" "}
-      <a
-        href={history.source.url}
-        target="_blank"
-        rel="noreferrer"
-        className="underline"
-      >
-        {history.source.name} · {history.ticker}
-      </a>
-      . Coleta:{" "}
-      {new Date(history.source.capturedAt).toLocaleString("pt-BR", {
-        timeZone: "UTC",
-      })}{" "}
-      UTC.
-    </figcaption>
-  );
-}
-
-function HistoryTable({
-  title,
-  columns,
-  rows,
-}: {
-  title: string;
-  columns: string[];
-  rows: { key: string; cells: string[]; value?: number | null }[];
-}) {
-  const [page, setPage] = useState(0);
-  const pageCount = Math.max(1, Math.ceil(rows.length / 20));
-  const current = Math.min(page, pageCount - 1);
-  return (
-    <div className="mt-5">
-      <div className="overflow-x-auto">
-        <table className="w-full min-w-[280px] text-xs">
-          <caption className="mb-2 text-left font-medium text-fmk-sub">
-            {title}
-          </caption>
-          <thead>
-            <tr className="border-b border-fmk-line text-left text-fmk-dim">
-              {columns.map((column) => (
-                <th key={column} scope="col" className="px-2 py-2 font-normal">
-                  {column}
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {rows.slice(current * 20, current * 20 + 20).map((row) => (
-              <tr
-                key={row.key}
-                data-history-row={title}
-                data-history-date={row.cells[0]}
-                data-history-value={row.value ?? ""}
-                className="border-b border-fmk-line-soft"
-              >
-                {row.cells.map((cell, index) => (
-                  <td key={index} className="px-2 py-2 text-fmk-sub">
-                    {index === 0 ? (
-                      <AccessibleTooltip
-                        content={columns
-                          .map((column, i) => `${column}: ${row.cells[i]}`)
-                          .join(". ")}
-                      >
-                        <button
-                          type="button"
-                          className="min-h-6 text-left text-fmk-ink"
-                        >
-                          {cell}
-                        </button>
-                      </AccessibleTooltip>
-                    ) : (
-                      cell
-                    )}
-                  </td>
-                ))}
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-      {!rows.length && (
-        <p className="py-3 text-xs text-fmk-dim">Nenhum registro informado.</p>
-      )}
-      <div className="mt-3 flex flex-wrap items-center justify-between gap-2 text-xs text-fmk-sub">
-        <span role="status">
-          {rows.length} registros · página {current + 1} de {pageCount}
-        </span>
-        <div className="flex gap-2">
-          <button
-            type="button"
-            aria-label={`Página anterior: ${title}`}
-            disabled={current === 0}
-            onClick={() => setPage(current - 1)}
-            className="min-h-8 rounded border border-fmk-line px-2"
-          >
-            Anterior
-          </button>
-          <button
-            type="button"
-            aria-label={`Próxima página: ${title}`}
-            disabled={current + 1 >= pageCount}
-            onClick={() => setPage(current + 1)}
-            className="min-h-8 rounded border border-fmk-line px-2"
-          >
-            Próxima
-          </button>
-        </div>
-      </div>
     </div>
   );
 }
@@ -214,16 +92,16 @@ export function HistoricalPriceChart({ history }: { history: StockHistory }) {
     high = amounts.length ? Math.max(...amounts) : 1;
   const padding = Math.max((high - low) * 0.08, Math.abs(high) * 0.02, 0.01);
   const items = [
-    { key: "price", label: "Fechamento AGF", color: TEAL },
+    { key: "price", label: "Cotação", color: TEAL },
     {
       key: "ceiling",
-      label: "Preço-teto Excel · constante",
+      label: "Preço-teto",
       color: AMBER,
       dash: "6 4",
     },
     {
       key: "reference",
-      label: "Cotação Excel · constante",
+      label: "Referência",
       color: LILAC,
       dash: "2 3",
     },
@@ -246,14 +124,11 @@ export function HistoricalPriceChart({ history }: { history: StockHistory }) {
             onChange={setPeriod}
           />
         </div>
-        <p className="mb-3 text-xs text-fmk-dim">
-          5D: últimos cinco fechamentos. Demais períodos até o último registro.
-          Sem intraday/1D. Lacunas superiores a sete dias interrompem a área.
-        </p>
-        <div aria-hidden="true">
+        <div>
           <ResponsiveContainer height={380}>
             <ComposedChart
-              accessibilityLayer={false}
+              accessibilityLayer
+              title="Cotação histórica em reais por ação"
               data={data}
               margin={{ top: 8, right: 0, left: 0, bottom: 0 }}
             >
@@ -289,7 +164,7 @@ export function HistoricalPriceChart({ history }: { history: StockHistory }) {
               {on.price && (
                 <Area
                   dataKey="price"
-                  name="Fechamento AGF"
+                  name="Cotação"
                   type="linear"
                   connectNulls={false}
                   stroke={TEAL}
@@ -309,7 +184,7 @@ export function HistoricalPriceChart({ history }: { history: StockHistory }) {
               {on.ceiling && company.teto !== null && (
                 <Line
                   dataKey="ceiling"
-                  name="Preço-teto Excel · constante"
+                  name="Preço-teto"
                   stroke={AMBER}
                   strokeWidth={1.4}
                   strokeDasharray="6 4"
@@ -320,7 +195,7 @@ export function HistoricalPriceChart({ history }: { history: StockHistory }) {
               {on.reference && company.price !== null && (
                 <Line
                   dataKey="reference"
-                  name="Cotação Excel · constante"
+                  name="Referência"
                   stroke={LILAC}
                   strokeWidth={1.4}
                   strokeDasharray="2 3"
@@ -336,21 +211,6 @@ export function HistoricalPriceChart({ history }: { history: StockHistory }) {
             Séries ocultas. Ative uma legenda para exibir o gráfico.
           </p>
         )}
-        <Source history={history}>
-          Fechamentos em R$ por ação, sem comprovação de ajuste por eventos
-          societários ou retorno total. Linhas Excel são referências constantes
-          de {company.updated}, não valores históricos.{" "}
-        </Source>
-        <HistoryTable
-          key={period}
-          title="Fechamentos do período"
-          columns={["Data", "Fechamento (R$/ação)"]}
-          rows={prices.map((point) => ({
-            key: point.date,
-            cells: [dateText(point.date), brl(point.close)],
-            value: point.close,
-          }))}
-        />
       </figure>
       <aside className="space-y-6 lg:border-l lg:border-fmk-line lg:pl-8">
         <div>
@@ -362,11 +222,7 @@ export function HistoricalPriceChart({ history }: { history: StockHistory }) {
               ["Variação entre fechamentos", pct(change, 1, true)],
               ["Mínima", brl(Math.min(...prices.map((point) => point.close)))],
               ["Máxima", brl(Math.max(...prices.map((point) => point.close)))],
-              ["Último fechamento AGF", brl(last)],
-              [
-                "Data do último registro",
-                dateText(prices.at(-1)?.date ?? null),
-              ],
+              ["Último fechamento", brl(last)],
             ].map(([label, value]) => (
               <div key={label} className="flex justify-between gap-3 py-2">
                 <dt className="text-fmk-sub">{label}</dt>
@@ -374,13 +230,10 @@ export function HistoricalPriceChart({ history }: { history: StockHistory }) {
               </div>
             ))}
           </dl>
-          <p className="mt-3 text-xs text-fmk-dim">
-            Variação de preço, sem incluir proventos. Não é rentabilidade total.
-          </p>
         </div>
         <div>
           <h3 className="font-fmk-mono text-[11px] uppercase tracking-[0.14em] text-fmk-dim">
-            Referências da planilha · {company.updated}
+            Referências
           </h3>
           <dl className="mt-3 space-y-3 text-sm">
             <div className="flex justify-between">
@@ -390,16 +243,12 @@ export function HistoricalPriceChart({ history }: { history: StockHistory }) {
               </dd>
             </div>
             <div className="flex justify-between">
-              <dt>Cotação Excel</dt>
+              <dt>Preço de referência</dt>
               <dd className="font-fmk-mono text-fmk-lilac">
                 {brl(company.price)}
               </dd>
             </div>
           </dl>
-          <p className="mt-3 text-xs text-fmk-dim">
-            Teto baseado na premissa histórica de yield de 6,81%. Não é taxa
-            atual nem atualização da cotação da pesquisa.
-          </p>
         </div>
       </aside>
     </div>
@@ -423,7 +272,7 @@ export function HistoricalDividendChart({
   );
   const pattern = useId().replaceAll(":", "");
   return (
-    <div className="fmk-chart-layout grid gap-10 lg:grid-cols-[1fr_360px]">
+    <div className="fmk-chart-layout">
       <figure
         data-history-chart="dividends"
         data-history-ticker={history.ticker}
@@ -431,10 +280,10 @@ export function HistoricalDividendChart({
         <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
           <Legend
             items={[
-              { key: "past", label: "Data até a coleta", color: TEAL },
+              { key: "past", label: "Histórico", color: TEAL },
               {
                 key: "future",
-                label: "Data após a coleta",
+                label: "Agendados",
                 color: TEAL,
                 hatch: true,
               },
@@ -459,11 +308,12 @@ export function HistoricalDividendChart({
             />
           </div>
         </div>
-        <div aria-hidden={data.length ? true : undefined}>
+        <div>
           {data.length ? (
             <ResponsiveContainer height={340}>
               <BarChart
-                accessibilityLayer={false}
+                accessibilityLayer
+                title="Proventos por período em reais por ação"
                 data={data}
                 margin={{ top: 8, right: 0, left: 0, bottom: 0 }}
                 barCategoryGap="22%"
@@ -509,7 +359,7 @@ export function HistoricalDividendChart({
                 {on.past && (
                   <Bar
                     dataKey="past"
-                    name="Data até a coleta"
+                    name="Histórico"
                     stackId="a"
                     fill={TEAL}
                     isAnimationActive={false}
@@ -518,7 +368,7 @@ export function HistoricalDividendChart({
                 {on.future && (
                   <Bar
                     dataKey="future"
-                    name="Data após a coleta"
+                    name="Agendados"
                     stackId="a"
                     fill={`url(#${pattern})`}
                     stroke={TEAL}
@@ -542,56 +392,7 @@ export function HistoricalDividendChart({
             Séries ocultas. Ative uma legenda para exibir o gráfico.
           </p>
         )}
-        <Source history={history}>
-          Valores por ação conforme informados, agrupados exclusivamente pela
-          data de pagamento. Sem inferir imposto ou valor bruto/líquido. Data
-          passada não comprova pagamento; data futura não é estimativa. 5A
-          inclui os cinco anos-calendário até a coleta e datas futuras
-          informadas.{" "}
-        </Source>
-        <HistoryTable
-          key={`${mode}-${range}`}
-          title="Proventos por data de pagamento"
-          columns={[
-            "Período",
-            "Até a coleta (R$)",
-            "Após a coleta (R$)",
-            "Eventos",
-          ]}
-          rows={data.map((row) => ({
-            key: row.period,
-            cells: [
-              row.period,
-              formatHistoricalDividend(row.past),
-              formatHistoricalDividend(row.future),
-              String(row.count),
-            ],
-            value: row.past + row.future,
-          }))}
-        />
       </figure>
-      <div>
-        <HistoryTable
-          title="Eventos informados pela AGF"
-          columns={["Pagamento", "Valor/ação (R$)", "Tipo", "Data-com"]}
-          rows={history.dividends.map((event, index) => ({
-            key: String(index),
-            cells: [
-              dateText(event.paymentDate),
-              formatHistoricalDividend(event.value),
-              event.type || "Não informado",
-              dateText(event.recordDate),
-            ],
-            value: event.value,
-          }))}
-        />
-        <p className="mt-3 text-xs leading-relaxed text-fmk-dim">
-          Todos os eventos são mantidos, inclusive repetições e registros sem
-          valor ou sem data de pagamento, que não entram nas barras. Data-com é
-          a data de posição informada; não é data ex. Calendário abaixo: meses
-          habituais da planilha, separado destes eventos.
-        </p>
-      </div>
     </div>
   );
 }

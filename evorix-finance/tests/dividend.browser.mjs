@@ -495,7 +495,7 @@ try {
         page.locator('#dividendos [data-month][data-announced="true"]'),
       ).toHaveCount(0);
       await expect(page.locator("#dividendos")).toContainText(
-        "Nenhum mês foi presumido",
+        "Meses habituais: Indefinido",
       );
       await assertPublicationCharts(page, probeEntry);
       const debt = page.locator('[data-field="netDebtToEbitda"] button');

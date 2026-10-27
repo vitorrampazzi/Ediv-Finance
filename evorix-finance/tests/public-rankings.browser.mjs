@@ -620,8 +620,15 @@ try {
         assert.ok(
           (await dividends.locator(".recharts-bar-rectangle").count()) > 0,
         );
-        await expect(price).toContainText("AGF · TIMS3");
-        await expect(price).toContainText("não valores históricos");
+        await expect(price.locator("table")).toHaveCount(0);
+        await expect(dividends.locator("table")).toHaveCount(0);
+        await expect(
+          page.getByRole("region", { name: "Origem dos dados" }),
+        ).toHaveCount(0);
+        assert.doesNotMatch(
+          await page.locator(".dividend-company").innerText(),
+          /AGF|Fonte:|Origem:|Pesquisa de dividendos|Data passada não comprova pagamento/,
+        );
         await expect(
           price.getByRole("button", { name: "1D", exact: true }),
         ).toHaveCount(0);
@@ -629,27 +636,21 @@ try {
         await period.focus();
         await period.press("Enter");
         await expect(period).toHaveAttribute("aria-pressed", "true");
-        const rows = price.locator(
-          'tr[data-history-row="Fechamentos do período"]',
-        );
-        await expect(rows).toHaveCount(5);
+        const plot = price.locator('svg[role="application"]');
+        await plot.focus();
+        for (let index = 0; index < 5; index++)
+          await page.keyboard.press("ArrowLeft");
+        await expect(price.getByRole("tooltip")).toBeVisible();
         const history = stockHistory("TIMS3");
-        for (const [index, point] of history.prices.slice(-5).entries()) {
-          await expect(rows.nth(index)).toHaveAttribute(
-            "data-history-date",
-            point.date.split("-").reverse().join("/"),
-          );
-          await expect(rows.nth(index)).toHaveAttribute(
-            "data-history-value",
-            String(point.close),
-          );
-        }
-        await rows.first().getByRole("button").focus();
-        await expect(page.getByRole("tooltip")).toBeVisible();
-        await page.keyboard.press("Escape");
-        await expect(page.getByRole("tooltip")).toHaveCount(0);
+        await expect(price.getByRole("tooltip")).toContainText(
+          history.prices.at(-5).date.split("-").reverse().join("/"),
+        );
+        await page.keyboard.press("ArrowRight");
+        await expect(price.getByRole("tooltip")).toContainText(
+          history.prices.at(-4).date.split("-").reverse().join("/"),
+        );
         const ceiling = price.getByRole("button", {
-          name: "Preço-teto Excel · constante",
+          name: "Preço-teto",
           exact: true,
         });
         await ceiling.focus();
@@ -663,10 +664,11 @@ try {
         await monthly.focus();
         await monthly.press("Enter");
         await expect(monthly).toHaveAttribute("aria-pressed", "true");
-        await expect(page.locator(".figma-stock")).toContainText("22/01/2027");
-        await expect(page.locator(".figma-stock")).toContainText(
-          "Data passada não comprova pagamento",
-        );
+        await expect(dividends).toContainText("Agendados");
+        const dividendPlot = dividends.locator('svg[role="application"]');
+        await dividendPlot.focus();
+        await page.keyboard.press("ArrowRight");
+        await expect(dividends.getByRole("tooltip")).toBeVisible();
         await page.goto(origin + "/app/ranking/acao/WIZC3?publication=27");
         await expect(price).toHaveAttribute("data-history-ticker", "WIZC3");
         await expect(dividends).toHaveAttribute("data-history-ticker", "WIZC3");
