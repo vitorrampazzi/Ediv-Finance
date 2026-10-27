@@ -345,9 +345,9 @@ try {
       await expect(page.getByRole("option", { name: /potencial/ })).toHaveCount(
         0,
       );
-      assert.match(
+      assert.doesNotMatch(
         await page.locator(".dividend-table-hint").textContent(),
-        /20\/10\/2026/,
+        /\b\d{2}\/\d{2}\/\d{4}\b/,
       );
       assert.match(await table.textContent(), /19,37/);
     },
@@ -518,7 +518,7 @@ try {
     },
   );
   await run(
-    "Detalhe: 21 campos em5categorias por90tickers, valores/fórmulas/calendário exatos",
+    "Detalhe: 20 campos em5categorias por90tickers, valores/fórmulas/calendário exatos",
     async () => {
       for (const entry of entries) {
         await page.goto(
@@ -527,7 +527,7 @@ try {
             entry.ticker +
             "?visual=real&publication=2",
         );
-        await expect(page.locator(".figma-stock [data-field]")).toHaveCount(21);
+        await expect(page.locator(".figma-stock [data-field]")).toHaveCount(20);
         const actual = await page
           .locator(".figma-stock [data-field]")
           .evaluateAll((nodes) =>
@@ -547,7 +547,9 @@ try {
                 .trim(),
             })),
           );
-        for (const column of dividendColumns)
+        for (const column of dividendColumns.filter(
+          (column) => column.key !== "updatedOn",
+        ))
           assert.deepEqual(
             actual.find((item) => item.key === column.key),
             {
@@ -634,7 +636,7 @@ try {
       const comparison = page.locator("details").filter({
         has: page.locator("summary", { hasText: "Comparar duas empresas" }),
       });
-      await expect(comparison.locator("dt")).toHaveCount(21);
+      await expect(comparison.locator("dt")).toHaveCount(20);
       await expect(comparison).toContainText("106,00%");
       await page.getByText("O que mudou na pesquisa?", { exact: true }).click();
       await page
@@ -654,7 +656,7 @@ try {
     },
   );
   await run(
-    "Prévia/publicação simulada: 90 ativos e 21 campos, sem exigência legada/autoria",
+    "Prévia/publicação simulada: 90 ativos e 20 campos, sem exigência legada/autoria",
     async () => {
       await page.goto(origin + "/app/ranking?visual=real#publicar-pesquisa");
       await page
@@ -681,7 +683,7 @@ try {
       const preview = page.getByRole("region", {
         name: "Prévia completa de dividendos",
       });
-      await expect(preview.locator("thead th")).toHaveCount(21);
+      await expect(preview.locator("thead th")).toHaveCount(20);
       await expect(preview.locator("tbody tr")).toHaveCount(90);
       await page
         .getByRole("button", {
@@ -727,7 +729,7 @@ try {
         await page.goto(
           origin + "/app/ranking/acao/TIMS3?visual=real&publication=2",
         );
-        await expect(page.locator(".figma-stock [data-field]")).toHaveCount(21);
+        await expect(page.locator(".figma-stock [data-field]")).toHaveCount(20);
         await page.evaluate(
           (theme) => (document.documentElement.dataset.theme = theme),
           theme,
@@ -759,7 +761,8 @@ try {
       ).toHaveCount(3);
       await expect(highlights).not.toContainText("Potencial informado");
       await expect(highlights).not.toContainText("Prazo não informado");
-      await expect(highlights).toContainText("Referência: 20/10/2026");
+      await expect(highlights).toContainText("Pesquisa de dividendos");
+      await expect(highlights).not.toContainText("Referência:");
     },
   );
   await run(

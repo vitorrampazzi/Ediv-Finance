@@ -73,7 +73,7 @@ try {
     "?publication=" +
     publication.id;
   async function exactFields(entry) {
-    await expect(page.locator(".figma-stock [data-field]")).toHaveCount(21);
+    await expect(page.locator(".figma-stock [data-field]")).toHaveCount(20);
     const actual = await page
       .locator(".figma-stock [data-field]")
       .evaluateAll((nodes) =>
@@ -83,8 +83,10 @@ try {
           value: node.querySelector("[data-exact-value]").dataset.exactValue,
         })),
       );
-    assert.equal(new Set(actual.map((row) => row.key)).size, 21);
-    for (const column of dividendColumns)
+    assert.equal(new Set(actual.map((row) => row.key)).size, 20);
+    for (const column of dividendColumns.filter(
+      (column) => column.key !== "updatedOn",
+    ))
       assert.deepEqual(
         actual.find((row) => row.key === column.key),
         {
@@ -134,7 +136,7 @@ try {
       if (!valid) await expect(figure.getByRole("status")).toBeVisible();
     }
   }
-  await run("Ranking→portZIP real/3tickers/21valores exatos", async () => {
+  await run("Ranking→portZIP real/3tickers/20valores exatos", async () => {
     await page.locator(".dividend-company-link").first().press("Enter");
     for (const entry of entries.slice(0, 3)) {
       await page.goto(companyUrl(entry));

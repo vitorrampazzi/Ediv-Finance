@@ -64,18 +64,13 @@ export function DividendRankingTable({
   showRank?: boolean;
 }) {
   const id = useId();
-  const columns = complete
-    ? dividendColumns
-    : dividendColumns.filter((column) => column.ranking);
+  const columns = dividendColumns.filter(
+    (column) => column.key !== "updatedOn" && (complete || column.ranking),
+  );
   const tableWidth = columns.reduce(
     (width, column) => width + (columnWidths[column.key] ?? 176),
     showRank ? 72 : 0,
   );
-  const dates = [
-    ...new Set(
-      entries.map((entry) => entry.dividendAnalysis?.updatedOn).filter(Boolean),
-    ),
-  ];
   return (
     <div
       className="dividend-table"
@@ -85,12 +80,8 @@ export function DividendRankingTable({
         {complete
           ? "Informações completas da planilha."
           : "Resumo da aba Ranking. Abra uma empresa para consultar as informações completas."}{" "}
-        Cotação de referência da planilha
-        {dates.length === 1
-          ? " em " + formatDividendValue(dates[0], "date")
-          : ", na data de atualização de cada empresa"}
-        ; sem cotação ao vivo. Role a tabela na horizontal para consultar todas
-        as colunas.
+        Cotação de referência da planilha; sem cotação ao vivo. Role a tabela na
+        horizontal para consultar todas as colunas.
       </p>
       <div
         role="region"

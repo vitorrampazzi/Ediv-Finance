@@ -646,29 +646,23 @@ function Company() {
               Institucional
             </h3>
             <dl className="mt-3 divide-y divide-fmk-line-soft text-sm">
-              {(["companyName", "ticker", "sector", "updatedOn"] as const).map(
-                (key) => (
-                  <div
-                    key={key}
-                    data-field={key}
-                    className={
-                      key === "updatedOn"
-                        ? "sr-only"
-                        : "flex flex-wrap justify-between gap-3 py-2.5"
-                    }
+              {(["companyName", "ticker", "sector"] as const).map((key) => (
+                <div
+                  key={key}
+                  data-field={key}
+                  className="flex flex-wrap justify-between gap-3 py-2.5"
+                >
+                  <dt className="text-fmk-sub">
+                    {dividendColumns.find((c) => c.key === key)!.label}
+                  </dt>
+                  <dd
+                    data-exact-value={value(key)}
+                    className="fmk-exact font-fmk-mono"
                   >
-                    <dt className="text-fmk-sub">
-                      {dividendColumns.find((c) => c.key === key)!.label}
-                    </dt>
-                    <dd
-                      data-exact-value={value(key)}
-                      className="fmk-exact font-fmk-mono"
-                    >
-                      {value(key)}
-                    </dd>
-                  </div>
-                ),
-              )}
+                    {value(key)}
+                  </dd>
+                </div>
+              ))}
             </dl>
           </div>
           <div>

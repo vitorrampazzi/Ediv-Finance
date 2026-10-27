@@ -1,5 +1,6 @@
 import express from "express";
-import { unzipSync } from "fflate";
+import { unzipSync, Unzip } from "fflate";
+import { inflateRawSync } from "node:zlib";
 import readWorkbook, { readSheet } from "read-excel-file/node";
 
 export const fileBody = express.raw({
@@ -12,6 +13,46 @@ export const fileBody = express.raw({
   inflate: false,
 });
 export class ImportError extends Error {}
+function checkExpandedWorkbook(body) {
+  const tooLarge = () =>
+    new ImportError("A planilha descompactada excede o limite permitido.");
+  let total = 0,
+    declaredTotal = 0;
+  class BoundedInflate {
+    static compression = 8;
+    chunks = [];
+    push(chunk, final) {
+      this.chunks.push(chunk);
+      if (!final) return;
+      let expanded;
+      try {
+        expanded = inflateRawSync(Buffer.concat(this.chunks), {
+          maxOutputLength: Math.max(1, Math.min(5_000_000, 10_000_000 - total)),
+        });
+      } catch (error) {
+        if (error.code === "ERR_BUFFER_TOO_LARGE") throw tooLarge();
+        throw error;
+      }
+      this.ondata(null, expanded, true);
+    }
+  }
+  // The Excel reader follows local headers, not the prechecked central directory.
+  const unzip = new Unzip((entry) => {
+    declaredTotal += entry.originalSize || 0;
+    if (entry.originalSize > 5_000_000 || declaredTotal > 10_000_000)
+      throw tooLarge();
+    let size = 0;
+    entry.ondata = (error, chunk) => {
+      if (error) throw error;
+      size += chunk.length;
+      total += chunk.length;
+      if (size > 5_000_000 || total > 10_000_000) throw tooLarge();
+    };
+    entry.start();
+  });
+  unzip.register(BoundedInflate);
+  unzip.push(body, true);
+}
 export function normalizeHeader(value) {
   return String(value ?? "")
     .trim()
@@ -83,6 +124,7 @@ export async function readUpload(req, { allSheets = false } = {}) {
           return false;
         },
       });
+      checkExpandedWorkbook(body);
       const convert = (rows) => {
         if (rows.length > 1001 || rows.some((row) => row.length > 40))
           throw new ImportError("Use até 1.000 linhas e 40 colunas.");

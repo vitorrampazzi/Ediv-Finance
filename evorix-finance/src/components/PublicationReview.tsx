@@ -29,7 +29,10 @@ export function PublicationReview({
         entry,
         columns: dividendColumns.filter((column) => {
           const value = dividendValue(entry, column.key);
-          return value === null || value === undefined || value === "";
+          return (
+            column.key !== "updatedOn" &&
+            (value === null || value === undefined || value === "")
+          );
         }),
       }))
       .filter((item) => item.columns.length);
@@ -41,7 +44,7 @@ export function PublicationReview({
         <h3 className="font-semibold">Confira antes de publicar</h3>
         <p className="mt-2 text-sm text-evo-textSec">
           {entries.length} empresas com análise de dividendos. O ranking mostra
-          11 colunas; as informações completas mostram os 21 campos da planilha.
+          11 colunas; as informações completas mostram 20 campos da planilha.
         </p>
         {sourceFileName && (
           <p className="mt-3 break-words text-sm">Origem: {sourceFileName}</p>
@@ -72,7 +75,7 @@ export function PublicationReview({
         )}
         <p className="mt-3 text-xs text-evo-textSec">
           Valores ausentes serão apresentados como não informados. Confira os
-          números, unidades e datas na prévia; a publicação preserva as versões
+          números e unidades na prévia; a publicação preserva as versões
           anteriores.
         </p>
       </section>

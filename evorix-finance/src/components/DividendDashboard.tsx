@@ -271,7 +271,6 @@ export function DividendDashboard({
           </div>
           <p className="fc-reference-date">
             Pesquisa de dividendos
-            <strong>{formatDividendValue(data.updatedOn, "date")}</strong>
             <span>Fonte: planilha da publicação</span>
           </p>
         </div>
@@ -381,7 +380,6 @@ export function DividendDashboard({
             title="Cotação de referência e preço teto"
             unit="Reais por ação"
             format="currency"
-            referenceDate={data.updatedOn}
             items={[
               { label: "Cotação", value: data.referencePrice },
               ...(showCeiling
@@ -413,7 +411,7 @@ export function DividendDashboard({
           </aside>
         </div>
         <p className="fc-history-status">
-          Cotação na data da pesquisa. Histórico de preços, proventos e
+          Cotação de referência da planilha. Histórico de preços, proventos e
           resultados indisponível nesta publicação.
         </p>
       </section>
@@ -433,7 +431,6 @@ export function DividendDashboard({
               title="Payout esperado e referência de lucro"
               unit="Percentual do lucro estimado"
               format="percent"
-              referenceDate={data.updatedOn}
               items={[
                 { label: "Payout", value: data.expectedPayout },
                 { label: "Referência 100%", value: "1" },
@@ -507,7 +504,6 @@ export function DividendDashboard({
             title="P/L projetado e média de dez anos"
             unit="P/L em vezes"
             format="number"
-            referenceDate={data.updatedOn}
             items={[
               { label: "P/L projetado", value: data.projectedPE },
               { label: "P/L médio", value: data.averagePE10Years },
@@ -542,7 +538,6 @@ export function DividendDashboard({
             title="Lucro e dividendo por ação"
             unit="Reais por ação"
             format="currency"
-            referenceDate={data.updatedOn}
             items={[
               { label: "LPA estimado", value: data.estimatedEps },
               {
@@ -590,7 +585,6 @@ export function DividendDashboard({
                 "sector",
                 "totalShares",
                 "marketValue",
-                "updatedOn",
               ] as const
             ).map((field) => (
               <MetricRow key={field} entry={entry} field={field} canonical />
