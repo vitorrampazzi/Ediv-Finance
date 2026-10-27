@@ -4,6 +4,7 @@ import { createServer } from "vite";
 import { chromium } from "playwright";
 import { expect } from "playwright/test";
 import { publicRanking } from "../server/public-ranking.js";
+import { stockHistory } from "../server/stock-history.js";
 import {
   dividendColumns,
   dividendValue,
@@ -106,7 +107,8 @@ let browser,
   mode = "hold",
   signedIn = false,
   pending = [],
-  privateReads = 0;
+  privateReads = 0,
+  historyEnabled = false;
 async function assertPublicationCharts(page, entry) {
   const groups = {
     price: ["referencePrice", "ceilingPrice"],
@@ -153,8 +155,7 @@ async function assertPublicationCharts(page, entry) {
     await expect(figure.locator(".recharts-wrapper")).toHaveCount(
       hasNumbers ? 1 : 0,
     );
-    if (!hasNumbers)
-      await expect(figure.getByRole("status")).toBeVisible();
+    if (!hasNumbers) await expect(figure.getByRole("status")).toBeVisible();
   }
 }
 const run = async (name, work) => {
@@ -244,7 +245,14 @@ try {
       data = { published: true };
     else if (url.pathname === "/api/notifications")
       data = { notifications: [], unreadCount: 0 };
-    else if (url.pathname === "/api/rankings") {
+    else if (url.pathname.startsWith("/api/rankings/history/")) {
+      data =
+        historyEnabled && signedIn
+          ? stockHistory(decodeURIComponent(url.pathname.split("/").at(-1)))
+          : null;
+      status = data ? 200 : 404;
+      data ||= { error: "Sem histórico nesta fixture de publicação" };
+    } else if (url.pathname === "/api/rankings") {
       privateReads++;
       data = privatePublication;
     } else {
@@ -573,6 +581,115 @@ try {
           .focus();
         await page.keyboard.press("Enter");
         await expect(page.locator("#dividendos")).toBeFocused();
+      }
+    },
+  );
+  await run(
+    "Históricos aprovados: área/linhas, barras, datas e controles por teclado",
+    async () => {
+      const previousEntries = privatePublication.entries;
+      privatePublication.entries = [
+        {
+          ...structuredClone(previousEntries[0]),
+          ticker: "TIMS3",
+          companyName: "Tim",
+        },
+        {
+          ...structuredClone(previousEntries[1]),
+          ticker: "WIZC3",
+          companyName: "Wiz",
+        },
+      ];
+      historyEnabled = true;
+      signedIn = true;
+      try {
+        await page.setViewportSize({ width: 1440, height: 1000 });
+        await page.goto(origin + "/app/ranking/acao/TIMS3?publication=27");
+        const price = page.locator('figure[data-history-chart="price"]');
+        const dividends = page.locator(
+          'figure[data-history-chart="dividends"]',
+        );
+        await expect(price).toHaveAttribute("data-history-ticker", "TIMS3");
+        await expect(dividends).toHaveAttribute("data-history-ticker", "TIMS3");
+        await expect(page.locator("figure.fmk-publication-chart")).toHaveCount(
+          5,
+        );
+        await expect(price.locator(".recharts-area-area")).toHaveCount(1);
+        await expect(price.locator(".recharts-line-curve")).toHaveCount(2);
+        await expect(price.locator(".recharts-bar-rectangle")).toHaveCount(0);
+        assert.ok(
+          (await dividends.locator(".recharts-bar-rectangle").count()) > 0,
+        );
+        await expect(price).toContainText("AGF · TIMS3");
+        await expect(price).toContainText("não valores históricos");
+        await expect(
+          price.getByRole("button", { name: "1D", exact: true }),
+        ).toHaveCount(0);
+        const period = price.getByRole("button", { name: "5D", exact: true });
+        await period.focus();
+        await period.press("Enter");
+        await expect(period).toHaveAttribute("aria-pressed", "true");
+        const rows = price.locator(
+          'tr[data-history-row="Fechamentos do período"]',
+        );
+        await expect(rows).toHaveCount(5);
+        const history = stockHistory("TIMS3");
+        for (const [index, point] of history.prices.slice(-5).entries()) {
+          await expect(rows.nth(index)).toHaveAttribute(
+            "data-history-date",
+            point.date.split("-").reverse().join("/"),
+          );
+          await expect(rows.nth(index)).toHaveAttribute(
+            "data-history-value",
+            String(point.close),
+          );
+        }
+        await rows.first().getByRole("button").focus();
+        await expect(page.getByRole("tooltip")).toBeVisible();
+        await page.keyboard.press("Escape");
+        await expect(page.getByRole("tooltip")).toHaveCount(0);
+        const ceiling = price.getByRole("button", {
+          name: "Preço-teto Excel · constante",
+          exact: true,
+        });
+        await ceiling.focus();
+        await ceiling.press("Enter");
+        await expect(ceiling).toHaveAttribute("aria-pressed", "false");
+        await expect(price.locator(".recharts-line-curve")).toHaveCount(1);
+        const monthly = dividends.getByRole("button", {
+          name: "Mensal",
+          exact: true,
+        });
+        await monthly.focus();
+        await monthly.press("Enter");
+        await expect(monthly).toHaveAttribute("aria-pressed", "true");
+        await expect(page.locator(".figma-stock")).toContainText("22/01/2027");
+        await expect(page.locator(".figma-stock")).toContainText(
+          "Data passada não comprova pagamento",
+        );
+        await page.goto(origin + "/app/ranking/acao/WIZC3?publication=27");
+        await expect(price).toHaveAttribute("data-history-ticker", "WIZC3");
+        await expect(dividends).toHaveAttribute("data-history-ticker", "WIZC3");
+        await expect(price).not.toContainText("AGF · TIMS3");
+        for (const theme of ["dark", "light"]) {
+          await page.setViewportSize({ width: 320, height: 1000 });
+          await page.evaluate(
+            (theme) => (document.documentElement.dataset.theme = theme),
+            theme,
+          );
+          assert.ok(
+            await page.evaluate(
+              () => document.documentElement.scrollWidth <= innerWidth + 1,
+            ),
+          );
+          await price.scrollIntoViewIfNeeded();
+          await page.screenshot({
+            path: output + "/history-320-" + theme + ".png",
+          });
+        }
+      } finally {
+        historyEnabled = false;
+        privatePublication.entries = previousEntries;
       }
     },
   );

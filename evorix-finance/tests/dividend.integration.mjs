@@ -70,12 +70,62 @@ try {
           "/api/rankings?publication=1",
           "/api/rankings/compare?from=1&to=2",
           "/api/rankings/drafts",
+          "/api/rankings/history/TIMS3",
+          "/api/rankings/history/TEST3",
+          "/api/rankings/history/tims3",
         ])
           assert.equal((await request(null, path)).status, 401, path);
         assert.equal(
           (await request(null, "/api/rankings", upload())).status,
           401,
         );
+      },
+    );
+    await t.test(
+      "stock history requires login, validates tickers and does not expose private source metadata",
+      async () => {
+        for (const account of [a, analyst]) {
+          const result = await request(account, "/api/rankings/history/TIMS3");
+          assert.equal(result.status, 200);
+          assert.equal(result.headers.get("cache-control"), "no-store");
+          assert.deepEqual(Object.keys(result.body), [
+            "ticker",
+            "source",
+            "prices",
+            "dividends",
+          ]);
+          assert.equal(result.body.ticker, "TIMS3");
+          assert.equal(result.body.prices.length, 1470);
+          assert.equal(result.body.dividends.length, 86);
+          assert.deepEqual(result.body.prices.at(-1), {
+            date: "2026-10-23",
+            close: 19.09,
+          });
+          assert.deepEqual(Object.keys(result.body.source), [
+            "name",
+            "url",
+            "capturedAt",
+          ]);
+          assert.equal(result.body.source.name, "AGF");
+          assert.deepEqual(Object.keys(result.body.dividends[0]), [
+            "value",
+            "type",
+            "recordDate",
+            "paymentDate",
+          ]);
+        }
+        for (const ticker of ["tims3", "TIM", "-1", "TIMS3%00"]) {
+          const result = await request(a, "/api/rankings/history/" + ticker);
+          assert.equal(result.status, 400, ticker);
+          assert.equal(result.headers.get("cache-control"), "no-store");
+        }
+        assert.equal(
+          (await request(a, "/api/rankings/history/TEST3")).status,
+          404,
+        );
+        const alphanumeric = await request(a, "/api/rankings/history/B3SA3");
+        assert.equal(alphanumeric.status, 200);
+        assert.equal(alphanumeric.body.ticker, "B3SA3");
       },
     );
     await t.test(

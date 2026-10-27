@@ -1,5 +1,6 @@
 import { parseRankingUpload } from "./dividend-import.js";
 import { publicRanking } from "./public-ranking.js";
+import { stockHistory } from "./stock-history.js";
 import { Router } from "express";
 import { rateLimit } from "express-rate-limit";
 import { pool } from "./database.js";
@@ -79,6 +80,17 @@ router.get("/public", async (_req, res) => {
     "SELECT id,title,created_at,entries_json FROM ranking_publications ORDER BY id DESC LIMIT 1",
   );
   return res.json(publicRanking(rows[0]));
+});
+router.get("/history/:ticker", requireAuthenticatedUser, (req, res) => {
+  const { ticker } = req.params;
+  if (!/^[A-Z0-9]{4}\d{1,2}$/.test(ticker))
+    return res.status(400).json({ error: "Código da ação inválido." });
+  const history = stockHistory(ticker);
+  if (!history || history.ticker !== ticker)
+    return res
+      .status(404)
+      .json({ error: "Histórico não disponível para esta ação." });
+  return res.json(history);
 });
 router.get("/", requireAuthenticatedUser, async (req, res) => {
   const user = req.authenticatedUser;

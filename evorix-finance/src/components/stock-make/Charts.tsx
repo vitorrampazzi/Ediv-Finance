@@ -1,11 +1,14 @@
+import {
+  HistoricalPriceChart,
+  HistoricalDividendChart,
+  HistoryFeedback,
+} from "./HistoryCharts";
 import { useState } from "react";
 import {
-  Area,
   Bar,
   BarChart,
   CartesianGrid,
   Cell,
-  ComposedChart,
   Line,
   LineChart,
   ReferenceLine,
@@ -19,26 +22,22 @@ import {
   num,
   pct,
   useStockData,
-  dividendsAnnual,
-  dividendsMonthly,
-  priceHistory,
+  useHistory,
   performanceHistory,
   results,
   cagrSeries,
-  periodKeys,
   perfPeriods,
   perfSeriesMeta,
   dividendAnnouncementMonths,
   axisProps,
   gridProps,
 } from "./data";
-import { ChartTip, Legend, Seg, Tag, type LegendItem } from "./ui";
+import { ChartTip, Legend, Seg, type LegendItem } from "./ui";
 import { Tooltip as AccessibleTooltip } from "../Tooltip";
 import { dividendColumns, type DividendColumnKey } from "./data";
 
 const TEAL = "var(--fmk-teal)";
 const AMBER = "var(--fmk-amber)";
-const LILAC = "var(--fmk-lilac)";
 const STEEL = "var(--fmk-steel)";
 
 const chartLabels: Partial<Record<DividendColumnKey, string>> = {
@@ -227,383 +226,52 @@ function useToggle(keys: string[]) {
   return [on, (k: string) => setOn((s) => ({ ...s, [k]: !s[k] }))] as const;
 }
 
-/* ───────────── Cotação ───────────── */
+/* Historical areas/bars use only the separately approved AGF endpoint. */
 export function PriceChart() {
-  const { company } = useStockData();
-  const [period, setPeriod] = useState("1A");
-  const [on, toggle] = useToggle(["price", "teto", "justo"]);
-  const data = priceHistory;
-  const first = data[0]?.price ?? null;
-  const last = data.at(-1)?.price ?? null;
-  const lo = data.length ? Math.min(...data.map((d) => d.price)) : null;
-  const hi = data.length ? Math.max(...data.map((d) => d.price)) : null;
-  const chg =
-    first !== null && first > 0 && last !== null ? last / first - 1 : null;
-  const vis = [
-    on.price && "price",
-    on.teto && "teto",
-    on.justo && "justo",
-  ].filter(Boolean) as ("price" | "teto" | "justo")[];
-  const all = data.flatMap((d) => vis.map((k) => d[k]));
-  const dMin = Math.floor(Math.min(...all) - 1);
-  const dMax = Math.ceil(Math.max(...all) + 1);
-
-  const items: LegendItem[] = [
-    { key: "price", label: "Cotação", color: TEAL },
-    { key: "teto", label: "Preço-teto", color: AMBER, dash: "6 4" },
-    {
-      key: "justo",
-      label: "Referência adicional indisponível",
-      color: LILAC,
-      dash: "2 3",
-    },
-  ];
-
+  const history = useHistory();
+  if (history.data?.prices.length)
+    return (
+      <HistoricalPriceChart key={history.data.ticker} history={history.data} />
+    );
   return (
-    <div className="fmk-chart-layout grid gap-10 lg:grid-cols-[1fr_300px]">
-      <div>
-        <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-          {data.length > 0 && (
-            <Legend disabled items={items} active={on} onToggle={toggle} />
-          )}
-          <Seg
-            disabled
-            label="Período do gráfico de cotação"
-            options={periodKeys}
-            value={period}
-            onChange={setPeriod}
-          />
-        </div>
-        <p className="mb-3 text-xs text-fmk-dim">
-          Períodos desativados: não há série histórica na planilha. Abaixo,
-          comparação das referências publicadas.
-        </p>
-        <div className="w-full">
-          {data.length ? (
-            <ResponsiveContainer height={380}>
-              <ComposedChart
-                data={data}
-                margin={{ top: 8, right: 0, left: 0, bottom: 0 }}
-              >
-                <CartesianGrid {...gridProps} />
-                <XAxis
-                  dataKey="label"
-                  {...axisProps}
-                  minTickGap={56}
-                  interval="preserveStartEnd"
-                />
-                <YAxis
-                  orientation="right"
-                  domain={[dMin, dMax]}
-                  {...axisProps}
-                  axisLine={false}
-                  width={48}
-                  tickFormatter={(v) => num(v, 0)}
-                />
-                <Tooltip
-                  cursor={{ stroke: "#5b6762", strokeDasharray: "3 3" }}
-                  content={
-                    <ChartTip
-                      fmt={(v) => brl(v)}
-                      title={(_, p) => String(p.full)}
-                    />
-                  }
-                />
-                {on.price && (
-                  <Area
-                    dataKey="price"
-                    name="Cotação"
-                    stroke={TEAL}
-                    strokeWidth={1.6}
-                    fill={TEAL}
-                    fillOpacity={0.07}
-                    dot={false}
-                    activeDot={{
-                      r: 4,
-                      fill: TEAL,
-                      stroke: "#0e1113",
-                      strokeWidth: 2,
-                    }}
-                  />
-                )}
-                {on.teto && (
-                  <Line
-                    dataKey="teto"
-                    name="Preço-teto"
-                    stroke={AMBER}
-                    strokeWidth={1.4}
-                    strokeDasharray="6 4"
-                    dot={false}
-                  />
-                )}
-                {on.justo && (
-                  <Line
-                    dataKey="justo"
-                    name="P/L médio × LPA proj."
-                    stroke={LILAC}
-                    strokeWidth={1.4}
-                    strokeDasharray="2 3"
-                    dot={false}
-                  />
-                )}
-              </ComposedChart>
-            </ResponsiveContainer>
-          ) : (
-            <PublicationChart
-              id="price"
-              title="Cotação e preço-teto"
-              keys={["referencePrice", "ceilingPrice"]}
-              unit="R$ por ação"
-              methodology="Comparação das referências da publicação; não é cotação ao vivo nem evolução temporal."
-              height={380}
-            />
-          )}
-        </div>
-        <p className="mt-3 text-xs text-fmk-dim">
-          Valores em reais por ação. Fonte: planilha da publicação ·{" "}
-          {company.updated}.
-        </p>
-      </div>
-
-      <aside className="space-y-6 lg:border-l lg:border-fmk-line lg:pl-8">
-        <div>
-          <h3 className="font-fmk-mono text-[11px] uppercase tracking-[0.14em] text-fmk-dim">
-            Histórico · indisponível
-          </h3>
-          <dl className="mt-3 divide-y divide-fmk-line-soft text-sm">
-            {[
-              [
-                "Variação",
-                pct(chg, 1, true),
-                chg === null
-                  ? "text-fmk-dim"
-                  : chg >= 0
-                    ? "text-fmk-up"
-                    : "text-fmk-down",
-              ],
-              ["Mínima", brl(lo), ""],
-              ["Máxima", brl(hi), ""],
-              ["Último", brl(last), ""],
-            ].map(([k, v, c]) => (
-              <div key={k} className="flex justify-between py-2">
-                <dt className="text-fmk-sub">{k}</dt>
-                <dd className={`font-fmk-mono ${c}`}>
-                  {k === "Variação" && chg !== null
-                    ? `${chg >= 0 ? "▲" : "▼"} ${v}`
-                    : v}
-                </dd>
-              </div>
-            ))}
-          </dl>
-        </div>
-        <div>
-          <h3 className="font-fmk-mono text-[11px] uppercase tracking-[0.14em] text-fmk-dim">
-            Referências de preço
-          </h3>
-          <ul className="mt-3 space-y-4 text-sm">
-            <li>
-              <div className="flex justify-between">
-                <span>Preço-teto</span>
-                <span className="font-fmk-mono text-fmk-amber">
-                  {brl(company.teto)}
-                </span>
-              </div>
-              <p className="mt-1 text-xs leading-relaxed text-fmk-dim">
-                Preço teto da planilha. Premissa histórica de yield de 6,81% do
-                Tesouro IPCA+ 2037 com juros semestrais, não taxa atual de
-                mercado.
-              </p>
-            </li>
-            <li>
-              <div className="flex justify-between">
-                <span>Cotação de referência</span>
-                <span className="font-fmk-mono text-fmk-lilac">
-                  {brl(company.price)}
-                </span>
-              </div>
-              <p className="mt-1 text-xs leading-relaxed text-fmk-dim">
-                Cotação na data da pesquisa: {company.updated}. Sem preço justo
-                ou cotação ao vivo presumidos.
-              </p>
-            </li>
-          </ul>
-        </div>
-      </aside>
-    </div>
+    <>
+      <HistoryFeedback empty="Sem fechamentos históricos aprovados. Referências pontuais da planilha abaixo." />
+      {!history.loading && (
+        <PublicationChart
+          id="price"
+          title="Cotação e preço-teto"
+          keys={["referencePrice", "ceilingPrice"]}
+          unit="R$ por ação"
+          methodology="Referências pontuais da planilha, sem série temporal nem cotação ao vivo."
+          height={380}
+        />
+      )}
+    </>
   );
 }
-
-/* ───────────── Proventos ───────────── */
 export function DividendChart() {
-  const { company, value } = useStockData();
-  const [mode, setMode] = useState<"Anual" | "Mensal">("Anual");
-  const [range, setRange] = useState<"5A" | "Máx">("Máx");
-  const [on, toggle] = useToggle(["realizado", "projetado", "anterior"]);
-  const annual = range === "5A" ? dividendsAnnual.slice(-6) : dividendsAnnual;
-  const data: Record<string, string | number>[] =
-    mode === "Anual" ? annual : dividendsMonthly;
-
-  const items: LegendItem[] = [
-    { key: "realizado", label: "Realizado", color: TEAL },
-    { key: "projetado", label: "Projetado", color: TEAL, hatch: true },
-    ...(mode === "Mensal"
-      ? [{ key: "anterior", label: "Período anterior", color: "#7f8f99" }]
-      : []),
-  ];
-
+  const history = useHistory();
+  if (history.data?.dividends.length)
+    return (
+      <HistoricalDividendChart
+        key={history.data.ticker}
+        history={history.data}
+      />
+    );
   return (
-    <div className="fmk-chart-layout grid gap-10 lg:grid-cols-[1fr_360px]">
-      <div>
-        <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-          {data.length > 0 && (
-            <Legend disabled items={items} active={on} onToggle={toggle} />
-          )}
-          <div className="flex gap-2">
-            <Seg
-              disabled
-              label="Visualização"
-              options={["Anual", "Mensal"] as const}
-              value={mode}
-              onChange={setMode}
-            />
-            {mode === "Anual" && (
-              <Seg
-                disabled
-                label="Intervalo"
-                options={["5A", "Máx"] as const}
-                value={range}
-                onChange={setRange}
-              />
-            )}
-          </div>
-        </div>
-        <p className="mb-3 text-xs text-fmk-dim">
-          Períodos desativados: a planilha não contém pagamentos históricos.
-          Abaixo, projeções consolidadas por ação.
-        </p>
-        <div className="w-full">
-          {data.length ? (
-            <ResponsiveContainer height={340}>
-              <BarChart
-                data={data}
-                margin={{ top: 8, right: 0, left: 0, bottom: 0 }}
-                barCategoryGap="22%"
-              >
-                <Hatch id="hatch-div" />
-                <CartesianGrid {...gridProps} />
-                <XAxis dataKey="period" {...axisProps} />
-                <YAxis
-                  {...axisProps}
-                  axisLine={false}
-                  width={44}
-                  tickFormatter={(v) => num(v, 1)}
-                />
-                <Tooltip
-                  cursor={{ fill: "rgba(255,255,255,0.03)" }}
-                  content={
-                    <ChartTip
-                      fmt={(v) => brl(v)}
-                      title={(l) =>
-                        mode === "Anual" ? `Proventos ${l}` : String(l)
-                      }
-                    />
-                  }
-                />
-                {on.realizado && (
-                  <Bar
-                    dataKey="realizado"
-                    name="Realizado"
-                    stackId="a"
-                    fill={TEAL}
-                    radius={[0, 0, 0, 0]}
-                  />
-                )}
-                {on.projetado && (
-                  <Bar
-                    dataKey="projetado"
-                    name="Projetado"
-                    stackId="a"
-                    fill="url(#hatch-div)"
-                    stroke={TEAL}
-                    strokeDasharray="3 2"
-                  />
-                )}
-                {mode === "Mensal" && on.anterior && (
-                  <Bar
-                    dataKey="anterior"
-                    name="Período anterior"
-                    stackId="b"
-                    fill="#4a565d"
-                  />
-                )}
-              </BarChart>
-            </ResponsiveContainer>
-          ) : (
-            <PublicationChart
-              id="dividends"
-              title="Dividendo e lucro por ação"
-              keys={["projectedGrossDividendPerShare", "estimatedEps"]}
-              unit="R$ por ação"
-              methodology="Dividendo bruto projetado e lucro por ação estimado; não são pagamentos realizados."
-              height={340}
-            />
-          )}
-        </div>
-        <p className="mt-3 text-xs text-fmk-dim">
-          Proventos brutos por ação, em reais. Projeção da pesquisa:{" "}
-          {value("projectedGrossDividendPerShare")}. Fonte: {company.updated}.
-        </p>
-      </div>
-
-      <div>
-        <h3 className="font-fmk-mono text-[11px] uppercase tracking-[0.14em] text-fmk-dim">
-          Histórico
-        </h3>
-        <div className="mt-3 overflow-x-auto">
-          <table className="w-full min-w-[320px] text-sm">
-            <thead>
-              <tr className="border-b border-fmk-line text-left font-fmk-mono text-[10px] uppercase tracking-wider text-fmk-dim">
-                <th className="py-2 font-normal">Período</th>
-                <th className="py-2 text-right font-normal">Provento/ação</th>
-                <th className="py-2 text-right font-normal">DY</th>
-                <th className="py-2 pl-4 font-normal">Dado</th>
-              </tr>
-            </thead>
-            <tbody>
-              {dividendsAnnual.length === 0 && (
-                <tr>
-                  <td colSpan={4} className="py-6 text-fmk-sub">
-                    Histórico não informado nesta publicação.
-                  </td>
-                </tr>
-              )}
-              {[...dividendsAnnual].reverse().map((r) => (
-                <tr key={r.period} className="border-b border-fmk-line-soft">
-                  <td className="py-2.5 font-fmk-mono">{r.period}</td>
-                  <td className="py-2.5 text-right font-fmk-mono">
-                    {brl(r.realizado + r.projetado)}
-                  </td>
-                  <td className="py-2.5 text-right font-fmk-mono text-fmk-sub">
-                    {pct(r.dy)}
-                  </td>
-                  <td className="py-2.5 pl-4">
-                    <Tag
-                      kind={
-                        r.status === "projetado" ? "projetado" : "realizado"
-                      }
-                    />
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-        <p className="mt-3 text-xs text-fmk-dim">
-          DY bruto estimado da pesquisa: {value("estimatedGrossDividendYield")}.
-          Não convertido em histórico realizado.
-        </p>
-      </div>
-    </div>
+    <>
+      <HistoryFeedback empty="Sem eventos históricos aprovados. Projeções pontuais da planilha abaixo." />
+      {!history.loading && (
+        <PublicationChart
+          id="dividends"
+          title="Dividendo e lucro por ação"
+          keys={["projectedGrossDividendPerShare", "estimatedEps"]}
+          unit="R$ por ação"
+          methodology="Dividendo bruto projetado e lucro por ação estimado da planilha, não pagamentos realizados."
+          height={340}
+        />
+      )}
+    </>
   );
 }
 

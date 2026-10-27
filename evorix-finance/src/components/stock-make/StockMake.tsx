@@ -7,6 +7,7 @@ import {
   type RefObject,
 } from "react";
 import type { Entry } from "../../lib/ranking";
+import { useStockHistory } from "../../hooks/useStockHistory";
 import { CompanyLogo } from "../CompanyLogo";
 import {
   DividendCalendar,
@@ -21,6 +22,7 @@ import {
   pct,
   makeStockData,
   StockContext,
+  StockHistoryContext,
   useStockData,
   dividendColumns,
   explanations,
@@ -850,9 +852,15 @@ export function StockMake({
   backLink: ReactNode;
 }) {
   const model = useMemo(() => makeStockData(entry), [entry]);
+  const history = useStockHistory(
+    entry.ticker,
+    !!entry.dividendAnalysis && /^[A-Z0-9]{4,12}$/.test(entry.ticker),
+  );
   return (
     <StockContext value={model}>
-      <StockPage titleRef={titleRef} backLink={backLink} />
+      <StockHistoryContext value={history}>
+        <StockPage key={entry.ticker} titleRef={titleRef} backLink={backLink} />
+      </StockHistoryContext>
     </StockContext>
   );
 }
@@ -899,7 +907,7 @@ function StockPage({
             id="cotacao"
             n="02"
             title="Cotação"
-            lede="Cotação de referência comparada ao preço-teto da pesquisa, sem simular uma evolução temporal."
+            lede="Fechamentos históricos AGF e referências constantes da planilha, com datas e fontes separadas."
           />
           <PriceChart />
         </section>
@@ -914,7 +922,7 @@ function StockPage({
             id="dividendos"
             n="03"
             title="Dividendos"
-            lede="Dividendo projetado comparado ao lucro estimado por ação e meses habituais de anúncio."
+            lede="Eventos AGF agrupados pela data de pagamento informada; projeções e meses habituais da planilha permanecem separados."
           />
           <div className="fmk-stats mb-12 grid grid-cols-2 gap-x-6 gap-y-6 md:grid-cols-5">
             <Stat label="DY estimado" tip="Dividendo projetado ÷ cotação.">

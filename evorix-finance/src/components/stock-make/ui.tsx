@@ -164,6 +164,7 @@ export function ChartTip({
     <div
       role="tooltip"
       className="min-w-40 rounded-md border border-fmk-line bg-fmk-raised px-3 py-2.5 text-xs shadow-none"
+      style={{ maxWidth: "100%", overflowWrap: "anywhere" }}
     >
       <div className="mb-2 border-b border-fmk-line pb-1.5 font-fmk-mono text-[11px] text-fmk-sub">
         {head}
@@ -174,7 +175,7 @@ export function ChartTip({
             key={String(r.dataKey)}
             className="flex items-center justify-between gap-5"
           >
-            <span className="flex items-center gap-2 text-fmk-sub">
+            <span className="flex min-w-0 items-center gap-2 text-fmk-sub">
               <span
                 className="size-2 rounded-full"
                 style={{ background: r.color ?? r.stroke }}

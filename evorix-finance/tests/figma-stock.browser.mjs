@@ -11,7 +11,7 @@ import {
   dividendAnnouncementMonths,
   dividendNumber,
 } from "../dividend-insights.mjs";
-const origin = process.env.EDIV_FIGMA_ORIGIN || "http://127.0.0.1:4331";
+const origin = process.env.EDIV_FIGMA_ORIGIN || "http://127.0.0.1:4332";
 assert.equal(new URL(origin).hostname, "127.0.0.1");
 const output =
   process.env.EDIV_FIGMA_OUTPUT || ".test-artifacts/figma-stock-browser";
@@ -41,11 +41,19 @@ try {
     viewport: { width: 1440, height: 1000 },
     reducedMotion: "reduce",
   });
-  await context.route("**/*", (route) =>
-    new URL(route.request().url()).hostname === "127.0.0.1"
-      ? route.continue()
-      : route.abort(),
-  );
+  await context.route("**/*", (route) => {
+    const url = new URL(route.request().url());
+    if (url.hostname !== "127.0.0.1") return route.abort();
+    if (url.pathname.startsWith("/api/rankings/history/"))
+      return route.fulfill({
+        status: 404,
+        contentType: "application/json",
+        body: JSON.stringify({
+          error: "Histórico ausente nesta fixture de fallback",
+        }),
+      });
+    return route.continue();
+  });
   const page = await context.newPage();
   page.on("pageerror", (e) => errors.push(e.message));
   page.on("response", (response) => {

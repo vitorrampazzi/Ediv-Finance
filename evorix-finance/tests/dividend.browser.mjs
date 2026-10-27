@@ -181,8 +181,7 @@ async function assertPublicationCharts(page, entry) {
     await expect(figure.locator(".recharts-wrapper")).toHaveCount(
       hasNumbers ? 1 : 0,
     );
-    if (!hasNumbers)
-      await expect(figure.getByRole("status")).toBeVisible();
+    if (!hasNumbers) await expect(figure.getByRole("status")).toBeVisible();
   }
 }
 const run = async (name, work) => {
@@ -214,7 +213,10 @@ try {
       data = { published: true };
     else if (url.pathname === "/api/notifications")
       data = { notifications: [], unreadCount: 0 };
-    else if (url.pathname === "/api/rankings/preview") data = { entries };
+    else if (url.pathname.startsWith("/api/rankings/history/")) {
+      status = 404;
+      data = { error: "Sem histórico nesta fixture de publicação" };
+    } else if (url.pathname === "/api/rankings/preview") data = { entries };
     else if (
       url.pathname === "/api/rankings" &&
       route.request().method() === "POST"
