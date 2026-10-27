@@ -4,8 +4,6 @@ import { authLink } from "../../lib/authDestination";
 import { PublicHeroBrand } from "./PublicHeroBrand";
 import { TeachingJourney } from "./TeachingJourney";
 import { ResearchSample } from "./ResearchSample";
-import { ReadingChecklist } from "./ReadingChecklist";
-import { LearningTerms } from "./LearningTerms";
 import { PublicQuestions } from "./PublicQuestions";
 import { usePublicHomeMotion } from "./usePublicHomeMotion";
 import "./public-home.css";
@@ -59,13 +57,12 @@ export function PublicHome({
               Escola do Dividendo
             </p>
             <h1 id="ph-home-title" className="display-title ph-hero-title">
-              <span>Aprenda a olhar</span>{" "}
-              <span className="ph-hero-title-accent">a raiz,</span>{" "}
-              <span>não só o fruto.</span>
+              <span>Entenda as empresas</span>{" "}
+              <span className="ph-hero-title-accent">por trás</span>{" "}
+              <span>dos dividendos.</span>
             </h1>
             <p className="ph-hero-description ph-hero-entry">
-              Pesquisas de ações e aulas para entender as empresas por trás dos
-              dividendos.
+              Pesquisas de ações e aulas para estudar com mais critério.
             </p>
             <div className="ph-hero-entry">
               <StartAction awaitingRegistration={awaitingRegistration} />
@@ -76,14 +73,12 @@ export function PublicHome({
           </div>
         </div>
         <nav className="ph-container ph-page-index" aria-label="Nesta página">
-          <a href="#caderno-de-exemplo">Ranking de ações</a>
+          <a href="#caderno-de-exemplo">Pesquisas de ações</a>
           <a href="#como-a-ediv-ensina">Educação em dividendos</a>
         </nav>
       </section>
       <ResearchSample />
       <TeachingJourney />
-      <ReadingChecklist />
-      <LearningTerms />
       <PublicQuestions />
       <section
         className="ph-section ph-final"

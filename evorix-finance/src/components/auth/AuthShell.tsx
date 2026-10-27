@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import { Link } from "react-router-dom";
-import { ArrowLeft, CircleAlert } from "lucide-react";
+import { CircleAlert } from "lucide-react";
 import { openPrivacyPreferences } from "../../lib/analytics";
 
 export function AuthShell({
@@ -25,19 +25,13 @@ export function AuthShell({
             aria-hidden="true"
             className="h-8 w-8 object-contain"
           />
-          Escola do Dividendo
+          Voltar ao site
         </Link>
         <h1 className="display-title text-3xl">{title}</h1>
         <p className="mt-2 text-sm leading-relaxed text-evo-textSec">
           {description}
         </p>
         {children}
-        <Link
-          to="/"
-          className="mt-5 inline-flex min-h-11 items-center gap-2 text-sm text-evo-textSec"
-        >
-          <ArrowLeft size={16} /> Voltar ao site
-        </Link>
         <button
           type="button"
           className="mt-2 block min-h-11 text-left text-xs text-evo-textSec underline"

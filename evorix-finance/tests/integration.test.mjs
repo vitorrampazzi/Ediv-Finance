@@ -2,6 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { createFixture } from "./fixture.mjs";
 import { zipSync, strToU8 } from "fflate";
+import { lessons, glossary } from "../server/learning-content.js";
 const fixture = await createFixture();
 const { accounts, pool, request, password, state } = fixture;
 const { admin, analyst, a, b } = accounts;
@@ -556,6 +557,46 @@ try {
     await t.test(
       "progresso sincronizado é pessoal e valida a resposta",
       async () => {
+        const guest = await request(null, "/api/learning");
+        assert.equal(guest.status, 200);
+        assert.equal(guest.body.access, "preview");
+        assert.deepEqual(guest.body.completed, []);
+        assert.deepEqual(guest.body.glossary, glossary);
+        for (const key of [
+          "id",
+          "title",
+          "text",
+          "sections",
+          "takeaways",
+          "sources",
+        ])
+          assert.deepEqual(guest.body.lessons[0][key], lessons[0][key]);
+        for (const lesson of guest.body.lessons)
+          for (const key of ["question", "choices", "answer", "explanation"])
+            assert.equal(Object.hasOwn(lesson, key), false);
+        assert.deepEqual(
+          guest.body.lessons.slice(1),
+          lessons
+            .slice(1)
+            .map(({ id, title }) => ({ id, title, locked: true })),
+        );
+        assert.equal(
+          (
+            await request(null, "/api/learning/progress/ranking", {
+              method: "PUT",
+              body: { answer: 1 },
+            })
+          ).status,
+          401,
+        );
+        const member = await request(a, "/api/learning");
+        assert.equal(member.status, 200);
+        assert.equal(member.body.access, "full");
+        assert.deepEqual(
+          member.body.lessons,
+          lessons.map((lesson) => ({ ...lesson, locked: false })),
+        );
+        assert.deepEqual(member.body.glossary, glossary);
         assert.equal(
           (
             await request(a, "/api/learning/progress/risco", {

@@ -8,7 +8,7 @@ import {
   pageMetadata,
   siteOrigin,
 } from "../site-pages.mjs";
-import { lessons, glossary } from "../server/learning-content.js";
+import { serializeLessons, glossary } from "../server/learning-content.js";
 import { assistantInQa } from "../deployment-policy.mjs";
 
 export async function prerender() {
@@ -32,12 +32,16 @@ export async function prerender() {
     .filter((name) => name.endsWith(".css"))
     .sort();
   const pageCss = {
-    "/": /^Home-[\w-]+\.css$/,
+    "/": /^(?:Home|ResearchSample)-[\w-]+\.css$/,
+    "/ranking": /^ResearchSample-[\w-]+\.css$/,
     "/aprender": /^Aprender-[\w-]+\.css$/,
   };
   const pageStyles = (path) =>
     cssFiles
-      .filter((name) => pageCss[path]?.test(name) || /^CompanyLogo-[\w-]+\.css$/.test(name))
+      .filter(
+        (name) =>
+          pageCss[path]?.test(name) || /^CompanyLogo-[\w-]+\.css$/.test(name),
+      )
       .map(
         (name) =>
           `<link rel="stylesheet" crossorigin href="/assets/${name}" />`,
@@ -47,11 +51,7 @@ export async function prerender() {
     access: "preview",
     completed: [],
     glossary,
-    lessons: lessons.map((lesson, index) =>
-      index === 0
-        ? { ...lesson, locked: false }
-        : { id: lesson.id, title: lesson.title, locked: true },
-    ),
+    lessons: serializeLessons(false),
   };
   const escape = (value) =>
     value
