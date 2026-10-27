@@ -622,8 +622,13 @@ try {
         );
         await expect(price.locator("table")).toHaveCount(0);
         await expect(dividends.locator("table")).toHaveCount(0);
-        await expect(page.getByRole("region", {name: "Origem dos dados"})).toHaveCount(0);
-        assert.doesNotMatch(await page.locator(".dividend-company").innerText(), /AGF|Fonte:|Origem:|Pesquisa de dividendos|Data passada não comprova pagamento/);
+        await expect(
+          page.getByRole("region", { name: "Origem dos dados" }),
+        ).toHaveCount(0);
+        assert.doesNotMatch(
+          await page.locator(".dividend-company").innerText(),
+          /AGF|Fonte:|Origem:|Pesquisa de dividendos|Data passada não comprova pagamento/,
+        );
         await expect(
           price.getByRole("button", { name: "1D", exact: true }),
         ).toHaveCount(0);

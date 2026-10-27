@@ -151,21 +151,23 @@ function PublicationChart({
       <figcaption className="sr-only">
         {title} · {unit}
       </figcaption>
-      <table className="sr-only">
-        <caption>
-          {title} · {unit}
-        </caption>
-        <tbody>
-          {rows.map((row) => (
-            <tr key={row.key} data-chart-field={row.key}>
-              <th scope="row">{row.label}</th>
-              <td data-chart-value={row.key} data-exact-value={row.formatted}>
-                {row.formatted}
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+      <div className="sr-only">
+        <table>
+          <caption>
+            {title} · {unit}
+          </caption>
+          <tbody>
+            {rows.map((row) => (
+              <tr key={row.key} data-chart-field={row.key}>
+                <th scope="row">{row.label}</th>
+                <td data-chart-value={row.key} data-exact-value={row.formatted}>
+                  {row.formatted}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </figure>
   );
 }
