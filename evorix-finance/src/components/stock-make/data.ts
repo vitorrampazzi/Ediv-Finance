@@ -1,4 +1,5 @@
 import { createContext, useContext } from "react";
+import type { StockHistoryState } from "../../hooks/useStockHistory";
 import type { Entry } from "../../lib/ranking";
 import {
   dividendColumns,
@@ -81,6 +82,14 @@ export function makeStockData(entry: Entry) {
 }
 export type StockData = ReturnType<typeof makeStockData>;
 export const StockContext = createContext<StockData | null>(null);
+export const StockHistoryContext = createContext<StockHistoryState | null>(
+  null,
+);
+export function useHistory() {
+  const history = useContext(StockHistoryContext);
+  if (!history) throw new Error("StockMake requires its history context");
+  return history;
+}
 export function useStockData() {
   const data = useContext(StockContext);
   if (!data) throw new Error("StockMake requires its research context");

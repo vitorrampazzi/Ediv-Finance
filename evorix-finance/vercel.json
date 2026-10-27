@@ -4,6 +4,11 @@
   "installCommand": "npm ci",
   "buildCommand": "npm run build",
   "outputDirectory": "dist",
+  "functions": {
+    "api/handler.js": {
+      "includeFiles": "server/data/stock-history.json.gz"
+    }
+  },
   "rewrites": [
     {
       "source": "/api/:vercelPath*",
