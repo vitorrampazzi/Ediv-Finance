@@ -120,24 +120,30 @@
   position: absolute;
   z-index: -2;
   inset: 0;
-  background: url("/ediv-hero-forest.webp") center / cover no-repeat;
+  background: url("/assets/hero-study-people.webp") 66% center / cover no-repeat;
   content: "";
 }
 .ph-hero-layout::after {
   position: absolute;
   z-index: -1;
   inset: 0;
-  background: linear-gradient(105deg, rgb(20 29 35 / 28%), rgb(14 25 30 / 34%));
+  background: linear-gradient(
+    105deg,
+    rgb(14 23 28 / 95%) 0%,
+    rgb(14 23 28 / 80%) 38%,
+    rgb(14 23 28 / 10%) 70%
+  );
   pointer-events: none;
   content: "";
 }
 
-/* Keep the forest photograph while providing a light reading surface. */
+/* Keep the copy on a solid reading surface while revealing the photograph. */
 :root[data-theme="light"] .ph-hero-layout::after {
   background: linear-gradient(
     105deg,
-    rgb(247 248 246 / 97%),
-    rgb(237 243 238 / 88%)
+    rgb(247 248 246 / 99%) 0%,
+    rgb(247 248 246 / 96%) 38%,
+    rgb(237 243 238 / 12%) 72%
   );
 }
 .ph-hero-copy {
@@ -326,8 +332,43 @@
     max-width: 30rem;
   }
   .ph-hero-brand-entry {
-    width: calc(100% + 2rem);
-    margin-left: -1rem;
+    width: 220px;
+    align-self: end;
+    justify-self: end;
+    margin: 0;
+  }
+}
+@media (max-width: 959px) {
+  .ph-hero-layout::before {
+    background-size: auto 260px;
+    background-position: 70% bottom;
+  }
+  .ph-hero-layout::after {
+    background: linear-gradient(
+      to bottom,
+      var(--ediv-inset) calc(100% - 260px),
+      rgb(14 23 28 / 8%) calc(100% - 220px)
+    );
+  }
+  :root[data-theme="light"] .ph-hero-layout::after {
+    background: linear-gradient(
+      to bottom,
+      var(--ediv-inset) calc(100% - 260px),
+      rgb(247 248 246 / 8%) calc(100% - 220px)
+    );
+  }
+  .ph-hero-brand-entry {
+    display: flex;
+    width: 100%;
+    min-height: 240px;
+    align-items: end;
+    justify-content: end;
+    justify-self: end;
+    align-self: end;
+  }
+  .ph-hero-brand-entry .ph-brand {
+    width: 140px;
+    margin: 0;
   }
 }
 @media (max-width: 479px) {
@@ -350,7 +391,7 @@
     font-size: 0.75rem;
   }
   .ph-hero-brand-entry {
-    width: 210px;
+    width: 100%;
     margin-block: -0.25rem -0.65rem;
   }
 }
