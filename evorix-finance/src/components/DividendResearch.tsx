@@ -229,7 +229,6 @@ export function DividendRankingTable({
 
 export function DividendCompanyResearch({
   entry,
-  ranking,
   backLink,
   previous,
   next,
@@ -254,25 +253,6 @@ export function DividendCompanyResearch({
     >
       <StockMake entry={entry} titleRef={title} backLink={backLink} />
       <div className="mx-auto max-w-[1280px] px-5 pb-10 md:px-10">
-        <section
-          className="my-7 border-y border-evo-border py-5 text-sm"
-          aria-label="Origem dos dados"
-        >
-          <h2 className="font-semibold">Sobre esta publicação</h2>
-          <p className="mt-2 break-words">{ranking.title}</p>
-          {ranking.sourceFileName && (
-            <p className="mt-2 break-words text-evo-textSec">
-              Origem: {ranking.sourceFileName}
-            </p>
-          )}
-          {ranking.authorName && (
-            <p className="mt-2">Responsável: {ranking.authorName}</p>
-          )}
-          <p className="mt-3 text-evo-textSec">
-            Valores e estimativas informados na planilha. Preço teto e margem de
-            segurança não representam preço-alvo ou retorno garantido.
-          </p>
-        </section>
         <nav
           aria-label="Outras pesquisas desta publicação"
           className="grid gap-3 sm:grid-cols-2"

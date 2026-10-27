@@ -107,13 +107,6 @@ function Header({
               </p>
             </div>
           </div>
-          <div className="text-right text-xs leading-relaxed text-fmk-dim">
-            <div className="mt-2">
-              Pesquisa de dividendos ·{" "}
-              <span className="text-fmk-sub">{company.updated}</span>
-            </div>
-            <div>Fonte: planilha da publicação</div>
-          </div>
         </div>
 
         <div className="fmk-stats mt-8 grid grid-cols-2 gap-x-6 gap-y-7 border-y border-fmk-line py-6 md:grid-cols-5">
@@ -241,12 +234,7 @@ function Overview() {
       aria-labelledby="visao-geral-t"
       className="scroll-mt-16 pt-14"
     >
-      <SectionHead
-        id="visao-geral"
-        n="01"
-        title="Visão geral"
-        lede="Um resumo analítico dos números que sustentam a pesquisa. Interpretações estatísticas, não recomendação."
-      />
+      <SectionHead id="visao-geral" n="01" title="Visão geral" />
       <div className="grid gap-12 lg:grid-cols-12">
         <div className="lg:col-span-7">
           <div className="fmk-overview-figures grid gap-8 sm:grid-cols-2">
@@ -367,10 +355,6 @@ function Overview() {
             <p className="mt-3 font-fmk-serif text-xl leading-snug">
               {company.name} · {company.sector}
             </p>
-            <p className="mt-3 text-sm leading-relaxed text-fmk-sub">
-              A pesquisa identifica a atuação e os indicadores abaixo. Descrição
-              institucional detalhada indisponível nesta publicação.
-            </p>
           </div>
           <div>
             <h3 className="font-fmk-mono text-[11px] uppercase tracking-[0.14em] text-fmk-dim">
@@ -384,10 +368,7 @@ function Overview() {
                     ? "Comparação de P/L indisponível sem bases positivas."
                     : `P/L projetado: ${value("projectedPE")}; média: ${value("averagePE10Years")}. Diferença relativa: ${pct(peDifference, 1, true)}.`,
                 ],
-                [
-                  "●",
-                  `Margem de segurança informada na fonte: ${value("safetyMargin")}. Não representa retorno esperado.`,
-                ],
+                ["●", `Margem de segurança: ${value("safetyMargin")}.`],
                 [
                   "●",
                   number("expectedPayout") === null
@@ -406,10 +387,6 @@ function Overview() {
                 </li>
               ))}
             </ul>
-            <p className="mt-3 text-xs leading-relaxed text-fmk-dim">
-              Leituras estatísticas dos dados da pesquisa. Não constituem
-              recomendação de compra ou venda.
-            </p>
           </div>
         </div>
       </div>
@@ -570,7 +547,6 @@ function Indicators() {
         id="indicadores"
         n="04"
         title="Indicadores"
-        lede="Agrupados por pergunta que o investidor costuma fazer. Passe o cursor ou foque o “i” para ler a explicação."
         right={
           <div className="flex flex-wrap gap-x-5 gap-y-2 text-xs text-fmk-sub">
             <span>
@@ -578,9 +554,6 @@ function Indicators() {
             </span>
             <span>
               <span className="text-fmk-down">▼</span> sinal negativo
-            </span>
-            <span className="text-fmk-dim">
-              Sinais indicam direção, não qualidade.
             </span>
           </div>
         }
@@ -678,7 +651,11 @@ function Company() {
                   <div
                     key={key}
                     data-field={key}
-                    className="flex flex-wrap justify-between gap-3 py-2.5"
+                    className={
+                      key === "updatedOn"
+                        ? "sr-only"
+                        : "flex flex-wrap justify-between gap-3 py-2.5"
+                    }
                   >
                     <dt className="text-fmk-sub">
                       {dividendColumns.find((c) => c.key === key)!.label}
@@ -903,12 +880,7 @@ function StockPage({
           aria-labelledby="cotacao-t"
           className="scroll-mt-16 pt-20"
         >
-          <SectionHead
-            id="cotacao"
-            n="02"
-            title="Cotação"
-            lede="Fechamentos históricos AGF e referências constantes da planilha, com datas e fontes separadas."
-          />
+          <SectionHead id="cotacao" n="02" title="Cotação" />
           <PriceChart />
         </section>
 
@@ -918,12 +890,7 @@ function StockPage({
           aria-labelledby="dividendos-t"
           className="scroll-mt-16 pt-20"
         >
-          <SectionHead
-            id="dividendos"
-            n="03"
-            title="Dividendos"
-            lede="Eventos AGF agrupados pela data de pagamento informada; projeções e meses habituais da planilha permanecem separados."
-          />
+          <SectionHead id="dividendos" n="03" title="Dividendos" />
           <div className="fmk-stats mb-12 grid grid-cols-2 gap-x-6 gap-y-6 md:grid-cols-5">
             <Stat label="DY estimado" tip="Dividendo projetado ÷ cotação.">
               {value("estimatedGrossDividendYield")}
@@ -961,12 +928,7 @@ function StockPage({
           aria-labelledby="resultados-t"
           className="scroll-mt-16 pt-20"
         >
-          <SectionHead
-            id="resultados"
-            n="05"
-            title="Resultados"
-            lede="Lucro estimado, crescimento agregado de cinco anos e endividamento da planilha, com unidades e metodologia."
-          />
+          <SectionHead id="resultados" n="05" title="Resultados" />
           <ResultsCharts />
           <div className="mt-16 border-t border-fmk-line pt-8">
             <div className="mb-6 flex flex-wrap items-end justify-between gap-3">
@@ -974,10 +936,6 @@ function StockPage({
                 <h3 className="font-fmk-serif text-2xl">
                   P/L e média histórica
                 </h3>
-                <p className="mt-1 text-sm text-fmk-sub">
-                  P/L projetado frente à média de dez anos da pesquisa; a média
-                  histórica não descreve a trajetória de cada ano.
-                </p>
               </div>
             </div>
             <PerformanceChart />
@@ -986,14 +944,6 @@ function StockPage({
 
         <Company />
         <Learn />
-
-        <footer className="mt-24 border-t border-fmk-line pt-6 text-xs leading-relaxed text-fmk-dim">
-          <p className="max-w-3xl">
-            Escola do Dividendo · Conteúdo educacional. Dados e estimativas da
-            publicação na data de referência; não representam cotação ao vivo
-            nem recomendação de investimento.
-          </p>
-        </footer>
       </div>
     </div>
   );
