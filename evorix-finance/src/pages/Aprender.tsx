@@ -48,6 +48,19 @@ export type LearningData = {
   access: "preview" | "full";
   completed: string[];
 };
+const learningTabs = [
+  { id: "curso", label: "Curso" },
+  { id: "testes", label: "Testes" },
+  { id: "laboratorio", label: "Laboratório de conceitos" },
+  { id: "termos", label: "Termos das aulas" },
+] as const;
+type LearningTab = (typeof learningTabs)[number]["id"];
+const tabForHash = (hash: string): LearningTab =>
+  hash === "#laboratorio"
+    ? "laboratorio"
+    : ["#learning-glossary-title", "#termos"].includes(hash)
+      ? "termos"
+      : "curso";
 const lessonIds: string[] = learningChapters.map((chapter) => chapter.id);
 export function Aprender({
   initialContent,
@@ -106,7 +119,7 @@ function LearningSession({
   } | null>(null);
   const [accountCompleted, setCompleted] = useState<string[]>([]);
   const visitorProgress = useVisitorLearningProgress(!user);
-  const completed = user ? accountCompleted : [...visitorProgress.completed];
+  const completed = user ? accountCompleted : [];
   const [progressBusy, setProgressBusy] = useState(false);
   const [sessionExpired, setSessionExpired] = useState(false);
   const [resetRequested, setResetRequested] = useState(false);
@@ -114,6 +127,17 @@ function LearningSession({
   const [search, setSearch] = useState("");
   const location = useLocation();
   const navigate = useNavigate();
+  const tabLocation =
+    location.key + location.pathname + location.search + location.hash;
+  const [tabState, setTabState] = useState({
+    key: tabLocation,
+    tab: tabForHash(location.hash),
+  });
+  const activeTab =
+    tabState.key === tabLocation ? tabState.tab : tabForHash(location.hash);
+  const tabButtons = useRef<(HTMLButtonElement | null)[]>([]);
+  const selectTab = (tab: LearningTab) =>
+    setTabState({ key: tabLocation, tab });
   const classroomRef = useRef<HTMLElement>(null);
   const classroomTitleRef = useRef<HTMLHeadingElement>(null);
   const selectionIntentRef = useRef<{
@@ -132,6 +156,7 @@ function LearningSession({
 
   function selectLesson(id: string, focusClassroom = false) {
     if (!lessonIds.includes(id)) return;
+    selectTab("curso");
     const params = new URLSearchParams(location.search);
     params.set("aula", id);
     selectionIntentRef.current = {
@@ -189,7 +214,7 @@ function LearningSession({
     if (
       !content ||
       !location.hash ||
-      handledLocationRef.current === location.key
+      handledLocationRef.current === tabLocation
     )
       return;
     const frame = window.requestAnimationFrame(() => {
@@ -209,7 +234,7 @@ function LearningSession({
       const target = lessonIds.includes(hash)
         ? classroomRef.current
         : document.getElementById(hash);
-      handledLocationRef.current = location.key;
+      handledLocationRef.current = tabLocation;
       // Playlist selection keeps document scroll and keyboard focus in place.
       // Direct links, history navigation and course CTAs still open the classroom.
       if (!intent || intent.focusClassroom) {
@@ -226,6 +251,7 @@ function LearningSession({
     location.search,
     location.hash,
     content,
+    tabLocation,
   ]);
   async function handleExpiredSession(message: string, lessonId?: string) {
     setSessionExpired(true);
@@ -243,7 +269,8 @@ function LearningSession({
     }
   }
   async function chooseAnswer(lesson: Lesson, answer: number) {
-    if (progressBusy || loading || sessionExpired || lesson.locked) return;
+    if (!user || progressBusy || loading || sessionExpired || lesson.locked)
+      return;
     setAnswers((current) => ({ ...current, [lesson.id]: answer }));
     setProgressError(null);
     if (answer !== lesson.answer) return;
@@ -378,56 +405,85 @@ function LearningSession({
         </div>
         <div className="mt-3 flex flex-wrap items-center justify-between gap-4 sm:mt-6">
           <p className="hidden text-sm text-evo-textSec sm:block">
-            <strong className="text-evo-textMain">
-              {completed.length} de {lessonIds.length} exercícios concluídos
-            </strong>{" "}
-            ·{" "}
-            {user
-              ? "progresso salvo na sua conta"
-              : visitorProgress.persisted
-                ? "progresso salvo neste navegador"
-                : "progresso mantido somente nesta sessão"}
+            {user ? (
+              <>
+                <strong className="text-evo-textMain">
+                  {completed.length} de {lessonIds.length} exercícios concluídos
+                </strong>{" "}
+                · progresso salvo na sua conta
+              </>
+            ) : (
+              "Primeira aula aberta. Entre para fazer os testes e salvar seu progresso."
+            )}
           </p>
           <a
             className="inline-flex min-h-11 items-center gap-2 text-sm text-evo-accent"
             href="#cursos"
+            onClick={() => selectTab("curso")}
           >
             Ver minicursos <ArrowDown size={16} aria-hidden="true" />
           </a>
         </div>
-        <div
-          className="mt-3 h-1 bg-evo-bgMain"
-          role="progressbar"
-          aria-label="Progresso dos exercícios"
-          aria-valuenow={completed.length}
-          aria-valuemin={0}
-          aria-valuemax={lessonIds.length}
-        >
+        {user && (
           <div
-            className="h-full bg-evo-accent transition-[width] motion-reduce:transition-none"
-            style={{ width: (completed.length / lessonIds.length) * 100 + "%" }}
-          />
-        </div>
-      </header>
-      {!user && !visitorProgress.persisted && (
-        <aside
-          className="rounded-lg border border-evo-border bg-evo-card p-4 text-sm text-evo-textSec"
-          role="status"
-        >
-          <p>
-            Não foi possível ler ou salvar seu progresso neste navegador. Suas
-            conclusões continuam nesta sessão do site, mas as mudanças não serão
-            preservadas ao recarregar ou fechar a página.
-          </p>
-          <button
-            type="button"
-            className="action-secondary mt-3"
-            onClick={visitorProgress.persist}
+            className="mt-3 h-1 bg-evo-bgMain"
+            role="progressbar"
+            aria-label="Progresso dos exercícios"
+            aria-valuenow={completed.length}
+            aria-valuemin={0}
+            aria-valuemax={lessonIds.length}
           >
-            Tentar salvar progresso
+            <div
+              className="h-full bg-evo-accent transition-[width] motion-reduce:transition-none"
+              style={{
+                width: (completed.length / lessonIds.length) * 100 + "%",
+              }}
+            />
+          </div>
+        )}
+      </header>
+      <div
+        role="tablist"
+        aria-label="Áreas de aprendizado"
+        className="flex max-w-full gap-2 overflow-x-auto border-b border-evo-border pb-2"
+      >
+        {learningTabs.map((item, index) => (
+          <button
+            key={item.id}
+            type="button"
+            role="tab"
+            id={"learning-tab-" + item.id}
+            aria-controls={"learning-panel-" + item.id}
+            aria-selected={activeTab === item.id}
+            tabIndex={activeTab === item.id ? 0 : -1}
+            ref={(node) => {
+              tabButtons.current[index] = node;
+            }}
+            className={
+              "min-h-11 shrink-0 rounded-lg border px-4 text-sm " +
+              (activeTab === item.id
+                ? "border-evo-accent bg-evo-bgMain text-evo-accent"
+                : "border-evo-border text-evo-textSec")
+            }
+            onClick={() => selectTab(item.id)}
+            onKeyDown={(event) => {
+              let next: number;
+              if (event.key === "ArrowRight")
+                next = (index + 1) % learningTabs.length;
+              else if (event.key === "ArrowLeft")
+                next = (index + learningTabs.length - 1) % learningTabs.length;
+              else if (event.key === "Home") next = 0;
+              else if (event.key === "End") next = learningTabs.length - 1;
+              else return;
+              event.preventDefault();
+              selectTab(learningTabs[next].id);
+              tabButtons.current[next]?.focus();
+            }}
+          >
+            {item.label}
           </button>
-        </aside>
-      )}
+        ))}
+      </div>
       {loading && (
         <div
           role="status"
@@ -469,152 +525,253 @@ function LearningSession({
           às demais aulas e salva seu progresso.
         </p>
       )}
-      {content && !authLoading && (
-        <LearningJourney
-          persisted={Boolean(user) || visitorProgress.persisted}
-          lessons={lessons}
-          completed={completed}
+      <section
+        role="tabpanel"
+        id="learning-panel-curso"
+        aria-labelledby="learning-tab-curso"
+        hidden={activeTab !== "curso"}
+      >
+        {content && !authLoading && user && (
+          <LearningJourney
+            persisted={Boolean(user) || visitorProgress.persisted}
+            lessons={lessons}
+            completed={completed}
+            isAuthenticated={Boolean(user)}
+            onSelect={(id) => selectLesson(id, true)}
+          />
+        )}
+        <LearningCourseCarousel
           isAuthenticated={Boolean(user)}
+          courses={learningCourses}
+          chapters={learningChapters}
+          completed={completed}
+          selectedCourseId={selectedCourse.id}
           onSelect={(id) => selectLesson(id, true)}
         />
-      )}
-      <LearningCourseCarousel
-        courses={learningCourses}
-        chapters={learningChapters}
-        completed={completed}
-        selectedCourseId={selectedCourse.id}
-        onSelect={(id) => selectLesson(id, true)}
-      />
-      {selectedLesson && (
-        <section
-          ref={classroomRef}
-          id="sala-de-aula"
-          className="scroll-mt-24 border-t border-evo-border pt-7"
-          aria-labelledby="classroom-title"
-        >
-          <p className="text-xs uppercase tracking-[0.14em] text-evo-textSec">
-            Sala de aula · {selectedCourse.title}
-          </p>
-          <h2
-            ref={classroomTitleRef}
-            tabIndex={-1}
-            id="classroom-title"
-            aria-live="polite"
-            className="mt-2 text-2xl font-semibold focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-evo-accent"
+        {selectedLesson && (
+          <section
+            ref={classroomRef}
+            id="sala-de-aula"
+            className="scroll-mt-24 border-t border-evo-border pt-7"
+            aria-labelledby="classroom-title"
           >
-            {selectedLesson.title}
-          </h2>
-          <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-evo-textSec">
-            <span>
-              Aula {selectedIndex + 1} de {playlistItems.length}
-            </span>
-            <span>
-              {completedInCourse} de {playlistItems.length} exercícios
-              concluídos neste curso
-            </span>
-            <a
-              className="inline-flex min-h-9 items-center gap-1 text-evo-accent underline underline-offset-4"
-              href="#cursos"
+            <p className="text-xs uppercase tracking-[0.14em] text-evo-textSec">
+              Sala de aula · {selectedCourse.title}
+            </p>
+            <h2
+              ref={classroomTitleRef}
+              tabIndex={-1}
+              id="classroom-title"
+              aria-live="polite"
+              className="mt-2 text-2xl font-semibold focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-evo-accent"
             >
-              <ArrowLeft size={13} aria-hidden="true" /> Todos os minicursos
-            </a>
-          </div>
-          <div className="mt-6 overflow-hidden rounded-2xl border border-evo-border bg-evo-bgMain">
-            <div className="grid min-w-0 grid-cols-1 items-start lg:grid-cols-[minmax(0,1fr)_20rem]">
-              <div className="min-w-0 p-4 sm:p-5">
-                {selectedLesson.locked ? (
-                  <AccountGate
-                    title="Entre para estudar esta aula"
-                    description="A conta gratuita dá acesso à aula completa e salva seu progresso."
-                    next={
-                      location.pathname +
-                      location.search +
-                      "#" +
-                      selectedLesson.id
-                    }
-                  />
-                ) : (
-                  <LearningVideo
-                    key={selectedLesson.id}
-                    title={selectedLesson.title}
-                    embedUrl={selectedChapter.videoEmbedUrl}
-                    readingTarget={"#leitura-" + selectedLesson.id}
-                  />
-                )}
-              </div>
-              <LearningPlaylist
-                items={playlistItems}
-                selectedId={selectedLesson.id}
-                onSelect={selectLesson}
-              />
-            </div>
-          </div>
-          {!selectedLesson.locked && (
-            <div className="mt-5 min-w-0 max-w-4xl">
-              <div className="mt-4 flex flex-wrap items-center gap-3 text-xs text-evo-textSec">
-                <BookOpen size={15} aria-hidden="true" />
-                <span>Leitura</span>
-                <Clock3 size={15} aria-hidden="true" />
+              {selectedLesson.title}
+            </h2>
+            <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-evo-textSec">
+              <span>
+                Aula {selectedIndex + 1} de {playlistItems.length}
+              </span>
+              {user && (
                 <span>
-                  {selectedChapter.readingMinutes} min de leitura estimada
+                  {completedInCourse} de {playlistItems.length} exercícios
+                  concluídos neste curso
                 </span>
-                {completed.includes(selectedLesson.id) && (
-                  <span className="inline-flex items-center gap-1 text-evo-accent">
-                    <CheckCircle2 size={15} aria-hidden="true" /> Exercício
-                    concluído
+              )}
+              <a
+                className="inline-flex min-h-9 items-center gap-1 text-evo-accent underline underline-offset-4"
+                href="#cursos"
+              >
+                <ArrowLeft size={13} aria-hidden="true" /> Todos os minicursos
+              </a>
+            </div>
+            <div className="mt-6 overflow-hidden rounded-2xl border border-evo-border bg-evo-bgMain">
+              <div className="grid min-w-0 grid-cols-1 items-start lg:grid-cols-[minmax(0,1fr)_20rem]">
+                <div className="min-w-0 p-4 sm:p-5">
+                  {selectedLesson.locked ? (
+                    <AccountGate
+                      title="Entre para estudar esta aula"
+                      description="A conta gratuita dá acesso à aula completa e salva seu progresso."
+                      next={
+                        location.pathname +
+                        location.search +
+                        "#" +
+                        selectedLesson.id
+                      }
+                    />
+                  ) : (
+                    <LearningVideo
+                      key={selectedLesson.id}
+                      title={selectedLesson.title}
+                      embedUrl={selectedChapter.videoEmbedUrl}
+                      readingTarget={"#leitura-" + selectedLesson.id}
+                    />
+                  )}
+                </div>
+                <LearningPlaylist
+                  items={playlistItems}
+                  selectedId={selectedLesson.id}
+                  onSelect={selectLesson}
+                />
+              </div>
+            </div>
+            {!selectedLesson.locked && (
+              <div className="mt-5 min-w-0 max-w-4xl">
+                <div className="mt-4 flex flex-wrap items-center gap-3 text-xs text-evo-textSec">
+                  <BookOpen size={15} aria-hidden="true" />
+                  <span>Leitura</span>
+                  <Clock3 size={15} aria-hidden="true" />
+                  <span>
+                    {selectedChapter.readingMinutes} min de leitura estimada
                   </span>
+                  {completed.includes(selectedLesson.id) && (
+                    <span className="inline-flex items-center gap-1 text-evo-accent">
+                      <CheckCircle2 size={15} aria-hidden="true" /> Exercício
+                      concluído
+                    </span>
+                  )}
+                </div>
+                <article
+                  id={"leitura-" + selectedLesson.id}
+                  className="scroll-mt-24 py-7"
+                  aria-labelledby="reading-title"
+                >
+                  <h3 id="reading-title" className="text-lg font-semibold">
+                    Texto da aula
+                  </h3>
+                  <p className="mt-4 text-sm leading-7 text-evo-textSec">
+                    {selectedLesson.text}
+                  </p>
+                  {selectedLesson.sections?.map((part) => (
+                    <section key={part.title} className="mt-6">
+                      <h4 className="font-semibold">{part.title}</h4>
+                      <p className="mt-2 text-sm leading-7 text-evo-textSec">
+                        {part.text}
+                      </p>
+                    </section>
+                  ))}
+                  {!!selectedLesson.takeaways?.length && (
+                    <aside className="mt-7 border-l-2 border-evo-accent pl-5">
+                      <h4 className="font-semibold">Pontos principais</h4>
+                      <ul className="mt-3 list-disc space-y-2 pl-4 text-sm leading-relaxed text-evo-textSec">
+                        {selectedLesson.takeaways.map((takeaway) => (
+                          <li key={takeaway}>{takeaway}</li>
+                        ))}
+                      </ul>
+                    </aside>
+                  )}
+                  {!!selectedLesson.sources?.length && (
+                    <div className="mt-6 text-xs leading-relaxed text-evo-textSec">
+                      <p className="font-semibold">Fontes da aula</p>
+                      <ul className="mt-2 space-y-2">
+                        {selectedLesson.sources.map((source) => (
+                          <li key={source.url}>
+                            <a
+                              className="inline-flex min-h-6 items-center text-evo-accent underline underline-offset-4"
+                              href={source.url}
+                              target="_blank"
+                              rel="noreferrer"
+                            >
+                              {source.title}{" "}
+                              <span className="sr-only">
+                                (abre em nova guia)
+                              </span>
+                            </a>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                </article>
+
+                {assistantEnabled && (
+                  <button
+                    className="mt-4 inline-flex min-h-11 items-center gap-2 text-sm text-evo-accent"
+                    onClick={() =>
+                      window.dispatchEvent(
+                        new CustomEvent("ediv-assistant-question", {
+                          detail:
+                            "Explique de forma educativa: " +
+                            selectedLesson.title,
+                        }),
+                      )
+                    }
+                  >
+                    <MessageCircle size={16} aria-hidden="true" /> Tirar uma
+                    dúvida com o assistente
+                  </button>
                 )}
               </div>
-              <article
-                id={"leitura-" + selectedLesson.id}
-                className="scroll-mt-24 py-7"
-                aria-labelledby="reading-title"
+            )}
+            <nav
+              aria-label="Continuar o aprendizado"
+              className="mt-6 flex flex-col gap-3 border-t border-evo-border pt-5 sm:flex-row sm:justify-between"
+            >
+              {previousLesson ? (
+                <button
+                  type="button"
+                  className="action-secondary justify-center"
+                  onClick={() => selectLesson(previousLesson.id, true)}
+                >
+                  <ArrowLeft size={15} aria-hidden="true" /> Aula anterior
+                </button>
+              ) : (
+                <a href="#cursos" className="action-secondary justify-center">
+                  Escolher outro curso
+                </a>
+              )}
+              {nextLesson ? (
+                <button
+                  type="button"
+                  className="action justify-center"
+                  onClick={() => selectLesson(nextLesson.id, true)}
+                >
+                  Próxima aula: {nextLesson.title}{" "}
+                  <ArrowRight size={15} aria-hidden="true" />
+                </button>
+              ) : nextCourseId ? (
+                <button
+                  type="button"
+                  className="action justify-center"
+                  onClick={() => selectLesson(nextCourseId, true)}
+                >
+                  Próximo curso: {nextCourse?.title}{" "}
+                  <ArrowRight size={15} aria-hidden="true" />
+                </button>
+              ) : (
+                <a href="#laboratorio" className="action justify-center">
+                  Praticar no laboratório{" "}
+                  <ArrowRight size={15} aria-hidden="true" />
+                </a>
+              )}
+            </nav>
+          </section>
+        )}
+      </section>
+      <section
+        role="tabpanel"
+        id="learning-panel-testes"
+        aria-labelledby="learning-tab-testes"
+        hidden={activeTab !== "testes"}
+      >
+        {activeTab === "testes" &&
+          (!user ? (
+            <AccountGate
+              title="Entre para fazer os testes"
+              description="Os exercícios e seu progresso ficam na sua conta gratuita."
+              next={location.pathname + location.search}
+            />
+          ) : selectedLesson && !selectedLesson.locked ? (
+            <>
+              <h2 className="text-2xl font-semibold">
+                Teste: {selectedLesson.title}
+              </h2>
+              <button
+                type="button"
+                className="mt-3 min-h-11 text-sm text-evo-accent underline"
+                onClick={() => selectTab("curso")}
               >
-                <h3 id="reading-title" className="text-lg font-semibold">
-                  Texto da aula
-                </h3>
-                <p className="mt-4 text-sm leading-7 text-evo-textSec">
-                  {selectedLesson.text}
-                </p>
-                {selectedLesson.sections?.map((part) => (
-                  <section key={part.title} className="mt-6">
-                    <h4 className="font-semibold">{part.title}</h4>
-                    <p className="mt-2 text-sm leading-7 text-evo-textSec">
-                      {part.text}
-                    </p>
-                  </section>
-                ))}
-                {!!selectedLesson.takeaways?.length && (
-                  <aside className="mt-7 border-l-2 border-evo-accent pl-5">
-                    <h4 className="font-semibold">Pontos principais</h4>
-                    <ul className="mt-3 list-disc space-y-2 pl-4 text-sm leading-relaxed text-evo-textSec">
-                      {selectedLesson.takeaways.map((takeaway) => (
-                        <li key={takeaway}>{takeaway}</li>
-                      ))}
-                    </ul>
-                  </aside>
-                )}
-                {!!selectedLesson.sources?.length && (
-                  <div className="mt-6 text-xs leading-relaxed text-evo-textSec">
-                    <p className="font-semibold">Fontes da aula</p>
-                    <ul className="mt-2 space-y-2">
-                      {selectedLesson.sources.map((source) => (
-                        <li key={source.url}>
-                          <a
-                            className="inline-flex min-h-6 items-center text-evo-accent underline underline-offset-4"
-                            href={source.url}
-                            target="_blank"
-                            rel="noreferrer"
-                          >
-                            {source.title}{" "}
-                            <span className="sr-only">(abre em nova guia)</span>
-                          </a>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
-              </article>
+                Escolher outra aula no curso
+              </button>
               <LearningQuiz
                 lesson={selectedLesson}
                 selectedAnswer={answers[selectedLesson.id]}
@@ -630,126 +787,90 @@ function LearningSession({
                 }
                 onAnswer={(answer) => void chooseAnswer(selectedLesson, answer)}
               />
-              {assistantEnabled && (
-                <button
-                  className="mt-4 inline-flex min-h-11 items-center gap-2 text-sm text-evo-accent"
-                  onClick={() =>
-                    window.dispatchEvent(
-                      new CustomEvent("ediv-assistant-question", {
-                        detail:
-                          "Explique de forma educativa: " +
-                          selectedLesson.title,
-                      }),
-                    )
-                  }
-                >
-                  <MessageCircle size={16} aria-hidden="true" /> Tirar uma
-                  dúvida com o assistente
-                </button>
-              )}
-            </div>
-          )}
-          <nav
-            aria-label="Continuar o aprendizado"
-            className="mt-6 flex flex-col gap-3 border-t border-evo-border pt-5 sm:flex-row sm:justify-between"
-          >
-            {previousLesson ? (
-              <button
-                type="button"
-                className="action-secondary justify-center"
-                onClick={() => selectLesson(previousLesson.id, true)}
-              >
-                <ArrowLeft size={15} aria-hidden="true" /> Aula anterior
-              </button>
-            ) : (
-              <a href="#cursos" className="action-secondary justify-center">
-                Escolher outro curso
-              </a>
-            )}
-            {nextLesson ? (
-              <button
-                type="button"
-                className="action justify-center"
-                onClick={() => selectLesson(nextLesson.id, true)}
-              >
-                Próxima aula: {nextLesson.title}{" "}
-                <ArrowRight size={15} aria-hidden="true" />
-              </button>
-            ) : nextCourseId ? (
-              <button
-                type="button"
-                className="action justify-center"
-                onClick={() => selectLesson(nextCourseId, true)}
-              >
-                Próximo curso: {nextCourse?.title}{" "}
-                <ArrowRight size={15} aria-hidden="true" />
-              </button>
-            ) : (
-              <a href="#laboratorio" className="action justify-center">
-                Praticar no laboratório{" "}
-                <ArrowRight size={15} aria-hidden="true" />
-              </a>
-            )}
-          </nav>
-        </section>
-      )}
-      <LearningPractice />
-      <section aria-labelledby="learning-glossary-title">
-        <div className="flex flex-wrap items-end justify-between gap-3">
-          <h2 id="learning-glossary-title" className="text-2xl font-semibold">
-            Termos das aulas
-          </h2>
-          <Link
-            to="/glossario"
-            className="inline-flex min-h-11 items-center gap-2 text-sm text-evo-accent"
-          >
-            Abrir glossário completo <ArrowRight size={15} aria-hidden="true" />
-          </Link>
-        </div>
-        <MobileDisclosure
-          title="Buscar conceitos no glossário"
-          className="mt-4"
-        >
-          <label className="block">
-            <span className="sr-only">Buscar um conceito</span>
-            <input
-              className="field"
-              placeholder="Buscar dividendo, payout, data-ex…"
-              value={search}
-              onChange={(event) => setSearch(event.target.value)}
-            />
-          </label>
-          <dl className="mt-3 grid gap-x-6 sm:grid-cols-2">
-            {matchingTerms.map(([term, text]) => (
-              <div key={term} className="border-b border-evo-border py-4">
-                <dt className="font-semibold">{term}</dt>
-                <dd className="mt-2 text-sm leading-relaxed text-evo-textSec">
-                  {text}
-                </dd>
-              </div>
-            ))}
-          </dl>
-          {glossary.length > 0 && matchingTerms.length === 0 && (
-            <p role="status" className="mt-4 text-sm text-evo-textSec">
-              Nenhum conceito encontrado. Tente outro termo.
+            </>
+          ) : (
+            <p className="text-sm text-evo-textSec">
+              Escolha uma aula disponível no curso para fazer o teste.
             </p>
-          )}
-        </MobileDisclosure>
+          ))}
       </section>
+      <section
+        role="tabpanel"
+        id="learning-panel-laboratorio"
+        aria-labelledby="learning-tab-laboratorio"
+        hidden={activeTab !== "laboratorio"}
+      >
+        <LearningPractice />
+      </section>
+      <div
+        role="tabpanel"
+        id="learning-panel-termos"
+        aria-labelledby="learning-tab-termos"
+        hidden={activeTab !== "termos"}
+      >
+        <section aria-labelledby="learning-glossary-title">
+          <div className="flex flex-wrap items-end justify-between gap-3">
+            <h2 id="learning-glossary-title" className="text-2xl font-semibold">
+              Termos das aulas
+            </h2>
+            <Link
+              to="/glossario"
+              className="inline-flex min-h-11 items-center gap-2 text-sm text-evo-accent"
+            >
+              Abrir glossário completo{" "}
+              <ArrowRight size={15} aria-hidden="true" />
+            </Link>
+          </div>
+          <MobileDisclosure
+            title="Buscar conceitos no glossário"
+            className="mt-4"
+          >
+            <label className="block">
+              <span className="sr-only">Buscar um conceito</span>
+              <input
+                className="field"
+                placeholder="Buscar dividendo, payout, data-ex…"
+                value={search}
+                onChange={(event) => setSearch(event.target.value)}
+              />
+            </label>
+            <dl className="mt-3 grid gap-x-6 sm:grid-cols-2">
+              {matchingTerms.map(([term, text]) => (
+                <div key={term} className="border-b border-evo-border py-4">
+                  <dt className="font-semibold">{term}</dt>
+                  <dd className="mt-2 text-sm leading-relaxed text-evo-textSec">
+                    {text}
+                  </dd>
+                </div>
+              ))}
+            </dl>
+            {glossary.length > 0 && matchingTerms.length === 0 && (
+              <p role="status" className="mt-4 text-sm text-evo-textSec">
+                Nenhum conceito encontrado. Tente outro termo.
+              </p>
+            )}
+          </MobileDisclosure>
+        </section>
+      </div>
       <footer className="flex flex-wrap items-center justify-between gap-4 border-t border-evo-border pt-6">
         <Link to={user ? "/app/ranking" : "/ranking"} className="action">
           Abrir pesquisas do ranking <ArrowRight size={16} aria-hidden="true" />
         </Link>
-        <button
-          type="button"
-          className="action-secondary"
-          disabled={
-            progressBusy || loading || sessionExpired || completed.length === 0
-          }
-          onClick={() => setResetRequested(true)}
-        >
-          Reiniciar progresso
-        </button>
+        {user && (
+          <button
+            type="button"
+            className="action-secondary"
+            disabled={
+              progressBusy ||
+              loading ||
+              sessionExpired ||
+              completed.length === 0
+            }
+            onClick={() => setResetRequested(true)}
+          >
+            Reiniciar progresso
+          </button>
+        )}
         {resetRequested && (
           <section
             className="w-full rounded-lg border border-evo-border p-4"

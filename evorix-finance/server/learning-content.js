@@ -184,6 +184,16 @@ export const lessons = [
     ],
   },
 ];
+export function serializeLessons(authenticated) {
+  return lessons.map((lesson, index) => {
+    if (authenticated) return { ...lesson, locked: false };
+    if (index !== 0)
+      return { id: lesson.id, title: lesson.title, locked: true };
+    const { id, title, text, sections, takeaways, sources } = lesson;
+    return { id, title, text, sections, takeaways, sources, locked: false };
+  });
+}
+
 export const glossary = [
   [
     "Preço-alvo",

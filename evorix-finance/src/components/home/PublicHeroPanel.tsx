@@ -12,7 +12,7 @@ const topics = [
     steps: ["Negócio", "Receita", "Resultado"],
     icons: ["building", "bars", "chart"],
     action: "Conhecer as empresas",
-    path: "/ranking",
+    path: "/#caderno-de-exemplo",
     questions: [
       ["Receita", "O que a empresa vende"],
       ["Resultado", "O que sobra após os custos"],
@@ -328,7 +328,11 @@ export function PublicHeroPanel() {
           </dl>
         )}
         {selected !== 2 && (
-          <Link to={topic.path} className="ph-panel-action">
+          <Link
+            reloadDocument={topic.path.includes("#")}
+            to={topic.path}
+            className="ph-panel-action"
+          >
             {topic.action} <ArrowUpRight size={15} aria-hidden="true" />
           </Link>
         )}

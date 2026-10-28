@@ -12,16 +12,13 @@ import { SessionStatus } from "../../components/SessionStatus";
 import { ConfirmationHelp } from "../../components/auth/ConfirmationHelp";
 import { ApiError } from "../../lib/api";
 export function LoginPage() {
-  const { user, loading, sessionError, login, resendVerification } = useAuth();
+  const { user, loading, sessionError, login } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
-  const [message, setMessage] = useState("");
-  const [resendUrl, setResendUrl] = useState("");
   const [busy, setBusy] = useState(false);
-  const [resending, setResending] = useState(false);
   const [verificationEmail, setVerificationEmail] = useState("");
   const destination = safeAuthDestination(
     new URLSearchParams(location.search).get("next") ||
@@ -35,9 +32,7 @@ export function LoginPage() {
   const submit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setError("");
-    setMessage("");
     setVerificationEmail("");
-    setResendUrl("");
     setBusy(true);
     try {
       await login(email, password);
@@ -54,26 +49,6 @@ export function LoginPage() {
       );
     } finally {
       setBusy(false);
-    }
-  };
-
-  const resend = async () => {
-    setError("");
-    setMessage("");
-    setResendUrl("");
-    setResending(true);
-    try {
-      const result = await resendVerification(email, destination);
-      setMessage(result.message || "Confira sua caixa de entrada.");
-      setResendUrl(result.verificationUrl || "");
-    } catch (reason) {
-      setError(
-        reason instanceof Error
-          ? reason.message
-          : "Não foi possível reenviar o link.",
-      );
-    } finally {
-      setResending(false);
     }
   };
 
@@ -103,8 +78,6 @@ export function LoginPage() {
             onChange={(event) => {
               setEmail(event.target.value);
               setVerificationEmail("");
-              setMessage("");
-              setResendUrl("");
               setError("");
             }}
             className="min-h-11 w-full rounded-lg border border-evo-border bg-evo-bgMain px-3 text-evo-textMain"
@@ -129,22 +102,6 @@ export function LoginPage() {
           />
         </div>
         {error && <ErrorMessage id="login-error">{error}</ErrorMessage>}
-        {message && (
-          <p
-            role="status"
-            className="rounded-lg border border-evo-green/20 bg-evo-green/5 p-3 text-sm text-evo-green"
-          >
-            {message}
-          </p>
-        )}
-        {resendUrl && (
-          <a
-            href={resendUrl}
-            className="block break-all text-sm text-evo-accent underline"
-          >
-            Confirmar e-mail (link de desenvolvimento)
-          </a>
-        )}
         <button
           type="submit"
           disabled={busy}
@@ -168,16 +125,6 @@ export function LoginPage() {
         >
           Esqueci minha senha
         </Link>
-        {!verificationEmail && (
-          <button
-            type="button"
-            disabled={resending || !email}
-            onClick={resend}
-            className="inline-flex min-h-11 items-center py-2 text-left text-xs text-evo-textSec underline decoration-evo-border underline-offset-4 hover:text-evo-textMain disabled:opacity-50"
-          >
-            {resending ? "Enviando…" : "Reenviar confirmação de e-mail"}
-          </button>
-        )}
       </div>
       <p className="mt-5 text-center text-sm text-evo-textSec">
         Ainda não tem conta?{" "}

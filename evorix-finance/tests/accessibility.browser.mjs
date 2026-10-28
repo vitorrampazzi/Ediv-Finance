@@ -136,7 +136,21 @@ try {
         data = { available: true, challenge: { required: false } };
       else if (path === "/api/learning")
         data = {
-          lessons,
+          lessons: member
+            ? lessons
+            : lessons.map((lesson, index) =>
+                index
+                  ? { id: lesson.id, title: lesson.title, locked: true }
+                  : {
+                      id: lesson.id,
+                      title: lesson.title,
+                      text: lesson.text,
+                      sections: lesson.sections,
+                      takeaways: lesson.takeaways,
+                      sources: lesson.sources,
+                      locked: false,
+                    },
+              ),
           glossary,
           completed: [],
           access: member ? "full" : "preview",

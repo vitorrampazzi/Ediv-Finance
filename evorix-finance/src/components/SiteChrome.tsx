@@ -1,5 +1,12 @@
 import { Tooltip } from "./Tooltip";
-import { ArrowRight, BookOpen, Menu, TrendingUp, X } from "lucide-react";
+import {
+  ArrowRight,
+  BookOpen,
+  Menu,
+  TrendingUp,
+  X,
+  MessageCircle,
+} from "lucide-react";
 import type { ReactNode } from "react";
 import { useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
@@ -23,6 +30,7 @@ export function SiteHeader({
   const headerRef = useRef<HTMLElement>(null);
   const reducedMotion = useReducedMotion();
   const links = [
+    { to: "/suporte", label: "Fale conosco", Icon: MessageCircle },
     {
       to: user ? "/app/ranking" : "/ranking",
       label: "Ranking de previsões",
@@ -254,25 +262,42 @@ export function SiteFooter({
             <ul className="mt-2 text-sm text-evo-textSec sm:mt-3 sm:space-y-2">
               <li>
                 <Link
-                  className="hover:text-evo-textMain"
+                  className="inline-flex min-h-11 items-center hover:text-evo-textMain"
                   to={user ? "/app" : "/"}
                 >
                   Início
                 </Link>
               </li>
               <li>
-                <Link className="hover:text-evo-textMain" to="/ranking">
+                <Link
+                  className="inline-flex min-h-11 items-center hover:text-evo-textMain"
+                  to="/ranking"
+                >
                   Ranking
                 </Link>
               </li>
               <li>
-                <Link className="hover:text-evo-textMain" to="/aprender">
+                <Link
+                  className="inline-flex min-h-11 items-center hover:text-evo-textMain"
+                  to="/aprender"
+                >
                   Aprender
                 </Link>
               </li>
               <li>
-                <Link className="hover:text-evo-textMain" to="/glossario">
+                <Link
+                  className="inline-flex min-h-11 items-center hover:text-evo-textMain"
+                  to="/glossario"
+                >
                   Glossário
+                </Link>
+              </li>
+              <li>
+                <Link
+                  className="inline-flex min-h-11 items-center hover:text-evo-textMain"
+                  to="/metodologia"
+                >
+                  Pesquisa e metodologia
                 </Link>
               </li>
             </ul>
@@ -284,39 +309,44 @@ export function SiteFooter({
             <ul className="mt-2 text-sm text-evo-textSec sm:mt-3 sm:space-y-2">
               <li>
                 <Link
-                  className="hover:text-evo-textMain"
+                  className="inline-flex min-h-11 items-center hover:text-evo-textMain"
                   to={user ? "/app" : "/entrar"}
                 >
                   {user ? "Acessar painel" : "Entrar"}
                 </Link>
               </li>
+
               <li>
-                <Link className="hover:text-evo-textMain" to="/metodologia">
-                  Pesquisa e metodologia
-                </Link>
-              </li>
-              <li>
-                <Link className="hover:text-evo-textMain" to="/privacidade">
+                <Link
+                  className="inline-flex min-h-11 items-center hover:text-evo-textMain"
+                  to="/privacidade"
+                >
                   Privacidade e uso
                 </Link>
               </li>
               <li>
                 <button
                   type="button"
-                  className="min-h-11 text-left hover:text-evo-textMain"
+                  className="inline-flex min-h-11 items-center p-0 text-left hover:text-evo-textMain"
                   onClick={openPrivacyPreferences}
                 >
                   Preferências de cookies
                 </button>
               </li>
               <li>
-                <Link className="hover:text-evo-textMain" to="/suporte">
+                <Link
+                  className="inline-flex min-h-11 items-center hover:text-evo-textMain"
+                  to="/suporte"
+                >
                   Dúvidas e suporte
                 </Link>
               </li>
               {!user && showRegistrationLink && (
                 <li>
-                  <Link className="hover:text-evo-textMain" to="/cadastro">
+                  <Link
+                    className="inline-flex min-h-11 items-center hover:text-evo-textMain"
+                    to="/cadastro"
+                  >
                     Criar conta
                   </Link>
                 </li>

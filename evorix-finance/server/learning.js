@@ -2,7 +2,7 @@ import { Router } from "express";
 import { currentUser, requireAuthenticatedUser } from "./auth.js";
 import { pool } from "./database.js";
 import { z } from "zod";
-import { lessons, glossary } from "./learning-content.js";
+import { lessons, glossary, serializeLessons } from "./learning-content.js";
 
 const router = Router();
 router.get("/", async (req, res) => {
@@ -15,11 +15,7 @@ router.get("/", async (req, res) => {
     : [[]];
   return res.json({
     access: user ? "full" : "preview",
-    lessons: lessons.map((lesson, index) =>
-      user || index === 0
-        ? { ...lesson, locked: false }
-        : { id: lesson.id, title: lesson.title, locked: true },
-    ),
+    lessons: serializeLessons(Boolean(user)),
     glossary,
     completed: progress.map((row) => row.lesson_id),
   });

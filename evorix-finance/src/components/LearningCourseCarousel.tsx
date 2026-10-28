@@ -20,6 +20,7 @@ type LearningCourseCarouselProps = {
     videoEmbedUrl: string | null;
   }[];
   completed: string[];
+  isAuthenticated?: boolean;
   selectedCourseId: string;
   onSelect: (chapterId: string) => void;
 };
@@ -28,6 +29,7 @@ export function LearningCourseCarousel({
   courses,
   chapters,
   completed,
+  isAuthenticated = true,
   selectedCourseId,
   onSelect,
 }: LearningCourseCarouselProps) {
@@ -195,11 +197,15 @@ export function LearningCourseCarousel({
                       {courseFinished && (
                         <CheckCircle2 size={13} aria-hidden="true" />
                       )}
-                      {courseFinished
-                        ? "Concluído"
-                        : selected
-                          ? "Em estudo"
-                          : "Disponível"}
+                      {!isAuthenticated
+                        ? course.chapterIds.includes(chapters[0]?.id)
+                          ? "Primeira aula aberta"
+                          : "Entre para acessar"
+                        : courseFinished
+                          ? "Concluído"
+                          : selected
+                            ? "Em estudo"
+                            : "Disponível"}
                     </span>
                   </div>
                   <p className="ediv-learning-eyebrow">{course.eyebrow}</p>
@@ -214,27 +220,31 @@ export function LearningCourseCarousel({
                       {minutes} min de leitura estimada
                     </span>
                   </div>
-                  <div className="ediv-learning-progress-label ediv-learning-course-progress-label">
-                    <span>Exercícios concluídos</span>
-                    <strong>
-                      {count}
-                      <span> / {course.chapterIds.length}</span>
-                    </strong>
-                  </div>
-                  <div
-                    className="ediv-learning-progress-track"
-                    role="progressbar"
-                    aria-label={"Exercícios concluídos: " + course.title}
-                    aria-valuemin={0}
-                    aria-valuemax={Math.max(1, course.chapterIds.length)}
-                    aria-valuenow={count}
-                  >
-                    <span
-                      style={{
-                        transform: `scaleX(${course.chapterIds.length ? count / course.chapterIds.length : 0})`,
-                      }}
-                    />
-                  </div>
+                  {isAuthenticated && (
+                    <>
+                      <div className="ediv-learning-progress-label ediv-learning-course-progress-label">
+                        <span>Exercícios concluídos</span>
+                        <strong>
+                          {count}
+                          <span> / {course.chapterIds.length}</span>
+                        </strong>
+                      </div>
+                      <div
+                        className="ediv-learning-progress-track"
+                        role="progressbar"
+                        aria-label={"Exercícios concluídos: " + course.title}
+                        aria-valuemin={0}
+                        aria-valuemax={Math.max(1, course.chapterIds.length)}
+                        aria-valuenow={count}
+                      >
+                        <span
+                          style={{
+                            transform: `scaleX(${course.chapterIds.length ? count / course.chapterIds.length : 0})`,
+                          }}
+                        />
+                      </div>
+                    </>
+                  )}
                   <p className="ediv-learning-course-video-status">
                     {availableVideos
                       ? `${availableVideos} ${availableVideos === 1 ? "vídeo disponível" : "vídeos disponíveis"}`

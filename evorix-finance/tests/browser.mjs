@@ -682,6 +682,7 @@ try {
     "Progresso de aula sobrevive à recarga e outra sessão",
     async () => {
       await page.goto(root + "/app/aprender#risco");
+      await page.getByRole("tab", { name: "Testes", exact: true }).click();
       await page
         .getByRole("button", {
           name: "Não; pode reduzir concentração, mas não elimina riscos",

@@ -375,3 +375,9 @@
     color: var(--ediv-muted);
   }
 }
+
+/* Route announcements focus the heading without drawing a control outline. */
+.ph-home h1[tabindex="-1"]:focus {
+  outline: none !important;
+  box-shadow: none !important;
+}

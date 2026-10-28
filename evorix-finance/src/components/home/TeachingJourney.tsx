@@ -11,7 +11,7 @@ const teachingSteps = [
     detail:
       "No ranking, abra a pesquisa da empresa para consultar o negócio, os indicadores publicados e o contexto que acompanha os números.",
     action: "Conhecer as empresas",
-    path: "/ranking",
+    path: "/#caderno-de-exemplo",
     diagram: "Negócio → receita → resultado",
   },
   {
@@ -428,7 +428,11 @@ export function TeachingJourney() {
                     <figcaption>Exemplo didático · {step.diagram}</figcaption>
                   </figure>
                   <p className="ph-teaching-detail">{step.detail}</p>
-                  <Link to={step.path} className="ph-teaching-action">
+                  <Link
+                    reloadDocument={step.path.includes("#")}
+                    to={step.path}
+                    className="ph-teaching-action"
+                  >
                     {step.action}
                     <ArrowUpRight size={16} aria-hidden="true" />
                   </Link>

@@ -2,7 +2,7 @@ import { BookOpen } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import { AccountGate } from "./AccountGate";
 import { OrbitCoins } from "./OrbitCoins";
-import { ResearchAvailability } from "./ResearchAvailability";
+import { ResearchSample } from "./home/ResearchSample";
 
 export function RankingAccessLanding({
   compact = false,
@@ -38,15 +38,17 @@ export function RankingAccessLanding({
               Compare os cenários e abra uma empresa para ler a tese, os riscos
               e os dados que sustentam a previsão.
             </p>
-            <ResearchAvailability />
           </div>
           <div className="shrink-0 self-start sm:self-center">
             <OrbitCoins variant="ranking" size="sm" />
           </div>
         </div>
       </header>
+      <div className="ph-home">
+        <ResearchSample showAccessActions={false} />
+      </div>
       <AccountGate
-        title="Entre para consultar as pesquisas"
+        title="Entre para acessar o ranking completo"
         description="Use sua conta ou crie uma. O acesso é liberado depois de confirmar seu e-mail."
         next={destination}
         compact

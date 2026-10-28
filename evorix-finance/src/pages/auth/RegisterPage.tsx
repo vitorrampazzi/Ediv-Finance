@@ -3,6 +3,7 @@ import type { FormEvent } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 
 import { useAuth } from "../../context/authContext";
+import { ApiError } from "../../lib/api";
 import { authLink, safeAuthDestination } from "../../lib/authDestination";
 import { PasswordInput } from "../../components/PasswordInput";
 import { PasswordRequirements } from "../../components/PasswordRequirements";
@@ -12,7 +13,6 @@ import {
   passwordMaxLength,
   passwordPolicyHint,
 } from "../../../password-policy.mjs";
-import { ResearchAvailability } from "../../components/ResearchAvailability";
 import { useRegistrationAvailability } from "../../hooks/useRegistrationAvailability";
 
 import { AuthShell, ErrorMessage } from "../../components/auth/AuthShell";
@@ -75,7 +75,9 @@ export function RegisterPage() {
       setSubmittedEmail(email.trim());
       setPassword("");
     } catch (reason) {
-      setShowConfirmationHelp(true);
+      setShowConfirmationHelp(
+        reason instanceof ApiError && reason.code === "EMAIL_NOT_VERIFIED",
+      );
       setError(
         reason instanceof Error
           ? reason.message
@@ -93,9 +95,8 @@ export function RegisterPage() {
   return (
     <AuthShell
       title="Criar conta grátis"
-      description="Crie sua conta gratuita. Enviaremos um link para o e-mail informado; confirme o endereço para liberar o acesso."
+      description="Conta gratuita. Confirme seu e-mail para liberar o acesso."
     >
-      {!message && availability.current?.available && <ResearchAvailability />}
       {message ? (
         <>
           <p role="status" className="mt-5 notice-success">
@@ -246,9 +247,8 @@ export function RegisterPage() {
           />
         )}
       <p className="mt-4 text-xs leading-relaxed text-evo-textSec">
-        O cadastro guarda seu nome, e-mail e senha protegida para autenticação.
-        Consulte nossa política de privacidade e uso. Não informe CPF, dados
-        bancários ou senha da corretora.
+        Usamos nome, e-mail e senha para sua conta. Não informe dados bancários
+        nem senha da corretora.
       </p>
       <Link
         className="mt-3 block text-xs text-evo-accent underline"

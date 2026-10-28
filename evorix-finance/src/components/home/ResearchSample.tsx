@@ -8,6 +8,7 @@ import {
   formatDividendValue,
 } from "../../../dividend-analysis.mjs";
 import "./public-sections.css";
+import "./public-home.css";
 
 const metrics = [
   "estimatedGrossDividendYield",
@@ -25,7 +26,11 @@ type PublicRanking = {
   }[];
 };
 
-export function ResearchSample() {
+export function ResearchSample({
+  showAccessActions = true,
+}: {
+  showAccessActions?: boolean;
+}) {
   const [publication, setPublication] = useState<PublicRanking | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -67,7 +72,7 @@ export function ResearchSample() {
         <header className="ph-section-heading">
           <div>
             <h2 id="ph-sample-title" className="display-title ph-section-title">
-              Conheça o ranking de ações
+              Pesquisas de ações
             </h2>
             <p className="ph-section-description">
               As três primeiras empresas da publicação mais recente, na ordem da
@@ -151,35 +156,37 @@ export function ResearchSample() {
             </ol>
           </>
         )}
-        <div
-          className="ph-ranking-unlock"
-          aria-labelledby="ph-ranking-unlock-title"
-        >
-          <div>
-            <h3 id="ph-ranking-unlock-title" className="display-title">
-              Desbloqueie o ranking completo de ações
-            </h3>
-            <p>
-              Crie sua conta gratuita e tenha acesso a todas as empresas
-              analisadas, indicadores, gráficos e insights para aprofundar seus
-              estudos sobre investimentos.
-            </p>
+        {showAccessActions && (
+          <div
+            className="ph-ranking-unlock"
+            aria-labelledby="ph-ranking-unlock-title"
+          >
+            <div>
+              <h3 id="ph-ranking-unlock-title" className="display-title">
+                Desbloqueie o ranking completo de ações
+              </h3>
+              <p>
+                Crie sua conta gratuita e tenha acesso a todas as empresas
+                analisadas, indicadores, gráficos e insights para aprofundar
+                seus estudos sobre investimentos.
+              </p>
+            </div>
+            <div className="ph-ranking-unlock-actions">
+              <Link
+                className="ph-primary"
+                to={authLink("cadastro", "/app/ranking")}
+              >
+                Criar conta gratuita
+              </Link>
+              <Link
+                className="ph-inline-link"
+                to={authLink("entrar", "/app/ranking")}
+              >
+                Já tenho uma conta
+              </Link>
+            </div>
           </div>
-          <div className="ph-ranking-unlock-actions">
-            <Link
-              className="ph-primary"
-              to={authLink("cadastro", "/app/ranking")}
-            >
-              Criar conta gratuita
-            </Link>
-            <Link
-              className="ph-inline-link"
-              to={authLink("entrar", "/app/ranking")}
-            >
-              Já tenho uma conta
-            </Link>
-          </div>
-        </div>
+        )}
       </div>
     </section>
   );
