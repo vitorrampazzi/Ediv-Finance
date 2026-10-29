@@ -31,9 +31,9 @@ test("llms.txt contém somente links públicos canônicos e descreve o acesso re
   }
 });
 
-test("home apresenta dividendos e pesquisa de ações nos metadados", () => {
+test("home usa exatamente o nome público da marca no título", () => {
   const home = pageMetadata("/");
-  assert.match(home.title, /Dividendos.*pesquisa de ações/);
+  assert.equal(home.title, "Escola do Dividendo");
   assert.ok(home.title.length <= 60);
   assert.ok(home.description.length <= 160);
   assert.equal(home.canonical, "https://escoladodividendo.com.br/");

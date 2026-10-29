@@ -1,7 +1,7 @@
 export const siteOrigin = "https://escoladodividendo.com.br";
 export const publicPages = {
   "/": {
-    title: "Dividendos e pesquisa de ações | Escola do Dividendo",
+    title: "Escola do Dividendo",
     description:
       "Estude dividendos e leia pesquisas de ações na Escola do Dividendo. Entenda o negócio, os cenários e os riscos de cada empresa, com aulas e exemplos.",
   },

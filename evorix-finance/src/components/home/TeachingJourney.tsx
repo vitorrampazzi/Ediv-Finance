@@ -271,20 +271,17 @@ export function TeachingJourney() {
   useEffect(() => {
     const section = sectionRef.current;
     const studio = studioRef.current;
-    if (!section || !studio || !window.IntersectionObserver) return;
+    if (!section || !studio) return;
 
-    const visibleSteps = new Set<number>();
     let frame = 0;
-    let resizeFrame = 0;
-    let stepObserver: IntersectionObserver | null = null;
 
     const updateSelection = () => {
       frame = 0;
       const readingLine = window.innerHeight * 0.52;
       let closest = -1;
       let distance = Infinity;
-      for (const index of visibleSteps) {
-        const rectangle = stepRefs.current[index]?.getBoundingClientRect();
+      for (const [index, step] of stepRefs.current.entries()) {
+        const rectangle = step?.getBoundingClientRect();
         if (!rectangle) continue;
         const currentDistance = Math.abs(
           rectangle.top + rectangle.height / 2 - readingLine,
@@ -298,27 +295,10 @@ export function TeachingJourney() {
         setActive((current) => (current === closest ? current : closest));
     };
 
-    const observeSteps = () => {
-      stepObserver?.disconnect();
-      visibleSteps.clear();
-      const topMargin = Math.round(window.innerHeight * 0.2);
-      const bottomMargin = Math.round(window.innerHeight * 0.24);
-      stepObserver = new IntersectionObserver(
-        (entries) => {
-          for (const entry of entries) {
-            const index = stepRefs.current.indexOf(entry.target as HTMLElement);
-            if (index < 0) continue;
-            if (entry.isIntersecting) visibleSteps.add(index);
-            else visibleSteps.delete(index);
-          }
-          if (!frame) frame = requestAnimationFrame(updateSelection);
-        },
-        {
-          rootMargin: `-${topMargin}px 0px -${bottomMargin}px 0px`,
-          threshold: [0, 0.25, 0.55, 1],
-        },
-      );
-      for (const step of stepRefs.current) if (step) stepObserver.observe(step);
+    // Intersection thresholds do not track the crossing of the reading line.
+    // Coalesce scroll/resize events into one measurement of the three steps.
+    const scheduleSelection = () => {
+      if (!frame) frame = requestAnimationFrame(updateSelection);
     };
 
     const loopElements = [
@@ -327,30 +307,28 @@ export function TeachingJourney() {
         "[data-ph-teaching-mobile-loop]",
       ),
     ];
-    const visibilityObserver = new IntersectionObserver(
-      (entries) => {
-        for (const entry of entries) {
-          (entry.target as HTMLElement).dataset.phInview = String(
-            entry.isIntersecting && entry.intersectionRatio >= 0.2,
-          );
-        }
-      },
-      { threshold: [0, 0.2] },
-    );
-    for (const element of loopElements) visibilityObserver.observe(element);
-    observeSteps();
+    const visibilityObserver =
+      window.IntersectionObserver &&
+      new IntersectionObserver(
+        (entries) => {
+          for (const entry of entries) {
+            (entry.target as HTMLElement).dataset.phInview = String(
+              entry.isIntersecting && entry.intersectionRatio >= 0.2,
+            );
+          }
+        },
+        { threshold: [0, 0.2] },
+      );
+    for (const element of loopElements) visibilityObserver?.observe(element);
+    scheduleSelection();
 
-    const resize = () => {
-      cancelAnimationFrame(resizeFrame);
-      resizeFrame = requestAnimationFrame(observeSteps);
-    };
-    window.addEventListener("resize", resize);
+    window.addEventListener("scroll", scheduleSelection, { passive: true });
+    window.addEventListener("resize", scheduleSelection);
     return () => {
-      stepObserver?.disconnect();
-      visibilityObserver.disconnect();
+      visibilityObserver?.disconnect();
       cancelAnimationFrame(frame);
-      cancelAnimationFrame(resizeFrame);
-      window.removeEventListener("resize", resize);
+      window.removeEventListener("scroll", scheduleSelection);
+      window.removeEventListener("resize", scheduleSelection);
       for (const element of loopElements) element.dataset.phInview = "false";
     };
   }, []);

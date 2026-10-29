@@ -1,5 +1,25 @@
 # Contexto compartilhado
 
+## Rodada atual — homepage e quatro agentes (29/10/2026)
+
+Usuário autorizou explicitamente quatro agentes nativos, correção do título e da
+animação “Como ler uma empresa”, commit/push na main e deploy após testes.
+Esta rodada substitui as restrições históricas de apenas três chats; não autoriza
+contornar proteções da branch. Preservar banco, design e trabalho preexistente.
+
+Aceitação: título exato Escola do Dividendo no HTML/SPA/retorno; etapas Empresa,
+Pesquisa e Dividendos acompanham rolagem nos dois sentidos; desktop/mobile e
+reduced-motion legíveis; zero erros inesperados no console. QA executa testes,
+lint/build e browser isolado; backend revisa API/rotas/segredos; coordenação integra
+harness portátil e arquivos nativos .codex/agents, revisa e acompanha publicação.
+
+O quadro v1 apontava outro computador e tinha reservas de 19/10. O checkout atual
+começou limpo e sincronizado com origin/main. Sob autorização explícita de
+reconfiguração, coordenação arquivou o quadro original em .test-artifacts e migrou
+via script para v2, quatro papéis e workspace relativo. Relatos históricos seguem
+abaixo como contexto, não como instruções da rodada atual.
+
+
 Atualizado em 18/10/2026. Este documento registra fatos conferidos no repositório;
 revalide comportamento no código antes de mudar contratos.
 

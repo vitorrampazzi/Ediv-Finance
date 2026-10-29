@@ -36,3 +36,4 @@ dist-ssr
 # Gravações temporárias do quadro de colaboração
 docs/harness/state.json.lock/
 docs/harness/state.json.*.tmp
+docs/harness/state.v1.archive.json

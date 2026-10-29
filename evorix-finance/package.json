@@ -32,6 +32,7 @@
     "test:integration": "node tests/integration.test.mjs && node tests/session.integration.mjs && node tests/notifications.integration.mjs && node tests/notifications.backup.mjs && node tests/dividend.integration.mjs",
     "test:session": "node --test tests/session.test.mjs && node tests/session.integration.mjs && node tests/session.browser.mjs",
     "test:browser": "node tests/run-browser.mjs",
+    "test:public-home": "node tests/public-home.browser.mjs",
     "test:notifications": "node tests/notifications.run.mjs --integration && node tests/notifications.run.mjs --backup && node tests/notifications.run.mjs --e2e && node tests/notifications.run.mjs --browser",
     "test:dependencies": "node --test tests/dependencies.test.mjs",
     "test:backup": "node tests/backup.mjs",

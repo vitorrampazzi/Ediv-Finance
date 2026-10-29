@@ -1,42 +1,29 @@
 {
-  "version": 1,
-  "workspace": "C:/Users/vitor/.codex/worktrees/11a6/Evorix-finance/evorix-finance",
+  "version": 2,
+  "workspace": ".",
   "sessions": {
     "coordenacao": {
       "phase": "revisao",
-      "summary": "95 testes/lint/build aprovados; CI MySQL integração passou, browser/restore em execução no PR3",
-      "updatedAt": "2026-10-19T06:17:42.890Z",
-      "claims": [
-        "analytics-policy.mjs",
-        "tests/analytics.test.mjs",
-        "docs/harness/relatos/coordenacao.md",
-        "docs/harness/contexto.md",
-        "docs/correcoes-pre-lancamento.md",
-        ".test-artifacts/round9-unit.log",
-        ".test-artifacts/round9-lint.log",
-        ".test-artifacts/round9-build.log",
-        ".test-artifacts/release-manifest.mjs",
-        ".test-artifacts/release-manifest.json",
-        "package.json",
-        "visitor-learning-progress.d.mts",
-        ".test-artifacts/round9-ci-summary.json",
-        ".test-artifacts/round9-preview.log",
-        ".test-artifacts/round9-preview-error.log",
-        ".test-artifacts/round9-browser-summary.json",
-        "tests/run-browser.mjs",
-        "tests/browser.mjs"
-      ]
+      "summary": "128 testes/Node22, lint/build e browser7/7 aprovados; integracao remota protegida pendente",
+      "updatedAt": "2026-10-29T19:40:08.038Z",
+      "claims": []
     },
     "interface": {
       "phase": "revisao",
-      "summary": "Regressão viewport exige URL/fontes visível/zero erros; indicador P3 registrado; syntax/lint OK",
-      "updatedAt": "2026-10-19T06:31:04.829Z",
+      "summary": "Frontend implementado; metadados 5/5 e diff/harness aprovados; aguardando QA browser e deps",
+      "updatedAt": "2026-10-29T19:34:55.391Z",
       "claims": []
     },
     "backend": {
       "phase": "revisao",
-      "summary": "Dreno fixture5s entregue: race SQL rechecada semawait antes reset;4testes+lint/syntax/harnessOK; CIpendente",
-      "updatedAt": "2026-10-19T01:44:10.820Z",
+      "summary": "Auditoria e revisao independente concluidas; sem bloqueador estatico; aguarda gates QA/CI e publicacao protegida",
+      "updatedAt": "2026-10-29T19:38:35.294Z",
+      "claims": []
+    },
+    "qa": {
+      "phase": "revisao",
+      "summary": "Node22:128 testes/lint/build e7 checks browser aprovados; CI SQL/backup pendente",
+      "updatedAt": "2026-10-29T19:40:04.216Z",
       "claims": []
     }
   }

@@ -4,6 +4,20 @@ Harness é o ambiente que torna o trabalho verificável: contexto, limites de
 edição, ferramentas, feedback e critérios de conclusão. Aqui, isso é implementado
 por AGENTS.md, documentos curtos, quadro persistente, reservas e testes.
 
+## Quatro agentes nativos (29/10/2026)
+
+Orquestrador (`coordenacao`) delega por ferramentas nativas aos agentes
+`frontend` (`interface`), `backend` e `qa`. As definições ficam em
+`.codex/agents/` e os limites em `.codex/config.toml`, ambos na raiz Git.
+Inicie o cliente nessa raiz.
+O modelo e as permissões são herdados; os TOMLs não concedem acesso adicional.
+
+O quadro v2 usa `workspace: "."`, relativo à raiz do aplicativo inferida pelo
+script. Para retomar um quadro v1 de outro computador, inspecione as reservas e
+obtenha autorização para a retomada antes de executar `node scripts/harness.mjs upgrade`.
+O comando arquiva o quadro anterior em arquivo ignorado e libera as reservas
+antigas; não substitui comunicação com agentes que ainda estejam trabalhando.
+
 ## Ciclo de trabalho
 
 1. Ler contexto, quadro e relatos. Identificar papel e objetivo autorizado.
