@@ -109,14 +109,29 @@
   transform-box: fill-box;
   transform-origin: center bottom;
 }
-.ph-teaching-mini[data-ph-inview="true"] .ph-teaching-bar {
+.ph-teaching-mini[data-ph-inview="true"] .ph-teaching-bar,
+.ph-teaching-studio[data-ph-inview="true"] .ph-is-active .ph-teaching-bar {
   animation: ph-teaching-bar-grow 350ms var(--ph-ease) both;
 }
-.ph-teaching-mini[data-ph-inview="true"] .ph-teaching-bar-two {
+.ph-teaching-mini[data-ph-inview="true"] .ph-teaching-bar-two,
+.ph-teaching-studio[data-ph-inview="true"] .ph-is-active .ph-teaching-bar-two {
   animation-delay: 35ms;
 }
-.ph-teaching-mini[data-ph-inview="true"] .ph-teaching-bar-three {
+.ph-teaching-mini[data-ph-inview="true"] .ph-teaching-bar-three,
+.ph-teaching-studio[data-ph-inview="true"]
+  .ph-is-active
+  .ph-teaching-bar-three {
   animation-delay: 70ms;
+}
+.ph-teaching-mini[data-ph-inview="true"] .ph-teaching-revision,
+.ph-teaching-studio[data-ph-inview="true"] .ph-is-active .ph-teaching-revision {
+  animation: ph-teaching-reveal 500ms var(--ph-ease) both;
+}
+.ph-teaching-mini[data-ph-inview="true"] .ph-teaching-dividend-signal,
+.ph-teaching-studio[data-ph-inview="true"]
+  .ph-is-active
+  .ph-teaching-dividend-signal {
+  animation: ph-teaching-flow 1400ms linear 2;
 }
 @media (hover: hover) and (pointer: fine) {
   .ph-teaching-action:hover {
@@ -134,7 +149,9 @@
     padding: 2rem 0;
   }
 }
-@media (min-width: 960px) {
+/* Keep each illustration beside its text when a short viewport cannot fit
+   the shared sticky studio and its introduction. */
+@media (min-width: 960px) and (min-height: 700px) {
   .ph-teaching-layout {
     display: grid;
     grid-template-columns: minmax(0, 1.06fr) minmax(0, 0.94fr);
@@ -236,6 +253,26 @@
   to {
     transform: scaleY(1);
     opacity: 1;
+  }
+}
+@keyframes ph-teaching-reveal {
+  from {
+    opacity: 0.5;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes ph-teaching-flow {
+  from {
+    stroke-dasharray: 2 27;
+    stroke-dashoffset: 58;
+  }
+  to {
+    stroke-dasharray: 2 27;
+    stroke-dashoffset: 0;
   }
 }
 @media (prefers-reduced-motion: reduce) {

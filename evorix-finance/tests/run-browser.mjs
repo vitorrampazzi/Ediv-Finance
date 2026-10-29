@@ -4,6 +4,7 @@ import { fileURLToPath } from "node:url";
 // Separate processes give each suite its own database pool and disposable schema.
 // Run sequentially because the browser suites share the same local Vite port.
 const suites = [
+  "public-home.browser.mjs",
   "public-rankings.browser.mjs",
   "dividend.browser.mjs",
   "notifications.browser.mjs",
