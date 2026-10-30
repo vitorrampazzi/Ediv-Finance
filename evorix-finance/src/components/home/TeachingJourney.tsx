@@ -1,5 +1,5 @@
 import { useEffect, useId, useRef, useState } from "react";
-import { ArrowUpRight } from "lucide-react";
+import { ArrowUpRight, Pause, Play } from "lucide-react";
 import { Link } from "react-router-dom";
 import "./teaching-journey.css";
 
@@ -267,6 +267,7 @@ export function TeachingJourney() {
   const studioRef = useRef<HTMLElement>(null);
   const stepRefs = useRef<(HTMLElement | null)[]>([]);
   const [active, setActive] = useState(0);
+  const [paused, setPaused] = useState(false);
 
   useEffect(() => {
     const section = sectionRef.current;
@@ -277,7 +278,16 @@ export function TeachingJourney() {
 
     const updateSelection = () => {
       frame = 0;
-      const readingLine = window.innerHeight * 0.52;
+      // On narrow screens the shared illustration sits above the reading area.
+      const studioBottom = studio.getBoundingClientRect().bottom;
+      const readingLine =
+        window.innerWidth < 960 &&
+        !(window.innerWidth >= 480 && window.innerHeight <= 550)
+          ? Math.max(
+              window.innerHeight * 0.52,
+              studioBottom + (window.innerHeight - studioBottom) * 0.45,
+            )
+          : window.innerHeight * 0.52;
       let closest = -1;
       let distance = Infinity;
       for (const [index, step] of stepRefs.current.entries()) {
@@ -301,35 +311,34 @@ export function TeachingJourney() {
       if (!frame) frame = requestAnimationFrame(updateSelection);
     };
 
-    const loopElements = [
-      studio,
-      ...section.querySelectorAll<HTMLElement>(
-        "[data-ph-teaching-mobile-loop]",
-      ),
-    ];
+    let visible = false;
+    const updatePlayback = () => {
+      studio.dataset.phInview = String(visible && !document.hidden);
+    };
     const visibilityObserver =
       window.IntersectionObserver &&
       new IntersectionObserver(
         (entries) => {
-          for (const entry of entries) {
-            (entry.target as HTMLElement).dataset.phInview = String(
-              entry.isIntersecting && entry.intersectionRatio >= 0.2,
-            );
-          }
+          visible = entries.some(
+            (entry) => entry.isIntersecting && entry.intersectionRatio >= 0.2,
+          );
+          updatePlayback();
         },
         { threshold: [0, 0.2] },
       );
-    for (const element of loopElements) visibilityObserver?.observe(element);
+    visibilityObserver?.observe(studio);
     scheduleSelection();
 
     window.addEventListener("scroll", scheduleSelection, { passive: true });
     window.addEventListener("resize", scheduleSelection);
+    document.addEventListener("visibilitychange", updatePlayback);
     return () => {
       visibilityObserver?.disconnect();
       cancelAnimationFrame(frame);
       window.removeEventListener("scroll", scheduleSelection);
       window.removeEventListener("resize", scheduleSelection);
-      for (const element of loopElements) element.dataset.phInview = "false";
+      document.removeEventListener("visibilitychange", updatePlayback);
+      studio.dataset.phInview = "false";
     };
   }, []);
 
@@ -339,6 +348,7 @@ export function TeachingJourney() {
       className="ph-teaching"
       aria-labelledby={titleId}
       ref={sectionRef}
+      data-ph-paused={paused}
     >
       <div className="ph-teaching-layout">
         <div className="ph-teaching-fixed">
@@ -381,11 +391,23 @@ export function TeachingJourney() {
               <span>Exemplo didático</span>
               <span>{teachingSteps[active].diagram}</span>
             </figcaption>
+            <button
+              className="ph-teaching-motion-control"
+              type="button"
+              aria-pressed={paused}
+              onClick={() => setPaused((value) => !value)}
+            >
+              {paused ? (
+                <Play size={14} aria-hidden="true" />
+              ) : (
+                <Pause size={14} aria-hidden="true" />
+              )}
+              {paused ? "Reproduzir ilustração" : "Pausar ilustração"}
+            </button>
           </figure>
         </div>
         <ol className="ph-teaching-steps">
           {teachingSteps.map((step, index) => {
-            const Scene = scenes[index];
             return (
               <li key={step.name}>
                 <article
@@ -397,14 +419,6 @@ export function TeachingJourney() {
                   <p className="ph-teaching-step-label">{step.name}</p>
                   <h3 className="display-title">{step.title}</h3>
                   <p className="ph-teaching-step-text">{step.text}</p>
-                  <figure
-                    className="ph-teaching-mini"
-                    data-ph-teaching-mobile-loop
-                    data-ph-inview="false"
-                  >
-                    <Scene />
-                    <figcaption>Exemplo didático · {step.diagram}</figcaption>
-                  </figure>
                   <p className="ph-teaching-detail">{step.detail}</p>
                   <Link
                     reloadDocument={step.path.includes("#")}
