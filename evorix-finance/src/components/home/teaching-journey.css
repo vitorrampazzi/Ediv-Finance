@@ -7,6 +7,9 @@
   width: min(100%, 1200px);
   margin: 0 auto;
 }
+.ph-teaching-fixed {
+  display: contents;
+}
 .ph-teaching-title {
   max-width: 12ch;
   margin-top: 1rem;
@@ -22,21 +25,111 @@
   line-height: 1.7;
 }
 .ph-teaching-studio {
+  position: sticky;
+  top: calc(5rem + env(safe-area-inset-top));
+  z-index: 2;
+  margin-top: 1.5rem;
+  padding: 0.65rem 0.75rem 0.15rem;
+  border: 1px solid var(--ediv-line);
+  border-top-color: var(--ediv-accent);
+  border-radius: 12px;
+  background: var(--ediv-inset);
+}
+.ph-teaching-stage-key {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.5rem;
+  color: var(--ediv-muted);
+  font-size: 0.75rem;
+}
+.ph-teaching-stage-key > span {
+  padding-bottom: 0.35rem;
+  border-bottom: 2px solid transparent;
+  transition:
+    color 250ms ease,
+    border-color 250ms ease;
+}
+.ph-teaching-stage-key .ph-is-current {
+  color: var(--ediv-accent);
+  border-bottom-color: currentColor;
+}
+.ph-teaching-scene-stack {
+  display: grid;
+  margin: 0.25rem 0;
+}
+.ph-teaching-scene {
+  grid-area: 1 / 1;
+  opacity: 0;
+  transform: translateY(8px);
+  transition:
+    opacity 450ms var(--ph-ease),
+    transform 550ms var(--ph-ease);
+  pointer-events: none;
+}
+.ph-teaching-scene.ph-is-active {
+  opacity: 1;
+  transform: none;
+}
+.ph-teaching-svg {
+  display: block;
+  width: 100%;
+  height: clamp(110px, 19svh, 150px);
+}
+.ph-teaching-svg[aria-hidden="true"] {
+  background: var(--ediv-inset);
+  color-scheme: inherit;
+  forced-color-adjust: none;
+}
+.ph-teaching-studio > figcaption {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.75rem;
+  color: var(--ediv-muted);
+  font-size: 0.6875rem;
+  line-height: 1.5;
+}
+.ph-teaching-studio > figcaption > span:first-child {
   display: none;
 }
+.ph-teaching-studio > figcaption > span:last-child {
+  max-width: none;
+  text-align: left;
+}
+.ph-teaching-motion-control {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  min-height: 44px;
+  margin: 0 auto;
+  padding: 0.4rem;
+  color: var(--ediv-muted);
+  font-size: 0.75rem;
+  cursor: pointer;
+}
+.ph-teaching-motion-control:hover {
+  color: var(--ediv-text);
+}
+.ph-teaching-motion-control:focus-visible,
+.ph-teaching-action:focus-visible {
+  outline: 2px solid var(--ediv-accent);
+  outline-offset: 4px;
+}
 .ph-teaching-steps {
-  margin: 2rem 0 0;
+  margin: 1.5rem 0 0;
   padding: 0;
   list-style: none;
 }
 .ph-teaching-step {
+  display: flex;
+  min-height: 340px;
+  flex-direction: column;
+  align-items: start;
+  justify-content: center;
   padding: 1.75rem 0;
-  border-top: 1px solid var(--ph-border, var(--ediv-line));
+  border-top: 1px solid var(--ediv-line);
 }
 .ph-teaching-step-label {
-  display: flex;
-  align-items: center;
-  gap: 0.8rem;
   margin-bottom: 0.8rem;
   color: var(--ediv-accent);
   font-size: 0.8125rem;
@@ -53,32 +146,9 @@
   font-size: 0.9375rem;
   line-height: 1.7;
 }
-.ph-teaching-mini {
-  max-width: 29rem;
-  margin: 1.25rem 0;
-  padding: 0.5rem 0.75rem 0.85rem;
-  border: 1px solid var(--ph-border, var(--ediv-line));
-  border-radius: 12px;
-  background: var(--ediv-inset);
-}
-.ph-teaching-svg {
-  display: block;
-  width: 100%;
-  height: auto;
-  max-height: 230px;
-}
-.ph-teaching-svg[aria-hidden="true"] {
-  background: var(--ediv-inset);
-  color-scheme: inherit;
-  forced-color-adjust: none;
-}
-.ph-teaching-mini figcaption {
-  color: var(--ediv-muted);
-  font-size: 0.75rem;
-  line-height: 1.5;
-}
 .ph-teaching-detail {
   max-width: 43ch;
+  margin-top: 0.85rem;
   color: var(--ediv-muted);
   font-size: 0.875rem;
   line-height: 1.65;
@@ -97,41 +167,39 @@
 .ph-teaching-action:active {
   opacity: 0.7;
 }
-.ph-teaching-action:focus-visible {
-  outline: 2px solid var(--ediv-accent);
-  outline-offset: 5px;
-}
-.ph-teaching-dividend-signal {
-  stroke-dasharray: none;
-  stroke-opacity: 0.6;
-}
+/* The original moving dividend signal (33cbd2b) is shared by all viewports.
+   Other scenes now have equally persistent, restrained motion. */
 .ph-teaching-bar {
   transform-box: fill-box;
   transform-origin: center bottom;
+  animation: ph-teaching-bar-grow 3.6s var(--ph-ease) infinite;
 }
-.ph-teaching-mini[data-ph-inview="true"] .ph-teaching-bar,
-.ph-teaching-studio[data-ph-inview="true"] .ph-is-active .ph-teaching-bar {
-  animation: ph-teaching-bar-grow 350ms var(--ph-ease) both;
+.ph-teaching-bar-two {
+  animation-delay: -0.35s;
 }
-.ph-teaching-mini[data-ph-inview="true"] .ph-teaching-bar-two,
-.ph-teaching-studio[data-ph-inview="true"] .ph-is-active .ph-teaching-bar-two {
-  animation-delay: 35ms;
+.ph-teaching-bar-three {
+  animation-delay: -0.7s;
 }
-.ph-teaching-mini[data-ph-inview="true"] .ph-teaching-bar-three,
+.ph-teaching-revision {
+  animation: ph-teaching-revision-enter 3.8s ease-in-out infinite;
+}
+.ph-teaching-dividend-signal {
+  stroke-dasharray: 2 27;
+  animation: ph-teaching-flow 1.8s linear infinite;
+}
+.ph-teaching-studio
+  :is(.ph-teaching-bar, .ph-teaching-revision, .ph-teaching-dividend-signal) {
+  animation-play-state: paused;
+}
 .ph-teaching-studio[data-ph-inview="true"]
   .ph-is-active
-  .ph-teaching-bar-three {
-  animation-delay: 70ms;
+  :is(.ph-teaching-bar, .ph-teaching-revision, .ph-teaching-dividend-signal) {
+  animation-play-state: running;
 }
-.ph-teaching-mini[data-ph-inview="true"] .ph-teaching-revision,
-.ph-teaching-studio[data-ph-inview="true"] .ph-is-active .ph-teaching-revision {
-  animation: ph-teaching-reveal 500ms var(--ph-ease) both;
-}
-.ph-teaching-mini[data-ph-inview="true"] .ph-teaching-dividend-signal,
-.ph-teaching-studio[data-ph-inview="true"]
-  .ph-is-active
-  .ph-teaching-dividend-signal {
-  animation: ph-teaching-flow 1400ms linear 2;
+.ph-teaching[data-ph-paused="true"]
+  .ph-teaching-studio
+  :is(.ph-teaching-bar, .ph-teaching-revision, .ph-teaching-dividend-signal) {
+  animation-play-state: paused;
 }
 @media (hover: hover) and (pointer: fine) {
   .ph-teaching-action:hover {
@@ -142,16 +210,15 @@
   .ph-teaching {
     padding: 4rem 2rem;
   }
-  .ph-teaching-steps {
-    margin-top: 2.5rem;
-  }
   .ph-teaching-step {
+    min-height: 360px;
     padding: 2rem 0;
   }
+  .ph-teaching-stage-key {
+    font-size: 0.8125rem;
+  }
 }
-/* Keep each illustration beside its text when a short viewport cannot fit
-   the shared sticky studio and its introduction. */
-@media (min-width: 960px) and (min-height: 700px) {
+@media (min-width: 960px) {
   .ph-teaching-layout {
     display: grid;
     grid-template-columns: minmax(0, 1.06fr) minmax(0, 0.94fr);
@@ -159,56 +226,26 @@
     gap: clamp(3rem, 6vw, 6rem);
   }
   .ph-teaching-fixed {
+    display: block;
+    position: sticky;
+    top: calc(6rem + env(safe-area-inset-top));
     min-width: 0;
   }
   .ph-teaching-studio {
-    display: block;
+    position: relative;
+    top: auto;
     margin-top: 2rem;
-    padding: 1rem 1.25rem;
-    border: 1px solid var(--ph-border, var(--ediv-line));
-    border-radius: 16px;
-    background: var(--ediv-inset);
+    padding: 1rem 1.25rem 0.3rem;
   }
-  .ph-teaching-stage-key {
-    display: flex;
-    justify-content: space-between;
-    flex-wrap: wrap;
-    gap: 0.75rem;
-    color: var(--ediv-muted);
-    font-size: 0.8125rem;
-  }
-  .ph-teaching-stage-key > span {
-    transition: color 150ms ease;
-  }
-  .ph-teaching-stage-key .ph-is-current {
-    color: var(--ediv-accent);
-  }
-  .ph-teaching-scene-stack {
-    display: grid;
-    margin: 0.75rem 0;
-  }
-  .ph-teaching-scene {
-    grid-area: 1 / 1;
-    opacity: 0;
-    transform: translateY(4px);
-    transition:
-      opacity 200ms ease,
-      transform 250ms var(--ph-ease);
-    pointer-events: none;
-  }
-  .ph-teaching-scene.ph-is-active {
-    opacity: 1;
-    transform: none;
+  .ph-teaching-svg {
+    height: auto;
+    max-height: 260px;
   }
   .ph-teaching-studio > figcaption {
-    display: flex;
-    min-height: 2.5rem;
-    align-items: start;
-    justify-content: space-between;
-    gap: 1rem;
-    color: var(--ediv-muted);
     font-size: 0.75rem;
-    line-height: 1.5;
+  }
+  .ph-teaching-studio > figcaption > span:first-child {
+    display: inline;
   }
   .ph-teaching-studio > figcaption > span:last-child {
     max-width: 25ch;
@@ -218,61 +255,90 @@
     margin: 0;
   }
   .ph-teaching-step {
-    display: flex;
-    min-height: 380px;
-    flex-direction: column;
-    align-items: start;
-    justify-content: center;
+    min-height: 440px;
     padding: 2rem 0 2rem 1.5rem;
     border-top: 0;
     border-left: 2px solid transparent;
-    border-bottom: 1px solid var(--ph-border, var(--ediv-line));
-    transition: border-color 150ms ease;
+    border-bottom: 1px solid var(--ediv-line);
+    transition: border-color 250ms ease;
   }
   .ph-teaching-step.ph-is-current {
     border-left-color: var(--ediv-accent);
   }
-  .ph-teaching-mini {
-    display: none;
+}
+@media (min-width: 960px) and (max-height: 799px) {
+  .ph-teaching-fixed {
+    top: calc(4.75rem + env(safe-area-inset-top));
   }
-  .ph-teaching-detail {
-    margin-top: 0.85rem;
+  .ph-teaching-title {
+    font-size: 2.25rem;
+    max-width: none;
+  }
+  .ph-teaching-lead {
+    margin-top: 0.65rem;
+    font-size: 0.875rem;
+  }
+  .ph-teaching-studio {
+    margin-top: 1rem;
+  }
+  .ph-teaching-svg {
+    height: clamp(120px, 27svh, 200px);
   }
 }
-@media (min-width: 960px) and (min-height: 700px) {
-  .ph-teaching-fixed {
-    position: sticky;
-    top: calc(6rem + env(safe-area-inset-top));
+@media (max-height: 550px) and (max-width: 959px) {
+  .ph-teaching-studio {
+    top: calc(5.25rem + env(safe-area-inset-top));
+  }
+  .ph-teaching-svg {
+    height: 90px;
+  }
+}
+@media (min-width: 480px) and (max-width: 959px) and (max-height: 550px) {
+  .ph-teaching-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    align-items: start;
+    gap: 1.5rem 2rem;
+  }
+  .ph-teaching-intro {
+    grid-column: 1 / -1;
+  }
+  .ph-teaching-studio {
+    margin-top: 0;
+  }
+  .ph-teaching-svg {
+    height: 110px;
+  }
+  .ph-teaching-steps {
+    grid-column: 2;
+    grid-row: 2;
+    margin: 0;
+  }
+  .ph-teaching-step {
+    min-height: 360px;
   }
 }
 @keyframes ph-teaching-bar-grow {
-  from {
-    transform: scaleY(0.8);
-    opacity: 0.8;
+  0%,
+  100% {
+    transform: scaleY(0.65);
   }
-  to {
+  50% {
     transform: scaleY(1);
-    opacity: 1;
   }
 }
-@keyframes ph-teaching-reveal {
-  from {
-    opacity: 0.5;
-    transform: translateY(6px);
+@keyframes ph-teaching-revision-enter {
+  0%,
+  100% {
+    transform: translateY(0);
   }
-  to {
-    opacity: 1;
-    transform: none;
+  50% {
+    transform: translateY(-9px);
   }
 }
 @keyframes ph-teaching-flow {
-  from {
-    stroke-dasharray: 2 27;
-    stroke-dashoffset: 58;
-  }
   to {
-    stroke-dasharray: 2 27;
-    stroke-dashoffset: 0;
+    stroke-dashoffset: -58;
   }
 }
 @media (prefers-reduced-motion: reduce) {
@@ -284,14 +350,19 @@
   }
   .ph-teaching-bar,
   .ph-teaching-revision,
-  .ph-teaching-dividend-signal,
-  .ph-teaching-mini[data-ph-inview="true"] .ph-teaching-bar {
+  .ph-teaching-dividend-signal {
     animation: none !important;
     transform: none;
   }
+  .ph-teaching-dividend-signal {
+    stroke-dasharray: none;
+    stroke-opacity: 0.7;
+  }
+  .ph-teaching-motion-control {
+    display: none;
+  }
 }
 @media (prefers-contrast: more) {
-  .ph-teaching-mini,
   .ph-teaching-studio {
     border-color: var(--ediv-muted);
   }

@@ -4,26 +4,26 @@
   "sessions": {
     "coordenacao": {
       "phase": "revisao",
-      "summary": "128 testes/Node22, lint/build e browser7/7 aprovados; integracao remota protegida pendente",
-      "updatedAt": "2026-10-29T19:40:08.038Z",
+      "summary": "Restauracao validada:128 testes, lint/build, home10/10 e cores6/6; envio main pendente",
+      "updatedAt": "2026-10-30T12:49:03.217Z",
       "claims": []
     },
     "interface": {
       "phase": "revisao",
-      "summary": "Frontend implementado; metadados 5/5 e diff/harness aprovados; aguardando QA browser e deps",
-      "updatedAt": "2026-10-29T19:34:55.391Z",
+      "summary": "Offset landscape84px mais safearea corrigido; QA final pendente",
+      "updatedAt": "2026-10-30T12:42:24.114Z",
       "claims": []
     },
     "backend": {
       "phase": "revisao",
-      "summary": "Auditoria e revisao independente concluidas; sem bloqueador estatico; aguarda gates QA/CI e publicacao protegida",
-      "updatedAt": "2026-10-29T19:38:35.294Z",
+      "summary": "Paleta das abas de acao unificada aos tokens globais dark/light; lint e contraste aprovados; QA visual pendente",
+      "updatedAt": "2026-10-29T19:56:45.022Z",
       "claims": []
     },
     "qa": {
       "phase": "revisao",
-      "summary": "Node22:128 testes/lint/build e7 checks browser aprovados; CI SQL/backup pendente",
-      "updatedAt": "2026-10-29T19:40:04.216Z",
+      "summary": "Node22:128unit/lint/build; home10/10 e cores6/6aprovados; quadros temporais e header/paisagem validados",
+      "updatedAt": "2026-10-30T12:49:22.177Z",
       "claims": []
     }
   }

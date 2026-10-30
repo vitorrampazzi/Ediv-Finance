@@ -356,9 +356,9 @@ export function PerformanceChart() {
                 width={52}
                 tickFormatter={(v) => `${num(v, 0)}%`}
               />
-              <ReferenceLine y={0} stroke="#3a4448" />
+              <ReferenceLine y={0} stroke="var(--fmk-line)" />
               <Tooltip
-                cursor={{ stroke: "#5b6762", strokeDasharray: "3 3" }}
+                cursor={{ stroke: "var(--fmk-dim)", strokeDasharray: "3 3" }}
                 content={
                   <ChartTip
                     fmt={(v) => pct(v, 2, true)}
@@ -520,7 +520,7 @@ export function ResultsCharts() {
                   tickFormatter={(v) => num(v, 0)}
                 />
                 <Tooltip
-                  cursor={{ stroke: "#5b6762", strokeDasharray: "3 3" }}
+                  cursor={{ stroke: "var(--fmk-dim)", strokeDasharray: "3 3" }}
                   content={<ChartTip fmt={(v) => `R$ ${num(v, 2)} bi`} />}
                 />
                 {evo.map(
@@ -533,7 +533,7 @@ export function ResultsCharts() {
                         stroke={s.color}
                         strokeWidth={1.7}
                         strokeDasharray={s.dash}
-                        dot={{ r: 2.5, fill: "#0e1113", strokeWidth: 1.5 }}
+                        dot={{ r: 2.5, fill: "var(--fmk-bg)", strokeWidth: 1.5 }}
                       />
                     ),
                 )}
@@ -582,7 +582,7 @@ export function ResultsCharts() {
                 <Line
                   dataKey="trend"
                   name="Trajetória a taxa constante"
-                  stroke="#7f8f99"
+                  stroke="var(--fmk-dim)"
                   strokeDasharray="4 4"
                   strokeWidth={1.2}
                   dot={false}
@@ -592,7 +592,7 @@ export function ResultsCharts() {
                   name="Lucro (índice)"
                   stroke={TEAL}
                   strokeWidth={1.8}
-                  dot={{ r: 2.5, fill: "#0e1113", strokeWidth: 1.5 }}
+                  dot={{ r: 2.5, fill: "var(--fmk-bg)", strokeWidth: 1.5 }}
                 />
               </LineChart>
             </ResponsiveContainer>

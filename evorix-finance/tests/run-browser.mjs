@@ -5,6 +5,7 @@ import { fileURLToPath } from "node:url";
 // Run sequentially because the browser suites share the same local Vite port.
 const suites = [
   "public-home.browser.mjs",
+  "stock-theme.browser.mjs",
   "public-rankings.browser.mjs",
   "dividend.browser.mjs",
   "notifications.browser.mjs",

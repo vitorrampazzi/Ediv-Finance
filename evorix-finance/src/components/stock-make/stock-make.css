@@ -113,21 +113,23 @@
     U+2215, U+FEFF, U+FFFD;
 }
 .figma-stock {
-  --fmk-bg: #0e1113;
-  --fmk-surface: #14181b;
-  --fmk-raised: #1a2024;
-  --fmk-line: #252c30;
-  --fmk-line-soft: #1b2226;
-  --fmk-ink: #e9edeb;
-  --fmk-sub: #a3aeaa;
-  --fmk-dim: #84908c;
-  --fmk-teal: #62bba8;
-  --fmk-teal-deep: #2f6f63;
+  /* Research pages share the site's palette in both themes. Keep these aliases
+     so every tab, chart and tooltip follows the same global tokens. */
+  --fmk-bg: var(--ediv-canvas);
+  --fmk-surface: var(--ediv-inset);
+  --fmk-raised: var(--ediv-surface);
+  --fmk-line: var(--ediv-border);
+  --fmk-line-soft: var(--ediv-line);
+  --fmk-ink: var(--ediv-text);
+  --fmk-sub: var(--ediv-muted);
+  --fmk-dim: var(--ediv-muted);
+  --fmk-teal: var(--ediv-accent);
+  --fmk-teal-deep: var(--ediv-primary);
   --fmk-amber: #d6aa62;
   --fmk-lilac: #a496d8;
   --fmk-steel: #7599bd;
-  --fmk-up: #6cc79a;
-  --fmk-down: #e58b7e;
+  --fmk-up: var(--ediv-green);
+  --fmk-down: var(--ediv-red);
   font-family: "Instrument Sans", ui-sans-serif, system-ui, sans-serif;
   background: var(--fmk-bg);
   color: var(--fmk-ink);
@@ -136,21 +138,9 @@
   -webkit-font-smoothing: antialiased;
 }
 :root[data-theme="light"] .figma-stock {
-  --fmk-bg: #f7f8f6;
-  --fmk-surface: #edf1ee;
-  --fmk-raised: #ffffff;
-  --fmk-line: #bac9c2;
-  --fmk-line-soft: #dce5df;
-  --fmk-ink: #172b24;
-  --fmk-sub: #42594e;
-  --fmk-dim: #566d61;
-  --fmk-teal: #226b59;
-  --fmk-teal-deep: #28645a;
   --fmk-amber: #8b5e23;
   --fmk-lilac: #7052a1;
   --fmk-steel: #3f678b;
-  --fmk-up: #236e4b;
-  --fmk-down: #a53630;
 }
 .figma-stock .text-fmk-sub {
   color: var(--fmk-sub);
