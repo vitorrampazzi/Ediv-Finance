@@ -190,33 +190,44 @@ function Overview() {
     cagrLucro,
     value,
     number,
-    priceDifference,
     peDifference,
   } = useStockData();
-  const rows: [string, string, string, DataKind][] = [
+  const rows: [string, string, string, DataKind, string][] = [
     [
       "Lucro líquido estimado",
       profitEst === null ? "Não informado" : `R$ ${num(profitEst, 2)} bi`,
       "Lucro líquido total estimado informado na pesquisa.",
       "estimado",
+      profitEst === null || profitEst === 0
+        ? ""
+        : profitEst < 0
+          ? "text-fmk-down"
+          : "text-fmk-amber",
     ],
     [
       "CAGR de lucros · 5 anos",
       pct(cagrLucro, 1, true),
       "Taxa composta de crescimento dos lucros em cinco anos.",
       "informado",
+      cagrLucro === null || cagrLucro === 0
+        ? ""
+        : cagrLucro > 0
+          ? "text-fmk-up"
+          : "text-fmk-down",
     ],
     [
       "Dívida líquida / EBITDA",
       value("netDebtToEbitda"),
       explanations.netDebtToEbitda!,
       "informado",
+      "",
     ],
     [
       "Dividend yield estimado",
       pct(dy),
       "Dividendos projetados ÷ cotação.",
       "projetado",
+      dy === null || dy === 0 ? "" : dy > 0 ? "text-fmk-teal" : "text-fmk-down",
     ],
   ];
   const comparable =
@@ -237,18 +248,7 @@ function Overview() {
       <SectionHead id="visao-geral" n="01" title="Visão geral" />
       <div className="grid gap-12 lg:grid-cols-12">
         <div className="lg:col-span-7">
-          <div className="fmk-overview-figures grid gap-8 sm:grid-cols-2">
-            <div>
-              <div className="text-sm text-fmk-sub">
-                Cotação em relação ao teto
-              </div>
-              <div className="mt-2 font-fmk-serif text-6xl leading-none tracking-tight md:text-7xl">
-                {pct(priceDifference, 1)}
-              </div>
-              <p className="mt-3 font-fmk-mono text-[11px] text-fmk-dim">
-                (cotação ÷ preço-teto − 1) × 100
-              </p>
-            </div>
+          <div className="fmk-overview-figures fmk-overview-market">
             <div>
               <div className="text-sm text-fmk-sub">Valor de mercado</div>
               <div className="mt-2 font-fmk-serif text-6xl leading-none tracking-tight md:text-7xl">
@@ -324,11 +324,11 @@ function Overview() {
             )}
           </figure>
 
-          <dl className="mt-12 divide-y divide-fmk-line-soft border-t border-fmk-line">
-            {rows.map(([k, v, tip, kind]) => (
+          <dl className="mt-12 space-y-2 border-t border-fmk-line pt-4">
+            {rows.map(([k, v, tip, kind, tone]) => (
               <div
                 key={k}
-                className="flex items-center justify-between gap-4 py-3.5"
+                className="fmk-overview-row flex items-center justify-between gap-4 py-3.5"
               >
                 <dt className="flex items-center gap-2 text-sm text-fmk-sub">
                   {k}
@@ -338,7 +338,9 @@ function Overview() {
                   <span className="hidden sm:block">
                     <Tag kind={kind} />
                   </span>
-                  <span className="w-28 text-right font-fmk-serif text-2xl">
+                  <span
+                    className={`w-28 text-right font-fmk-serif text-2xl ${tone}`}
+                  >
                     {v}
                   </span>
                 </dd>
@@ -360,7 +362,7 @@ function Overview() {
             <h3 className="font-fmk-mono text-[11px] uppercase tracking-[0.14em] text-fmk-dim">
               Insights quantitativos
             </h3>
-            <ul className="mt-4 divide-y divide-fmk-line-soft">
+            <ul className="fmk-overview-insights mt-4 divide-y divide-fmk-line-soft">
               {[
                 [
                   "●",

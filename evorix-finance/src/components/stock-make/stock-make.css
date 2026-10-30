@@ -379,3 +379,38 @@
     text-align: left;
   }
 }
+
+/* Category accents distinguish estimates without assigning a buy signal. */
+.figma-stock .fmk-stats > div {
+  border-top: 2px solid var(--fmk-steel);
+  padding-top: 0.75rem;
+}
+.figma-stock .fmk-stats > div:nth-child(2) {
+  border-top-color: var(--fmk-teal);
+}
+.figma-stock .fmk-stats > div:nth-child(3) {
+  border-top-color: var(--fmk-lilac);
+}
+.figma-stock .fmk-stats > div:nth-child(4) {
+  border-top-color: var(--fmk-amber);
+}
+.figma-stock .fmk-stats > div:nth-child(5) {
+  border-top-color: var(--fmk-teal);
+}
+.figma-stock .fmk-overview-market {
+  padding: 1.25rem;
+  border-left: 3px solid var(--fmk-steel);
+  border-radius: 0.5rem;
+  background: color-mix(in srgb, var(--fmk-steel) 7%, var(--fmk-bg));
+}
+.figma-stock .fmk-overview-row {
+  padding-inline: 0.75rem;
+  border-radius: 0.5rem;
+  background: var(--fmk-surface);
+}
+.figma-stock .fmk-overview-insights {
+  padding: 0 1rem;
+  border-left: 3px solid var(--fmk-teal);
+  border-radius: 0.5rem;
+  background: color-mix(in srgb, var(--fmk-teal) 5%, var(--fmk-bg));
+}

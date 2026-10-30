@@ -189,6 +189,35 @@ try {
             },
           )
           .toBe(true);
+        await expect(
+          page.getByText("Cotação em relação ao teto", { exact: true }),
+        ).toHaveCount(0);
+        await expect(page.locator(".fmk-overview-market")).toContainText(
+          "Valor de mercado",
+        );
+        const growth = page
+          .locator(".fmk-overview-row")
+          .filter({ hasText: "CAGR de lucros" });
+        await expect(growth.locator("dd .text-fmk-up")).toHaveCount(1);
+        if (name === "desktop" && theme === "dark") {
+          const original = entry.dividendAnalysis.earningsCagr5Years;
+          for (const [value, tone] of [
+            ["-0.1", "text-fmk-down"],
+            [null, null],
+            ["0", null],
+          ]) {
+            entry.dividendAnalysis.earningsCagr5Years = value;
+            await page.reload();
+            await expect(growth).toBeVisible();
+            await expect(growth.locator("dd .text-fmk-up")).toHaveCount(0);
+            await expect(growth.locator("dd .text-fmk-down")).toHaveCount(
+              tone ? 1 : 0,
+            );
+          }
+          entry.dividendAnalysis.earningsCagr5Years = original;
+          await page.reload();
+          await expect(growth.locator("dd .text-fmk-up")).toHaveCount(1);
+        }
         const palette = await readPalette();
         assert.equal(palette.background, palette.canvas);
         assert.equal(palette.text, palette.ink);

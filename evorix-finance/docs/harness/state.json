@@ -3,9 +3,9 @@
   "workspace": ".",
   "sessions": {
     "coordenacao": {
-      "phase": "revisao",
-      "summary": "Restauracao validada:128 testes, lint/build, home10/10 e cores6/6; envio main pendente",
-      "updatedAt": "2026-10-30T13:05:33.578Z",
+      "phase": "concluido",
+      "summary": "Insight percentual removido;cores ajustadas;build/lint e browser6/6 PASS;dados preservados",
+      "updatedAt": "2026-10-30T19:48:04.098Z",
       "claims": []
     },
     "interface": {
