@@ -123,12 +123,32 @@ try {
       try {
         await page.goto(`${root}/app/ranking/acao/TEST3?visual=real`);
         await expect(page.locator(".figma-stock")).toBeVisible();
-        await page.evaluate((theme) => {
-          document.documentElement.dataset.theme = theme;
-        }, theme);
-        const palette = await page
-          .locator(".figma-stock")
-          .evaluate((element) => {
+        // Use the actual control so the DOM, theme store and persisted choice
+        // agree. Writing data-theme directly bypasses the application state.
+        await expect(page.locator("html")).toHaveAttribute(
+          "data-theme",
+          "dark",
+        );
+        if (theme === "light") {
+          await page
+            .getByRole("button", { name: "Ativar tema claro", exact: true })
+            .click();
+        }
+        await expect(page.locator("html")).toHaveAttribute("data-theme", theme);
+        await expect
+          .poll(() =>
+            page.evaluate(() => window.edivTheme?.getSnapshot().theme),
+          )
+          .toBe(theme);
+        await expect(
+          page.getByRole("button", {
+            name:
+              theme === "light" ? "Ativar tema escuro" : "Ativar tema claro",
+            exact: true,
+          }),
+        ).toBeVisible();
+        const readPalette = () =>
+          page.locator(".figma-stock").evaluate((element) => {
             const style = getComputedStyle(element);
             const resolve = (variable) => {
               const probe = document.createElement("i");
@@ -151,6 +171,25 @@ try {
               globalMuted: resolve("--ediv-muted"),
             };
           });
+        await expect
+          .poll(
+            async () => {
+              const value = await readPalette();
+              return (
+                value.background === value.canvas &&
+                value.text === value.ink &&
+                value.surface === value.inset &&
+                value.raised === value.globalSurface &&
+                value.muted === value.globalMuted
+              );
+            },
+            {
+              message:
+                "A paleta renderizada deve acompanhar os tokens do tema escolhido",
+            },
+          )
+          .toBe(true);
+        const palette = await readPalette();
         assert.equal(palette.background, palette.canvas);
         assert.equal(palette.text, palette.ink);
         assert.equal(palette.surface, palette.inset);

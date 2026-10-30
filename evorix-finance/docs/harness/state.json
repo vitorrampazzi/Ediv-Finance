@@ -5,7 +5,7 @@
     "coordenacao": {
       "phase": "revisao",
       "summary": "Restauracao validada:128 testes, lint/build, home10/10 e cores6/6; envio main pendente",
-      "updatedAt": "2026-10-30T12:49:03.217Z",
+      "updatedAt": "2026-10-30T13:05:33.578Z",
       "claims": []
     },
     "interface": {
@@ -22,8 +22,8 @@
     },
     "qa": {
       "phase": "revisao",
-      "summary": "Node22:128unit/lint/build; home10/10 e cores6/6aprovados; quadros temporais e header/paisagem validados",
-      "updatedAt": "2026-10-30T12:49:22.177Z",
+      "summary": "Fixture tema usa botao real/store/CSS coerentes;6/6locaisaprovados; novaCIpendente",
+      "updatedAt": "2026-10-30T13:06:07.803Z",
       "claims": []
     }
   }

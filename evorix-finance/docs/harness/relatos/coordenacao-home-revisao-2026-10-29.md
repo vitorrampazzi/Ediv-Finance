@@ -72,3 +72,17 @@ Cores6/6cenários e42seções percorridas;128unitários/lint/build aprovados.
 Revisão React: efeitos com cleanup, RAF/passive scroll e updates sem timers;
 movimento CSS pausado emcenainativa/offscreen/abaoculta e reduced-motion.
 Sem mudança deAPI, dados, dependências ou configurações deprodução.
+
+## Integração e ajuste da verificação remota
+
+Envio direto à main solicitado foi recusado pela revisão automática por exigir
+fluxo PR/checks da branch protegida. Não houve bypass. Versão idêntica ao commit
+localcef3f67 enviada via conexão GitHub na PR29, commitd7490b6, árvore34f97fc.
+
+Primeira CIquality41058462306 aprovou128unitários,51integraçõesSQL, home10/10 e
+suítes anteriores, mas recusou duas capturas light do novo stock-theme; backup
+foi pulado por falha do passo browser. Nenhuma integração/produção ocorreu.
+O teste alterava data-theme diretamente sem usar o estado da aplicação. QA
+corrigiu para usar botão real, conferir DOM/store/rótulo inverso e aguardar paleta
+efetivamente renderizada por expect.poll, mantendo todas equivalências e sem
+sleepfixo. Somente teste/relato/quadro alterados, sem mudar código deproduto.

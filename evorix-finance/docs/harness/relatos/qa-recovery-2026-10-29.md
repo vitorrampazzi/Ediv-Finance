@@ -79,3 +79,25 @@ contabilizada separadamente; erros inesperados continuam falhando o teste.
 Publicação pertence ao Orquestrador após sua revisão e os checks remotos.
 Não há bloqueador local de QA. Os gates SQL/backup e a suíte browser completa
 da CI desta nova alteração ainda precisam ser acompanhados pelo Orquestrador.
+
+## CI e correção da fixture de tema — 30/10
+
+O workflow `quality` 41058462306 aprovou os 128 unitários, lint, build, 51 testes
+SQL e as dez verificações temporais da home. A etapa browser falhou somente em
+duas leituras do tema claro no teste novo de cores: desktop e mobile390 ainda
+leram o fundo escuro enquanto a variável global já indicava o canvas claro.
+Mobile320 claro e todas as suítes anteriores passaram. O backup final foi
+pulado pela falha anterior; não deve ser declarado aprovado nessa execução.
+`dependency-security` 41058462355 concluiu com sucesso.
+
+A fixture alterava `document.documentElement.dataset.theme` diretamente e lia
+os estilos na sequência, contornando `window.edivTheme` e a interação real.
+O teste agora usa o botão “Ativar tema claro”, confirma atributo do HTML,
+snapshot do store e rótulo do controle inverso, e aguarda por condição observável
+que fundo/texto/superfícies/muted correspondam aos tokens antes da captura.
+As comparações exatas foram preservadas; nenhum sleep fixo foi acrescentado.
+Nenhum arquivo de produto foi alterado nessa correção da fixture.
+
+Com o fluxo real, os seis cenários locais de cores passaram novamente com Node22,
+sem erros ou APIs inesperadas. Syntax e ESLint focado aprovados. Nova CI completa
+continua necessária antes de integrar/publicar a correção.
