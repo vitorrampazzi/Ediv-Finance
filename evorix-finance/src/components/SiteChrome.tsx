@@ -33,7 +33,7 @@ export function SiteHeader({
     { to: "/suporte", label: "Fale conosco", Icon: MessageCircle },
     {
       to: user ? "/app/ranking" : "/ranking",
-      label: "Ranking de previsões",
+      label: "Ranking de Ações",
       Icon: TrendingUp,
     },
     {

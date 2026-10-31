@@ -63,7 +63,7 @@ export function GettingStarted({ compact = false }: GettingStartedProps) {
             {
               title: "Leia a pesquisa",
               text: "No ranking, abra a empresa para ler as premissas e os riscos do cenário.",
-              action: "Ranking de previsões",
+              action: "Ranking de Ações",
               to: user ? "/app/ranking" : "/ranking",
             },
             {

@@ -82,7 +82,13 @@ const privatePublication = {
   authorName: null,
   professionalCategory: null,
   professionalRegistration: null,
-  history: [],
+  history: [
+    {
+      id: "26",
+      title: "Publicação de teste",
+      createdAt: "2026-10-01T12:00:00Z",
+    },
+  ],
   sourceFileName: "Fonte de teste.xlsx",
   entries: entries.map((entry) => ({
     ...entry,
@@ -163,6 +169,13 @@ const run = async (name, work) => {
   results.push(name);
   console.log("PASS", name);
 };
+const expectInstrumentSans = async (locator) => {
+  const family = await locator.evaluate(
+    (node) => getComputedStyle(node).fontFamily,
+  );
+  assert.match(family, /Instrument Sans/);
+  assert.doesNotMatch(family, /Newsreader|DM Mono|Georgia|Times New Roman/);
+};
 try {
   await server.listen();
   await run(
@@ -191,6 +204,21 @@ try {
       } finally {
         globalThis.fetch = previous;
       }
+      const prerendered = await readFile("dist/index.html", "utf8");
+      const stylesheets = Array.from(
+        prerendered.matchAll(/href="([^"]+\.css)"/g),
+        ([, href]) => href,
+      );
+      assert.ok(stylesheets.length > 0, "CSS incluído no HTML inicial");
+      const css = await Promise.all(
+        stylesheets.map((href) =>
+          readFile("dist/" + href.replace(/^\//, ""), "utf8"),
+        ),
+      );
+      assert.ok(
+        css.some((stylesheet) => stylesheet.includes(".ph-brand")),
+        "O CSS da marca deve estar carregado no primeiro paint da home",
+      );
     },
   );
   try {
@@ -285,11 +313,18 @@ try {
         });
       pending = [];
       const cards = section.locator(".ph-ranking-company");
+      await expect(
+        section.getByRole("heading", { name: "Ranking de Ações", exact: true }),
+      ).toBeVisible();
+      await expect(section).not.toContainText(completePublication.title);
+      await expect(section).not.toContainText("22/10/2026");
+      await expectInstrumentSans(section.locator("h2"));
       await expect(cards).toHaveCount(3);
       for (let i = 0; i < 3; i++) {
         await expect(cards.nth(i).getByRole("heading")).toContainText(
           entries[i].companyName,
         );
+        await expectInstrumentSans(cards.nth(i).getByRole("heading"));
         await expect(cards.nth(i).locator(".company-logo")).toHaveCount(1);
         const keys = [
           "estimatedGrossDividendYield",
@@ -323,6 +358,7 @@ try {
       await cta.press("Enter");
       await expect(page).toHaveURL(/\/cadastro\?next=/);
       await expect(page.getByLabel("Nome", { exact: true })).toBeVisible();
+      await expectInstrumentSans(page.getByLabel("Nome", { exact: true }));
       await page.goto(origin);
     },
   );
@@ -344,6 +380,24 @@ try {
         "/app/ranking/acao/" + entries[0].ticker + "?publication=27",
       );
       assert.equal(privateReads, 0);
+    },
+  );
+  await run(
+    "Rota pública apresenta Ranking de Ações sem datas decorativas",
+    async () => {
+      await page.goto(origin + "/ranking");
+      await expect(
+        page.getByRole("heading", { level: 1, name: "Ranking de Ações" }),
+      ).toBeVisible();
+      await expect(
+        page.locator("#public-ranking-results .ph-ranking-company"),
+      ).toHaveCount(3);
+      await expect(page.locator("body")).not.toContainText(
+        completePublication.title,
+      );
+      await expect(page.locator("body")).not.toContainText("22/10/2026");
+      await expectInstrumentSans(page.getByRole("heading", { level: 1 }));
+      await page.goto(origin);
     },
   );
   await run(
@@ -372,8 +426,118 @@ try {
   );
   signedIn = true;
   await run(
+    "Home autenticada mantém marca animada, sem datas/publication title e IDs únicos",
+    async () => {
+      await page.setViewportSize({ width: 1366, height: 950 });
+      await page.goto(origin + "/app");
+      const brand = page.locator(".ph-brand");
+      await expect(brand).toHaveCount(1);
+      await expect(brand).toBeVisible();
+      await expect(
+        page
+          .locator("section")
+          .filter({ hasText: "Publicação mais recente" })
+          .locator("p")
+          .filter({ hasText: /^Ranking de Ações$/ })
+          .first(),
+      ).toBeVisible();
+      await expect(page.locator("body")).not.toContainText(
+        completePublication.title,
+      );
+      await expect(page.locator("body")).not.toContainText("22/10/2026");
+      await expectInstrumentSans(page.locator("h1").first());
+      for (const theme of ["dark", "light"]) {
+        await page.evaluate(
+          (theme) => (document.documentElement.dataset.theme = theme),
+          theme,
+        );
+        await page.locator(".home-editorial").screenshot({
+          path: output + "/member-home-1366-" + theme + ".png",
+          animations: "allow",
+        });
+      }
+      assert.equal(
+        await page.evaluate(() => {
+          const ids = [...document.querySelectorAll("[id]")].map(
+            (element) => element.id,
+          );
+          return new Set(ids).size;
+        }),
+        await page.locator("[id]").count(),
+        "IDs únicos na home autenticada",
+      );
+      await brand.scrollIntoViewIfNeeded();
+      await page.emulateMedia({ reducedMotion: "no-preference" });
+      await expect(brand).toHaveAttribute("data-ph-inview", "true");
+      const running = () =>
+        brand.evaluate(
+          (element) =>
+            element
+              .getAnimations({ subtree: true })
+              .filter((animation) => animation.playState === "running").length,
+        );
+      await expect.poll(running).toBeGreaterThan(0);
+      await brand
+        .getByRole("button", { name: "Pausar animação", exact: true })
+        .click();
+      await expect(brand).toHaveAttribute("data-ph-paused", "true");
+      await expect.poll(running).toBe(0);
+      await brand
+        .getByRole("button", { name: "Reproduzir animação", exact: true })
+        .click();
+      await expect.poll(running).toBeGreaterThan(0);
+      await page.emulateMedia({ reducedMotion: "reduce" });
+      await expect.poll(running).toBe(0);
+      for (const theme of ["dark", "light"]) {
+        await page.setViewportSize({ width: 320, height: 900 });
+        await page.goto(origin + "/app");
+        await page.evaluate(
+          (theme) => (document.documentElement.dataset.theme = theme),
+          theme,
+        );
+        await expect(page.locator(".ph-brand")).toBeVisible();
+        await expectInstrumentSans(page.locator("h1").first());
+        assert.ok(
+          await page.evaluate(
+            () => document.documentElement.scrollWidth <= innerWidth + 1,
+          ),
+          "Home autenticada 320px sem overflow em " + theme,
+        );
+        assert.equal(
+          await page
+            .locator(".ph-brand")
+            .evaluate(
+              (element) =>
+                element
+                  .getAnimations({ subtree: true })
+                  .filter((animation) => animation.playState === "running")
+                  .length,
+            ),
+          0,
+          "Home autenticada 320px permanece estática com movimento reduzido",
+        );
+        await page.screenshot({
+          path: output + "/member-home-320-" + theme + ".png",
+          fullPage: true,
+        });
+      }
+    },
+  );
+  await run(
     "Conta mantém ranking completo, filtros e paginação10+10",
     async () => {
+      await page.goto(origin + "/app/ranking");
+      await expect(
+        page.getByRole("heading", { level: 1, name: "Ranking de Ações" }),
+      ).toBeVisible();
+      await expectInstrumentSans(page.getByLabel("Buscar empresa ou ticker"));
+      const versions = page.getByLabel("Histórico de publicações");
+      await expect(versions.locator('option[value="26"]')).toHaveText(
+        /Ranking de Ações · 01\/10\/2026/,
+      );
+      await versions.selectOption("26");
+      await expect(page).toHaveURL(/publication=26/);
+      await expect(page.locator(".dividend-table tbody tr")).toHaveCount(10);
       await page.goto(origin + "/app/ranking");
       const table = page.locator(".dividend-table tbody tr");
       await expect(table).toHaveCount(10);
@@ -388,6 +552,14 @@ try {
         await more.click();
         await expect(table).toHaveCount(count);
       }
+      await expect(page.locator("#ranking-count")).toContainText("90 ações");
+      assert.deepEqual(
+        await page.locator(".dividend-company-link").evaluateAll((links) =>
+          links.map((link) => link.querySelector("small")?.textContent.trim()),
+        ),
+        entries.map((entry) => entry.ticker),
+        "Os 90 tickers e sua ordem devem corresponder ao mesmo payload público",
+      );
       await expect(more).toHaveCount(0);
     },
   );
@@ -401,6 +573,7 @@ try {
         await expect(page.getByRole("heading", { level: 1 })).toHaveText(
           entry.companyName,
         );
+        await expectInstrumentSans(page.getByRole("heading", { level: 1 }));
         await expect(page.getByRole("heading", { level: 1 })).toBeFocused();
         await expect(
           page.locator(".figma-stock header .fmk-stats [data-summary]"),
@@ -422,6 +595,15 @@ try {
           );
         }
         await expect(page.locator(".figma-stock [data-field]")).toHaveCount(20);
+        const referenceInfo = page.getByRole("button", {
+          name: "O que é Cotação atual?",
+          exact: true,
+        });
+        await referenceInfo.focus();
+        await expect(page.getByRole("tooltip")).toContainText(
+          "Cotação de referência da planilha; não é preço ao vivo.",
+        );
+        await referenceInfo.press("Escape");
         const fields = await page
           .locator(".figma-stock [data-field]")
           .evaluateAll((nodes) =>
@@ -643,6 +825,10 @@ try {
         for (let index = 0; index < 5; index++)
           await page.keyboard.press("ArrowLeft");
         await expect(price.getByRole("tooltip")).toBeVisible();
+        await expectInstrumentSans(price.getByRole("tooltip"));
+        await expect(
+          price.locator(".recharts-cartesian-axis-tick-value"),
+        ).not.toHaveCount(0);
         const history = stockHistory("TIMS3");
         await expect(price.getByRole("tooltip")).toContainText(
           history.prices.at(-5).date.split("-").reverse().join("/"),

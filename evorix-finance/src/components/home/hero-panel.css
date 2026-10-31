@@ -19,7 +19,7 @@
 }
 .ph-panel-folio {
   color: var(--ediv-muted);
-  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-family: var(--ediv-font-sans);
   font-size: 0.75rem;
   font-variant-numeric: tabular-nums;
 }
@@ -187,7 +187,7 @@
 }
 .ph-panel-range-label output {
   color: var(--ediv-accent);
-  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-family: var(--ediv-font-sans);
 }
 .ph-panel-range {
   display: block;
@@ -273,7 +273,7 @@
 .ph-panel-results dd {
   margin: 0;
   white-space: nowrap;
-  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-family: var(--ediv-font-sans);
   font-variant-numeric: tabular-nums;
 }
 .ph-panel-results .ph-panel-per-share {

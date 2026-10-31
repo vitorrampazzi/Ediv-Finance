@@ -163,38 +163,35 @@ try {
       );
     }
   });
-  await run("Fontes locais e tokens originais ZIP", async () => {
+  await run("Instrument Sans global nos textos, valores e fontes locais", async () => {
     await page.evaluate(() => document.fonts.ready);
-    assert.match(
-      await page
-        .locator(".figma-stock h1")
-        .evaluate((node) => getComputedStyle(node).fontFamily),
-      /Newsreader/,
-    );
-    assert.match(
-      await page
-        .locator(".figma-stock")
-        .evaluate((node) => getComputedStyle(node).fontFamily),
-      /Instrument Sans/,
-    );
-    assert.match(
-      await page
-        .locator(".figma-stock .font-fmk-mono")
-        .first()
-        .evaluate((node) => getComputedStyle(node).fontFamily),
-      /DM Mono/,
-    );
+    for (const locator of [
+      page.locator(".figma-stock"),
+      page.locator(".figma-stock h1"),
+      page.locator(".figma-stock .font-fmk-mono").first(),
+      page.locator(".figma-stock figure.fmk-publication-chart svg text").first(),
+    ]) {
+      const family = await locator.evaluate(
+        (node) => getComputedStyle(node).fontFamily,
+      );
+      assert.match(family, /Instrument Sans/);
+      assert.doesNotMatch(family, /Newsreader|DM Mono|Georgia|Times New Roman/);
+    }
     const loaded = await page.evaluate(() =>
       Array.from(document.fonts)
         .filter((face) => face.status === "loaded")
         .map((face) => face.family),
     );
-    for (const family of ["Newsreader", "Instrument Sans", "DM Mono"])
-      assert.ok(
-        loaded.some((name) => name.includes(family)),
-        family + " carregada",
-      );
-    assert.ok(fonts.length >= 3 && fonts.every((font) => font.status === 200));
+    assert.ok(loaded.some((name) => name.includes("Instrument Sans")));
+    assert.ok(
+      loaded.every((name) => name.includes("Instrument Sans")),
+      "Somente Instrument Sans deve carregar como família visual",
+    );
+    assert.ok(fonts.length >= 1 && fonts.every((font) => font.status === 200));
+    assert.ok(
+      fonts.every((font) => /instrument-sans/i.test(font.url)),
+      "Somente arquivos de Instrument Sans devem ser requisitados",
+    );
     await page.evaluate(
       () => (document.documentElement.dataset.theme = "dark"),
     );
@@ -231,6 +228,12 @@ try {
     await page.keyboard.press("Tab");
     await info.focus();
     await expect(page.getByRole("tooltip")).toBeVisible();
+    assert.match(
+      await page
+        .getByRole("tooltip")
+        .evaluate((node) => getComputedStyle(node).fontFamily),
+      /Instrument Sans/,
+    );
     await info.press("Escape");
     await expect(page.getByRole("tooltip")).toHaveCount(0);
     await expect(info).toBeFocused();
@@ -383,7 +386,7 @@ try {
       await page.unroute(matches);
     },
   );
-  await run("Público3×3 e estilo global preservados", async () => {
+  await run("Público3×3 e Instrument Sans global preservados", async () => {
     await page.goto(origin);
     await expect(
       page.locator("#public-ranking-results .ph-ranking-company"),
@@ -391,11 +394,11 @@ try {
     await expect(
       page.locator("#public-ranking-results .ph-ranking-company dt"),
     ).toHaveCount(9);
-    assert.doesNotMatch(
+    assert.match(
       await page
         .locator("body")
         .evaluate((node) => getComputedStyle(node).fontFamily),
-      /Instrument Sans|Newsreader|DM Mono/,
+      /Instrument Sans/,
     );
     await expect(page.locator(".figma-stock")).toHaveCount(0);
   });

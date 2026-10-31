@@ -72,7 +72,7 @@ function getLocalAnswer(question: string): LocalAnswer {
     return {
       text: "A Escola do Dividendo está focada em pesquisa de ações e educação sobre dividendos. A área de carteira não faz parte desta POC. Entre no ranking e abra uma empresa para conhecer sua tese, os riscos e os indicadores publicados.",
       href: "/app/ranking",
-      linkLabel: "Abrir ranking de previsões",
+      linkLabel: "Abrir Ranking de Ações",
     };
   }
 
@@ -94,7 +94,7 @@ function getLocalAnswer(question: string): LocalAnswer {
     )
   ) {
     return {
-      text: "O ranking de previsões mostra projeções publicadas pela equipe a partir de uma planilha. Projeções são estimativas, não garantias de valorização nem recomendações automáticas. Veja a data e as informações de origem apresentadas na página.",
+      text: "O Ranking de Ações mostra pesquisas publicadas pela equipe. Os cenários são estimativas, não garantias de valorização nem recomendações automáticas. Confira as premissas e a origem dos dados na pesquisa da empresa.",
       href: "/ranking",
       linkLabel: "Consultar ranking",
     };

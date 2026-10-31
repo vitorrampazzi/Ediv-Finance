@@ -330,7 +330,7 @@ function MemberIncomeRanking() {
                 : "Pesquisa de ações"}
             </p>
             <h1 className="display-title mt-3 text-3xl sm:text-5xl">
-              {dividendMode ? "Ranking de dividendos" : "Ranking de previsões"}
+              Ranking de Ações
             </h1>
             <p className="mt-3 max-w-3xl text-sm leading-relaxed text-evo-textSec sm:text-base">
               {showingDemo ? (
@@ -652,20 +652,9 @@ function MemberIncomeRanking() {
               {showingDemo
                 ? "Explore os cenários de exemplo"
                 : current
-                  ? ranking.title
+                  ? "Ranking de Ações"
                   : "Pesquisa selecionada"}
             </h2>
-            {!showingDemo && (
-              <p className="mt-1 text-xs text-evo-textSec">
-                {!current
-                  ? loading
-                    ? "Carregando a versão selecionada…"
-                    : "Pesquisa indisponível"
-                  : ranking.updatedAt
-                    ? "Publicado em " + date(ranking.updatedAt)
-                    : "Aguardando a primeira publicação"}
-              </p>
-            )}
           </div>
           {!showingDemo && (
             <label className="text-xs text-evo-textSec">
@@ -687,7 +676,7 @@ function MemberIncomeRanking() {
                 <option value="">Publicação mais recente</option>
                 {ranking.history.map((h) => (
                   <option key={h.id} value={h.id}>
-                    {h.title} · {date(h.createdAt)}
+                    Ranking de Ações · {date(h.createdAt)}
                   </option>
                 ))}
               </select>

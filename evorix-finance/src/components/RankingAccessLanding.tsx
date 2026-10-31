@@ -31,7 +31,7 @@ export function RankingAccessLanding({
               </h2>
             ) : (
               <h1 className="display-title mt-3 text-3xl sm:text-4xl">
-                Ranking de previsões
+                Ranking de Ações
               </h1>
             )}
             <p className="mt-3 max-w-2xl text-sm leading-6 text-evo-textSec">

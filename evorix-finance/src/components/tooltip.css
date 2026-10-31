@@ -12,8 +12,6 @@
   border-radius: 0.5rem;
   background: var(--ediv-text);
   color: var(--ediv-canvas);
-  font:
-    400 0.8125rem/1.5 system-ui,
-    sans-serif;
+  font: 400 0.8125rem/1.5 var(--ediv-font-sans);
   box-shadow: 0 3px 12px rgb(0 0 0 / 20%);
 }

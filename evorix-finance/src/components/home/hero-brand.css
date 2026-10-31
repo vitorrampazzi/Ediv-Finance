@@ -233,3 +233,15 @@
     color: var(--ediv-text);
   }
 }
+
+.member-home-brand-entry {
+  width: 100%;
+  min-width: 0;
+  max-width: 540px;
+  margin-inline: auto;
+}
+@media (max-width: 767px) {
+  .member-home-brand-entry {
+    max-width: 380px;
+  }
+}

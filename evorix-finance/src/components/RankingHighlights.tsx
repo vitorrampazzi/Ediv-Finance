@@ -98,14 +98,7 @@ function MemberRankingHighlights() {
       ) : (
         <>
           <p className="mt-5 text-xs text-evo-textSec">
-            {showingDemo ? "Demonstração · dados fictícios" : publication.title}{" "}
-            {!showingDemo &&
-              publication.updatedAt &&
-              "· " +
-                new Date(
-                  publication.updatedAt.replace(" ", "T") +
-                    (publication.updatedAt.endsWith("Z") ? "" : "Z"),
-                ).toLocaleDateString("pt-BR")}
+            {showingDemo ? "Demonstração · dados fictícios" : "Ranking de Ações"}
           </p>
           <div className="mt-3 border-t border-evo-border">
             {entries.slice(0, 3).map((entry) => (

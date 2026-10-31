@@ -43,7 +43,7 @@ export function PublicQuestions() {
           </details>
           <details className="ph-faq-item">
             <summary>
-              O que é o ranking de previsões?
+              O que é o Ranking de Ações?
               <ChevronDown size={18} aria-hidden="true" />
             </summary>
             <div className="ph-faq-expand">

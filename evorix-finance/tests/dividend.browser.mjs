@@ -275,10 +275,10 @@ try {
     "Ranking: 10→20→90/fim com foco e contagem, 11 colunas e ordem exata",
     async () => {
       await expect(page.getByRole("heading", { level: 1 })).toHaveText(
-        "Ranking de dividendos",
+        "Ranking de Ações",
       );
       const table = page
-        .getByRole("region", { name: "Ranking de dividendos por empresa" })
+        .getByRole("region", { name: "Ranking de Ações por empresa" })
         .locator("table");
       assert.deepEqual(
         await table
@@ -709,7 +709,7 @@ try {
           theme,
         );
         const region = page.getByRole("region", {
-          name: "Ranking de dividendos por empresa",
+          name: "Ranking de Ações por empresa",
         });
         await expect(region.locator("tbody tr")).toHaveCount(10);
         await region.focus();

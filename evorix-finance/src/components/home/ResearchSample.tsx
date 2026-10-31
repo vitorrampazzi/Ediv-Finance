@@ -98,7 +98,7 @@ export function ResearchSample({
         ) : (
           <>
             <div className="ph-ranking-publication">
-              <h3>{publication.title}</h3>
+              <h3>Ranking de Ações</h3>
               <p>
                 Estimativas da pesquisa publicada, sem cotação ao vivo. Margem
                 de segurança não representa retorno garantido.

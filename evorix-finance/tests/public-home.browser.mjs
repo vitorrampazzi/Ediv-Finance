@@ -320,6 +320,7 @@ try {
         });
         try {
           await page.goto(root);
+          await page.evaluate(() => document.fonts.ready);
           await expect(page.locator(".ph-home")).toBeVisible();
           await expect(page).toHaveTitle("Escola do Dividendo");
           await expect(page.locator(".ph-ranking-company")).toHaveCount(3);

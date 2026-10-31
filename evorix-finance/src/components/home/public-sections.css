@@ -147,7 +147,7 @@
 }
 .ph-sample-potential strong,
 .ph-sample-horizon strong {
-  font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+  font-family: var(--ediv-font-sans);
   font-variant-numeric: tabular-nums;
 }
 .ph-sample-summary > .research-sample-identity {
