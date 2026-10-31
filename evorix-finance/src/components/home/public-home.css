@@ -222,7 +222,7 @@
   padding: 0.75rem 0.2rem;
   border-bottom: 1px solid var(--ph-border);
   color: var(--ediv-text);
-  font-family: Georgia, "Times New Roman", serif;
+  font-family: var(--ediv-font-sans);
   font-size: 1rem;
 }
 .ph-page-index a:last-child {

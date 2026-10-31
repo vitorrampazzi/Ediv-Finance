@@ -46,7 +46,7 @@ const navigation = [
   },
   {
     to: "/app/ranking",
-    label: "Ranking de previsões",
+    label: "Ranking de Ações",
     shortLabel: "Ranking",
     icon: TrendingUp,
     end: false,
@@ -64,7 +64,7 @@ const navigation = [
 
 const pageTitles: Record<string, string> = {
   "/app": "Início",
-  "/app/ranking": "Ranking de previsões",
+  "/app/ranking": "Ranking de Ações",
   "/app/aprender": "Aprender",
   "/app/conversas": "Dúvidas e suporte",
   "/app/atendimentos": "Atendimentos",

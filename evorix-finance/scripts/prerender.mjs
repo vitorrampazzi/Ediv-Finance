@@ -32,7 +32,7 @@ export async function prerender() {
     .filter((name) => name.endsWith(".css"))
     .sort();
   const pageCss = {
-    "/": /^(?:Home|ResearchSample)-[\w-]+\.css$/,
+    "/": /^(?:Home|ResearchSample|AccountHomeContent)-[\w-]+\.css$/,
     "/ranking": /^ResearchSample-[\w-]+\.css$/,
     "/aprender": /^Aprender-[\w-]+\.css$/,
   };
@@ -104,7 +104,7 @@ export async function prerender() {
     "dist/404.html",
     html(
       "/404",
-      '<main style="padding:3rem;font-family:system-ui"><h1>Página não encontrada</h1><p>Confira o endereço ou volte ao início.</p><a href="/">Voltar ao início</a></main>',
+      '<main style="padding:3rem"><h1>Página não encontrada</h1><p>Confira o endereço ou volte ao início.</p><a href="/">Voltar ao início</a></main>',
     ),
   );
   await writeFile(

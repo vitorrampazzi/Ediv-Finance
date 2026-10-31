@@ -280,7 +280,7 @@ export function VersionComparison({
               <option value="">Selecione uma versão anterior</option>
               {older.map((item) => (
                 <option key={item.id} value={item.id}>
-                  {item.title} · #{item.id}
+                  Ranking de Ações · #{item.id}
                 </option>
               ))}
             </select>

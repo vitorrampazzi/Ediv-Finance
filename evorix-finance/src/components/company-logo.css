@@ -38,11 +38,7 @@
   padding: 8px;
 }
 .company-logo-fallback {
-  font:
-    600 9px/1.1 -apple-system,
-    BlinkMacSystemFont,
-    "Segoe UI",
-    sans-serif;
+  font: 600 9px/1.1 var(--ediv-font-sans);
   letter-spacing: -0.03em;
 }
 .company-logo--sm .company-logo-fallback {

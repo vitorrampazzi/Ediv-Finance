@@ -88,7 +88,7 @@ export function DividendRankingTable({
         aria-label={
           complete
             ? "Prévia completa de dividendos"
-            : "Ranking de dividendos por empresa"
+            : "Ranking de Ações por empresa"
         }
         aria-describedby={id}
         tabIndex={0}
@@ -112,7 +112,7 @@ export function DividendRankingTable({
           <caption className="sr-only">
             {complete
               ? "Informações completas a publicar"
-              : "Ranking de dividendos"}{" "}
+              : "Ranking de Ações"}{" "}
             · {columns.length + (showRank ? 1 : 0)} colunas
           </caption>
           <thead>

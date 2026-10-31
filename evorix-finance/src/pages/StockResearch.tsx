@@ -33,15 +33,6 @@ const money = new Intl.NumberFormat("pt-BR", {
   style: "currency",
   currency: "BRL",
 });
-const publicationDate = (value: string) => {
-  const normalized = value.replace(" ", "T");
-  const parsed = new Date(
-    /(?:Z|[+-]\d{2}:\d{2})$/.test(normalized) ? normalized : normalized + "Z",
-  );
-  return Number.isNaN(parsed.valueOf())
-    ? "Data não informada"
-    : parsed.toLocaleString("pt-BR");
-};
 const page = "mx-auto max-w-6xl px-4 py-6 sm:px-6 md:py-10";
 const section = "scroll-mt-40 border-t border-evo-border py-7 sm:py-9";
 
@@ -477,16 +468,6 @@ function MemberStockResearch() {
                   {entry.referencePeriod || "Não informado nesta publicação"}
                 </dd>
               </div>
-              <div>
-                <dt className="text-xs text-evo-textSec">Data da publicação</dt>
-                <dd className="mt-2">
-                  {demo
-                    ? "Demonstração"
-                    : ranking.updatedAt
-                      ? publicationDate(ranking.updatedAt)
-                      : "Não informada"}
-                </dd>
-              </div>
             </dl>
             <h3 className="mb-3 mt-6 text-sm font-semibold">
               Materiais informados pela equipe
@@ -516,7 +497,7 @@ function MemberStockResearch() {
               <div>
                 <dt className="text-evo-textSec">Publicação</dt>
                 <dd className="mt-2 break-words">
-                  {demo ? "Demonstração da Escola do Dividendo" : ranking.title}
+                  {demo ? "Demonstração da Escola do Dividendo" : "Ranking de Ações"}
                 </dd>
               </div>
               <div>
@@ -536,22 +517,8 @@ function MemberStockResearch() {
                       {ranking.professionalRegistration || "Não informado"}
                     </dd>
                   </div>
-                  <div>
-                    <dt className="text-evo-textSec">Publicado em</dt>
-                    <dd className="mt-2">
-                      {ranking.updatedAt
-                        ? publicationDate(ranking.updatedAt)
-                        : "Não informado"}
-                    </dd>
-                  </div>
                 </>
               )}
-              <div>
-                <dt className="text-evo-textSec">Período dos dados</dt>
-                <dd className="mt-2 break-words">
-                  {entry.referencePeriod || "Não informado"}
-                </dd>
-              </div>
             </dl>
             <ResearchCoverage entry={entry} />
             <Link

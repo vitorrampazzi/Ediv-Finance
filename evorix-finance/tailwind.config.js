@@ -20,7 +20,9 @@ export default {
         },
       },
       fontFamily: {
-        sans: ["-apple-system", "BlinkMacSystemFont", "Segoe UI", "sans-serif"],
+        sans: ["var(--ediv-font-sans)"],
+        serif: ["var(--ediv-font-sans)"],
+        mono: ["var(--ediv-font-sans)"],
       },
       fontSize: {
         xs: ["0.8125rem", { lineHeight: "1.25rem" }],

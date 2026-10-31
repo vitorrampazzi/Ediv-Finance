@@ -18,7 +18,7 @@
 }
 .fc-company-identity h1 {
   scroll-margin-top: 6rem;
-  font-family: Georgia, "Times New Roman", serif;
+  font-family: var(--ediv-font-sans);
   font-size: clamp(1.8rem, 2.6vw, 2.8rem);
   font-weight: 400;
   letter-spacing: -0.035em;

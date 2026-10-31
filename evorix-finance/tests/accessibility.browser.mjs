@@ -492,10 +492,10 @@ try {
               name: "Navegação principal",
               exact: true,
             })
-            .getByRole("link", { name: "Ranking de previsões", exact: true });
+            .getByRole("link", { name: "Ranking de Ações", exact: true });
           await ranking.focus();
           await expect(
-            page.getByRole("tooltip", { name: "Ranking de previsões" }),
+            page.getByRole("tooltip", { name: "Ranking de Ações" }),
           ).toBeVisible();
           await ranking.press("Escape");
           await expect(ranking).toBeFocused();

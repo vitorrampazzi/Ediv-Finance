@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@import "./typography.css";
 @import "./components/stock-make/stock-make.css";
 @source "./components/stock-make";
 @config "../tailwind.config.js";
@@ -29,7 +30,7 @@
   --ediv-radius: 14px;
   --ediv-ease: cubic-bezier(0.2, 0.8, 0.2, 1);
   color-scheme: dark;
-  font-synthesis: none;
+  font-synthesis: style;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
@@ -151,7 +152,7 @@ body {
   margin: 0;
   background-color: var(--ediv-canvas);
   color: var(--ediv-text);
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-family: var(--ediv-font-sans);
   line-height: 1.6;
 }
 
@@ -195,8 +196,8 @@ button:disabled {
 }
 
 .display-title {
-  font-family: Georgia, "Times New Roman", serif;
-  font-weight: 400;
+  font-family: var(--ediv-font-sans);
+  font-weight: 600;
   line-height: 1.09;
   letter-spacing: -0.035em;
   text-wrap: balance;
@@ -204,7 +205,7 @@ button:disabled {
 
 .account-workspace .display-title,
 .auth-shell .display-title {
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-family: var(--ediv-font-sans);
   font-weight: 600;
   line-height: 1.13;
   letter-spacing: -0.04em;
@@ -522,7 +523,7 @@ button:disabled {
 .font-numbers {
   font-variant-numeric: tabular-nums;
   font-feature-settings: "tnum";
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-family: var(--ediv-font-sans);
   letter-spacing: -0.025em;
 }
 

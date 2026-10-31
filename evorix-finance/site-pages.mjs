@@ -6,9 +6,9 @@ export const publicPages = {
       "Estude dividendos e leia pesquisas de ações na Escola do Dividendo. Entenda o negócio, os cenários e os riscos de cada empresa, com aulas e exemplos.",
   },
   "/ranking": {
-    title: "Ranking de ações | Escola do Dividendo",
+    title: "Ranking de Ações | Escola do Dividendo",
     description:
-      "Conheça o ranking de cenários da Escola do Dividendo. Acesse pesquisas, premissas, horizonte e riscos com uma conta gratuita.",
+      "Conheça o Ranking de Ações da Escola do Dividendo. Acesse pesquisas, premissas, horizonte e riscos com uma conta gratuita.",
   },
   "/aprender": {
     title: "Aulas sobre dividendos | Escola do Dividendo",

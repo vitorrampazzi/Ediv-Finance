@@ -4,7 +4,18 @@ import { RankingHighlights } from "../RankingHighlights";
 import { useAuth } from "../../context/authContext";
 import { authLink } from "../../lib/authDestination";
 import { RankingPreview } from "../RankingPreview";
+import { PublicHeroBrand } from "./PublicHeroBrand";
+import { usePublicHomeMotion } from "./usePublicHomeMotion";
 import { GettingStarted } from "../GettingStarted";
+
+function MemberHomeBrand() {
+  const root = usePublicHomeMotion();
+  return (
+    <div ref={root} className="member-home-brand-entry">
+      <PublicHeroBrand />
+    </div>
+  );
+}
 
 export function HomeContent({
   member = false,
@@ -81,7 +92,7 @@ export function HomeContent({
             </p>
           )}
         </div>
-        <RankingPreview />
+        {member ? <MemberHomeBrand /> : <RankingPreview />}
       </section>
 
       <RankingHighlights />

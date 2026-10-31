@@ -1,3 +1,16 @@
+## Rodada atual — refinamento visual — 31/10/2026
+
+Usuário autorizou implementação com Frontend/Backend/QA e publicação após gates.
+Aceites: Ranking de Ações em interface/metadados sem mudar IDs/rotas/regras;
+home autenticada reutiliza PublicHeroBrand à direita preservando esquerda e
+reduced-motion; remover datas redundantes em títulos/cards/headers mantendo
+versões distinguíveis, avisos de preço de referência e eixos/histórico;
+Instrument Sans única família visual centralizada, pesos400..700 do arquivo
+variável local. Backend auditou: sem necessidade API/DB. Fonte snapshots intacta.
+Coordenação owns CSS/global/tailwind/site-pages/prerender/docs; Frontend TSX;
+QA owns testes e validação final em fixtures. Preservar Java untracked.
+Publicação via PR/main com quality e dependency-security, sem bypass/force.
+
 # Contexto compartilhado
 
 ## Rodada atual — homepage e quatro agentes (29/10/2026)
