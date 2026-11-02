@@ -197,7 +197,7 @@ function ProfileMenu({
           onClick={() => setMenuRoute(open ? null : routeKey)}
           aria-label={`${open ? "Fechar" : "Abrir"} menu da conta de ${name}${initials ? " · " + initials : ""}`}
           aria-expanded={open}
-          aria-controls="demo-profile-links"
+          aria-controls={open ? "demo-profile-links" : undefined}
           className="ediv-chrome-icon ediv-account-avatar flex h-11 w-11 items-center justify-center rounded-full"
         >
           <span aria-hidden="true" className="text-xs font-bold">
@@ -370,7 +370,7 @@ export const DashboardLayout = () => {
               className="ediv-sidebar-logo ediv-chrome-icon group relative flex h-14 w-14 items-center justify-center rounded-xl"
             >
               <img
-                src="/ediv-logo-clean.png"
+                src="/ediv-icon-clean-192.png"
                 alt=""
                 aria-hidden="true"
                 className="h-10 w-10 object-contain"
@@ -462,7 +462,7 @@ export const DashboardLayout = () => {
         <header className="ediv-account-header sticky top-0 z-20 flex min-h-16 items-center justify-between gap-2 px-4 pt-[env(safe-area-inset-top)] md:min-h-20 md:gap-3 md:px-8">
           <div className="flex min-w-0 items-center gap-3">
             <img
-              src="/ediv-logo-clean.png"
+              src="/ediv-icon-clean-192.png"
               alt=""
               aria-hidden="true"
               className="h-8 w-8 shrink-0 object-contain lg:hidden"

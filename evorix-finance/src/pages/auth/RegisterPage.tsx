@@ -17,7 +17,7 @@ import { useRegistrationAvailability } from "../../hooks/useRegistrationAvailabi
 
 import { AuthShell, ErrorMessage } from "../../components/auth/AuthShell";
 import { ConfirmationHelp } from "../../components/auth/ConfirmationHelp";
-import { SessionStatus } from "../../components/SessionStatus";
+import { SessionNotice, SessionStatus } from "../../components/SessionStatus";
 import { onboardingEntryDestination } from "../../../onboarding.mjs";
 import { RegistrationChallenge } from "../../components/auth/RegistrationChallenge";
 export function RegisterPage() {
@@ -90,13 +90,22 @@ export function RegisterPage() {
     }
   };
 
-  if (loading || (!user && sessionError)) return <SessionStatus />;
+  // Only the first check blocks; an unavailable session check keeps the form
+  // usable because submitting reports the server error itself.
+  if (loading && !sessionError) return <SessionStatus />;
 
   return (
     <AuthShell
       title="Criar conta grátis"
       description="Conta gratuita. Confirme seu e-mail para liberar o acesso."
     >
+      {/* The availability error below already offers its own retry. */}
+      {!availability.current?.error && (
+        <SessionNotice
+          className="mt-5"
+          message="Não foi possível verificar a sessão agora. Você ainda pode continuar; se o serviço estiver indisponível, o envio do formulário vai avisar."
+        />
+      )}
       {message ? (
         <>
           <p role="status" className="mt-5 notice-success">

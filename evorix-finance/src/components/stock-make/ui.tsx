@@ -3,7 +3,7 @@ import { Tooltip } from "../Tooltip";
 
 export function InfoTip({ text, label }: { text: string; label: string }) {
   return (
-    <Tooltip content={text}>
+    <Tooltip content={text} toggleOnClick>
       <button
         type="button"
         aria-label={`O que é ${label}?`}

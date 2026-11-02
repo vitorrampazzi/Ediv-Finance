@@ -47,32 +47,36 @@ export function useRankingPublication(publication: string) {
   useEffect(() => {
     if (authLoading) return;
     const controller = new AbortController();
+    const failure = (reason: unknown) =>
+      reason instanceof Error ? reason.message : "Não foi possível carregar.";
     load(controller.signal)
       .then(async (data) => {
         if (!controller.signal.aborted) await applyRanking(data);
       })
       .catch(async (reason) => {
-        if (
-          !controller.signal.aborted &&
-          reason instanceof ApiError &&
-          reason.status === 401
-        ) {
-          try {
-            await refreshSession();
-          } catch {
-            if (!controller.signal.aborted)
-              setError(
-                "Não foi possível verificar sua sessão. Atualize a página e entre novamente.",
-              );
-          }
+        if (controller.signal.aborted) return;
+        if (!(reason instanceof ApiError && reason.status === 401)) {
+          setError(failure(reason));
           return;
         }
-        if (!controller.signal.aborted)
-          setError(
-            reason instanceof Error
-              ? reason.message
-              : "Não foi possível carregar.",
-          );
+        try {
+          await refreshSession();
+        } catch {
+          if (!controller.signal.aborted)
+            setError(
+              "Não foi possível verificar sua sessão. Atualize a página e entre novamente.",
+            );
+          return;
+        }
+        // The session is still valid (an expired one unmounts this page). Load
+        // once more instead of leaving an empty result that reads as no data.
+        if (controller.signal.aborted) return;
+        try {
+          const data = await load(controller.signal);
+          if (!controller.signal.aborted) applyRanking(data);
+        } catch (retryReason) {
+          if (!controller.signal.aborted) setError(failure(retryReason));
+        }
       })
       .finally(() => {
         if (!controller.signal.aborted) {

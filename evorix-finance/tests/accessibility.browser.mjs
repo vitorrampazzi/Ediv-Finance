@@ -267,10 +267,13 @@ try {
           await control.focus();
           const tooltip = page.getByRole("tooltip");
           await expect(tooltip).toBeVisible();
+          // The tooltip repeats the button's accessible name, so it is not
+          // linked as a description (avoids reading the same text twice).
           assert.equal(
-            await control.getAttribute("aria-describedby"),
-            await tooltip.getAttribute("id"),
+            (await tooltip.textContent())?.trim(),
+            await control.getAttribute("aria-label"),
           );
+          assert.equal(await control.getAttribute("aria-describedby"), null);
           await control.press("Escape");
           await expect(tooltip).toHaveCount(0);
           await expect(control).toBeFocused();

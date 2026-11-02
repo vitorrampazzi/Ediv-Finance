@@ -24,37 +24,45 @@ function MemberRankingHighlights() {
   const { refreshSession } = useAuth();
   const [publication, setPublication] = useState<Publication | null>(null);
   const [error, setError] = useState("");
+  const [revision, setRevision] = useState(0);
   const showingDemo = Boolean(publication && !publication.entries.length);
   const entries: Entry[] = showingDemo
     ? rankingDemoEntries
     : publication?.entries || [];
   useEffect(() => {
     const controller = new AbortController();
-    apiRequest<Publication>("/api/rankings", { signal: controller.signal })
+    const request = () =>
+      apiRequest<Publication>("/api/rankings", { signal: controller.signal });
+    request()
+      .catch(async (reason) => {
+        if (
+          controller.signal.aborted ||
+          !(reason instanceof ApiError && reason.status === 401)
+        )
+          throw reason;
+        try {
+          await refreshSession();
+        } catch {
+          throw new Error(
+            "Não foi possível verificar sua sessão. Atualize a página e entre novamente.",
+          );
+        }
+        // A valid session gets one more attempt; an expired one leaves this page.
+        return request();
+      })
       .then((data) => {
         if (!controller.signal.aborted) setPublication(data);
       })
-      .catch(async (reason) => {
-        if (
-          !controller.signal.aborted &&
-          reason instanceof ApiError &&
-          reason.status === 401
-        ) {
-          try {
-            await refreshSession();
-          } catch {
-            if (!controller.signal.aborted)
-              setError(
-                "Não foi possível verificar sua sessão. Atualize a página e entre novamente.",
-              );
-          }
-          return;
-        }
-        if (!controller.signal.aborted)
-          setError("A publicação não pôde ser carregada agora.");
+      .catch((reason) => {
+        if (controller.signal.aborted) return;
+        setError(
+          reason instanceof Error && !(reason instanceof ApiError)
+            ? reason.message
+            : "A publicação não pôde ser carregada agora.",
+        );
       });
     return () => controller.abort();
-  }, [refreshSession]);
+  }, [refreshSession, revision]);
 
   return (
     <section className="mx-auto max-w-7xl py-5 sm:px-5 sm:pb-10 md:px-8">
@@ -84,11 +92,22 @@ function MemberRankingHighlights() {
       {error ? (
         <div role="status" className="mt-5 text-sm text-evo-textSec">
           {error}
-          <Link
+          <button
+            type="button"
             className="ml-2 inline-flex min-h-11 items-center text-evo-accent underline"
-            to="/app/ranking?visual=demo"
+            onClick={() => {
+              setError("");
+              setPublication(null);
+              setRevision((value) => value + 1);
+            }}
           >
-            Ver exemplo com dados fictícios
+            Tentar novamente
+          </button>
+          <Link
+            className="ml-4 inline-flex min-h-11 items-center text-evo-accent underline"
+            to="/app/ranking"
+          >
+            Abrir o Ranking de Ações
           </Link>
         </div>
       ) : !publication ? (

@@ -1,5 +1,5 @@
 import { useRankingPublication } from "../hooks/useRankingPublication";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link, useLocation, useSearchParams } from "react-router-dom";
 import {
   BookOpen,
@@ -22,7 +22,7 @@ import { MobileDisclosure } from "../components/MobileDisclosure";
 import { ResearchEditor } from "../components/ResearchEditor";
 import { PublicationReview } from "../components/PublicationReview";
 import { ResearchRankingTable } from "../components/ResearchRankingTable";
-import { DividendRankingTable } from "../components/DividendResearch";
+import { DividendRankingTable } from "../components/DividendRankingTable";
 import { userCan } from "../lib/permissions";
 import {
   CompanyComparison,
@@ -42,13 +42,10 @@ const input =
 const button =
   "inline-flex min-h-11 items-center justify-center gap-2 rounded-lg bg-evo-primary px-4 text-sm font-semibold text-white hover:bg-evo-primaryHover disabled:opacity-50";
 export function IncomeRanking() {
-  const { user, loading } = useAuth();
-  if (loading)
-    return (
-      <p role="status" className="p-8 text-center text-sm text-evo-textSec">
-        Verificando seu acesso ao ranking…
-      </p>
-    );
+  const { user } = useAuth();
+  // The public landing matches the prerendered /ranking HTML, so it stays on
+  // screen while the session is checked (or unavailable). Inside /app the
+  // account guard resolves the session before this page mounts.
   if (!user) return <RankingAccessLanding />;
   return <MemberIncomeRanking key={user.id + ":" + user.role} />;
 }
@@ -96,6 +93,8 @@ function MemberIncomeRanking() {
       !error &&
       !publication &&
       ranking.entries.length === 0);
+  // The example stays reachable only while the team has nothing published.
+  const hasRealPublication = current && ranking.entries.length > 0;
   const sourceEntries: Entry[] = showingDemo
     ? rankingDemoEntries
     : current
@@ -253,6 +252,16 @@ function MemberIncomeRanking() {
   if (pagination.key !== paginationKey)
     setPagination({ key: paginationKey, limit: 10 });
   const visibleEntries = entries.slice(0, visibleLimit);
+  const countText =
+    loading && !showingDemo
+      ? "Carregando pesquisas…"
+      : `${visibleEntries.length} exibidas de ${entries.length} filtradas · ${totalEntries} ${showingDemo ? "empresas de exemplo no total" : "ações no total"}`;
+  // Announce the result count once typing or filtering settles, not per key.
+  const [announcedCount, setAnnouncedCount] = useState("");
+  useEffect(() => {
+    const timer = window.setTimeout(() => setAnnouncedCount(countText), 800);
+    return () => window.clearTimeout(timer);
+  }, [countText]);
   const showMore = () => {
     setPagination({ key: paginationKey, limit: visibleLimit + 10 });
     requestAnimationFrame(() => {
@@ -352,20 +361,22 @@ function MemberIncomeRanking() {
                   Como interpretar o ranking
                 </span>
               </Link>
-              <button
-                type="button"
-                className="min-h-11 rounded-lg border border-evo-border px-4 text-sm font-semibold hover:border-evo-accent/50"
-                onClick={() => changeView(showingDemo ? "real" : "demo")}
-              >
-                <span className="sm:hidden">
-                  {showingDemo ? "Publicações" : "Ver exemplo"}
-                </span>
-                <span className="hidden sm:inline">
-                  {showingDemo
-                    ? "Ver publicações da equipe"
-                    : "Explorar demonstração"}
-                </span>
-              </button>
+              {(showingDemo || (!loading && !hasRealPublication)) && (
+                <button
+                  type="button"
+                  className="min-h-11 rounded-lg border border-evo-border px-4 text-sm font-semibold hover:border-evo-accent/50"
+                  onClick={() => changeView(showingDemo ? "real" : "demo")}
+                >
+                  <span className="sm:hidden">
+                    {showingDemo ? "Publicações" : "Ver exemplo"}
+                  </span>
+                  <span className="hidden sm:inline">
+                    {showingDemo
+                      ? "Ver publicações da equipe"
+                      : "Explorar demonstração"}
+                  </span>
+                </button>
+              )}
               <Link
                 to="/metodologia"
                 className="inline-flex min-h-11 items-center text-sm text-evo-textSec underline hover:text-evo-accent"
@@ -652,7 +663,7 @@ function MemberIncomeRanking() {
               {showingDemo
                 ? "Explore os cenários de exemplo"
                 : current
-                  ? "Ranking de Ações"
+                  ? "Empresas da publicação"
                   : "Pesquisa selecionada"}
             </h2>
           </div>
@@ -811,20 +822,11 @@ function MemberIncomeRanking() {
           </ul>
         )}
         <div className="flex flex-wrap items-center justify-between gap-2">
-          <p
-            id="ranking-count"
-            role="status"
-            aria-live="polite"
-            className="text-xs text-evo-textSec"
-          >
-            {loading && !showingDemo
-              ? "Carregando pesquisas…"
-              : `${visibleEntries.length} exibidas de ${entries.length} filtradas · ${totalEntries} `}
-            {loading && !showingDemo
-              ? ""
-              : showingDemo
-                ? "empresas de exemplo no total"
-                : "ações no total"}
+          <p id="ranking-count" className="text-xs text-evo-textSec">
+            {countText}
+          </p>
+          <p role="status" className="sr-only">
+            {announcedCount}
           </p>
           {(hasFilters || sort !== "rank") && (
             <button

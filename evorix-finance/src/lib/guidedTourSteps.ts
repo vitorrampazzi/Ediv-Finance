@@ -18,7 +18,7 @@ export const guidedTourSteps = [
     route: "/app/ranking",
     title: "Abra a pesquisa de uma empresa",
     description:
-      "No Ranking, clique no nome de uma empresa para ler a pesquisa. As colunas resumem balanço, DRE, fluxo de caixa e outros módulos. Na demonstração, empresas e valores são fictícios. Confira sempre as premissas, os riscos e a versão publicada.",
+      "No Ranking, clique no nome de uma empresa para abrir as informações completas. As colunas resumem valor de mercado, lucro estimado, P/L projetado, cotação de referência, preço-teto, margem de segurança e os meses em que a empresa costuma anunciar dividendos. A cotação vem da planilha publicada, não é ao vivo, e a margem de segurança não garante retorno.",
   },
   {
     target: "aprender",
