@@ -8,7 +8,7 @@ import { authLink, safeAuthDestination } from "../../lib/authDestination";
 import { PasswordInput } from "../../components/PasswordInput";
 
 import { AuthShell, ErrorMessage } from "../../components/auth/AuthShell";
-import { SessionStatus } from "../../components/SessionStatus";
+import { SessionNotice, SessionStatus } from "../../components/SessionStatus";
 import { ConfirmationHelp } from "../../components/auth/ConfirmationHelp";
 import { ApiError } from "../../lib/api";
 export function LoginPage() {
@@ -52,13 +52,19 @@ export function LoginPage() {
     }
   };
 
-  if (loading || (!user && sessionError)) return <SessionStatus />;
+  // Only the first check blocks; an unavailable session check keeps the form
+  // usable because submitting reports the server error itself.
+  if (loading && !sessionError) return <SessionStatus />;
 
   return (
     <AuthShell
       title="Entrar na conta"
       description="Use seu e-mail e sua senha para acessar o painel."
     >
+      <SessionNotice
+        className="mt-5"
+        message="Não foi possível verificar a sessão agora. Você ainda pode continuar; se o serviço estiver indisponível, o envio do formulário vai avisar."
+      />
       <form onSubmit={submit} className="mt-6 space-y-4">
         <div>
           <label

@@ -394,7 +394,6 @@ export function TeachingJourney() {
             <button
               className="ph-teaching-motion-control"
               type="button"
-              aria-pressed={paused}
               onClick={() => setPaused((value) => !value)}
             >
               {paused ? (

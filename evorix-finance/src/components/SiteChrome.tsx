@@ -85,7 +85,7 @@ export function SiteHeader({
             aria-label="Escola do Dividendo, página inicial"
           >
             <img
-              src="/ediv-logo-clean.png"
+              src="/ediv-icon-clean-192.png"
               alt=""
               aria-hidden="true"
               className="h-10 w-10 object-contain"
@@ -159,7 +159,9 @@ export function SiteHeader({
                   onClick={() => setMenuRoute(mobileMenuOpen ? null : routeKey)}
                   aria-label={mobileMenuOpen ? "Fechar menu" : "Abrir menu"}
                   aria-expanded={mobileMenuOpen}
-                  aria-controls="public-mobile-menu"
+                  aria-controls={
+                    mobileMenuOpen ? "public-mobile-menu" : undefined
+                  }
                   className="ediv-chrome-icon inline-flex h-11 w-11 items-center justify-center"
                 >
                   {mobileMenuOpen ? (
@@ -242,7 +244,7 @@ export function SiteFooter({
               aria-label="Escola do Dividendo, página inicial"
             >
               <img
-                src="/ediv-logo-clean.png"
+                src="/ediv-icon-clean-192.png"
                 alt=""
                 aria-hidden="true"
                 className="h-9 w-9 object-contain"
@@ -271,15 +273,15 @@ export function SiteFooter({
               <li>
                 <Link
                   className="inline-flex min-h-11 items-center hover:text-evo-textMain"
-                  to="/ranking"
+                  to={user ? "/app/ranking" : "/ranking"}
                 >
-                  Ranking
+                  Ranking de Ações
                 </Link>
               </li>
               <li>
                 <Link
                   className="inline-flex min-h-11 items-center hover:text-evo-textMain"
-                  to="/aprender"
+                  to={user ? "/app/aprender" : "/aprender"}
                 >
                   Aprender
                 </Link>

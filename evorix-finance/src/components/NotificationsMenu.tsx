@@ -78,7 +78,7 @@ export function NotificationsMenu() {
             (data?.unreadCount ? " · " + data.unreadCount + " não lidas" : "")
           }
           aria-expanded={open}
-          aria-controls="ediv-notifications"
+          aria-controls={open ? "ediv-notifications" : undefined}
           onClick={() => setMenuRoute(open ? null : routeKey)}
           className="ediv-chrome-icon relative min-h-11 min-w-11 p-3"
         >

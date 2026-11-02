@@ -62,11 +62,14 @@ export function ConfirmationHelp({
         </li>
         <li>Depois de confirmar, entre com sua senha para continuar.</li>
       </ol>
+      {/* aria-disabled keeps keyboard focus on the control during the countdown. */}
       <button
         type="button"
-        className="action-secondary w-full"
-        disabled={busy || remaining > 0}
-        onClick={() => void resend()}
+        className="action-secondary w-full aria-disabled:cursor-not-allowed aria-disabled:opacity-50"
+        aria-disabled={busy || remaining > 0 || undefined}
+        onClick={() => {
+          if (!busy && remaining <= 0) void resend();
+        }}
       >
         {busy
           ? "Reenviando…"

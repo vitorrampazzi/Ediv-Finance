@@ -75,17 +75,6 @@ const registrationLimiter = rateLimit({
       "Muitas tentativas. Aguarde alguns minutos antes de tentar novamente.",
   },
 });
-const loginLimiter = rateLimit({
-  store: new MysqlLimitStore("login"),
-  windowMs: 15 * 60 * 1000,
-  limit: 8,
-  standardHeaders: "draft-8",
-  legacyHeaders: false,
-  message: {
-    error:
-      "Muitas tentativas de acesso. Aguarde alguns minutos e tente novamente.",
-  },
-});
 const verificationLimiter = rateLimit({
   store: new MysqlLimitStore("verify"),
   windowMs: 15 * 60 * 1000,
@@ -447,7 +436,8 @@ router.post("/verify-email", verificationLimiter, async (req, res) => {
   }
 });
 
-router.post("/login", loginLimiter, async (req, res) => {
+// Per-IP and per-account login limits run in app.js before this handler.
+router.post("/login", async (req, res) => {
   const parsed = parseBody(loginSchema, req.body);
   if (parsed.error) return res.status(400).json(parsed);
 
@@ -607,16 +597,25 @@ router.delete(
   },
 );
 
-const recoveryLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000,
-  limit: 5,
-  store: new MysqlLimitStore("password-recovery"),
-  standardHeaders: "draft-8",
-  legacyHeaders: false,
-  message: { error: "Aguarde alguns minutos antes de solicitar outro link." },
-});
+// One counter per action: requesting links must not block the reset itself,
+// a password change or revoking sessions (same 5 per 15 minutes each).
+const recoveryLimiter = (prefix) =>
+  rateLimit({
+    windowMs: 15 * 60 * 1000,
+    limit: 5,
+    store: new MysqlLimitStore(prefix),
+    standardHeaders: "draft-8",
+    legacyHeaders: false,
+    message: {
+      error: "Aguarde alguns minutos antes de solicitar outro link.",
+    },
+  });
+const forgotLimiter = recoveryLimiter("password-recovery");
+const resetLimiter = recoveryLimiter("password-reset");
+const changeLimiter = recoveryLimiter("password-change");
+const revokeLimiter = recoveryLimiter("sessions-revoke");
 
-router.post("/password/forgot", recoveryLimiter, async (req, res) => {
+router.post("/password/forgot", forgotLimiter, async (req, res) => {
   const parsed = emailOnlySchema.safeParse(req.body);
   if (!parsed.success)
     return res.status(400).json({ error: "Informe um e-mail válido." });
@@ -680,7 +679,7 @@ router.post("/password/forgot", recoveryLimiter, async (req, res) => {
   });
 });
 
-router.post("/password/reset", recoveryLimiter, async (req, res) => {
+router.post("/password/reset", resetLimiter, async (req, res) => {
   const parsed = resetPasswordSchema.safeParse(req.body);
   if (!parsed.success)
     return res.status(400).json({
@@ -743,7 +742,7 @@ router.post("/password/reset", recoveryLimiter, async (req, res) => {
 
 router.post(
   "/password/change",
-  recoveryLimiter,
+  changeLimiter,
   requireAuthenticatedUser,
   async (req, res) => {
     const parsed = changePasswordSchema.safeParse(req.body);
@@ -807,7 +806,7 @@ router.post(
 
 router.post(
   "/sessions/revoke",
-  recoveryLimiter,
+  revokeLimiter,
   requireAuthenticatedUser,
   async (req, res) => {
     await pool.execute("DELETE FROM user_sessions WHERE user_id = ?", [

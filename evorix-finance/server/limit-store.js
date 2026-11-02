@@ -1,5 +1,6 @@
 import { createHash } from "node:crypto";
 import { pool } from "./database.js";
+import { errorCode, isConnectionFailure } from "./api-errors.js";
 
 let lastCleanup = 0;
 const MAXIMUM_CACHED_BLOCKS = 1000;
@@ -29,9 +30,20 @@ export class MysqlLimitStore {
     try {
       if (!lastCleanup || now - lastCleanup > 3_600_000) {
         lastCleanup = now;
-        await pool.execute(
-          "DELETE FROM request_limits WHERE expires_at < UTC_TIMESTAMP(3) LIMIT 1000",
-        );
+        try {
+          await pool.execute(
+            "DELETE FROM request_limits WHERE expires_at < UTC_TIMESTAMP(3) LIMIT 1000",
+          );
+        } catch (error) {
+          // An unreachable database also fails the counter below; stop here
+          // instead of waiting for a second connection attempt.
+          if (isConnectionFailure(error)) throw error;
+          // Housekeeping only: a lock wait or similar must not fail the request.
+          console.warn(
+            "Rate limit cleanup failed:",
+            errorCode(error) || "unknown error",
+          );
+        }
       }
       await pool.execute(
         `INSERT INTO request_limits (bucket, hits, expires_at) VALUES (?, 1, DATE_ADD(UTC_TIMESTAMP(3), INTERVAL ? MICROSECOND))

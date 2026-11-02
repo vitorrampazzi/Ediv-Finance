@@ -114,9 +114,32 @@ export const registrationBudget = limiter(
     keyGenerator: () => "project",
   },
 );
-export const loginAccountLimiter = limiter("login-account", 15 * MINUTE, 12, {
+// Same 8 attempts per IP that the auth router used to apply, now evaluated
+// before any per-account counter is touched.
+export const loginIpLimiter = limiter("login-ip", 15 * MINUTE, 8, {
+  message: {
+    code: "RATE_LIMITED",
+    error:
+      "Muitas tentativas de acesso. Aguarde alguns minutos e tente novamente.",
+  },
+});
+// Keyed by account AND client: one client cannot lock another person out.
+export const loginAccountLimiter = limiter(
+  "login-account-ip",
+  15 * MINUTE,
+  12,
+  {
+    keyGenerator: (req) => `${req.securityEmail}|${req.securityIpKey}`,
+  },
+);
+// High per-account ceiling against distributed guessing. Reaching it needs
+// several clients, since each one is capped at 8 attempts per 15 minutes.
+export const loginEmailCeiling = limiter("login-account-hour", HOUR, 100, {
   keyGenerator: (req) => req.securityEmail,
 });
+// Per-IP gate for every route that sends e-mail. It runs before the shared
+// project budgets so a single client cannot drain them for everyone.
+export const emailEntryLimiter = limiter("email-entry", 15 * MINUTE, 5);
 export const emailCooldown = limiter("email-recipient-minute", MINUTE, 1, {
   keyGenerator: (req) => req.securityEmail,
 });

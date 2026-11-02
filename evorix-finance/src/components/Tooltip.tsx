@@ -2,24 +2,42 @@ import { useEffect, useId, useLayoutEffect, useRef, useState } from "react";
 import type { ReactNode } from "react";
 import "./tooltip.css";
 
-/** Keeps the native control and its focus order; the hint also works inside dialogs. */
+function accessibleName(control: HTMLElement) {
+  return (
+    control.getAttribute("aria-label") ||
+    control.textContent ||
+    ""
+  )
+    .replace(/\s+/g, " ")
+    .trim()
+    .toLocaleLowerCase("pt-BR");
+}
+
+/**
+ * Keeps the native control and its focus order; the hint also works inside dialogs.
+ * With `toggleOnClick`, a tap or click (also Enter/Space) pins the hint open so
+ * touch and screen reader users can read it; it closes on a second activation,
+ * Escape or a press outside.
+ */
 export function Tooltip({
   content,
   children,
+  toggleOnClick = false,
 }: {
   content: string;
   children: ReactNode;
+  toggleOnClick?: boolean;
 }) {
   const id = useId();
   const hint = useRef<HTMLDivElement>(null);
   const trigger = useRef<HTMLElement | null>(null);
+  const pinned = useRef(false);
   const [position, setPosition] = useState<{
     left: number;
     top: number;
   } | null>(null);
   const show = (target: EventTarget | null) => {
-    if (!content) return;
-    if (!(target instanceof Element)) return;
+    if (!content || !(target instanceof Element)) return false;
     const control =
       target.closest<HTMLElement>("button, a[href]") ||
       target.querySelector<HTMLElement>("button, a[href]");
@@ -28,17 +46,19 @@ export function Tooltip({
       control.matches(":disabled") ||
       control.getAttribute("aria-expanded") === "true"
     )
-      return;
+      return false;
     trigger.current = control;
     const bounds = control.getBoundingClientRect();
     setPosition({
       left: bounds.left,
       top: bounds.bottom,
     });
+    return true;
   };
   useLayoutEffect(() => {
     const element = hint.current;
     if (!position) {
+      pinned.current = false;
       element?.hidePopover();
       return;
     }
@@ -67,16 +87,27 @@ export function Tooltip({
     if (!position) return;
     const control = trigger.current;
     const previousDescription = control?.getAttribute("aria-describedby");
-    control?.setAttribute(
-      "aria-describedby",
-      [previousDescription, id].filter(Boolean).join(" "),
-    );
+    // A hint that repeats the control's name would be read twice.
+    const describes =
+      Boolean(control) &&
+      accessibleName(control!) !==
+        content.replace(/\s+/g, " ").trim().toLocaleLowerCase("pt-BR");
+    if (describes)
+      control?.setAttribute(
+        "aria-describedby",
+        [previousDescription, id].filter(Boolean).join(" "),
+      );
     const close = () => setPosition(null);
     const key = (event: KeyboardEvent) => {
       if (event.key !== "Escape") return;
       // Dismiss the hint before Escape reaches a containing dialog or menu.
       event.preventDefault();
       event.stopPropagation();
+      close();
+    };
+    const pressOutside = (event: PointerEvent) => {
+      const target = event.target as Node;
+      if (control?.contains(target) || hint.current?.contains(target)) return;
       close();
     };
     const reposition = () => {
@@ -88,6 +119,7 @@ export function Tooltip({
         bounds.right <= 0 ||
         bounds.left >= window.innerWidth ||
         !(
+          pinned.current ||
           (document.activeElement === control &&
             control.matches(":focus-visible")) ||
           control.matches(":hover") ||
@@ -100,23 +132,39 @@ export function Tooltip({
     window.addEventListener("keydown", key, true);
     window.addEventListener("scroll", reposition, true);
     window.addEventListener("resize", reposition);
+    document.addEventListener("pointerdown", pressOutside, true);
     return () => {
-      if (previousDescription)
-        control?.setAttribute("aria-describedby", previousDescription);
-      else control?.removeAttribute("aria-describedby");
+      if (describes) {
+        if (previousDescription)
+          control?.setAttribute("aria-describedby", previousDescription);
+        else control?.removeAttribute("aria-describedby");
+      }
       window.removeEventListener("keydown", key, true);
       window.removeEventListener("scroll", reposition, true);
       window.removeEventListener("resize", reposition);
+      document.removeEventListener("pointerdown", pressOutside, true);
     };
-  }, [position, id]);
+  }, [position, id, content]);
   return (
     <span
       className="ediv-tooltip-owner"
       onFocus={(event) => {
         if (event.target.matches(":focus-visible")) show(event.target);
       }}
-      onPointerDownCapture={() => setPosition(null)}
-      onClickCapture={() => setPosition(null)}
+      onPointerDownCapture={() => {
+        if (!toggleOnClick) setPosition(null);
+      }}
+      onClickCapture={(event) => {
+        if (!toggleOnClick) {
+          setPosition(null);
+          return;
+        }
+        if (pinned.current) {
+          setPosition(null);
+          return;
+        }
+        if (show(event.target)) pinned.current = true;
+      }}
       onBlur={(event) => {
         if (
           !(
@@ -133,6 +181,7 @@ export function Tooltip({
       }}
       onPointerLeave={(event) => {
         if (
+          !pinned.current &&
           !(
             event.relatedTarget instanceof Node &&
             event.currentTarget.contains(event.relatedTarget)
