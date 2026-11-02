@@ -112,6 +112,11 @@
       "source": "/app/analises",
       "destination": "/app/ranking",
       "permanent": true
+    },
+    {
+      "source": "/login",
+      "destination": "/entrar",
+      "permanent": true
     }
   ]
 }

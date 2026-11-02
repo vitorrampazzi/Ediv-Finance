@@ -1,4 +1,18 @@
-## Rodada atual — refinamento visual — 31/10/2026
+## Rodada atual — auditoria geral e melhorias — 02/11/2026
+
+Usuário autorizou auditoria completa (produção + código), correções priorizadas
+e publicação após gates, sob o nome dele (sem menção a ferramentas de IA).
+Achado principal: produção sem banco — o host MySQL do Aiven não resolve
+(ENOTFOUND no QA; produção respondia 503 "ocupado" sem causa no log). Religar o
+serviço no Aiven é ação do usuário; nenhuma credencial ou configuração foi tocada.
+Backend: erros de conexão viram 503 "indisponível" com causa no log, limites por IP
+antes dos orçamentos de e-mail/login, contadores de recuperação separados, histórico
+sob demanda, cache curto no ranking público. Interface: home/ranking/entrar/cadastro
+utilizáveis com a sessão indisponível, tooltips por toque, /app/ranking sem recharts,
+textos sem demonstração, ajustes de acessibilidade e logo leve. Coordenação: guia,
+/login → /entrar, teste novo no npm test. Relatos *-auditoria-2026-11-02.md.
+
+## Rodada anterior — refinamento visual — 31/10/2026
 
 Usuário autorizou implementação com Frontend/Backend/QA e publicação após gates.
 Aceites: Ranking de Ações em interface/metadados sem mudar IDs/rotas/regras;

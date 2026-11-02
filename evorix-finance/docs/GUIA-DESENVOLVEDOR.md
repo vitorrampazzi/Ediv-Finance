@@ -1,6 +1,6 @@
 # Escola do Dividendo — guia para desenvolvimento e apresentação
 
-Atualizado em 18 de outubro de 2026.
+Atualizado em 2 de novembro de 2026.
 
 ## O que estamos construindo
 
@@ -15,8 +15,12 @@ visão geral de patrimônio e favoritos foram retirados da navegação do produt
 O backend e as tabelas dessas funções antigas ainda existem para preservar os
 dados, mas não são o foco deste MVP. O site não executa ordens ou movimenta dinheiro.
 
-O ranking de demonstração usa empresas e números fictícios. As pesquisas reais,
-a identificação profissional e os vídeos do corretor ainda precisam chegar.
+O ranking usa as pesquisas reais publicadas pela equipe, importadas da planilha
+de ações analisadas e conferidas antes da publicação. Não há mais dados de
+demonstração no ranking em produção; o código de exemplo (`src/lib/researchDemo.ts`)
+só aparece quando não existe nenhuma publicação (por exemplo, num banco local
+vazio) ou quando a URL pede `?visual=demo`, e é sempre identificado na tela.
+A identificação profissional e os vídeos do corretor ainda precisam chegar.
 Não há cobrança habilitada. A IA permanece experimental na branch QA e bloqueada
 em produção.
 
@@ -181,8 +185,8 @@ o código dependente; o usuário da função não deve receber permissão de DDL
 ## Roteiro curto para apresentar
 
 1. Home pública: explicar a proposta, mostrar análises e o acesso à escola.
-2. Conta confirmada: abrir o ranking de demonstração e explicar que a pesquisa real
-   será fornecida pelo corretor.
+2. Conta confirmada: abrir o Ranking de Ações e mostrar a publicação mais recente,
+   com as empresas na ordem da pesquisa.
 3. Clicar numa empresa: tese, riscos, fundamentos, período, fontes e versão.
 4. Escola: cursos, playlist, leitura e exercício; demonstrar o percurso salvo.
 5. Conta de equipe: mostrar editor guiado e conferência da prévia. Salvar um rascunho
@@ -191,7 +195,7 @@ o código dependente; o usuário da função não deve receber permissão de DDL
 
 ## Próximos passos com o corretor e o desenvolvedor
 
-- Receber e revisar pesquisas reais, suas fontes e identificação profissional.
+- Revisar a identificação profissional e as fontes das próximas publicações.
 - Receber vídeos, títulos e ordem das aulas; associar ao catálogo atual.
 - Completar contato, horários e dados públicos da equipe.
 - Revisar a metodologia específica das previsões com o autor; a página atual explica
