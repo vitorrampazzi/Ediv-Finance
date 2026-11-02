@@ -75,11 +75,17 @@ router.get("/compare", requireAuthenticatedUser, async (req, res) => {
     ),
   });
 });
+// Same body for every visitor: no cookie, session or query is read here, so a
+// short shared CDN cache is safe. Errors keep the global no-store header.
+export const publicRankingCacheControl =
+  "public, max-age=0, s-maxage=60, stale-while-revalidate=300";
 router.get("/public", async (_req, res) => {
   const [rows] = await pool.execute(
     "SELECT id,title,created_at,entries_json FROM ranking_publications ORDER BY id DESC LIMIT 1",
   );
-  return res.json(publicRanking(rows[0]));
+  const body = publicRanking(rows[0]);
+  res.setHeader("Cache-Control", publicRankingCacheControl);
+  return res.json(body);
 });
 router.get("/history/:ticker", requireAuthenticatedUser, (req, res) => {
   const { ticker } = req.params;

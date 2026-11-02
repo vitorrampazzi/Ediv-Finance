@@ -17,6 +17,7 @@ import { notificationsRouter } from "./notifications.js";
 import { requirePermission } from "./permissions.js";
 import { requireRegistrationChallenge } from "./registration-challenge.js";
 import { cleanupExpiredAuth } from "./auth-cleanup.js";
+import { createApiErrorHandler } from "./api-errors.js";
 import {
   identifyClient,
   requestAdmission,
@@ -28,7 +29,10 @@ import {
   registrationEntryLimiter,
   registrationBudget,
   identifyEmail,
+  loginIpLimiter,
   loginAccountLimiter,
+  loginEmailCeiling,
+  emailEntryLimiter,
   emailCooldown,
   emailRecipientLimiter,
   emailBurstBudget,
@@ -149,13 +153,22 @@ app.post(
   identifyEmail,
   registrationBudget,
 );
-app.post("/api/auth/login", identifyEmail, loginAccountLimiter);
+// Per-IP limits run first so one client cannot exhaust a per-account or
+// project-wide counter that other people depend on.
+app.post(
+  "/api/auth/login",
+  loginIpLimiter,
+  identifyEmail,
+  loginAccountLimiter,
+  loginEmailCeiling,
+);
 app.post(
   [
     "/api/auth/register",
     "/api/auth/verification/resend",
     "/api/auth/password/forgot",
   ],
+  emailEntryLimiter,
   identifyEmail,
   emailCooldown,
   emailRecipientLimiter,
@@ -186,42 +199,6 @@ app.use("/api", (_req, res) =>
   res.status(404).json({ error: "Rota de API não encontrada." }),
 );
 
-app.use((error, _req, res, _next) => {
-  if (res.headersSent) return;
-  if (
-    error.code === "PASSWORD_WORK_BUSY" ||
-    error.code === "RATE_LIMIT_STORE_UNAVAILABLE" ||
-    error.code === "ER_CON_COUNT_ERROR" ||
-    error.code === "ER_USER_LIMIT_REACHED" ||
-    error.code === "ER_LOCK_WAIT_TIMEOUT" ||
-    error.message === "Queue limit reached."
-  ) {
-    res.setHeader("Retry-After", "2");
-    return res.status(503).json({
-      error:
-        "O serviço está ocupado. Aguarde alguns instantes e tente novamente.",
-    });
-  }
-  if (error.type === "entity.too.large")
-    return res
-      .status(413)
-      .json({ error: "A solicitação excede o tamanho permitido." });
-  if (error.type === "entity.parse.failed")
-    return res
-      .status(400)
-      .json({ error: "O conteúdo enviado não é um JSON válido." });
-  if (error.status === 415)
-    return res
-      .status(415)
-      .json({ error: "Formato ou codificação de conteúdo não aceito." });
-  console.error(
-    "API request failed:",
-    _req.requestId,
-    error.code || error.name || "unknown error",
-  );
-  return res.status(500).json({
-    error: "Não foi possível concluir a solicitação. Tente novamente.",
-  });
-});
+app.use(createApiErrorHandler());
 
 export { app };
