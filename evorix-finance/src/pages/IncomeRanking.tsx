@@ -25,11 +25,7 @@ import { PublicationReview } from "../components/PublicationReview";
 import { ResearchRankingTable } from "../components/ResearchRankingTable";
 import { DividendRankingTable } from "../components/DividendRankingTable";
 import { userCan } from "../lib/permissions";
-import {
-  CompanyComparison,
-  ToolSummary,
-  VersionComparison,
-} from "../components/ResearchTools";
+import { CompanyComparison, ToolSummary } from "../components/ResearchTools";
 import "./income-ranking.css";
 
 const noEntries: Entry[] = [];
@@ -653,13 +649,6 @@ function MemberIncomeRanking() {
             demo={showingDemo}
           />
         )}
-        {!loading && !error && !showingDemo && current && (
-          <VersionComparison
-            key={ranking.id}
-            publicationId={ranking.id}
-            history={ranking.history}
-          />
-        )}
       </div>
       <section className="space-y-3 sm:space-y-4">
         <div className="flex flex-wrap items-start justify-between gap-4">
@@ -935,11 +924,6 @@ function MemberIncomeRanking() {
           </button>
         )}
       </section>
-      {!showingDemo && current && ranking.sourceFileName && (
-        <p className="text-xs text-evo-textSec">
-          Origem: {ranking.sourceFileName}
-        </p>
-      )}
     </section>
   );
 }

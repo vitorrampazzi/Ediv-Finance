@@ -1,11 +1,5 @@
 import { useState } from "react";
-import {
-  ChevronDown,
-  Columns2,
-  GitCompareArrows,
-  type LucideIcon,
-} from "lucide-react";
-import { apiRequest } from "../lib/api";
+import { ChevronDown, Columns2, type LucideIcon } from "lucide-react";
 import { assistantEnabled } from "../lib/features";
 import { CompanyLogo } from "./CompanyLogo";
 import type { Entry } from "../lib/ranking";
@@ -34,14 +28,6 @@ const labels: Record<string, string> = {
   dataSource: "Fonte",
   dividendAnalysis: "Análise de dividendos",
 };
-const visibleField = (field: string) =>
-  !["updatedOn", "dividendAnalysis.updatedOn"].includes(field);
-const fieldLabel = (field: string) =>
-  dividendColumns.find(
-    (column) => column.key === field.replace(/^dividendAnalysis\./, ""),
-  )?.label ||
-  labels[field] ||
-  field;
 function fieldValue(entry: ResearchEntry, field: string) {
   if (field === "dividendAnalysis")
     return (
@@ -147,11 +133,12 @@ export function ToolSummary({
         <span className="block text-sm font-semibold">{label}</span>
         <span className="block text-xs text-evo-textSec">{hint}</span>
       </span>
-      <ChevronDown
-        size={16}
-        aria-hidden="true"
-        className="ranking-tool-chevron text-evo-textSec"
-      />
+      {/* O estado aberto já é anunciado pelo summary; o texto é só visual. */}
+      <span aria-hidden="true" className="ranking-tool-toggle">
+        <span className="ranking-tool-open">Abrir</span>
+        <span className="ranking-tool-close">Fechar</span>
+        <ChevronDown size={16} className="ranking-tool-chevron" />
+      </span>
     </summary>
   );
 }
@@ -237,168 +224,6 @@ export function CompanyComparison({
             </div>
           ))}
         </dl>
-      )}
-    </details>
-  );
-}
-interface Comparison {
-  added: ResearchEntry[];
-  removed: ResearchEntry[];
-  changed: {
-    ticker: string;
-    companyName: string;
-    fields: string[];
-    before: ResearchEntry;
-    after: ResearchEntry;
-  }[];
-  unchanged: number;
-  from: { title: string };
-  to: { title: string };
-}
-export function VersionComparison({
-  publicationId,
-  history,
-}: {
-  publicationId: string | null;
-  history: { id: string; title: string; createdAt: string }[];
-}) {
-  const [previous, setPrevious] = useState("");
-  const [result, setResult] = useState<Comparison | null>(null);
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState("");
-  const older = publicationId
-    ? history.filter((h) => BigInt(h.id) < BigInt(publicationId))
-    : [];
-  if (!publicationId) return null;
-  async function compare() {
-    setBusy(true);
-    setError("");
-    setResult(null);
-    try {
-      setResult(
-        await apiRequest<Comparison>(
-          "/api/rankings/compare?from=" + previous + "&to=" + publicationId,
-        ),
-      );
-    } catch (err) {
-      setError(
-        err instanceof Error ? err.message : "Não foi possível comparar.",
-      );
-    } finally {
-      setBusy(false);
-    }
-  }
-  return (
-    <details className="ranking-tool">
-      <ToolSummary
-        Icon={GitCompareArrows}
-        label="O que mudou na pesquisa?"
-        hint="Empresas e campos alterados desde uma versão anterior."
-      />
-      {!older.length ? (
-        <p className="mt-2 text-sm text-evo-textSec">
-          Ainda não há uma versão anterior disponível para esta publicação.
-        </p>
-      ) : (
-        <>
-          <label className="mt-3 block text-sm">
-            Comparar a publicação atual com
-            <select
-              className={input + " mt-1"}
-              value={previous}
-              disabled={busy}
-              onChange={(e) => {
-                setPrevious(e.target.value);
-                setResult(null);
-              }}
-            >
-              <option value="">Selecione uma versão anterior</option>
-              {older.map((item) => (
-                <option key={item.id} value={item.id}>
-                  Ranking de Ações · #{item.id}
-                </option>
-              ))}
-            </select>
-          </label>
-          <button
-            className="action mt-3"
-            disabled={busy || !previous}
-            onClick={() => void compare()}
-          >
-            {busy ? "Comparando…" : "Comparar versões"}
-          </button>
-        </>
-      )}
-      {error && (
-        <p role="alert" className="notice-error mt-3">
-          {error}
-        </p>
-      )}
-      {result && (
-        <section className="mt-4 space-y-3">
-          <p role="status" className="text-sm">
-            {result.added.length} adicionado(s) · {result.removed.length}{" "}
-            removido(s) · {result.changed.length} alterado(s) ·{" "}
-            {result.unchanged} sem alterações nos campos.
-          </p>
-          {result.added.map((e) => (
-            <p key={"add" + e.ticker} className="text-sm text-evo-accent">
-              <span className="company-identity-inline">
-                <CompanyLogo ticker={e.ticker} size="sm" />
-                Adicionado: {e.ticker} · {e.companyName}
-              </span>
-            </p>
-          ))}
-          {result.removed.map((e) => (
-            <p key={"remove" + e.ticker} className="text-sm">
-              <span className="company-identity-inline">
-                <CompanyLogo ticker={e.ticker} size="sm" />
-                Removido: {e.ticker} · {e.companyName}
-              </span>
-            </p>
-          ))}
-          {result.changed.map((change) => (
-            <details
-              key={change.ticker}
-              className="rounded-lg border border-evo-border p-3"
-            >
-              <summary className="min-h-11 cursor-pointer text-sm font-semibold">
-                <span className="company-identity-inline">
-                  <CompanyLogo ticker={change.ticker} size="sm" />
-                  {change.ticker} ·{" "}
-                  {change.fields
-                    .filter(visibleField)
-                    .map(fieldLabel)
-                    .join(", ")}
-                </span>
-              </summary>
-              <dl className="space-y-3">
-                {change.fields.filter(visibleField).map((field) => (
-                  <div key={field}>
-                    <dt className="text-sm font-semibold">
-                      {fieldLabel(field)}
-                    </dt>
-                    <dd className="grid gap-3 text-xs sm:grid-cols-2">
-                      {(["before", "after"] as const).map((side) => (
-                        <div
-                          key={side}
-                          className="min-w-0 rounded-lg bg-evo-bgMain p-3"
-                        >
-                          <span className="text-evo-accent">
-                            {side === "before" ? "Antes" : "Nesta publicação"}
-                          </span>
-                          <div className="mt-1 whitespace-pre-wrap break-words">
-                            {fieldValue(change[side], field)}
-                          </div>
-                        </div>
-                      ))}
-                    </dd>
-                  </div>
-                ))}
-              </dl>
-            </details>
-          ))}
-        </section>
       )}
     </details>
   );

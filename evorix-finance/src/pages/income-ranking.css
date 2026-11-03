@@ -56,33 +56,50 @@
   }
 }
 
-/* Ferramentas do ranking: uma faixa editorial com divisórias, sem caixas. */
+/* Ferramentas do ranking: linhas finas com fundo sutil, claramente clicáveis. */
 .ranking-tools {
-  border-block: 1px solid var(--ediv-border);
+  display: grid;
+  gap: 0.5rem;
 }
 
 .ranking-tools:empty {
   display: none;
 }
 
-.ranking-tool + .ranking-tool {
-  border-top: 1px solid var(--ediv-border);
+.ranking-tool {
+  border: 1px solid var(--ediv-border);
+  border-left: 3px solid var(--ediv-accent);
+  border-radius: 0.5rem;
+  background: var(--ediv-subtle);
+  transition: border-color 150ms var(--ediv-ease);
+}
+
+.ranking-tool:hover,
+.ranking-tool[open] {
+  border-color: var(--ediv-control-border);
+  border-left-color: var(--ediv-accent);
 }
 
 .ranking-tool[open] {
-  padding-bottom: 1.25rem;
+  padding: 0 1rem 1.25rem;
 }
 
 .ranking-tool-summary {
   display: grid;
-  grid-template-columns: 1rem minmax(0, 1fr) 1rem;
+  grid-template-columns: 1rem minmax(0, 1fr) auto;
   align-items: center;
   gap: 0.875rem;
   min-height: 3.5rem;
-  padding: 0.75rem 0.25rem;
+  padding: 0.75rem 1rem;
+  border-radius: calc(0.5rem - 1px);
+  color: var(--ediv-accent);
   cursor: pointer;
   list-style: none;
   transition: background-color 150ms var(--ediv-ease);
+}
+
+.ranking-tool[open] > .ranking-tool-summary {
+  margin-inline: -1rem;
 }
 
 .ranking-tool-summary::-webkit-details-marker {
@@ -98,6 +115,19 @@
   outline-offset: 2px;
 }
 
+.ranking-tool-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  font-size: 0.8125rem;
+  font-weight: 600;
+}
+
+.ranking-tool[open] .ranking-tool-open,
+.ranking-tool:not([open]) .ranking-tool-close {
+  display: none;
+}
+
 .ranking-tool-chevron {
   transition: transform 200ms var(--ediv-ease);
 }
@@ -107,6 +137,7 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .ranking-tool,
   .ranking-tool-summary,
   .ranking-tool-chevron {
     transition: none;

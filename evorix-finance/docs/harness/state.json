@@ -5,13 +5,13 @@
     "coordenacao": {
       "phase": "revisao",
       "summary": "Auditoria 02/11: QA aprovado 131/lint/build; publicação via PR em andamento",
-      "updatedAt": "2026-11-02T18:16:00.423Z",
+      "updatedAt": "2026-11-03T03:30:36.360Z",
       "claims": []
     },
     "interface": {
       "phase": "revisao",
-      "summary": "Ajustes 03/11: título fixo, hero sem rótulos/pausa, faixa de ferramentas, 3 KPIs, Por onde começar; test/lint/build e 2 browser PASS",
-      "updatedAt": "2026-11-03T02:14:41.822Z",
+      "summary": "Configurações em seções, Perfil com progresso real, faixa do ranking sem versões/Origem; test/lint/build e 2 browser PASS",
+      "updatedAt": "2026-11-03T03:29:46.490Z",
       "claims": []
     },
     "backend": {

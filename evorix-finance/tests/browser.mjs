@@ -292,7 +292,7 @@ try {
       ).toHaveAttribute("aria-valuenow", "0");
       await page.goto(root + "/app/perfil");
       await expect(page.locator("body")).toContainText(journeyEmail);
-      await expect(page.locator("body")).toContainText("Confirmado");
+      await expect(page.locator("body")).toContainText("E-mail confirmado");
     },
   );
   await check(
@@ -617,49 +617,36 @@ try {
       ).toBeVisible();
     }
   });
-  await check(
-    "Comparação de empresas, versões e indicador com assistente",
-    async () => {
-      await page.goto(root + "/app/ranking");
-      await page.getByText("Comparar duas empresas", { exact: true }).click();
-      await page.getByLabel("Primeira empresa").selectOption("PETR4");
-      await page.getByLabel("Segunda empresa").selectOption("ITUB4");
-      await expect(page.locator("body")).toContainText("Empresa de teste B");
-      await page.getByText("O que mudou na pesquisa?", { exact: true }).click();
-      await page
-        .getByLabel("Comparar a publicação atual com")
-        .selectOption({ index: 1 });
-      await page
-        .getByRole("button", { name: "Comparar versões", exact: true })
-        .click();
-      await expect(
-        page.getByRole("status").filter({ hasText: "alterado(s)" }),
-      ).toBeVisible();
-      await page.goto(
-        root + "/app/ranking/acao/PETR4?visual=real&publication=" + second,
-      );
-      const help = page
-        .locator("summary")
-        .filter({ hasText: "Entender este indicador" })
-        .first();
-      await help.click();
-      await page
-        .getByRole("button", { name: "Continuar a dúvida no assistente" })
-        .first()
-        .click();
-      await expect(page.getByRole("dialog")).toBeVisible();
-      await expect(page.getByPlaceholder("Escreva sua dúvida…")).toHaveValue(
-        /Explique o conceito/,
-      );
-      await page
-        .getByRole("button", { name: "Fechar assistente", exact: true })
-        .click();
-      await page.screenshot({
-        path: ".test-artifacts/ranking-desktop.png",
-        fullPage: true,
-      });
-    },
-  );
+  await check("Comparação de empresas e indicador com assistente", async () => {
+    await page.goto(root + "/app/ranking");
+    await page.getByText("Comparar duas empresas", { exact: true }).click();
+    await page.getByLabel("Primeira empresa").selectOption("PETR4");
+    await page.getByLabel("Segunda empresa").selectOption("ITUB4");
+    await expect(page.locator("body")).toContainText("Empresa de teste B");
+    await page.goto(
+      root + "/app/ranking/acao/PETR4?visual=real&publication=" + second,
+    );
+    const help = page
+      .locator("summary")
+      .filter({ hasText: "Entender este indicador" })
+      .first();
+    await help.click();
+    await page
+      .getByRole("button", { name: "Continuar a dúvida no assistente" })
+      .first()
+      .click();
+    await expect(page.getByRole("dialog")).toBeVisible();
+    await expect(page.getByPlaceholder("Escreva sua dúvida…")).toHaveValue(
+      /Explique o conceito/,
+    );
+    await page
+      .getByRole("button", { name: "Fechar assistente", exact: true })
+      .click();
+    await page.screenshot({
+      path: ".test-artifacts/ranking-desktop.png",
+      fullPage: true,
+    });
+  });
   await check(
     "Notificação abre a versão correta e registra leitura",
     async () => {
