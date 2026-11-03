@@ -12,6 +12,7 @@ export function pageMetadata(
   qa?: boolean,
 ): {
   title: string;
+  socialTitle: string;
   description: string;
   canonical: string | null;
   noindex: boolean;

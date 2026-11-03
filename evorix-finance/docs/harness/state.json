@@ -10,8 +10,8 @@
     },
     "interface": {
       "phase": "revisao",
-      "summary": "Auditoria 02/11: itens 1-4,6-9,11-14,16-18 implementados; lint/tsc/131 testes/build PASS; browser pendente com QA; relato interface-auditoria-2026-11-02.md",
-      "updatedAt": "2026-11-02T17:31:48.536Z",
+      "summary": "Ajustes 03/11: título fixo, hero sem rótulos/pausa, faixa de ferramentas, 3 KPIs, Por onde começar; test/lint/build e 2 browser PASS",
+      "updatedAt": "2026-11-03T02:14:41.822Z",
       "claims": []
     },
     "backend": {

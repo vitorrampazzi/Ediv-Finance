@@ -67,10 +67,10 @@ export async function prerender() {
     );
     for (const [name, value] of Object.entries({
       description: meta.description,
-      "og:title": meta.title,
+      "og:title": meta.socialTitle,
       "og:description": meta.description,
       "og:url": meta.canonical || "",
-      "twitter:title": meta.title,
+      "twitter:title": meta.socialTitle,
       "twitter:description": meta.description,
     })) {
       const attr = name.startsWith("og:") ? "property" : "name";

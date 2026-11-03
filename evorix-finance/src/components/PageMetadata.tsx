@@ -11,10 +11,10 @@ export function PageMetadata() {
     for (const [key, value] of Object.entries({
       description: metadata.description,
       robots: metadata.noindex ? "noindex, nofollow" : "index, follow",
-      "og:title": metadata.title,
+      "og:title": metadata.socialTitle,
       "og:description": metadata.description,
       "og:url": metadata.canonical || "",
-      "twitter:title": metadata.title,
+      "twitter:title": metadata.socialTitle,
       "twitter:description": metadata.description,
     })) {
       const attribute = key.startsWith("og:") ? "property" : "name";

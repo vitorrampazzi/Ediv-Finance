@@ -39,6 +39,21 @@ test("home usa exatamente o nome público da marca no título", () => {
   assert.equal(home.canonical, "https://escoladodividendo.com.br/");
 });
 
+test("aba do navegador mostra só a marca em todas as rotas", () => {
+  for (const path of [
+    ...Object.keys(publicPages),
+    ...accountPaths,
+    "/app",
+    "/app/ranking",
+    "/404",
+  ])
+    assert.equal(pageMetadata(path).title, "Escola do Dividendo");
+  assert.equal(
+    pageMetadata("/ranking").socialTitle,
+    "Ranking de Ações | Escola do Dividendo",
+  );
+});
+
 test("metadados públicos são únicos e contas/QA não são indexáveis", () => {
   assert.equal(
     new Set(Object.values(publicPages).map((p) => p.title)).size,

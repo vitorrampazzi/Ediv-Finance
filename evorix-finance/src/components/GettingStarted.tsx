@@ -2,6 +2,85 @@ import { BookOpen, ChartNoAxesCombined, ArrowRight } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useAuth } from "../context/authContext";
 import { authLink } from "../lib/authDestination";
+import { learningChapters, learningCourses } from "../lib/learningCatalog";
+
+// Traço fino no estilo das ilustrações da home; cores por currentColor para os dois temas.
+function ResearchArt() {
+  return (
+    <svg
+      viewBox="0 0 128 112"
+      fill="none"
+      aria-hidden="true"
+      focusable="false"
+      className="h-auto w-full self-start text-evo-border"
+    >
+      <path d="M20 8H82L102 28V104H20V8Z" stroke="currentColor" />
+      <path d="M82 8V28H102" stroke="currentColor" />
+      <path
+        d="M32 30H64M32 40H56"
+        stroke="currentColor"
+        strokeWidth="3"
+        strokeLinecap="round"
+      />
+      <g className="text-evo-accent">
+        <path
+          d="M32 90V78M46 90V68M60 90V72M74 90V58"
+          stroke="currentColor"
+          strokeWidth="5"
+          strokeLinecap="round"
+        />
+        <path
+          d="M30 56L48 50L62 54L88 40"
+          stroke="currentColor"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+        <circle cx="88" cy="40" r="3" fill="currentColor" />
+      </g>
+    </svg>
+  );
+}
+
+function LessonArt() {
+  return (
+    <svg
+      viewBox="0 0 128 112"
+      fill="none"
+      aria-hidden="true"
+      focusable="false"
+      className="h-auto w-full self-start text-evo-border"
+    >
+      <path
+        d="M64 30C52 22 34 20 14 24V94C34 90 52 92 64 100"
+        stroke="currentColor"
+      />
+      <path
+        d="M64 30C76 22 94 20 114 24V94C94 90 76 92 64 100V30Z"
+        stroke="currentColor"
+      />
+      <path
+        d="M24 40H50M24 50H46M24 60H52"
+        stroke="currentColor"
+        strokeWidth="3"
+        strokeLinecap="round"
+      />
+      <g className="text-evo-accent">
+        <circle cx="89" cy="52" r="15" stroke="currentColor" />
+        <path
+          d="M89 44V60M84 48.5C84 46 86 45 89 45C92 45 94 46.5 94 48.5C94 54 84 50 84 55.5C84 57.5 86 59 89 59C92 59 94 58 94 56"
+          stroke="currentColor"
+          strokeLinecap="round"
+        />
+        <path
+          d="M76 82H102"
+          stroke="currentColor"
+          strokeWidth="3"
+          strokeLinecap="round"
+        />
+      </g>
+    </svg>
+  );
+}
 
 const questions = [
   [
@@ -58,45 +137,51 @@ export function GettingStarted({ compact = false }: GettingStartedProps) {
             <ArrowRight size={16} aria-hidden="true" />
           </Link>
         </div>
-        <ol className="mt-5 space-y-1 border-t border-evo-border pt-3 sm:mt-6">
+        <ol className="mt-5 grid gap-x-8 border-t border-evo-border sm:mt-6 md:grid-cols-2">
           {[
             {
+              Art: ResearchArt,
               title: "Leia a pesquisa",
+              detail: "Premissas, cenário e riscos",
               text: "No ranking, abra a empresa para ler as premissas e os riscos do cenário.",
               action: "Ranking de Ações",
               to: user ? "/app/ranking" : "/ranking",
             },
             {
+              Art: LessonArt,
               title: "Estude dividendos",
+              detail: `${learningCourses.length} cursos · ${learningChapters.length} aulas`,
               text: "Escolha uma aula e responda ao exercício para registrar sua conclusão.",
               action: "Aulas e exercícios",
               to: user ? "/app/aprender" : "/aprender",
             },
-          ].map(({ title, text, action, to }) => (
-            <li key={title}>
+          ].map(({ Art, title, detail, text, action, to }) => (
+            <li
+              key={title}
+              className="border-b border-evo-border md:border-b-0"
+            >
               <Link
-                className="group grid min-h-11 grid-cols-[minmax(0,1fr)_1rem] items-start gap-x-3 py-4 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-evo-accent sm:grid-cols-[minmax(0,.75fr)_minmax(0,1fr)_1rem] sm:items-center sm:gap-x-6"
+                className="group grid h-full grid-cols-[minmax(0,1fr)_5.5rem] gap-x-4 py-5 transition-colors hover:bg-evo-bgSec focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-evo-accent sm:grid-cols-[minmax(0,1fr)_8rem] sm:gap-x-6 sm:px-3 sm:py-7"
                 to={to}
               >
                 <div className="min-w-0">
-                  <h3 className="text-base font-semibold transition-colors group-hover:text-evo-accent sm:text-lg">
+                  <p className="text-xs text-evo-textSec">{detail}</p>
+                  <h3 className="mt-2 text-xl font-semibold transition-colors group-hover:text-evo-accent sm:text-2xl">
                     {title}
                   </h3>
-                  <p className="mt-1 text-xs text-evo-textSec sm:text-sm">
-                    {action}
-                  </p>
-                  <p className="mt-2 text-sm leading-relaxed text-evo-textSec sm:hidden">
+                  <p className="mt-2 max-w-md text-sm leading-relaxed text-evo-textSec">
                     {text}
                   </p>
+                  <span className="mt-4 inline-flex min-h-11 items-center gap-2 text-sm font-semibold text-evo-accent">
+                    {action}
+                    <ArrowRight
+                      size={16}
+                      aria-hidden="true"
+                      className="transition-transform group-hover:translate-x-0.5 motion-reduce:transition-none"
+                    />
+                  </span>
                 </div>
-                <p className="hidden text-sm leading-relaxed text-evo-textSec sm:block">
-                  {text}
-                </p>
-                <ArrowRight
-                  size={16}
-                  aria-hidden="true"
-                  className="mt-1 text-evo-accent sm:mt-0"
-                />
+                <Art />
               </Link>
             </li>
           ))}

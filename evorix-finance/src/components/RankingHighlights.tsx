@@ -5,7 +5,10 @@ import { rankingDemoEntries } from "../lib/rankingDemo";
 import { useAuth } from "../context/authContext";
 import { CompanyLogo } from "./CompanyLogo";
 import type { Entry } from "../lib/ranking";
-import { formatDividendValue } from "../../dividend-analysis.mjs";
+import {
+  formatDividendValue,
+  type DividendFormat,
+} from "../../dividend-analysis.mjs";
 
 type Publication = {
   id: string | null;
@@ -13,6 +16,32 @@ type Publication = {
   updatedAt: string | null;
   entries: Entry[];
 };
+
+// Campo ausente aparece como travessão, nunca como número estimado.
+const shown = (value: string | null | undefined, format: DividendFormat) => {
+  const text = formatDividendValue(value ?? null, format);
+  return text === "Não informado" ? "—" : text;
+};
+
+function kpis(entry: Entry, demo: boolean): [string, string][] {
+  const analysis = entry.dividendAnalysis;
+  if (analysis)
+    return [
+      ["Cotação de referência", shown(analysis.referencePrice, "currency")],
+      ["Preço teto", shown(analysis.ceilingPrice, "currency")],
+      ["Margem de segurança", shown(analysis.safetyMargin, "percentInteger")],
+    ];
+  return [
+    [
+      demo ? "Potencial simulado" : "Potencial informado",
+      entry.expectedReturnPercent === null
+        ? "—"
+        : Number(entry.expectedReturnPercent).toLocaleString("pt-BR") + "%",
+    ],
+    ["Preço-alvo", shown(entry.targetPrice, "currency")],
+    ["Horizonte", entry.horizonMonths ? entry.horizonMonths + " meses" : "—"],
+  ];
+}
 
 export function RankingHighlights() {
   const { user, loading } = useAuth();
@@ -117,7 +146,9 @@ function MemberRankingHighlights() {
       ) : (
         <>
           <p className="mt-5 text-xs text-evo-textSec">
-            {showingDemo ? "Demonstração · dados fictícios" : "Ranking de Ações"}
+            {showingDemo
+              ? "Demonstração · dados fictícios"
+              : "Ranking de Ações"}
           </p>
           <div className="mt-3 border-t border-evo-border">
             {entries.slice(0, 3).map((entry) => (
@@ -132,9 +163,9 @@ function MemberRankingHighlights() {
                     ? "&publication=" + encodeURIComponent(publication.id)
                     : "")
                 }
-                className="group grid min-w-0 grid-cols-[minmax(0,1fr)_auto] items-center gap-x-3 border-b border-evo-border py-4 transition-colors hover:bg-evo-bgSec focus-visible:outline focus-visible:outline-2 focus-visible:outline-evo-accent sm:grid-cols-[minmax(0,1fr)_auto_auto] sm:gap-x-6 sm:py-5"
+                className="group grid min-w-0 grid-cols-[minmax(0,1fr)_auto] items-center gap-x-3 gap-y-3 border-b border-evo-border py-4 transition-colors hover:bg-evo-bgSec focus-visible:outline focus-visible:outline-2 focus-visible:outline-evo-accent lg:grid-cols-[minmax(0,1fr)_minmax(0,1.5fr)_auto] lg:gap-x-6 lg:py-5"
               >
-                <div className="company-identity col-start-1 row-span-2 row-start-1">
+                <div className="company-identity min-w-0">
                   <CompanyLogo ticker={entry.ticker} demo={showingDemo} />
                   <div className="company-identity-copy">
                     <h3 className="font-semibold group-hover:text-evo-accent">
@@ -143,35 +174,26 @@ function MemberRankingHighlights() {
                     <p className="mt-1 truncate text-xs text-evo-textSec">
                       {entry.companyName}
                     </p>
+                    {entry.dividendAnalysis && (
+                      <p className="mt-0.5 text-xs text-evo-textSec">
+                        Pesquisa de dividendos
+                      </p>
+                    )}
                   </div>
                 </div>
-                <p className="col-start-2 row-start-1 text-right font-numbers text-xl">
-                  <span className="mb-1 block font-sans text-xs text-evo-textSec">
-                    {entry.dividendAnalysis
-                      ? "Margem de segurança"
-                      : showingDemo
-                        ? "Potencial simulado"
-                        : "Potencial informado"}
-                  </span>
-                  {entry.dividendAnalysis
-                    ? formatDividendValue(
-                        entry.dividendAnalysis.safetyMargin,
-                        "percentInteger",
-                      )
-                    : entry.expectedReturnPercent === null
-                      ? "Não informado"
-                      : Number(entry.expectedReturnPercent).toLocaleString(
-                          "pt-BR",
-                        ) + "%"}
-                </p>
-                <p className="col-start-2 row-start-2 mt-1 text-right text-xs text-evo-textSec">
-                  {entry.dividendAnalysis
-                    ? "Pesquisa de dividendos"
-                    : entry.horizonMonths
-                      ? entry.horizonMonths + " meses"
-                      : "Prazo não informado"}
-                </p>
-                <span className="col-span-2 mt-2 text-xs text-evo-accent sm:col-span-1 sm:col-start-3 sm:row-span-2 sm:row-start-1 sm:mt-0 sm:text-sm">
+                <dl className="col-span-2 row-start-2 grid grid-cols-3 items-end gap-x-3 lg:col-span-1 lg:col-start-2 lg:row-start-1 lg:gap-x-6">
+                  {kpis(entry, showingDemo).map(([label, value]) => (
+                    <div key={label} className="min-w-0">
+                      <dt className="text-[0.6875rem] leading-4 text-evo-textSec sm:text-xs">
+                        {label}
+                      </dt>
+                      <dd className="mt-1 font-numbers text-base sm:text-lg">
+                        {value}
+                      </dd>
+                    </div>
+                  ))}
+                </dl>
+                <span className="col-start-2 row-start-1 text-xs text-evo-accent sm:text-sm lg:col-start-3">
                   {showingDemo ? "Abrir exemplo" : "Ler pesquisa"}
                 </span>
               </Link>

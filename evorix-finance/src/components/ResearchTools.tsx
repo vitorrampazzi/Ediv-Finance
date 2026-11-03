@@ -1,4 +1,10 @@
 import { useState } from "react";
+import {
+  ChevronDown,
+  Columns2,
+  GitCompareArrows,
+  type LucideIcon,
+} from "lucide-react";
 import { apiRequest } from "../lib/api";
 import { assistantEnabled } from "../lib/features";
 import { CompanyLogo } from "./CompanyLogo";
@@ -124,6 +130,31 @@ export function IndicatorHelp({ field }: { field: string }) {
 }
 const input =
   "min-h-11 w-full rounded-lg border border-evo-border bg-evo-bgMain px-3 text-sm";
+/** Linha de abertura das ferramentas do ranking (estilos em income-ranking.css). */
+export function ToolSummary({
+  Icon,
+  label,
+  hint,
+}: {
+  Icon: LucideIcon;
+  label: string;
+  hint: string;
+}) {
+  return (
+    <summary className="ranking-tool-summary">
+      <Icon size={16} aria-hidden="true" className="text-evo-accent" />
+      <span className="min-w-0">
+        <span className="block text-sm font-semibold">{label}</span>
+        <span className="block text-xs text-evo-textSec">{hint}</span>
+      </span>
+      <ChevronDown
+        size={16}
+        aria-hidden="true"
+        className="ranking-tool-chevron text-evo-textSec"
+      />
+    </summary>
+  );
+}
 export function CompanyComparison({
   entries,
   demo,
@@ -136,10 +167,12 @@ export function CompanyComparison({
   const a = entries.find((e) => e.ticker === left);
   const b = entries.find((e) => e.ticker === right);
   return (
-    <details className="rounded-xl border border-evo-border bg-evo-card p-4">
-      <summary className="min-h-11 cursor-pointer font-semibold">
-        Comparar duas empresas
-      </summary>
+    <details className="ranking-tool">
+      <ToolSummary
+        Icon={Columns2}
+        label="Comparar duas empresas"
+        hint="Indicadores lado a lado, na mesma publicação."
+      />
       <p className="mt-2 text-xs text-evo-textSec">
         {demo
           ? "Dados fictícios da demonstração."
@@ -256,10 +289,12 @@ export function VersionComparison({
     }
   }
   return (
-    <details className="rounded-xl border border-evo-border bg-evo-card p-4">
-      <summary className="min-h-11 cursor-pointer font-semibold">
-        O que mudou na pesquisa?
-      </summary>
+    <details className="ranking-tool">
+      <ToolSummary
+        Icon={GitCompareArrows}
+        label="O que mudou na pesquisa?"
+        hint="Empresas e campos alterados desde uma versão anterior."
+      />
       {!older.length ? (
         <p className="mt-2 text-sm text-evo-textSec">
           Ainda não há uma versão anterior disponível para esta publicação.

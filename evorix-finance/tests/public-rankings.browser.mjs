@@ -477,15 +477,8 @@ try {
               .filter((animation) => animation.playState === "running").length,
         );
       await expect.poll(running).toBeGreaterThan(0);
-      await brand
-        .getByRole("button", { name: "Pausar animação", exact: true })
-        .click();
-      await expect(brand).toHaveAttribute("data-ph-paused", "true");
-      await expect.poll(running).toBe(0);
-      await brand
-        .getByRole("button", { name: "Reproduzir animação", exact: true })
-        .click();
-      await expect.poll(running).toBeGreaterThan(0);
+      await expect(brand.getByRole("button")).toHaveCount(0);
+      await expect(brand).not.toContainText("Educação em dividendos");
       await page.emulateMedia({ reducedMotion: "reduce" });
       await expect.poll(running).toBe(0);
       for (const theme of ["dark", "light"]) {
