@@ -7,8 +7,7 @@ const metricKeys = [
 ];
 
 export function publicRanking(row) {
-  const all = readEntries(row?.entries_json);
-  const entries = [...all]
+  const entries = [...readEntries(row?.entries_json)]
     .sort((a, b) => a.rank - b.rank)
     .slice(0, 3)
     .map((entry) => ({
@@ -28,8 +27,7 @@ export function publicRanking(row) {
     id: row ? String(row.id) : null,
     title: row?.title ?? "Ranking de dividendos",
     updatedAt: row?.created_at ?? null,
-    // Only the count of the remaining companies is public, not their data.
-    totalEntries: all.length,
+    totalEntries: entries.length,
     entries,
   };
 }

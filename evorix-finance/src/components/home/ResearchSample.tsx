@@ -19,7 +19,6 @@ const metrics = [
 type PublicRanking = {
   id: string | null;
   title: string;
-  totalEntries?: number;
   entries: {
     rank: number;
     ticker: string;
@@ -158,7 +157,7 @@ export function ResearchSample({
                 </li>
               ))}
             </ol>
-            {lockedPreview && <LockedRows publication={publication} />}
+            {lockedPreview && publication.entries.length >= 3 && <LockedRows />}
           </>
         )}
         {showAccessActions && (
@@ -197,17 +196,13 @@ export function ResearchSample({
   );
 }
 
-// Placeholder rows only: the API sends the count of the remaining companies,
-// never their names or values, so nothing real sits under the blur.
-function LockedRows({ publication }: { publication: PublicRanking }) {
-  const locked =
-    (publication.totalEntries ?? publication.entries.length) -
-    publication.entries.length;
-  if (locked <= 0) return null;
+// Placeholder rows only: the public API sends just the first companies, so
+// nothing real sits under the blur and the full ranking size stays private.
+function LockedRows() {
   return (
     <div className="ph-ranking-locked">
       <ol className="ph-ranking-locked-rows" aria-hidden="true">
-        {Array.from({ length: Math.min(locked, 4) }, (_, index) => (
+        {Array.from({ length: 4 }, (_, index) => (
           <li key={index}>
             <i className="ph-ranking-locked-logo" />
             <i className="ph-ranking-locked-name" />
@@ -219,9 +214,7 @@ function LockedRows({ publication }: { publication: PublicRanking }) {
       </ol>
       <p className="ph-ranking-locked-note">
         <LockKeyhole size={16} aria-hidden="true" />
-        {locked === 1
-          ? "Mais 1 empresa na pesquisa completa"
-          : `Mais ${locked} empresas na pesquisa completa`}
+        Mais empresas na pesquisa completa
       </p>
     </div>
   );
