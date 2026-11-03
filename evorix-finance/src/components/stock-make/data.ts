@@ -115,34 +115,7 @@ export type DividendPoint = {
 };
 export const dividendsAnnual: DividendPoint[] = [];
 export const dividendsMonthly: DividendPoint[] = [];
-export type ResultPoint = {
-  period: string;
-  estimado: boolean;
-  receita: number;
-  lucro: number;
-  ebitda: number;
-  lpaR: number;
-  lpaE: number;
-  divEbitda: number | null;
-};
-export const results: ResultPoint[] = [];
-export const cagrSeries: { period: string; real: number; trend: number }[] = [];
-export const performanceHistory: {
-  label: string;
-  full: string;
-  acao: number;
-  ibov: number;
-  cdi: number;
-  ifix: number;
-}[] = [];
 export const periodKeys = ["1D", "5D", "1M", "6M", "1A", "5A", "Máx"];
-export const perfPeriods = ["6M", "1A", "3A", "5A"];
-export const perfSeriesMeta = [
-  { key: "acao", label: "Ação", color: "var(--fmk-teal)", dash: "" },
-  { key: "ibov", label: "Ibovespa", color: "var(--fmk-amber)", dash: "" },
-  { key: "cdi", label: "CDI", color: "var(--fmk-lilac)", dash: "5 4" },
-  { key: "ifix", label: "IFIX", color: "var(--fmk-steel)", dash: "2 3" },
-];
 export const explanations: Partial<Record<DividendColumnKey, string>> = {
   projectedPE: "Preço em relação ao lucro estimado por ação, em vezes.",
   averagePE10Years: "Média dos últimos dez anos informada na pesquisa.",
@@ -177,7 +150,11 @@ export const explanations: Partial<Record<DividendColumnKey, string>> = {
 };
 
 export const axisProps = {
-  tick: { fill: "var(--fmk-dim)", fontSize: 11, fontFamily: "DM Mono" },
+  tick: {
+    fill: "var(--fmk-dim)",
+    fontSize: 11,
+    fontFamily: "Instrument Sans, sans-serif",
+  },
   axisLine: { stroke: "var(--fmk-line)" },
   tickLine: false as const,
 };

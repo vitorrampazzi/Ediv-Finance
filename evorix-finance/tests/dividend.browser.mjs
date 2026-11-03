@@ -139,15 +139,19 @@ async function assertPublicationCharts(page, entry) {
   const groups = {
     price: ["referencePrice", "ceilingPrice"],
     dividends: ["projectedGrossDividendPerShare", "estimatedEps"],
-    eps: ["estimatedEps"],
-    profit: ["estimatedNetIncome"],
+    earnings: [
+      "estimatedNetIncome",
+      "estimatedEps",
+      "projectedGrossDividendPerShare",
+      "expectedPayout",
+    ],
     cagr: ["earningsCagr5Years"],
     debt: ["netDebtToEbitda"],
-    valuation: ["projectedPE", "averagePE10Years"],
+    valuation: ["projectedPE", "averagePE10Years", "peDeviation"],
   };
   await expect(
     page.locator(".figma-stock figure.fmk-publication-chart"),
-  ).toHaveCount(7);
+  ).toHaveCount(6);
   for (const [id, keys] of Object.entries(groups)) {
     const figure = page.locator(
       `figure.fmk-publication-chart[data-publication-chart="${id}"]`,
@@ -178,7 +182,7 @@ async function assertPublicationCharts(page, entry) {
       await expect(figure.locator(`[data-chart-value="${key}"]`)).toContainText(
         value,
       );
-    await expect(figure.locator(".recharts-wrapper")).toHaveCount(
+    await expect(figure.locator("[data-chart-visual]")).toHaveCount(
       hasNumbers ? 1 : 0,
     );
     if (!hasNumbers) await expect(figure.getByRole("status")).toBeVisible();
