@@ -87,7 +87,8 @@ test("limita a três por rank sem modificar a publicação e aceita JSON do banc
     created_at: null,
     entries_json: entries,
   });
-  assert.equal(result.totalEntries, 3);
+  assert.equal(result.totalEntries, 90);
+  assert.equal(result.entries.length, 3);
   assert.deepEqual(
     result.entries.map(({ rank }) => rank),
     [1, 2, 3],

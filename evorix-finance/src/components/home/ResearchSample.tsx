@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { LockKeyhole } from "lucide-react";
 import { Link } from "react-router-dom";
 import { apiRequest } from "../../lib/api";
 import { authLink } from "../../lib/authDestination";
@@ -18,6 +19,7 @@ const metrics = [
 type PublicRanking = {
   id: string | null;
   title: string;
+  totalEntries?: number;
   entries: {
     rank: number;
     ticker: string;
@@ -28,8 +30,10 @@ type PublicRanking = {
 
 export function ResearchSample({
   showAccessActions = true,
+  lockedPreview = false,
 }: {
   showAccessActions?: boolean;
+  lockedPreview?: boolean;
 }) {
   const [publication, setPublication] = useState<PublicRanking | null>(null);
   const [loading, setLoading] = useState(true);
@@ -154,6 +158,7 @@ export function ResearchSample({
                 </li>
               ))}
             </ol>
+            {lockedPreview && <LockedRows publication={publication} />}
           </>
         )}
         {showAccessActions && (
@@ -189,5 +194,35 @@ export function ResearchSample({
         )}
       </div>
     </section>
+  );
+}
+
+// Placeholder rows only: the API sends the count of the remaining companies,
+// never their names or values, so nothing real sits under the blur.
+function LockedRows({ publication }: { publication: PublicRanking }) {
+  const locked =
+    (publication.totalEntries ?? publication.entries.length) -
+    publication.entries.length;
+  if (locked <= 0) return null;
+  return (
+    <div className="ph-ranking-locked">
+      <ol className="ph-ranking-locked-rows" aria-hidden="true">
+        {Array.from({ length: Math.min(locked, 4) }, (_, index) => (
+          <li key={index}>
+            <i className="ph-ranking-locked-logo" />
+            <i className="ph-ranking-locked-name" />
+            <i />
+            <i />
+            <i />
+          </li>
+        ))}
+      </ol>
+      <p className="ph-ranking-locked-note">
+        <LockKeyhole size={16} aria-hidden="true" />
+        {locked === 1
+          ? "Mais 1 empresa na pesquisa completa"
+          : `Mais ${locked} empresas na pesquisa completa`}
+      </p>
+    </div>
   );
 }

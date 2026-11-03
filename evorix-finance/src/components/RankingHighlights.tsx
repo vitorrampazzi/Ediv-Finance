@@ -99,7 +99,7 @@ function MemberRankingHighlights() {
         <div>
           <p className="edition-label">Pesquisa de empresas</p>
           <h2 className="display-title mt-2 text-2xl sm:text-3xl">
-            {showingDemo ? "Caderno de exemplo" : "Publicação mais recente"}
+            {showingDemo ? "Pesquisa de exemplo" : "Publicação mais recente"}
           </h2>
           <p className="mt-2 max-w-2xl text-sm text-evo-textSec">
             {showingDemo ? (

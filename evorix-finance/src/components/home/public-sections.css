@@ -77,6 +77,58 @@
   white-space: nowrap;
   font-size: 1.125rem;
 }
+.ph-ranking-locked {
+  position: relative;
+  margin-top: 0.5rem;
+}
+.ph-ranking-locked-rows {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  filter: blur(3px);
+  mask-image: linear-gradient(to bottom, #000 35%, transparent);
+  user-select: none;
+}
+.ph-ranking-locked-rows li {
+  display: grid;
+  grid-template-columns: 2.25rem minmax(0, 1.6fr) repeat(3, minmax(0, 1fr));
+  align-items: center;
+  gap: 1rem;
+  min-height: 3.5rem;
+  border-top: 1px solid var(--ph-border, var(--ediv-line));
+}
+.ph-ranking-locked-rows i {
+  display: block;
+  height: 0.7rem;
+  border-radius: 999px;
+  background: var(--ediv-line);
+}
+.ph-ranking-locked-rows .ph-ranking-locked-logo {
+  width: 2.25rem;
+  height: 2.25rem;
+}
+.ph-ranking-locked-rows .ph-ranking-locked-name {
+  width: 80%;
+  height: 0.85rem;
+  background: var(--ediv-muted);
+  opacity: 0.45;
+}
+.ph-ranking-locked-note {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding-inline: 1rem;
+  color: var(--ediv-text);
+  text-align: center;
+  font-size: 0.9375rem;
+  font-weight: 600;
+}
+.ph-ranking-locked-note svg {
+  color: var(--ediv-accent);
+}
 .ph-ranking-unlock {
   display: flex;
   align-items: center;
@@ -106,6 +158,12 @@
   .ph-ranking-preview {
     grid-template-columns: minmax(0, 1fr);
     gap: 0.5rem;
+  }
+  .ph-ranking-locked-rows li {
+    grid-template-columns: 2.25rem minmax(0, 1fr) minmax(0, 0.6fr);
+  }
+  .ph-ranking-locked-rows li > i:nth-of-type(n + 4) {
+    display: none;
   }
   .ph-ranking-unlock {
     align-items: stretch;

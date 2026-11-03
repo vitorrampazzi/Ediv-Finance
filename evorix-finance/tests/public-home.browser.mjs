@@ -549,7 +549,7 @@ try {
           );
           await expect(steps.nth(1).locator("a")).toHaveAttribute(
             "href",
-            "/ranking",
+            "/metodologia",
           );
           await expect(steps.nth(2).locator("a")).toHaveAttribute(
             "href",

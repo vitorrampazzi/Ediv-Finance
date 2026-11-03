@@ -97,7 +97,7 @@ export function RegisterPage() {
   return (
     <AuthShell
       title="Criar conta grátis"
-      description="Conta gratuita. Confirme seu e-mail para liberar o acesso."
+      description="Depois, confirme seu e-mail para liberar o acesso."
     >
       {/* The availability error below already offers its own retry. */}
       {!availability.current?.error && (
@@ -256,15 +256,11 @@ export function RegisterPage() {
           />
         )}
       <p className="mt-4 text-xs leading-relaxed text-evo-textSec">
-        Usamos nome, e-mail e senha para sua conta. Não informe dados bancários
-        nem senha da corretora.
+        Não informe dados bancários nem senha da corretora.{" "}
+        <Link className="text-evo-accent underline" to="/privacidade">
+          Privacidade e uso
+        </Link>
       </p>
-      <Link
-        className="mt-3 block text-xs text-evo-accent underline"
-        to="/privacidade"
-      >
-        Privacidade e uso da plataforma
-      </Link>
       <p className="mt-5 text-center text-sm text-evo-textSec">
         Já tem conta?{" "}
         <Link
