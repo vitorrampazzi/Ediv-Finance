@@ -20,8 +20,8 @@ const teachingSteps = [
     text: "Uma estimativa depende de hipóteses. Abra a tese, confira o horizonte do cenário e compare o que mudou entre versões.",
     detail:
       "O preço-alvo faz parte dessa leitura. O que sustenta o cenário e os riscos precisam acompanhar o número.",
-    action: "Consultar o ranking",
-    path: "/ranking",
+    action: "Ver como a pesquisa é feita",
+    path: "/metodologia",
     diagram: "Premissas → cenário → revisão",
   },
   {

@@ -1,7 +1,7 @@
 export const passwordMinLength = 8;
 export const passwordMaxLength = 128;
 export const passwordPolicyHint =
-  "Use de 8 a 128 caracteres, com pelo menos uma letra maiúscula, um número e um caractere especial. Espaços não contam como caractere especial.";
+  "Use de 8 a 128 caracteres, com uma letra maiúscula, um número e um símbolo (espaço não conta).";
 
 export function isValidNewPassword(value) {
   return (

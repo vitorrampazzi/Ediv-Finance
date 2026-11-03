@@ -45,7 +45,7 @@ export function RankingAccessLanding({
         </div>
       </header>
       <div className="ph-home">
-        <ResearchSample showAccessActions={false} />
+        <ResearchSample showAccessActions={false} lockedPreview />
       </div>
       <AccountGate
         title="Entre para acessar o ranking completo"

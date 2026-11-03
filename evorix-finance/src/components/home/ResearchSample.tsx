@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { LockKeyhole } from "lucide-react";
 import { Link } from "react-router-dom";
 import { apiRequest } from "../../lib/api";
 import { authLink } from "../../lib/authDestination";
@@ -28,8 +29,10 @@ type PublicRanking = {
 
 export function ResearchSample({
   showAccessActions = true,
+  lockedPreview = false,
 }: {
   showAccessActions?: boolean;
+  lockedPreview?: boolean;
 }) {
   const [publication, setPublication] = useState<PublicRanking | null>(null);
   const [loading, setLoading] = useState(true);
@@ -154,6 +157,7 @@ export function ResearchSample({
                 </li>
               ))}
             </ol>
+            {lockedPreview && publication.entries.length >= 3 && <LockedRows />}
           </>
         )}
         {showAccessActions && (
@@ -189,5 +193,29 @@ export function ResearchSample({
         )}
       </div>
     </section>
+  );
+}
+
+// Placeholder rows only: the public API sends just the first companies, so
+// nothing real sits under the blur and the full ranking size stays private.
+function LockedRows() {
+  return (
+    <div className="ph-ranking-locked">
+      <ol className="ph-ranking-locked-rows" aria-hidden="true">
+        {Array.from({ length: 4 }, (_, index) => (
+          <li key={index}>
+            <i className="ph-ranking-locked-logo" />
+            <i className="ph-ranking-locked-name" />
+            <i />
+            <i />
+            <i />
+          </li>
+        ))}
+      </ol>
+      <p className="ph-ranking-locked-note">
+        <LockKeyhole size={16} aria-hidden="true" />
+        Mais empresas na pesquisa completa
+      </p>
+    </div>
   );
 }

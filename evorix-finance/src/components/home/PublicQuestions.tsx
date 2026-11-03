@@ -12,7 +12,7 @@ export function PublicQuestions() {
             Como funciona o acesso.
           </h2>
           <Link className="ph-inline-link" to="/suporte">
-            Outras dúvidas
+            Fale conosco
           </Link>
         </header>
         <div className="ph-faq-list" data-ph-reveal>
