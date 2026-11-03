@@ -118,6 +118,34 @@ try {
       },
     );
     await fixture.clearLimits();
+    await t.test("conta edita só o próprio nome", async () => {
+      const rename = (account, body) =>
+        request(account, "/api/auth/me", { method: "PATCH", body });
+      assert.equal((await rename(null, { name: "Sem sessão" })).status, 401);
+      for (const body of [
+        { name: "A" },
+        { name: "x".repeat(101) },
+        { name: "Outro", id: b.id },
+      ])
+        assert.equal((await rename(a, body)).status, 400, JSON.stringify(body));
+      const updated = await rename(a, { name: "  Nome Editado  " });
+      assert.equal(updated.status, 200);
+      assert.equal(updated.body.user.id, a.id);
+      assert.equal(updated.body.user.name, "Nome Editado");
+      assert.equal(updated.body.user.email, a.email);
+      assert.deepEqual(
+        updated.body.user,
+        (await request(a, "/api/auth/me")).body.user,
+      );
+      assert.equal((await request(b, "/api/auth/me")).body.user.name, "Teste b");
+      const [[other]] = await pool.execute(
+        "SELECT name FROM users WHERE id = ?",
+        [b.id],
+      );
+      assert.equal(other.name, "Teste b");
+      assert.equal((await rename(a, { name: "Teste a" })).status, 200);
+    });
+    await fixture.clearLimits();
     await t.test(
       "Usuário e Analista não administram contas; Usuário não atende",
       async () => {

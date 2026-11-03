@@ -141,7 +141,7 @@ test("API sem banco alcançável: 503 honesto, limites por IP antes de contas e 
   const { MysqlLimitStore } = await import("../server/limit-store.js");
   // No connection is ever opened: every statement is answered in memory.
   const counters = new Map();
-  const state = { mode: "ok", calls: [] };
+  const state = { mode: "ok", calls: [], session: null, updates: [] };
   pool.execute = async (sql, params = []) => {
     const text = sql.replace(/\s+/g, " ").trim();
     state.calls.push(text.slice(0, 40));
@@ -169,6 +169,12 @@ test("API sem banco alcançável: 503 honesto, limites por IP antes de contas e 
       return [[]];
     if (text.startsWith("SELECT u.id, u.name, u.email, u.password_hash")) return [[]];
     if (text.startsWith("SELECT id, email FROM users WHERE email")) return [[]];
+    if (text.startsWith("SELECT u.id, u.name, u.email, u.email_verified_at"))
+      return [state.session ? [state.session] : []];
+    if (text.startsWith("UPDATE users SET name = ? WHERE id = ?")) {
+      state.updates.push(params);
+      return [{ affectedRows: 1 }];
+    }
     throw new Error("SQL inesperado no teste: " + text.slice(0, 60));
   };
   const hits = (prefix, key) =>
@@ -283,4 +289,63 @@ test("API sem banco alcançável: 503 honesto, limites por IP antes de contas e 
   // Separate recovery counters: forgot attempts do not consume the reset quota.
   assert.equal(hits("password-recovery", "127.0.0.1"), 5);
   assert.equal(hits("password-reset", "127.0.0.1"), 0);
+
+  // PATCH /api/auth/me: own name only, same rule as registration.
+  const patchMe = async (body, cookie) => {
+    const response = await fetch(base + "/api/auth/me", {
+      method: "PATCH",
+      headers: {
+        Origin: "http://127.0.0.1:4180",
+        "Content-Type": "application/json",
+        ...(cookie ? { Cookie: cookie } : {}),
+      },
+      body: JSON.stringify(body),
+    });
+    return { status: response.status, body: await response.json() };
+  };
+  const anonymous = await patchMe({ name: "Novo nome" });
+  assert.equal(anonymous.status, 401);
+  assert.equal(anonymous.body.error, "Entre na sua conta para continuar.");
+  const now = Date.now();
+  state.session = {
+    id: "user-1",
+    name: "Nome antigo",
+    email: "pessoa@ediv.test",
+    email_verified_at: new Date(now),
+    created_at: new Date(now),
+    role: "USER",
+    session_id: "session-1",
+    session_created_at: new Date(now),
+    session_expires_at: new Date(now + 30 * 86_400_000),
+  };
+  const cookie = "evorix_session=" + "a".repeat(43);
+  for (const body of [
+    { name: "A" },
+    { name: "   x   " },
+    { name: "x".repeat(101) },
+    { name: 42 },
+    {},
+    { name: "Nome válido", id: "user-2" },
+    { name: "Nome válido", email: "outro@ediv.test" },
+  ]) {
+    const invalid = await patchMe(body, cookie);
+    assert.equal(invalid.status, 400, JSON.stringify(body));
+    assert.equal(invalid.body.error, "Informe um nome com 2 a 100 caracteres.");
+  }
+  assert.deepEqual(state.updates, []);
+  const updated = await patchMe({ name: "  Nome Novo  " }, cookie);
+  assert.equal(updated.status, 200);
+  assert.equal(updated.body.user.id, "user-1");
+  assert.equal(updated.body.user.name, "Nome Novo");
+  assert.equal(updated.body.user.email, "pessoa@ediv.test");
+  assert.equal(updated.body.user.role, "USER");
+  assert.ok(Array.isArray(updated.body.user.permissions));
+  assert.deepEqual(state.updates, [["Nome Novo", "user-1"]]);
+  const outside = await fetch(base + "/api/auth/me", {
+    method: "PATCH",
+    headers: { Origin: "https://outside.test", "Content-Type": "application/json", Cookie: cookie },
+    body: JSON.stringify({ name: "Outro nome" }),
+  });
+  assert.equal(outside.status, 403);
+  assert.equal(state.updates.length, 1);
 });

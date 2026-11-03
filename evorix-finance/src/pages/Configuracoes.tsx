@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { FormEvent, ReactNode } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/authContext";
@@ -20,6 +20,13 @@ import {
 // O reset global "button { font: inherit }" fica fora das camadas e anula o
 // text-sm de .action; o pai define a fonte para todos os botões terem a mesma.
 const buttonFont = "text-sm font-semibold";
+// Botões empilhados em largura total no celular e alinhados à direita a partir de sm.
+const buttonRow =
+  buttonFont + " flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:justify-end";
+// Mesmas regras do cadastro (registerSchema: trim, de 2 a 100).
+const nameMinLength = 2;
+const nameMaxLength = 100;
+const nameHint = `Use de ${nameMinLength} a ${nameMaxLength} caracteres.`;
 
 // Título e descrição à esquerda, controles à direita; uma coluna no celular.
 function Section({
@@ -66,13 +73,15 @@ function Row({
         <p className="text-sm font-medium">{title}</p>
         <p className="mt-1 text-sm text-evo-textSec">{text}</p>
       </div>
-      <div className={buttonFont + " shrink-0"}>{children}</div>
+      <div className={buttonFont + " flex shrink-0 flex-col gap-3 sm:flex-row"}>
+        {children}
+      </div>
     </div>
   );
 }
 
 export const Configuracoes = () => {
-  const { user, deleteAccount } = useAuth();
+  const { user, deleteAccount, refreshSession } = useAuth();
   const { theme, setPreference } = useTheme();
   const navigate = useNavigate();
   const [currentPassword, setCurrentPassword] = useState("");
@@ -83,6 +92,58 @@ export const Configuracoes = () => {
   const [open, setOpen] = useState(false);
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
+  const [editingName, setEditingName] = useState(false);
+  const [nameDraft, setNameDraft] = useState("");
+  const [nameError, setNameError] = useState("");
+  const [nameNotice, setNameNotice] = useState("");
+  const [nameBusy, setNameBusy] = useState(false);
+  const [confirmRevoke, setConfirmRevoke] = useState(false);
+  // Foco aplicado depois do render que monta o controle de destino.
+  const focusNext = useRef("");
+  useEffect(() => {
+    if (!focusNext.current) return;
+    document.getElementById(focusNext.current)?.focus();
+    focusNext.current = "";
+  });
+  const toggleName = (open: boolean) => {
+    setEditingName(open);
+    setNameError("");
+    if (open) {
+      setNameDraft(user?.name ?? "");
+      setNameNotice("");
+    }
+    focusNext.current = open ? "settings-name" : "settings-name-edit";
+  };
+  const saveName = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const name = nameDraft.trim();
+    if (name.length < nameMinLength || name.length > nameMaxLength) {
+      setNameError(nameHint);
+      document.getElementById("settings-name")?.focus();
+      return;
+    }
+    setNameBusy(true);
+    setNameError("");
+    try {
+      await apiRequest("/api/auth/me", {
+        method: "PATCH",
+        body: JSON.stringify({ name }),
+      });
+      // O topo, o Perfil e a home leem o usuário do AuthProvider.
+      await refreshSession().catch(() => {});
+      toggleName(false);
+      setNameNotice("Nome atualizado.");
+    } catch (reason) {
+      setNameError(
+        reason instanceof Error
+          ? reason.message
+          : "Não foi possível salvar o nome.",
+      );
+      focusNext.current = "settings-name";
+    } finally {
+      setNameBusy(false);
+    }
+  };
   const action = async (work: () => Promise<void>) => {
     setBusy(true);
     setError("");
@@ -141,8 +202,77 @@ export const Configuracoes = () => {
         description="Dados usados para entrar e para falar com você."
       >
         <dl className="divide-y divide-evo-border text-sm">
+          <div className="grid gap-1 py-3 first:pt-0 sm:grid-cols-[11rem_minmax(0,1fr)] sm:gap-4">
+            <dt
+              id="settings-name-label"
+              className="text-evo-textSec sm:flex sm:min-h-11 sm:items-center sm:self-start"
+            >
+              Nome
+            </dt>
+            <dd className="min-w-0">
+              {editingName ? (
+                <form onSubmit={saveName} className="grid gap-3">
+                  <input
+                    id="settings-name"
+                    className="field"
+                    aria-labelledby="settings-name-label"
+                    aria-describedby="settings-name-hint"
+                    aria-invalid={Boolean(nameError) || undefined}
+                    type="text"
+                    autoComplete="name"
+                    required
+                    minLength={nameMinLength}
+                    maxLength={nameMaxLength}
+                    readOnly={nameBusy}
+                    value={nameDraft}
+                    onChange={(e) => setNameDraft(e.target.value)}
+                  />
+                  <p
+                    id="settings-name-hint"
+                    role={nameError ? "alert" : undefined}
+                    className={nameError ? "text-evo-red" : "text-evo-textSec"}
+                  >
+                    {nameError || nameHint}
+                  </p>
+                  <div className={buttonRow}>
+                    <button
+                      type="button"
+                      className="action-secondary"
+                      disabled={nameBusy}
+                      onClick={() => toggleName(false)}
+                    >
+                      Cancelar
+                    </button>
+                    <button className="action" disabled={nameBusy}>
+                      {nameBusy ? "Salvando…" : "Salvar"}
+                    </button>
+                  </div>
+                </form>
+              ) : (
+                <div
+                  className={
+                    buttonFont +
+                    " flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"
+                  }
+                >
+                  <span className="break-words font-medium">{user?.name}</span>
+                  <button
+                    id="settings-name-edit"
+                    type="button"
+                    className="action-secondary shrink-0"
+                    aria-label="Editar nome"
+                    onClick={() => toggleName(true)}
+                  >
+                    Editar
+                  </button>
+                </div>
+              )}
+              <p role="status" className="mt-2 text-evo-accent empty:hidden">
+                {nameNotice}
+              </p>
+            </dd>
+          </div>
           {[
-            ["Nome", user?.name],
             ["E-mail", user?.email],
             [
               "Confirmação de e-mail",
@@ -160,7 +290,7 @@ export const Configuracoes = () => {
           ))}
         </dl>
         <p className="mt-3 text-sm text-evo-textSec">
-          Para corrigir o nome ou o e-mail,{" "}
+          Para alterar o e-mail,{" "}
           <Link
             to="/app/conversas"
             className="text-evo-accent underline underline-offset-4"
@@ -243,7 +373,7 @@ export const Configuracoes = () => {
               onChange={(e) => setRepeat(e.target.value)}
             />
           </div>
-          <div className={buttonFont + " flex justify-end sm:col-span-2"}>
+          <div className={buttonRow + " sm:col-span-2"}>
             <button className="action" disabled={busy}>
               Salvar e entrar novamente
             </button>
@@ -252,23 +382,56 @@ export const Configuracoes = () => {
         <div className="mt-6 border-t border-evo-border pt-6">
           <Row
             title="Sessões abertas"
-            text="Sai da conta em todos os navegadores e aparelhos, inclusive neste."
+            text={
+              confirmRevoke
+                ? "Encerrar todas as sessões? Você sairá de todos os aparelhos, inclusive deste."
+                : "Sai da conta em todos os navegadores e aparelhos, inclusive neste."
+            }
           >
-            <button
-              type="button"
-              className="action-secondary"
-              disabled={busy}
-              onClick={() =>
-                void action(async () => {
-                  await apiRequest("/api/auth/sessions/revoke", {
-                    method: "POST",
-                  });
-                  window.location.replace("/entrar");
-                })
-              }
-            >
-              Encerrar todas as sessões
-            </button>
+            {confirmRevoke ? (
+              <>
+                <button
+                  id="settings-revoke-cancel"
+                  type="button"
+                  className="action-secondary"
+                  disabled={busy}
+                  onClick={() => {
+                    setConfirmRevoke(false);
+                    focusNext.current = "settings-revoke";
+                  }}
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="button"
+                  className="action bg-evo-red text-evo-bgMain hover:bg-evo-red/90"
+                  disabled={busy}
+                  onClick={() =>
+                    void action(async () => {
+                      await apiRequest("/api/auth/sessions/revoke", {
+                        method: "POST",
+                      });
+                      window.location.replace("/entrar");
+                    })
+                  }
+                >
+                  {busy ? "Encerrando…" : "Sim, encerrar"}
+                </button>
+              </>
+            ) : (
+              <button
+                id="settings-revoke"
+                type="button"
+                className="action-secondary"
+                disabled={busy}
+                onClick={() => {
+                  setConfirmRevoke(true);
+                  focusNext.current = "settings-revoke-cancel";
+                }}
+              >
+                Encerrar todas as sessões
+              </button>
+            )}
           </Row>
         </div>
       </Section>
@@ -320,7 +483,7 @@ export const Configuracoes = () => {
           recursos usados em versões anteriores. Guarde o arquivo em um lugar
           privado.
         </p>
-        <div className="mt-4 flex flex-wrap items-center justify-between gap-x-6 gap-y-3">
+        <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between sm:gap-x-6">
           <Link
             to="/privacidade"
             className="inline-flex min-h-11 items-center text-sm text-evo-accent underline underline-offset-4"
@@ -343,7 +506,7 @@ export const Configuracoes = () => {
           permanecer até expirar a retenção definida pela operação.
         </p>
         {!open ? (
-          <div className={buttonFont + " mt-4 flex justify-end"}>
+          <div className={buttonRow + " mt-4"}>
             <button
               type="button"
               className="action-secondary border-evo-red/50 text-evo-red"
@@ -388,7 +551,7 @@ export const Configuracoes = () => {
                 onChange={(e) => setConfirmation(e.target.value)}
               />
             </label>
-            <div className={buttonFont + " flex flex-wrap justify-end gap-3"}>
+            <div className={buttonRow}>
               <button
                 type="button"
                 className="action-secondary"

@@ -146,6 +146,13 @@ html {
   scroll-behavior: smooth;
 }
 
+/* Keeps focused controls above the fixed mobile navigation (WCAG 2.4.11). */
+@media (max-width: 1023px) {
+  html:has(.ediv-mobile-navigation) {
+    scroll-padding-bottom: calc(5rem + env(safe-area-inset-bottom));
+  }
+}
+
 body {
   min-width: 320px;
   min-height: 100vh;
