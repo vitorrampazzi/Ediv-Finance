@@ -333,20 +333,8 @@ try {
             !scenario.reducedMotion,
             `${artifacts}/${scenario.name}-hero`,
           );
-          if (!scenario.reducedMotion) {
-            await hero
-              .getByRole("button", { name: "Pausar animação", exact: true })
-              .click();
-            await page.waitForTimeout(300);
-            await temporalMotion(
-              hero,
-              false,
-              `${artifacts}/${scenario.name}-hero-paused`,
-            );
-            await hero
-              .getByRole("button", { name: "Reproduzir animação", exact: true })
-              .click();
-          }
+          await expect(hero.getByRole("button")).toHaveCount(0);
+          await expect(hero).not.toContainText("Pesquisa de ações");
           const steps = page.locator(".ph-teaching-step");
           await expect(steps).toHaveCount(3);
           const labels = ["Empresa", "Pesquisa", "Dividendos"];
@@ -569,7 +557,7 @@ try {
           );
           await page.locator('a[href="/metodologia"]').first().click();
           await expect(page).toHaveURL(`${root}/metodologia`);
-          await expect(page).not.toHaveTitle("Escola do Dividendo");
+          await expect(page).toHaveTitle("Escola do Dividendo");
           await page.locator('header a[href="/"]').first().click();
           await expect(page).toHaveURL(`${root}/`);
           await expect(page).toHaveTitle("Escola do Dividendo");

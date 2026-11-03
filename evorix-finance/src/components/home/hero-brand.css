@@ -64,15 +64,9 @@
   stroke-linecap: round;
 }
 
-.ph-brand-guides,
-.ph-brand-label-lines {
+.ph-brand-guides {
   fill: none;
   stroke: rgb(143 189 184 / 30%);
-}
-
-.ph-brand-pin {
-  fill: var(--ediv-accent);
-  stroke: none;
 }
 
 .ph-brand-signal {
@@ -122,56 +116,7 @@
   filter: saturate(0.65) brightness(0.6);
 }
 
-.ph-brand-label {
-  position: absolute;
-  padding: 0.45rem 0;
-  color: var(--ediv-text);
-  font-size: clamp(0.6875rem, 1.1vw, 0.8125rem);
-  line-height: 1.4;
-  letter-spacing: 0.01em;
-  white-space: nowrap;
-}
-
-.ph-brand-label-research {
-  top: 10.3%;
-  right: 7.5%;
-}
-
-.ph-brand-label-learning {
-  bottom: 20%;
-  left: 3.5%;
-}
-
-.ph-brand-motion-control {
-  position: absolute;
-  right: 0;
-  bottom: 0;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 44px;
-  gap: 0.45rem;
-  padding: 0.4rem 0.6rem;
-  border: 0;
-  border-radius: 6px;
-  background: transparent;
-  color: var(--ediv-muted);
-  font-size: 0.75rem;
-  line-height: 1.5;
-  cursor: pointer;
-  touch-action: manipulation;
-}
-
-.ph-brand-motion-control:active {
-  color: var(--ediv-text);
-  background: rgb(150 198 193 / 8%);
-}
-
 .ph-brand[data-ph-inview="false"] :is(.ph-brand-mark, .ph-brand-signal) {
-  animation-play-state: paused;
-}
-
-.ph-brand[data-ph-paused="true"] .ph-brand-signal {
   animation-play-state: paused;
 }
 
@@ -201,18 +146,8 @@
     margin-block: -0.75rem -0.5rem;
   }
 
-  .ph-brand-label {
-    font-size: 0.6875rem;
-  }
-
   .ph-brand-logo-depth {
     transform: translate(6px, 8px) scale(1.015);
-  }
-}
-
-@media (max-width: 479px) {
-  .ph-brand-label {
-    display: none;
   }
 }
 
@@ -220,17 +155,6 @@
   .ph-brand :is(.ph-brand-mark, .ph-brand-signal) {
     animation: none;
     transform: none;
-  }
-
-  .ph-brand-motion-control {
-    display: none;
-  }
-}
-
-@media (prefers-contrast: more) {
-  .ph-brand-label,
-  .ph-brand-motion-control {
-    color: var(--ediv-text);
   }
 }
 

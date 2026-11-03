@@ -4,6 +4,7 @@ import { Link, useLocation, useSearchParams } from "react-router-dom";
 import {
   BookOpen,
   FileSpreadsheet,
+  FileUp,
   Search,
   Upload,
   RotateCcw,
@@ -26,6 +27,7 @@ import { DividendRankingTable } from "../components/DividendRankingTable";
 import { userCan } from "../lib/permissions";
 import {
   CompanyComparison,
+  ToolSummary,
   VersionComparison,
 } from "../components/ResearchTools";
 import "./income-ranking.css";
@@ -453,209 +455,212 @@ function MemberIncomeRanking() {
           {message}
         </p>
       )}
-      {userCan(user, "rankings:write") && ranking.canManage && (
-        <details
-          id="publicar-pesquisa"
-          open={location.hash === "#publicar-pesquisa"}
-          className="scroll-mt-28 rounded-xl border border-evo-border bg-evo-card p-5"
-        >
-          <summary className="cursor-pointer font-semibold">
-            Área da equipe · preparar nova publicação
-          </summary>
-          <p className="mt-3 text-sm text-evo-textSec">
-            Excel com as abas Ranking e Informações Completas para análises de
-            dividendos, ou planilha legada/CSV UTF-8. Até 300 ativos. Revise
-            todos os dados antes de publicar. Cada publicação preserva a versão
-            anterior.
-          </p>
-          <a
-            href="/modelos/ranking.csv"
-            download
-            className="mt-2 inline-block text-sm text-evo-accent underline"
+      <div className="ranking-tools">
+        {userCan(user, "rankings:write") && ranking.canManage && (
+          <details
+            id="publicar-pesquisa"
+            open={location.hash === "#publicar-pesquisa"}
+            className="ranking-tool scroll-mt-28"
           >
-            Baixar modelo de planilha
-          </a>
-          <p className="mt-3 text-sm leading-relaxed text-evo-textSec">
-            O modelo legado inclui balanço patrimonial, DRE, fluxo de caixa,
-            informações da empresa, dívida líquida e estatísticas. Preencha cada
-            módulo como texto, com os valores, unidades e datas que deseja
-            exibir. Período e fonte também são opcionais. Campos vazios aparecem
-            como não informados. Os metadados editoriais também são opcionais.
-          </p>
-          <div className="mt-4 grid gap-3 sm:grid-cols-2">
-            {(
-              [
-                "title",
-                "authorName",
-                "professionalCategory",
-                "professionalRegistration",
-              ] as const
-            ).map((key, i) => (
-              <label key={key} className="text-sm">
-                {
-                  [
-                    "Título da publicação",
-                    "Nome profissional (opcional)",
-                    "Categoria profissional (opcional)",
-                    "Registro profissional (opcional)",
-                  ][i]
-                }
-                <input
-                  className={input + " mt-1"}
-                  disabled={busy}
-                  maxLength={key === "title" ? 160 : 120}
-                  value={metadata[key]}
-                  onChange={(e) => {
-                    setMetadata((current) => ({
-                      ...current,
-                      [key]: e.target.value,
-                    }));
-                    setPreview([]);
-                  }}
-                />
-              </label>
-            ))}
-          </div>
-          <ResearchEditor
-            metadata={metadata}
-            onContentChange={() => {
-              setFile(null);
-              setPreview([]);
-            }}
-            onMetadata={(value) => {
-              setMetadata(value);
-              setFile(null);
-              setPreview([]);
-            }}
-            disabled={busy}
-            onPrepare={(draftFile) => {
-              setFile(draftFile);
-              setPreview([]);
-              setMessage("");
-              setError("");
-            }}
-          />
-          <label className="mt-4 block text-sm">
-            Planilha CSV ou Excel
-            <input
-              type="file"
-              accept=".csv,.xlsx"
+            <ToolSummary
+              Icon={FileUp}
+              label="Área da equipe · preparar nova publicação"
+              hint="Envie a planilha, revise a prévia e publique uma nova versão."
+            />
+            <p className="mt-3 text-sm text-evo-textSec">
+              Excel com as abas Ranking e Informações Completas para análises de
+              dividendos, ou planilha legada/CSV UTF-8. Até 300 ativos. Revise
+              todos os dados antes de publicar. Cada publicação preserva a
+              versão anterior.
+            </p>
+            <a
+              href="/modelos/ranking.csv"
+              download
+              className="mt-2 inline-block text-sm text-evo-accent underline"
+            >
+              Baixar modelo de planilha
+            </a>
+            <p className="mt-3 text-sm leading-relaxed text-evo-textSec">
+              O modelo legado inclui balanço patrimonial, DRE, fluxo de caixa,
+              informações da empresa, dívida líquida e estatísticas. Preencha
+              cada módulo como texto, com os valores, unidades e datas que
+              deseja exibir. Período e fonte também são opcionais. Campos vazios
+              aparecem como não informados. Os metadados editoriais também são
+              opcionais.
+            </p>
+            <div className="mt-4 grid gap-3 sm:grid-cols-2">
+              {(
+                [
+                  "title",
+                  "authorName",
+                  "professionalCategory",
+                  "professionalRegistration",
+                ] as const
+              ).map((key, i) => (
+                <label key={key} className="text-sm">
+                  {
+                    [
+                      "Título da publicação",
+                      "Nome profissional (opcional)",
+                      "Categoria profissional (opcional)",
+                      "Registro profissional (opcional)",
+                    ][i]
+                  }
+                  <input
+                    className={input + " mt-1"}
+                    disabled={busy}
+                    maxLength={key === "title" ? 160 : 120}
+                    value={metadata[key]}
+                    onChange={(e) => {
+                      setMetadata((current) => ({
+                        ...current,
+                        [key]: e.target.value,
+                      }));
+                      setPreview([]);
+                    }}
+                  />
+                </label>
+              ))}
+            </div>
+            <ResearchEditor
+              metadata={metadata}
+              onContentChange={() => {
+                setFile(null);
+                setPreview([]);
+              }}
+              onMetadata={(value) => {
+                setMetadata(value);
+                setFile(null);
+                setPreview([]);
+              }}
               disabled={busy}
-              onChange={(e) => {
-                setFile(e.target.files?.[0] || null);
+              onPrepare={(draftFile) => {
+                setFile(draftFile);
                 setPreview([]);
                 setMessage("");
+                setError("");
               }}
-              className="mt-2 block max-w-full text-sm"
             />
-          </label>
-          {file && (
-            <p className="mt-2 text-xs text-evo-textSec">
-              Arquivo para a próxima prévia: {file.name}
-            </p>
-          )}
-          <button
-            className={button + " mt-4"}
-            disabled={!file || busy || loading}
-            onClick={() => void sendFile(false)}
-          >
-            <FileSpreadsheet size={16} />
-            {busy ? "Processando…" : "Validar e ver prévia"}
-          </button>
-          {preview.length > 0 && (
-            <section className="mt-5 space-y-3">
-              <h2 className="font-semibold">Prévia · {preview.length} ações</h2>
-              <PublicationReview
-                entries={preview}
-                metadata={metadata}
-                sourceFileName={file?.name}
-              />
-              {preview.some((entry) => entry.dividendAnalysis) ? (
-                <DividendRankingTable entries={preview} complete />
-              ) : (
-                <div className="max-h-72 overflow-auto rounded-lg border border-evo-border">
-                  <table className="w-full min-w-[500px] text-left text-sm">
-                    <caption className="sr-only">Ativos a publicar</caption>
-                    <thead>
-                      <tr>
-                        <th className="p-3">Ativo</th>
-                        <th>Potencial</th>
-                        <th>Prazo</th>
-                        <th>Tese / riscos</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {preview.map((e) => (
-                        <tr
-                          key={e.ticker}
-                          className="border-t border-evo-border"
-                        >
-                          <td className="p-3">
-                            <span className="company-identity-inline">
-                              <CompanyLogo ticker={e.ticker} size="sm" />
-                              {e.ticker}
-                            </span>
-                          </td>
-                          <td>
-                            {e.expectedReturnPercent === null
-                              ? "Não informado"
-                              : e.expectedReturnPercent + "%"}
-                          </td>
-                          <td>{e.horizonMonths ?? "—"}</td>
-                          <td>
-                            <details>
-                              <summary className="cursor-pointer py-3">
-                                Ver tese e riscos
-                              </summary>
-                              <p className="max-w-lg whitespace-pre-wrap p-2">
-                                {e.thesis || "Sem tese"}
-                              </p>
-                              <p className="max-w-lg whitespace-pre-wrap p-2">
-                                {e.risks || "Sem riscos"}
-                              </p>
-                              <RankingFundamentals data={e} />
-                            </details>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              )}
-              <p className="text-xs text-evo-textSec">
-                Dados profissionais não preenchidos aparecerão como não
-                informados. O conteúdo da prévia corresponde ao arquivo
-                selecionado.
-              </p>
-              <button
-                className={button}
+            <label className="mt-4 block text-sm">
+              Planilha CSV ou Excel
+              <input
+                type="file"
+                accept=".csv,.xlsx"
                 disabled={busy}
-                onClick={() => void sendFile(true)}
-              >
-                <Upload size={16} /> Confirmar e publicar esta versão
-              </button>
-            </section>
-          )}
-        </details>
-      )}
-      {!loading && !error && (
-        <div className="ranking-comparison">
+                onChange={(e) => {
+                  setFile(e.target.files?.[0] || null);
+                  setPreview([]);
+                  setMessage("");
+                }}
+                className="mt-2 block max-w-full text-sm"
+              />
+            </label>
+            {file && (
+              <p className="mt-2 text-xs text-evo-textSec">
+                Arquivo para a próxima prévia: {file.name}
+              </p>
+            )}
+            <button
+              className={button + " mt-4"}
+              disabled={!file || busy || loading}
+              onClick={() => void sendFile(false)}
+            >
+              <FileSpreadsheet size={16} />
+              {busy ? "Processando…" : "Validar e ver prévia"}
+            </button>
+            {preview.length > 0 && (
+              <section className="mt-5 space-y-3">
+                <h2 className="font-semibold">
+                  Prévia · {preview.length} ações
+                </h2>
+                <PublicationReview
+                  entries={preview}
+                  metadata={metadata}
+                  sourceFileName={file?.name}
+                />
+                {preview.some((entry) => entry.dividendAnalysis) ? (
+                  <DividendRankingTable entries={preview} complete />
+                ) : (
+                  <div className="max-h-72 overflow-auto rounded-lg border border-evo-border">
+                    <table className="w-full min-w-[500px] text-left text-sm">
+                      <caption className="sr-only">Ativos a publicar</caption>
+                      <thead>
+                        <tr>
+                          <th className="p-3">Ativo</th>
+                          <th>Potencial</th>
+                          <th>Prazo</th>
+                          <th>Tese / riscos</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {preview.map((e) => (
+                          <tr
+                            key={e.ticker}
+                            className="border-t border-evo-border"
+                          >
+                            <td className="p-3">
+                              <span className="company-identity-inline">
+                                <CompanyLogo ticker={e.ticker} size="sm" />
+                                {e.ticker}
+                              </span>
+                            </td>
+                            <td>
+                              {e.expectedReturnPercent === null
+                                ? "Não informado"
+                                : e.expectedReturnPercent + "%"}
+                            </td>
+                            <td>{e.horizonMonths ?? "—"}</td>
+                            <td>
+                              <details>
+                                <summary className="cursor-pointer py-3">
+                                  Ver tese e riscos
+                                </summary>
+                                <p className="max-w-lg whitespace-pre-wrap p-2">
+                                  {e.thesis || "Sem tese"}
+                                </p>
+                                <p className="max-w-lg whitespace-pre-wrap p-2">
+                                  {e.risks || "Sem riscos"}
+                                </p>
+                                <RankingFundamentals data={e} />
+                              </details>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+                <p className="text-xs text-evo-textSec">
+                  Dados profissionais não preenchidos aparecerão como não
+                  informados. O conteúdo da prévia corresponde ao arquivo
+                  selecionado.
+                </p>
+                <button
+                  className={button}
+                  disabled={busy}
+                  onClick={() => void sendFile(true)}
+                >
+                  <Upload size={16} /> Confirmar e publicar esta versão
+                </button>
+              </section>
+            )}
+          </details>
+        )}
+        {!loading && !error && (
           <CompanyComparison
             key={showingDemo ? "demo" : ranking.id || "empty"}
             entries={sourceEntries}
             demo={showingDemo}
           />
-        </div>
-      )}
-      {!loading && !error && !showingDemo && current && (
-        <div className="ranking-comparison">
+        )}
+        {!loading && !error && !showingDemo && current && (
           <VersionComparison
             key={ranking.id}
             publicationId={ranking.id}
             history={ranking.history}
           />
-        </div>
-      )}
+        )}
+      </div>
       <section className="space-y-3 sm:space-y-4">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>

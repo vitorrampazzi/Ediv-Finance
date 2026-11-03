@@ -63,12 +63,10 @@ export function retiredPageDestination(path) {
 }
 export function pageMetadata(path, qa = false) {
   const metadata = publicPages[normalizedPath(path)];
+  // A aba sempre mostra a marca; o título da página segue nas prévias sociais.
   return {
-    title:
-      metadata?.title ||
-      (normalizedPath(path) === "/app"
-        ? "Início | Escola do Dividendo"
-        : "Escola do Dividendo"),
+    title: "Escola do Dividendo",
+    socialTitle: metadata?.title || "Escola do Dividendo",
     description:
       metadata?.description || "Acesse sua conta na Escola do Dividendo.",
     canonical: metadata ? siteOrigin + normalizedPath(path) : null,
