@@ -10,14 +10,14 @@
     },
     "interface": {
       "phase": "revisao",
-      "summary": "Configurações em seções, Perfil com progresso real, faixa do ranking sem versões/Origem; test/lint/build e 2 browser PASS",
-      "updatedAt": "2026-11-03T03:29:46.490Z",
+      "summary": "Conta: nome editável, confirmação de encerrar sessões, botões em largura total no celular; test 132/lint/build ok; relato interface-conta-editavel-2026-11-03",
+      "updatedAt": "2026-11-03T03:58:14.592Z",
       "claims": []
     },
     "backend": {
       "phase": "revisao",
-      "summary": "A-G implementados; npm test 128/128, lint ok, api-resilience 4/4; integração SQL pendente CI; relato backend-auditoria-2026-11-02",
-      "updatedAt": "2026-11-02T17:23:26.295Z",
+      "summary": "PATCH /api/auth/me (nome) e limitadores de verificação separados; npm test 132/132, lint ok; integração pendente CI; relato backend-conta-editavel-2026-11-03",
+      "updatedAt": "2026-11-03T03:52:51.035Z",
       "claims": []
     },
     "qa": {

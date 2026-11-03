@@ -75,17 +75,22 @@ const registrationLimiter = rateLimit({
       "Muitas tentativas. Aguarde alguns minutos antes de tentar novamente.",
   },
 });
-const verificationLimiter = rateLimit({
-  store: new MysqlLimitStore("verify"),
-  windowMs: 15 * 60 * 1000,
-  limit: 8,
-  standardHeaders: "draft-8",
-  legacyHeaders: false,
-  message: {
-    error:
-      "Muitas tentativas. Aguarde alguns minutos antes de tentar novamente.",
-  },
-});
+// One counter per action: resending links must not block confirming the
+// e-mail itself (same 8 per 15 minutes each).
+const verificationLimiter = (prefix) =>
+  rateLimit({
+    store: new MysqlLimitStore(prefix),
+    windowMs: 15 * 60 * 1000,
+    limit: 8,
+    standardHeaders: "draft-8",
+    legacyHeaders: false,
+    message: {
+      error:
+        "Muitas tentativas. Aguarde alguns minutos antes de tentar novamente.",
+    },
+  });
+const verifyEmailLimiter = verificationLimiter("verify");
+const resendLimiter = verificationLimiter("verification-resend");
 const accountDeletionLimiter = rateLimit({
   store: new MysqlLimitStore("delete-account"),
   windowMs: 15 * 60 * 1000,
@@ -341,7 +346,7 @@ router.post("/register", registrationLimiter, async (req, res) => {
   });
 });
 
-router.post("/verification/resend", verificationLimiter, async (req, res) => {
+router.post("/verification/resend", resendLimiter, async (req, res) => {
   const availability = registrationAvailability();
   if (!availability.available)
     return res.status(503).json({ error: availability.message });
@@ -380,7 +385,7 @@ router.post("/verification/resend", verificationLimiter, async (req, res) => {
   });
 });
 
-router.post("/verify-email", verificationLimiter, async (req, res) => {
+router.post("/verify-email", verifyEmailLimiter, async (req, res) => {
   const parsed = parseBody(verificationSchema, req.body);
   if (parsed.error) return res.status(400).json(parsed);
 
@@ -511,6 +516,24 @@ router.get("/me", async (req, res) => {
       .status(401)
       .json({ error: "Entre na sua conta para continuar." });
   return res.status(200).json({ user });
+});
+
+// Same name rule as registration; only the session's own account is updated.
+const profileSchema = z.object({ name: registerSchema.shape.name }).strict();
+
+router.patch("/me", requireAuthenticatedUser, async (req, res) => {
+  const parsed = profileSchema.safeParse(req.body);
+  if (!parsed.success)
+    return res
+      .status(400)
+      .json({ error: "Informe um nome com 2 a 100 caracteres." });
+  await pool.execute("UPDATE users SET name = ? WHERE id = ?", [
+    parsed.data.name,
+    req.authenticatedUser.id,
+  ]);
+  return res
+    .status(200)
+    .json({ user: { ...req.authenticatedUser, name: parsed.data.name } });
 });
 
 router.delete(

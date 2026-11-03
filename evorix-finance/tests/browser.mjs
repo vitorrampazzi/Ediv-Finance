@@ -419,6 +419,31 @@ try {
     },
   );
   await check(
+    "Conta: editar o nome valida e atualiza o topo da área logada",
+    async () => {
+      await page.goto(root + "/app/config");
+      await page.getByRole("button", { name: "Editar nome" }).click();
+      const field = page.getByLabel("Nome", { exact: true });
+      await expect(field).toBeFocused();
+      await field.fill(" ");
+      await page.getByRole("button", { name: "Salvar", exact: true }).click();
+      await expect(field).toBeFocused();
+      await field.fill("Nome Editado");
+      await page.getByRole("button", { name: "Salvar", exact: true }).click();
+      await expect(
+        page.getByRole("status").filter({ hasText: "Nome atualizado." }),
+      ).toBeVisible();
+      await expect(
+        page.getByRole("button", { name: "Editar nome" }),
+      ).toBeFocused();
+      await expect(
+        page.getByRole("button", {
+          name: /^Abrir menu da conta de Nome Editado/,
+        }),
+      ).toBeVisible();
+    },
+  );
+  await check(
     "Encerrar todas as sessões invalida também uma segunda janela",
     async () => {
       const other = await context(null);
@@ -431,6 +456,17 @@ try {
       await page.goto(root + "/app/config");
       await page
         .getByRole("button", { name: "Encerrar todas as sessões", exact: true })
+        .click();
+      await page.getByRole("button", { name: "Cancelar", exact: true }).click();
+      assert.equal(
+        (await otherPage.request.get(root + "/api/auth/me")).status(),
+        200,
+      );
+      await page
+        .getByRole("button", { name: "Encerrar todas as sessões", exact: true })
+        .click();
+      await page
+        .getByRole("button", { name: "Sim, encerrar", exact: true })
         .click();
       await page.waitForURL("**/entrar");
       assert.equal(
