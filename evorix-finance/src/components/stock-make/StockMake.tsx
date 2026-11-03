@@ -12,9 +12,9 @@ import { CompanyLogo } from "../CompanyLogo";
 import {
   DividendCalendar,
   DividendChart,
-  PerformanceChart,
   PriceChart,
   ResultsCharts,
+  ValuationChart,
 } from "./Charts";
 import {
   brl,
@@ -926,15 +926,8 @@ function StockPage({
         >
           <SectionHead id="resultados" n="05" title="Resultados" />
           <ResultsCharts />
-          <div className="mt-16 border-t border-fmk-line pt-8">
-            <div className="mb-6 flex flex-wrap items-end justify-between gap-3">
-              <div>
-                <h3 className="font-fmk-serif text-2xl">
-                  P/L e média histórica
-                </h3>
-              </div>
-            </div>
-            <PerformanceChart />
+          <div className="mt-12">
+            <ValuationChart />
           </div>
         </section>
 

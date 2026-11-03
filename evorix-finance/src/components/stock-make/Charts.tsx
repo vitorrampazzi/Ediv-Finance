@@ -3,14 +3,13 @@ import {
   HistoricalDividendChart,
   HistoryFeedback,
 } from "./HistoryCharts";
-import { useState } from "react";
 import {
+  Area,
+  AreaChart,
   Bar,
   BarChart,
   CartesianGrid,
   Cell,
-  Line,
-  LineChart,
   ReferenceLine,
   ResponsiveContainer,
   Tooltip,
@@ -23,21 +22,15 @@ import {
   pct,
   useStockData,
   useHistory,
-  performanceHistory,
-  results,
-  cagrSeries,
-  perfPeriods,
-  perfSeriesMeta,
   dividendAnnouncementMonths,
   axisProps,
   gridProps,
 } from "./data";
-import { ChartTip, Legend, Seg, type LegendItem } from "./ui";
+import { ChartTip } from "./ui";
 import { dividendColumns, type DividendColumnKey } from "./data";
 
 const TEAL = "var(--fmk-teal)";
 const AMBER = "var(--fmk-amber)";
-const STEEL = "var(--fmk-steel)";
 
 const chartLabels: Partial<Record<DividendColumnKey, string>> = {
   referencePrice: "Cotação",
@@ -88,7 +81,7 @@ function PublicationChart({
   const data = rows.filter((row) => row.amount !== null);
   return (
     <figure className="fmk-publication-chart" data-publication-chart={id}>
-      <div style={{ height }}>
+      <div style={{ height }} data-chart-visual={data.length ? "" : undefined}>
         {data.length ? (
           <ResponsiveContainer width="100%" height="100%">
             <BarChart
@@ -170,28 +163,6 @@ function PublicationChart({
       </div>
     </figure>
   );
-}
-
-const Hatch = ({ id, color = TEAL }: { id: string; color?: string }) => (
-  <defs>
-    <pattern
-      id={id}
-      width="6"
-      height="6"
-      patternUnits="userSpaceOnUse"
-      patternTransform="rotate(45)"
-    >
-      <rect width="6" height="6" fill={color} fillOpacity="0.1" />
-      <line x1="0" y1="0" x2="0" y2="6" stroke={color} strokeWidth="2.4" />
-    </pattern>
-  </defs>
-);
-
-function useToggle(keys: string[]) {
-  const [on, setOn] = useState<Record<string, boolean>>(
-    Object.fromEntries(keys.map((k) => [k, true])),
-  );
-  return [on, (k: string) => setOn((s) => ({ ...s, [k]: !s[k] }))] as const;
 }
 
 /* Historical areas/bars use only the separately approved AGF endpoint. */
@@ -307,362 +278,523 @@ export function DividendCalendar() {
   );
 }
 
-/* ───────────── Rentabilidade ───────────── */
-export function PerformanceChart() {
-  const { company } = useStockData();
-  const [period, setPeriod] = useState("1A");
-  const [on, toggle] = useToggle(perfSeriesMeta.map((s) => s.key));
-  const data = performanceHistory;
-  const ends = data.at(-1);
-  const items: LegendItem[] = perfSeriesMeta.map((s) => ({
-    ...s,
-    label: s.key === "acao" ? company.ticker : s.label,
-    value: ends
-      ? pct(ends[s.key as keyof typeof ends] as number, 1, true)
-      : "Não informado",
-  }));
+/* ───────────── Resultados ───────────── */
+// The publication brings one snapshot per field, so each block shows how the
+// fields relate instead of a single bar. Derived values are direct arithmetic.
+function ResultFigure({
+  id,
+  title,
+  sub,
+  keys,
+  summary,
+  className = "",
+  children,
+}: {
+  id: string;
+  title: string;
+  sub: string;
+  keys: DividendColumnKey[];
+  summary: string;
+  className?: string;
+  children: React.ReactNode;
+}) {
+  const { number, value } = useStockData();
+  const ready = keys.some((key) => number(key) !== null);
   return (
-    <div>
-      <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-        {data.length > 0 && (
-          <Legend disabled items={items} active={on} onToggle={toggle} />
-        )}
-        <Seg
-          disabled
-          label="Período de rentabilidade"
-          options={perfPeriods}
-          value={period}
-          onChange={setPeriod}
-        />
+    <figure
+      className={`fmk-publication-chart min-w-0 border-t border-fmk-line pt-6 ${className}`}
+      data-publication-chart={id}
+    >
+      <figcaption className="mb-5">
+        <h3 className="font-fmk-serif text-xl">{title}</h3>
+        <p className="mt-0.5 text-xs text-fmk-sub">{sub}</p>
+      </figcaption>
+      {ready ? (
+        <div data-chart-visual>{children}</div>
+      ) : (
+        <div className="h-40">
+          <ChartUnavailable title={`${title}: dados indisponíveis`} />
+        </div>
+      )}
+      <div className="sr-only">
+        <p>{summary}</p>
+        <table>
+          <caption>{title}: valores da publicação</caption>
+          <tbody>
+            {keys.map((key) => (
+              <tr key={key} data-chart-field={key}>
+                <th scope="row">
+                  {dividendColumns.find((column) => column.key === key)!.label}
+                </th>
+                <td data-chart-value={key} data-exact-value={value(key)}>
+                  {value(key)}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       </div>
-      <div className="w-full">
-        {data.length ? (
-          <ResponsiveContainer height={360}>
-            <LineChart
-              data={data}
-              margin={{ top: 8, right: 0, left: 0, bottom: 0 }}
-            >
-              <CartesianGrid {...gridProps} />
-              <XAxis
-                dataKey="label"
-                {...axisProps}
-                minTickGap={56}
-                interval="preserveStartEnd"
-              />
-              <YAxis
-                orientation="right"
-                {...axisProps}
-                axisLine={false}
-                width={52}
-                tickFormatter={(v) => `${num(v, 0)}%`}
-              />
-              <ReferenceLine y={0} stroke="var(--fmk-line)" />
-              <Tooltip
-                cursor={{ stroke: "var(--fmk-dim)", strokeDasharray: "3 3" }}
-                content={
-                  <ChartTip
-                    fmt={(v) => pct(v, 2, true)}
-                    title={(_, p) => String(p.full)}
-                  />
-                }
-              />
-              {perfSeriesMeta.map(
-                (s) =>
-                  on[s.key] && (
-                    <Line
-                      key={s.key}
-                      dataKey={s.key}
-                      name={s.label}
-                      stroke={s.color}
-                      strokeWidth={s.key === "acao" ? 2 : 1.4}
-                      strokeDasharray={s.dash}
-                      dot={false}
-                      activeDot={{ r: 3.5 }}
-                    />
-                  ),
-              )}
-            </LineChart>
-          </ResponsiveContainer>
-        ) : (
-          <PublicationChart
-            id="valuation"
-            title="P/L e média histórica"
-            keys={["projectedPE", "averagePE10Years"]}
-            unit="vezes"
-            height={360}
-          />
-        )}
-      </div>
+    </figure>
+  );
+}
+
+/** Round linear scale from min(bottom, values) to max(top, values), about 5 ticks. */
+function scale(values: number[], top: number, bottom = 0) {
+  const low = Math.min(bottom, ...values);
+  const high = Math.max(top, ...values);
+  const rough = (high - low) / 5;
+  const magnitude = 10 ** Math.floor(Math.log10(rough));
+  const step = [1, 2, 5, 10].map((m) => m * magnitude).find((s) => s >= rough)!;
+  const min = Math.floor(low / step) * step;
+  const max = Math.ceil(high / step) * step;
+  const ticks = Array.from(
+    { length: Math.round((max - min) / step) + 1 },
+    (_, i) => min + i * step,
+  );
+  return { ticks, at: (v: number) => ((v - min) / (max - min)) * 100 };
+}
+
+function Axis({
+  ticks,
+  at,
+  unit = "",
+}: {
+  ticks: number[];
+  at: (v: number) => number;
+  unit?: string;
+}) {
+  return (
+    <div aria-hidden className="relative mt-2 h-4 text-[11px] text-fmk-dim">
+      {ticks.map((t, i) => (
+        <span
+          key={t}
+          className="absolute top-0 whitespace-nowrap"
+          style={{
+            left: `${at(t)}%`,
+            transform: `translateX(${i === 0 ? 0 : i === ticks.length - 1 ? -100 : -50}%)`,
+          }}
+        >
+          {num(t, 0)}
+          {unit}
+        </span>
+      ))}
     </div>
   );
 }
 
-/* ───────────── Resultados ───────────── */
-const Panel = ({
-  title,
-  sub,
-  children,
-}: {
-  title: string;
-  sub: string;
-  children: React.ReactNode;
-}) => (
-  <div className="border-t border-fmk-line pt-6">
-    <div className="mb-4 flex items-start justify-between gap-3">
-      <div>
-        <h3 className="font-fmk-serif text-xl">{title}</h3>
-        <p className="mt-0.5 text-xs text-fmk-dim">{sub}</p>
-      </div>
-    </div>
-    {children}
-  </div>
+/** Text label above a point of a track, kept inside the track edges. */
+function Pin({ at, children }: { at: number; children: React.ReactNode }) {
+  return (
+    <span
+      className="absolute bottom-full mb-1.5 whitespace-nowrap text-xs text-fmk-ink"
+      style={{
+        left: `${at}%`,
+        transform: `translateX(${at < 15 ? 0 : at > 85 ? -100 : -50}%)`,
+      }}
+    >
+      {children}
+    </span>
+  );
+}
+
+const Swatch = ({ hatch = false }: { hatch?: boolean }) => (
+  <span
+    aria-hidden
+    className={`inline-block size-3 shrink-0 rounded-sm ${hatch ? "hatch border border-dashed border-fmk-teal" : "bg-fmk-teal"}`}
+  />
 );
 
-export function ResultsCharts() {
-  const { cagrLucro, value } = useStockData();
-  const [on, toggle] = useToggle(["receita", "lucro", "ebitda"]);
-  const evo: LegendItem[] = [
-    { key: "receita", label: "Receita líquida", color: STEEL },
-    { key: "lucro", label: "Lucro líquido", color: TEAL },
-    { key: "ebitda", label: "EBITDA", color: AMBER, dash: "5 4" },
-  ];
-  const [lpaOn, lpaToggle] = useToggle(["lpaR", "lpaE"]);
-  return (
-    <div className="grid gap-x-14 gap-y-12 lg:grid-cols-2">
-      <Panel
-        title="Lucro por ação"
-        sub="R$ por ação · estimativa da publicação"
-      >
-        {results.length > 0 && (
-          <Legend
-            disabled
-            items={[
-              { key: "lpaR", label: "Realizado", color: TEAL },
-              { key: "lpaE", label: "Estimado", color: TEAL, hatch: true },
-            ]}
-            active={lpaOn}
-            onToggle={lpaToggle}
-          />
-        )}
-        <div className="mt-2">
-          {results.length ? (
-            <ResponsiveContainer height={260}>
-              <BarChart
-                data={results}
-                margin={{ top: 8, right: 0, left: 0, bottom: 0 }}
-                barCategoryGap="24%"
-              >
-                <Hatch id="hatch-lpa" />
-                <CartesianGrid {...gridProps} />
-                <XAxis dataKey="period" {...axisProps} />
-                <YAxis
-                  {...axisProps}
-                  axisLine={false}
-                  width={36}
-                  tickFormatter={(v) => num(v, 1)}
-                />
-                <Tooltip
-                  cursor={{ fill: "rgba(255,255,255,0.03)" }}
-                  content={<ChartTip fmt={(v) => brl(v)} />}
-                />
-                {lpaOn.lpaR && (
-                  <Bar
-                    dataKey="lpaR"
-                    name="Realizado"
-                    stackId="a"
-                    fill={TEAL}
-                  />
-                )}
-                {lpaOn.lpaE && (
-                  <Bar
-                    dataKey="lpaE"
-                    name="Estimado"
-                    stackId="a"
-                    fill="url(#hatch-lpa)"
-                    stroke={TEAL}
-                    strokeDasharray="3 2"
-                  />
-                )}
-              </BarChart>
-            </ResponsiveContainer>
-          ) : (
-            <PublicationChart
-              id="eps"
-              title="Lucro por ação estimado"
-              keys={["estimatedEps"]}
-              unit="R$ por ação"
-              height={260}
-            />
-          )}
-        </div>
-      </Panel>
+const years = (n: number) =>
+  `${num(Math.abs(n), 1)} ${Math.abs(Math.round(n * 10) / 10) < 2 ? "ano" : "anos"}`;
 
-      <Panel
-        title="Lucro líquido estimado"
-        sub="R$ totais · estimativa da publicação"
-      >
-        {results.length > 0 && (
-          <Legend disabled items={evo} active={on} onToggle={toggle} />
+function EarningsToDividend() {
+  const { company, number, value } = useStockData();
+  const { lpa, dpa } = company;
+  const profit = number("estimatedNetIncome");
+  const ok = lpa !== null && dpa !== null && lpa > 0 && dpa >= 0 && dpa <= lpa;
+  const kept = ok ? lpa - dpa : null;
+  const share = ok ? (dpa / lpa) * 100 : 0;
+  const note =
+    lpa === null || dpa === null
+      ? "Sem LPA estimado ou dividendo projetado para comparar a divisão."
+      : !(lpa > 0)
+        ? "LPA estimado igual ou abaixo de zero: não há lucro por ação para dividir entre distribuição e retenção."
+        : dpa < 0
+          ? "Dividendo projetado negativo na publicação; a divisão não é exibida."
+          : dpa > lpa
+            ? `O dividendo projetado supera o LPA estimado em ${brl(dpa - lpa)} por ação. A barra não é exibida para não distorcer a proporção.`
+            : null;
+  const summary = ok
+    ? `Lucro líquido estimado de ${value("estimatedNetIncome")}. Do LPA estimado de ${brl(lpa)}, ${brl(dpa)} são distribuídos como dividendo projetado e ${brl(kept)} ficam retidos na empresa (LPA menos DPA), ${num(share, 0)}% distribuídos. Payout esperado informado: ${value("expectedPayout")}.`
+    : `Lucro líquido estimado de ${value("estimatedNetIncome")}, LPA estimado de ${value("estimatedEps")}, dividendo projetado de ${value("projectedGrossDividendPerShare")} e payout esperado de ${value("expectedPayout")}. ${note}`;
+  return (
+    <ResultFigure
+      id="earnings"
+      title="Do lucro ao dividendo"
+      sub="Quanto do lucro por ação estimado vira dividendo projetado"
+      keys={[
+        "estimatedNetIncome",
+        "estimatedEps",
+        "projectedGrossDividendPerShare",
+        "expectedPayout",
+      ]}
+      summary={summary}
+      className="lg:col-span-2"
+    >
+      <div className="grid gap-x-12 gap-y-8 md:grid-cols-[minmax(0,5fr)_minmax(0,7fr)]">
+        <dl className="grid grid-cols-2 gap-x-6 gap-y-5">
+          <div className="col-span-2">
+            <dt className="text-xs text-fmk-sub">Lucro líquido estimado</dt>
+            <dd className="mt-1 font-fmk-serif text-4xl tracking-tight text-fmk-teal">
+              {profit === null
+                ? "Não informado"
+                : Math.abs(profit) >= 1e9
+                  ? `R$ ${num(profit / 1e9)} bi`
+                  : Math.abs(profit) >= 1e6
+                    ? `R$ ${num(profit / 1e6)} mi`
+                    : brl(profit)}
+            </dd>
+            {profit !== null && (
+              <dd className="mt-1 text-xs text-fmk-dim">
+                {value("estimatedNetIncome")}
+              </dd>
+            )}
+          </div>
+          <div>
+            <dt className="text-xs text-fmk-sub">LPA estimado</dt>
+            <dd className="mt-1 text-xl">{value("estimatedEps")}</dd>
+          </div>
+          <div>
+            <dt className="text-xs text-fmk-sub">Payout esperado</dt>
+            <dd className="mt-1 text-xl">{value("expectedPayout")}</dd>
+          </div>
+        </dl>
+        <div className="self-end">
+          {ok ? (
+            <div aria-hidden>
+              <div className="relative mt-7">
+                <Pin at={share}>DPA ÷ LPA: {num(share, 0)}%</Pin>
+                <div className="flex h-11 overflow-hidden rounded-md">
+                  {dpa > 0 && (
+                    <div
+                      className="bg-fmk-teal"
+                      style={{ width: `${share}%` }}
+                    />
+                  )}
+                  {kept! > 0 && (
+                    <div
+                      className="hatch flex-1 rounded-r-md border border-dashed border-fmk-teal"
+                      style={dpa > 0 ? { borderLeft: 0 } : undefined}
+                    />
+                  )}
+                </div>
+              </div>
+              <div className="mt-2 flex justify-between text-[11px] text-fmk-dim">
+                <span>R$ 0</span>
+                <span>LPA estimado {brl(lpa)}</span>
+              </div>
+            </div>
+          ) : (
+            <p
+              className="rounded-md border border-dashed border-fmk-line px-4 py-3 text-sm text-fmk-sub"
+              data-chart-note
+            >
+              {note}
+            </p>
+          )}
+          <ul className="mt-4 grid gap-2 text-sm sm:grid-cols-2">
+            <li className="flex items-start gap-2">
+              {ok && (
+                <span className="mt-1">
+                  <Swatch />
+                </span>
+              )}
+              <span>
+                <span className="block text-fmk-sub">
+                  Distribuído como dividendo
+                </span>
+                <span className="text-fmk-ink">
+                  {value("projectedGrossDividendPerShare")}
+                </span>{" "}
+                <span className="text-xs text-fmk-dim">DPA projetado</span>
+              </span>
+            </li>
+            <li className="flex items-start gap-2">
+              {ok && (
+                <span className="mt-1">
+                  <Swatch hatch />
+                </span>
+              )}
+              <span>
+                <span className="block text-fmk-sub">Retido na empresa</span>
+                <span className="text-fmk-ink">
+                  {kept === null ? "Não calculado" : brl(kept)}
+                </span>{" "}
+                <span className="text-xs text-fmk-dim">LPA − DPA</span>
+              </span>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </ResultFigure>
+  );
+}
+
+function EarningsGrowth() {
+  const { cagrLucro } = useStockData();
+  const rate = cagrLucro !== null && cagrLucro > -1 ? cagrLucro : null;
+  const data =
+    rate === null
+      ? []
+      : Array.from({ length: 6 }, (_, year) => ({
+          year: `Ano ${year}`,
+          index: 100 * (1 + rate) ** year,
+        }));
+  const end = data.at(-1)?.index ?? null;
+  const { ticks } = scale(
+    data.map((d) => d.index),
+    100,
+    100,
+  );
+  const rateText = pct(cagrLucro, 1);
+  return (
+    <ResultFigure
+      id="cagr"
+      title="Crescimento do lucro"
+      sub="CAGR dos lucros em cinco anos, informado na pesquisa"
+      keys={["earningsCagr5Years"]}
+      summary={
+        end === null
+          ? `CAGR de lucros informado: ${rateText}.`
+          : `Ilustração do CAGR informado de ${rateText} ao ano: partindo do índice 100 no ano 0, o crescimento composto leva a ${num(end, 0)} no ano 5. ${data.map((d) => `${d.year}: ${num(d.index, 0)}`).join("; ")}. Não são lucros nem datas reais.`
+      }
+    >
+      <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+        <span className="font-fmk-serif text-4xl tracking-tight text-fmk-teal">
+          {rateText}
+        </span>
+        <span className="text-sm text-fmk-sub">ao ano</span>
+        {end !== null && (
+          <span className="ml-auto text-sm text-fmk-sub">
+            índice 100 → <span className="text-fmk-ink">{num(end, 0)}</span>
+          </span>
         )}
-        <div className="mt-2">
-          {results.length ? (
-            <ResponsiveContainer height={260}>
-              <LineChart
-                data={results}
-                margin={{ top: 8, right: 0, left: 0, bottom: 0 }}
+      </div>
+      {data.length > 0 && (
+        <>
+          <div aria-hidden className="mt-4 h-[200px]">
+            <ResponsiveContainer width="100%" height="100%">
+              <AreaChart
+                data={data}
+                margin={{ top: 8, right: 24, left: 0, bottom: 0 }}
+                baseValue={100}
               >
                 <CartesianGrid {...gridProps} />
-                <XAxis dataKey="period" {...axisProps} />
+                <XAxis
+                  dataKey="year"
+                  {...axisProps}
+                  interval={0}
+                  padding={{ left: 8, right: 8 }}
+                />
                 <YAxis
                   {...axisProps}
                   axisLine={false}
-                  width={36}
-                  tickFormatter={(v) => num(v, 0)}
+                  width={40}
+                  domain={[ticks[0], ticks.at(-1)!]}
+                  ticks={ticks}
+                  interval={0}
+                  tickFormatter={(v: number) => num(v, 0)}
+                />
+                <ReferenceLine
+                  y={100}
+                  stroke="var(--fmk-dim)"
+                  strokeDasharray="3 3"
                 />
                 <Tooltip
                   cursor={{ stroke: "var(--fmk-dim)", strokeDasharray: "3 3" }}
-                  content={<ChartTip fmt={(v) => `R$ ${num(v, 2)} bi`} />}
+                  content={<ChartTip fmt={(v) => num(v, 1)} />}
                 />
-                {evo.map(
-                  (s) =>
-                    on[s.key] && (
-                      <Line
-                        key={s.key}
-                        dataKey={s.key}
-                        name={s.label}
-                        stroke={s.color}
-                        strokeWidth={1.7}
-                        strokeDasharray={s.dash}
-                        dot={{ r: 2.5, fill: "var(--fmk-bg)", strokeWidth: 1.5 }}
-                      />
-                    ),
-                )}
-              </LineChart>
-            </ResponsiveContainer>
-          ) : (
-            <PublicationChart
-              id="profit"
-              title="Lucro líquido estimado"
-              keys={["estimatedNetIncome"]}
-              unit="R$"
-              height={260}
-            />
-          )}
-        </div>
-      </Panel>
-
-      <Panel
-        title="Crescimento do lucro (CAGR)"
-        sub="Taxa composta informada em cinco anos"
-      >
-        <div className="flex items-baseline gap-3">
-          <span className="font-fmk-serif text-5xl text-fmk-teal">
-            {pct(cagrLucro, 1)}
-          </span>
-          <span className="text-sm text-fmk-sub">
-            ao ano · período de cinco anos da fonte
-          </span>
-        </div>
-        <div className="mt-2">
-          {cagrSeries.length ? (
-            <ResponsiveContainer height={190}>
-              <LineChart
-                data={cagrSeries}
-                margin={{ top: 8, right: 0, left: 0, bottom: 0 }}
-              >
-                <CartesianGrid {...gridProps} />
-                <XAxis dataKey="period" {...axisProps} />
-                <YAxis
-                  {...axisProps}
-                  axisLine={false}
-                  width={36}
-                  domain={[90, "dataMax + 5"]}
-                />
-                <Tooltip content={<ChartTip fmt={(v) => num(v, 1)} />} />
-                <Line
-                  dataKey="trend"
-                  name="Trajetória a taxa constante"
-                  stroke="var(--fmk-dim)"
-                  strokeDasharray="4 4"
-                  strokeWidth={1.2}
-                  dot={false}
-                />
-                <Line
-                  dataKey="real"
-                  name="Lucro (índice)"
+                <Area
+                  dataKey="index"
+                  name="Índice"
+                  type="monotone"
                   stroke={TEAL}
-                  strokeWidth={1.8}
-                  dot={{ r: 2.5, fill: "var(--fmk-bg)", strokeWidth: 1.5 }}
+                  strokeWidth={2}
+                  fill={TEAL}
+                  fillOpacity={0.14}
+                  dot={{
+                    r: 3,
+                    fill: "var(--fmk-bg)",
+                    stroke: TEAL,
+                    strokeWidth: 1.5,
+                  }}
+                  isAnimationActive={false}
                 />
-              </LineChart>
+              </AreaChart>
             </ResponsiveContainer>
-          ) : (
-            <PublicationChart
-              id="cagr"
-              title="Crescimento composto do lucro"
-              keys={["earningsCagr5Years"]}
-              unit="% ao ano"
-              height={190}
-            />
-          )}
-        </div>
-      </Panel>
+          </div>
+          <p className="mt-3 text-xs leading-relaxed text-fmk-dim">
+            Ilustração: o que um crescimento de {rateText} ao ano representa em
+            5 anos, em índice (ano 0 = 100). Não são lucros nem datas reais.
+          </p>
+        </>
+      )}
+    </ResultFigure>
+  );
+}
 
-      <Panel title="Endividamento" sub="Dívida líquida / EBITDA, em vezes">
-        <div className="flex items-baseline gap-3">
-          <span className="font-fmk-serif text-5xl">
-            {value("netDebtToEbitda")}
-          </span>
-          <span className="text-sm text-fmk-sub">
-            dado informado na pesquisa
-          </span>
-        </div>
-        <div className="mt-2">
-          {results.length ? (
-            <ResponsiveContainer height={190}>
-              <BarChart
-                data={results.filter((r) => r.divEbitda != null)}
-                margin={{ top: 8, right: 0, left: 0, bottom: 0 }}
-                barCategoryGap="30%"
-              >
-                <CartesianGrid {...gridProps} />
-                <XAxis dataKey="period" {...axisProps} />
-                <YAxis
-                  {...axisProps}
-                  axisLine={false}
-                  width={36}
-                  domain={[0, 3]}
-                  tickFormatter={(v) => `${v}x`}
+function Leverage() {
+  const { number, value } = useStockData();
+  const debt = number("netDebtToEbitda");
+  const s = scale(debt === null ? [] : [debt], 5);
+  const text =
+    debt === null
+      ? ""
+      : debt < 0
+        ? `${value("netDebtToEbitda")}x: valor negativo, o que indica caixa maior que a dívida ou EBITDA negativo; a pesquisa não informa os sinais separados.`
+        : debt === 0
+          ? "0x: a dívida líquida informada é nula em relação ao EBITDA."
+          : `${value("netDebtToEbitda")}x significa que a dívida líquida equivale a cerca de ${years(debt)} de EBITDA.`;
+  return (
+    <ResultFigure
+      id="debt"
+      title="Endividamento"
+      sub="Dívida líquida / EBITDA, em vezes"
+      keys={["netDebtToEbitda"]}
+      summary={
+        debt === null
+          ? "Dívida líquida / EBITDA não informada."
+          : `Dívida líquida / EBITDA de ${value("netDebtToEbitda")} vezes, numa régua de ${num(s.ticks[0], 0)} a ${num(s.ticks.at(-1)!, 0)} vezes. ${text}`
+      }
+    >
+      {debt !== null && (
+        <>
+          <div className="flex items-baseline gap-3">
+            <span className="font-fmk-serif text-4xl tracking-tight">
+              {value("netDebtToEbitda")}x
+            </span>
+            <span className="text-sm text-fmk-sub">
+              dívida líquida / EBITDA
+            </span>
+          </div>
+          <div aria-hidden className="mt-12">
+            <div className="relative h-3 rounded-full bg-fmk-line-soft">
+              {s.ticks.map((t) => (
+                <span
+                  key={t}
+                  className="absolute top-1/2 h-3 w-px -translate-y-1/2 bg-fmk-line"
+                  style={{ left: `${s.at(t)}%` }}
                 />
+              ))}
+              <span
+                className="absolute inset-y-0 rounded-full bg-fmk-teal/80"
+                style={{
+                  left: `${Math.min(s.at(0), s.at(debt))}%`,
+                  width: `${Math.abs(s.at(debt) - s.at(0))}%`,
+                }}
+              />
+              <span
+                className="absolute top-1/2 size-5 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-fmk-teal"
+                style={{ left: `${s.at(debt)}%`, background: "var(--fmk-bg)" }}
+              />
+              <Pin at={s.at(debt)}>
+                <span className="relative -top-2">
+                  {value("netDebtToEbitda")}x
+                </span>
+              </Pin>
+            </div>
+            <Axis ticks={s.ticks} at={s.at} unit="x" />
+          </div>
+          <p className="mt-6 text-sm leading-relaxed text-fmk-sub">{text}</p>
+        </>
+      )}
+    </ResultFigure>
+  );
+}
 
-                <Tooltip
-                  cursor={{ fill: "rgba(255,255,255,0.03)" }}
-                  content={<ChartTip fmt={(v) => `${num(v, 1)}x`} />}
-                />
-                <Bar dataKey="divEbitda" name="Dív. líq./EBITDA">
-                  {results
-                    .filter((r) => r.divEbitda != null)
-                    .map((r) => (
-                      <Cell
-                        key={r.period}
-                        fill={(r.divEbitda ?? 0) > 2 ? AMBER : STEEL}
-                      />
-                    ))}
-                </Bar>
-              </BarChart>
-            </ResponsiveContainer>
-          ) : (
-            <PublicationChart
-              id="debt"
-              title="Dívida líquida / EBITDA"
-              keys={["netDebtToEbitda"]}
-              unit="vezes"
-              height={190}
-            />
-          )}
-        </div>
-      </Panel>
+export function ResultsCharts() {
+  return (
+    <div className="grid gap-x-14 gap-y-12 lg:grid-cols-2">
+      <EarningsToDividend />
+      <EarningsGrowth />
+      <Leverage />
     </div>
+  );
+}
+
+/* P/L projetado contra a média de 10 anos, ambos informados na pesquisa. */
+export function ValuationChart() {
+  const { company, number, value } = useStockData();
+  const times = (key: DividendColumnKey) =>
+    number(key) === null ? value(key) : `${value(key)}x`;
+  const { plProj, plMed } = company;
+  const values = [plProj, plMed].filter((v): v is number => v !== null);
+  const s = scale(values, Math.max(1, ...values) * 1.15);
+  return (
+    <ResultFigure
+      id="valuation"
+      title="P/L e média histórica"
+      sub="P/L projetado comparado à média dos últimos 10 anos"
+      keys={["projectedPE", "averagePE10Years", "peDeviation"]}
+      summary={`P/L projetado de ${value("projectedPE")} e média de 10 anos de ${value("averagePE10Years")}; desvio informado de ${value("peDeviation")}.`}
+    >
+      <div className="grid gap-x-12 gap-y-8 md:grid-cols-[minmax(0,4fr)_minmax(0,8fr)] md:items-end">
+        <div>
+          <p className="font-fmk-serif text-4xl tracking-tight text-fmk-teal">
+            {value("peDeviation")}
+          </p>
+          <p className="mt-1 text-sm text-fmk-sub">
+            desvio do P/L projetado em relação à média de 10 anos, informado na
+            pesquisa
+          </p>
+        </div>
+        <div>
+          <div
+            aria-hidden
+            className="relative mt-6 h-10 rounded-md bg-fmk-line-soft"
+          >
+            {plProj !== null && (
+              <span
+                className="absolute top-1/2 h-4 -translate-y-1/2 bg-fmk-teal"
+                style={{
+                  left: `${Math.min(s.at(0), s.at(plProj))}%`,
+                  width: `${Math.abs(s.at(plProj) - s.at(0))}%`,
+                }}
+              />
+            )}
+            {plMed !== null && (
+              <>
+                <span
+                  className="absolute -inset-y-1.5 w-[3px] -translate-x-1/2 rounded-full bg-fmk-ink"
+                  style={{ left: `${s.at(plMed)}%` }}
+                />
+                <Pin at={s.at(plMed)}>
+                  <span className="relative -top-1.5">
+                    média {value("averagePE10Years")}
+                  </span>
+                </Pin>
+              </>
+            )}
+          </div>
+          <Axis ticks={s.ticks} at={s.at} unit="x" />
+          <ul className="mt-4 flex flex-wrap gap-x-6 gap-y-2 text-sm">
+            <li className="flex items-center gap-2">
+              <span aria-hidden className="h-2 w-5 rounded-sm bg-fmk-teal" />
+              <span className="text-fmk-sub">P/L projetado</span>
+              <span className="text-fmk-ink">{times("projectedPE")}</span>
+            </li>
+            <li className="flex items-center gap-2">
+              <span
+                aria-hidden
+                className="h-4 w-[3px] rounded-full bg-fmk-ink"
+              />
+              <span className="text-fmk-sub">Média de 10 anos</span>
+              <span className="text-fmk-ink">{times("averagePE10Years")}</span>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </ResultFigure>
   );
 }
 

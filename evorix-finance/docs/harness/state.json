@@ -10,8 +10,8 @@
     },
     "interface": {
       "phase": "revisao",
-      "summary": "Conta: nome editável, confirmação de encerrar sessões, botões em largura total no celular; test 132/lint/build ok; relato interface-conta-editavel-2026-11-03",
-      "updatedAt": "2026-11-03T03:58:14.592Z",
+      "summary": "Resultados: 4 novos gráficos (lucro→dividendo, CAGR ilustrado, régua Dív/EBITDA, bullet P/L); test 132/lint/build ok; relato interface-resultados-2026-11-03",
+      "updatedAt": "2026-11-03T13:15:51.738Z",
       "claims": []
     },
     "backend": {

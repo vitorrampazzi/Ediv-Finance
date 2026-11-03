@@ -102,14 +102,18 @@ try {
   const groups = {
     price: ["referencePrice", "ceilingPrice"],
     dividends: ["projectedGrossDividendPerShare", "estimatedEps"],
-    eps: ["estimatedEps"],
-    profit: ["estimatedNetIncome"],
+    earnings: [
+      "estimatedNetIncome",
+      "estimatedEps",
+      "projectedGrossDividendPerShare",
+      "expectedPayout",
+    ],
     cagr: ["earningsCagr5Years"],
     debt: ["netDebtToEbitda"],
-    valuation: ["projectedPE", "averagePE10Years"],
+    valuation: ["projectedPE", "averagePE10Years", "peDeviation"],
   };
   async function publicationCharts(entry) {
-    await expect(page.locator("figure.fmk-publication-chart")).toHaveCount(7);
+    await expect(page.locator("figure.fmk-publication-chart")).toHaveCount(6);
     for (const [id, keys] of Object.entries(groups)) {
       const figure = page.locator(
         'figure[data-publication-chart="' + id + '"]',
@@ -118,7 +122,7 @@ try {
       const valid = keys.some(
         (key) => dividendNumber(dividendValue(entry, key)) !== null,
       );
-      await expect(figure.locator(".recharts-wrapper")).toHaveCount(
+      await expect(figure.locator("[data-chart-visual]")).toHaveCount(
         valid ? 1 : 0,
       );
       await expect(figure.locator("[data-chart-value]")).toHaveCount(
@@ -163,45 +167,55 @@ try {
       );
     }
   });
-  await run("Instrument Sans global nos textos, valores e fontes locais", async () => {
-    await page.evaluate(() => document.fonts.ready);
-    for (const locator of [
-      page.locator(".figma-stock"),
-      page.locator(".figma-stock h1"),
-      page.locator(".figma-stock .font-fmk-mono").first(),
-      page.locator(".figma-stock figure.fmk-publication-chart svg text").first(),
-    ]) {
-      const family = await locator.evaluate(
-        (node) => getComputedStyle(node).fontFamily,
+  await run(
+    "Instrument Sans global nos textos, valores e fontes locais",
+    async () => {
+      await page.evaluate(() => document.fonts.ready);
+      for (const locator of [
+        page.locator(".figma-stock"),
+        page.locator(".figma-stock h1"),
+        page.locator(".figma-stock .font-fmk-mono").first(),
+        page
+          .locator(".figma-stock figure.fmk-publication-chart svg text")
+          .first(),
+      ]) {
+        const family = await locator.evaluate(
+          (node) => getComputedStyle(node).fontFamily,
+        );
+        assert.match(family, /Instrument Sans/);
+        assert.doesNotMatch(
+          family,
+          /Newsreader|DM Mono|Georgia|Times New Roman/,
+        );
+      }
+      const loaded = await page.evaluate(() =>
+        Array.from(document.fonts)
+          .filter((face) => face.status === "loaded")
+          .map((face) => face.family),
       );
-      assert.match(family, /Instrument Sans/);
-      assert.doesNotMatch(family, /Newsreader|DM Mono|Georgia|Times New Roman/);
-    }
-    const loaded = await page.evaluate(() =>
-      Array.from(document.fonts)
-        .filter((face) => face.status === "loaded")
-        .map((face) => face.family),
-    );
-    assert.ok(loaded.some((name) => name.includes("Instrument Sans")));
-    assert.ok(
-      loaded.every((name) => name.includes("Instrument Sans")),
-      "Somente Instrument Sans deve carregar como família visual",
-    );
-    assert.ok(fonts.length >= 1 && fonts.every((font) => font.status === 200));
-    assert.ok(
-      fonts.every((font) => /instrument-sans/i.test(font.url)),
-      "Somente arquivos de Instrument Sans devem ser requisitados",
-    );
-    await page.evaluate(
-      () => (document.documentElement.dataset.theme = "dark"),
-    );
-    assert.equal(
-      await page
-        .locator(".figma-stock")
-        .evaluate((node) => getComputedStyle(node).backgroundColor),
-      "rgb(14, 17, 19)",
-    );
-  });
+      assert.ok(loaded.some((name) => name.includes("Instrument Sans")));
+      assert.ok(
+        loaded.every((name) => name.includes("Instrument Sans")),
+        "Somente Instrument Sans deve carregar como família visual",
+      );
+      assert.ok(
+        fonts.length >= 1 && fonts.every((font) => font.status === 200),
+      );
+      assert.ok(
+        fonts.every((font) => /instrument-sans/i.test(font.url)),
+        "Somente arquivos de Instrument Sans devem ser requisitados",
+      );
+      await page.evaluate(
+        () => (document.documentElement.dataset.theme = "dark"),
+      );
+      assert.equal(
+        await page
+          .locator(".figma-stock")
+          .evaluate((node) => getComputedStyle(node).backgroundColor),
+        "rgb(14, 17, 19)",
+      );
+    },
+  );
   await run("7âncoras,FAQ e InfoTip mouse/teclado/Escape", async () => {
     const nav = page.locator(".figma-stock nav");
     await expect(nav.getByRole("link")).toHaveCount(7);
