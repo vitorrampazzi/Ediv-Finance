@@ -231,29 +231,6 @@ try {
       data = probeEntry
         ? { ...publication, entries: [probeEntry], totalEntries: 1 }
         : publication;
-    else if (url.pathname === "/api/rankings/compare")
-      data = {
-        from: { title: "Antes" },
-        to: { title: "Atual" },
-        added: [],
-        removed: [],
-        unchanged: 89,
-        changed: [
-          {
-            ticker: entries[0].ticker,
-            companyName: entries[0].companyName,
-            fields: ["dividendAnalysis"],
-            before: entries[0],
-            after: {
-              ...entries[0],
-              dividendAnalysis: {
-                ...entries[0].dividendAnalysis,
-                expectedPayout: "1.5",
-              },
-            },
-          },
-        ],
-      };
     else if (url.pathname === "/api/learning")
       data = { lessons: [], glossary: [], completed: [], access: "full" };
     else {
@@ -627,7 +604,7 @@ try {
     },
   );
   await run(
-    "Comparações: indicadores rotulados e objetos formatados nas versões",
+    "Comparação: indicadores rotulados, sem comparação de versões nem origem do arquivo",
     async () => {
       await page.goto(origin + "/app/ranking?visual=real");
       await page.getByText("Comparar duas empresas", { exact: true }).click();
@@ -638,18 +615,10 @@ try {
       });
       await expect(comparison.locator("dt")).toHaveCount(20);
       await expect(comparison).toContainText("106,00%");
-      await page.getByText("O que mudou na pesquisa?", { exact: true }).click();
-      await page
-        .getByLabel("Comparar a publicação atual com")
-        .selectOption("1");
-      await page
-        .getByRole("button", { name: "Comparar versões", exact: true })
-        .click();
-      await page
-        .locator("summary")
-        .filter({ hasText: /TIMS3.*Análise de dividendos/ })
-        .click();
-      await expect(page.getByText("150,00%", { exact: true })).toBeVisible();
+      await expect(
+        page.getByText("O que mudou na pesquisa?", { exact: true }),
+      ).toHaveCount(0);
+      await expect(page.getByText(/^Origem:/)).toHaveCount(0);
       assert.ok(
         !(await page.locator("body").textContent()).includes("[object Object]"),
       );
