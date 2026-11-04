@@ -3,6 +3,7 @@ import { LockKeyhole } from "lucide-react";
 import { Link } from "react-router-dom";
 import { apiRequest } from "../../lib/api";
 import { authLink } from "../../lib/authDestination";
+import { trackEvent } from "../../lib/analytics";
 import { CompanyLogo } from "../CompanyLogo";
 import {
   dividendColumns,
@@ -112,7 +113,7 @@ export function ResearchSample({
               className="ph-ranking-preview"
               aria-label="Prévia do ranking publicado"
             >
-              {publication.entries.slice(0, 3).map((entry) => (
+              {publication.entries.slice(0, 3).map((entry, index) => (
                 <li key={entry.ticker} className="ph-ranking-company">
                   <h3>
                     <Link
@@ -123,6 +124,12 @@ export function ResearchSample({
                         (publication.id
                           ? "?publication=" + encodeURIComponent(publication.id)
                           : "")
+                      }
+                      onClick={() =>
+                        trackEvent("click_stock_card", {
+                          list_location: "ranking_preview",
+                          list_position: index + 1,
+                        })
                       }
                     >
                       <CompanyLogo ticker={entry.ticker} />
@@ -179,12 +186,20 @@ export function ResearchSample({
               <Link
                 className="ph-primary"
                 to={authLink("cadastro", "/app/ranking")}
+                onClick={() =>
+                  trackEvent("click_signup", {
+                    cta_location: "ranking_preview",
+                  })
+                }
               >
                 Criar conta gratuita
               </Link>
               <Link
                 className="ph-inline-link"
                 to={authLink("entrar", "/app/ranking")}
+                onClick={() =>
+                  trackEvent("click_login", { cta_location: "ranking_preview" })
+                }
               >
                 Já tenho uma conta
               </Link>

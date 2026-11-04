@@ -1,7 +1,8 @@
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/authContext";
 import { useOnboarding } from "../lib/onboarding";
+import { trackEvent } from "../lib/analytics";
 import { cleanOnboardingDestination } from "../../onboarding.mjs";
 import { GuidedTour } from "./GuidedTour";
 
@@ -17,6 +18,19 @@ export function AccountOnboarding() {
   );
   const onboarding = useOnboarding(user, destination, requested);
   const { restart } = onboarding;
+  const measuredSignup = useRef(false);
+
+  // The first verified access opens the introduction once per account and
+  // browser. The timeout lets this page's own page view go first.
+  useEffect(() => {
+    if (!requested || !user || !onboarding.active || measuredSignup.current)
+      return;
+    const timer = window.setTimeout(() => {
+      measuredSignup.current = true;
+      trackEvent("complete_signup");
+    }, 0);
+    return () => window.clearTimeout(timer);
+  }, [requested, user, onboarding.active]);
 
   useEffect(() => {
     const replay = () => restart(current);

@@ -38,18 +38,20 @@ O workflow **Teste de carga** (`.github/workflows/load-test.yml`) roda no GitHub
 
 Como rodar: GitHub → Actions → Teste de carga → Run workflow, ou um push numa branch `vitorrampazzi/escala-*`. O resultado aparece no resumo e nas anotações da execução.
 
-Resultado de 4/11/2026 (MySQL com 1 CPU e 1 GB e o banco a 70 ms, como na produção antes desta mudança):
+Resultado de 4/11/2026 (MySQL com 1 CPU e 1 GB, 6 instâncias da API, p95 e erros):
 
-| Pessoas simultâneas | Código antigo: p50 / p95 / erros | Código novo: p50 / p95 / erros |
-|---|---|---|
-| 50 | 643 ms / 3,3 s / 0% | 212 ms / 1,4 s / 0% |
-| 100 | 867 ms / 3,4 s / 2,4% | 208 ms / 1,6 s / 0,7% |
-| 200 | 1,9 s / 4,2 s / 21,8% | 580 ms / 1,8 s / 4,9% |
-| 400 | 4,2 s de p95 / 62,6% de erros | 2,4 s de p95 / 37,1% de erros |
+| Pessoas simultâneas | Antes (banco a 70 ms) | Código novo, banco a 70 ms | Agora (função ao lado do banco) |
+|---|---|---|---|
+| 50 | 3,3 s / 0% | 1,4 s / 0% | 81 ms / 0% |
+| 100 | 3,5 s / 2,4% | 1,6 s / 0,7% | 110 ms / 0% |
+| 200 | 4,1 s / 22% | 1,9 s / 5,0% | 174 ms / 0,3% |
+| 400 | 4,2 s / 63% | 2,5 s / 38,7% | 231 ms / 4,3% |
+| 800 | 3,6 s / 83% | 2,2 s / 65,9% | 460 ms / 6,4% |
 
-- A CPU do MySQL ficou entre 2% e 13% em todos os níveis. O limite está na distância até o banco e no número de chamadas em andamento por instância, não na força do banco.
-- Acima de 200 pessoas simultâneas, os erros são respostas 503 "ocupado". Elas vêm do limite de 32 chamadas em andamento por instância e da fila do pool.
-- O cenário com a função ao lado do banco é o que vale depois do deploy em `sfo1`. Os números dele aparecem nas anotações da execução do workflow.
+- A CPU do MySQL ficou em no máximo 34%. O banco não foi o limite.
+- Os erros acima de 200 pessoas são respostas 503 "ocupado". Elas vêm do limite de 32 chamadas em andamento por instância. O teste usa 6 instâncias fixas; a Vercel abre mais instâncias sob carga, mas isso não foi medido aqui.
+- Capacidade medida: até 200 pessoas usando o site ao mesmo tempo, com p95 abaixo de 1 s e erros abaixo de 1%. Para comparar: 10 mil contas cadastradas costumam gerar dezenas de pessoas simultâneas no pico, não milhares.
+- 10 mil pessoas ao mesmo tempo não foram testadas e exigem mais instâncias, mais conexões e um banco maior.
 
 ## Monitoramento
 

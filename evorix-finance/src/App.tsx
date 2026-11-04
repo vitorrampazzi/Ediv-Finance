@@ -11,15 +11,15 @@ import { PageContent, PageLoading } from "./components/PageContent";
 import { NavigationIntent } from "./components/NavigationIntent";
 import { PrivacyConsent } from "./components/PrivacyConsent";
 import { pageImports } from "./lib/pageImports";
+import { lazyPage } from "./lib/lazyPage";
 const DashboardLayout = lazy(() =>
   pageImports.dashboard().then((module) => ({
     default: module.DashboardLayout,
   })),
 );
-const Assessoria = lazy(() =>
-  pageImports.assessoria().then((module) => ({
-    default: module.Assessoria,
-  })),
+const Assessoria = lazyPage(
+  () => pageImports.assessoria().then((module) => module.Assessoria),
+  ["/assessoria"],
 );
 const Perfil = lazy(() =>
   pageImports.perfil().then((module) => ({ default: module.Perfil })),
@@ -31,8 +31,9 @@ const Configuracoes = lazy(() =>
 );
 import { PageErrorBoundary } from "./components/PageErrorBoundary";
 import { PageMetadata } from "./components/PageMetadata";
-const Glossario = lazy(() =>
-  pageImports.glossario().then((module) => ({ default: module.Glossario })),
+const Glossario = lazyPage(
+  () => pageImports.glossario().then((module) => module.Glossario),
+  ["/glossario"],
 );
 import { AuthProvider } from "./context/AuthProvider";
 import { useAuth } from "./context/authContext";
@@ -41,33 +42,29 @@ import { RequirePermission } from "./components/RequirePermission";
 const AdminPage = lazy(() =>
   pageImports.admin().then((module) => ({ default: module.AdminPage })),
 );
-const LoginPage = lazy(() =>
-  pageImports.login().then((module) => ({
-    default: module.LoginPage,
-  })),
+const LoginPage = lazyPage(
+  () => pageImports.login().then((module) => module.LoginPage),
+  ["/entrar"],
 );
-const RegisterPage = lazy(() =>
-  pageImports.register().then((module) => ({
-    default: module.RegisterPage,
-  })),
+const RegisterPage = lazyPage(
+  () => pageImports.register().then((module) => module.RegisterPage),
+  ["/cadastro"],
 );
-const VerifyEmailPage = lazy(() =>
-  pageImports.verify().then((module) => ({
-    default: module.VerifyEmailPage,
-  })),
+const VerifyEmailPage = lazyPage(
+  () => pageImports.verify().then((module) => module.VerifyEmailPage),
+  ["/verificar"],
 );
-const ForgotPasswordPage = lazy(() =>
-  pageImports.forgot().then((module) => ({
-    default: module.ForgotPasswordPage,
-  })),
+const ForgotPasswordPage = lazyPage(
+  () => pageImports.forgot().then((module) => module.ForgotPasswordPage),
+  ["/recuperar-senha"],
 );
-const ResetPasswordPage = lazy(() =>
-  pageImports.reset().then((module) => ({
-    default: module.ResetPasswordPage,
-  })),
+const ResetPasswordPage = lazyPage(
+  () => pageImports.reset().then((module) => module.ResetPasswordPage),
+  ["/redefinir-senha"],
 );
-const Home = lazy(() =>
-  pageImports.home().then((module) => ({ default: module.Home })),
+const Home = lazyPage(
+  () => pageImports.home().then((module) => module.Home),
+  ["/"],
 );
 const MemberHome = lazy(() =>
   pageImports.memberHome().then((module) => ({
@@ -75,10 +72,9 @@ const MemberHome = lazy(() =>
   })),
 );
 import { PublicLayout } from "./components/SiteChrome";
-const IncomeRanking = lazy(() =>
-  pageImports.ranking().then((module) => ({
-    default: module.IncomeRanking,
-  })),
+const IncomeRanking = lazyPage(
+  () => pageImports.ranking().then((module) => module.IncomeRanking),
+  ["/ranking"],
 );
 const StockResearch = lazy(() =>
   pageImports.stockResearch().then((module) => ({
@@ -94,26 +90,24 @@ const EdivAssistant = assistantEnabled
     )
   : null;
 
-const Aprender = lazy(() =>
-  pageImports.aprender().then((module) => ({ default: module.Aprender })),
+const Aprender = lazyPage(
+  () => pageImports.aprender().then((module) => module.Aprender),
+  ["/aprender"],
 );
 const Conversas = lazy(() =>
   pageImports.conversas().then((module) => ({ default: module.Conversas })),
 );
-const Privacidade = lazy(() =>
-  pageImports.privacidade().then((module) => ({
-    default: module.Privacidade,
-  })),
+const Privacidade = lazyPage(
+  () => pageImports.privacidade().then((module) => module.Privacidade),
+  ["/privacidade"],
 );
-const Suporte = lazy(() =>
-  pageImports.suporte().then((module) => ({
-    default: module.Suporte,
-  })),
+const Suporte = lazyPage(
+  () => pageImports.suporte().then((module) => module.Suporte),
+  ["/suporte"],
 );
-const Metodologia = lazy(() =>
-  pageImports.metodologia().then((module) => ({
-    default: module.Metodologia,
-  })),
+const Metodologia = lazyPage(
+  () => pageImports.metodologia().then((module) => module.Metodologia),
+  ["/metodologia"],
 );
 function App() {
   return (

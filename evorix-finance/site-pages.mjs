@@ -73,3 +73,43 @@ export function pageMetadata(path, qa = false) {
     noindex: qa || !metadata,
   };
 }
+
+// Schema.org data for search engines: who publishes the site and where each
+// public page sits. No address or company registration until they are public.
+export function structuredData(path, qa = false) {
+  const page = publicPages[normalizedPath(path)];
+  if (qa || !page) return [];
+  const home = siteOrigin + "/";
+  if (normalizedPath(path) === "/")
+    return [
+      {
+        "@context": "https://schema.org",
+        "@type": "Organization",
+        name: "Escola do Dividendo",
+        url: home,
+        logo: siteOrigin + "/ediv-icon-clean-192.png",
+      },
+      {
+        "@context": "https://schema.org",
+        "@type": "WebSite",
+        name: "Escola do Dividendo",
+        url: home,
+        inLanguage: "pt-BR",
+      },
+    ];
+  return [
+    {
+      "@context": "https://schema.org",
+      "@type": "BreadcrumbList",
+      itemListElement: [
+        { "@type": "ListItem", position: 1, name: "Início", item: home },
+        {
+          "@type": "ListItem",
+          position: 2,
+          name: page.title.split(" | ")[0],
+          item: siteOrigin + normalizedPath(path),
+        },
+      ],
+    },
+  ];
+}

@@ -7,6 +7,7 @@ import {
   accountPaths,
   pageMetadata,
   siteOrigin,
+  structuredData,
 } from "../site-pages.mjs";
 import { serializeLessons, glossary } from "../server/learning-content.js";
 import { assistantInQa } from "../deployment-policy.mjs";
@@ -69,24 +70,32 @@ export async function prerender() {
       description: meta.description,
       "og:title": meta.socialTitle,
       "og:description": meta.description,
-      "og:url": meta.canonical || "",
+      "og:url": meta.canonical,
       "twitter:title": meta.socialTitle,
       "twitter:description": meta.description,
     })) {
       const attr = name.startsWith("og:") ? "property" : "name";
       result = result.replace(
         new RegExp(`<meta\\s+${attr}="${name}"\\s+content="[^"]*"\\s*/?>`, "s"),
-        `<meta ${attr}="${name}" content="${escape(value)}" />`,
+        // A page without a canonical address carries no og:url at all.
+        value ? `<meta ${attr}="${name}" content="${escape(value)}" />` : "",
       );
     }
     const canonical =
       meta.canonical && !meta.noindex
         ? `<link rel="canonical" href="${meta.canonical}" />`
         : "";
+    // JSON is a data block, not a script; "<" is escaped so it cannot end it.
+    const schema = structuredData(path, qa)
+      .map(
+        (data) =>
+          `<script type="application/ld+json">${JSON.stringify(data).replaceAll("<", "\\u003c")}</script>`,
+      )
+      .join("");
     return result
       .replace(
         "</head>",
-        `${pageStyles(path)}${canonical}<meta name="robots" content="${meta.noindex ? "noindex, nofollow" : "index, follow"}" /></head>`,
+        `${pageStyles(path)}${canonical}${schema}<meta name="robots" content="${meta.noindex ? "noindex, nofollow" : "index, follow"}" /></head>`,
       )
       .replace('<div id="root"></div>', `<div id="root">${content}</div>`);
   }

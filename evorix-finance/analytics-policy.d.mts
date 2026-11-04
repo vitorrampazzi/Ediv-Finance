@@ -9,6 +9,12 @@ export interface ConsentState {
 }
 export function validMeasurementId(value: unknown): boolean;
 export function analyticsReferrer(value: string): string;
+export function analyticsCampaign(search: string): string;
+export type AnalyticsEventName =
+  "click_signup" | "click_login" | "click_stock_card" | "complete_signup";
+export const analyticsEvents: Readonly<
+  Record<AnalyticsEventName, Record<string, readonly (string | number)[]>>
+>;
 export function analyticsPage(
   pathname: string,
 ): { path: string; title: string } | null;
@@ -29,6 +35,7 @@ export function createAnalyticsController(options: {
   setDisabled: (disabled: boolean) => void;
   clearCookies: () => void;
   initialReferrer?: string;
+  initialSearch?: string;
 }): {
   configured: boolean;
   allowedOrigin: boolean;
@@ -37,4 +44,8 @@ export function createAnalyticsController(options: {
     pathname: string;
     audienceAllowed?: boolean;
   }): boolean;
+  track(
+    name: AnalyticsEventName,
+    params?: Record<string, string | number>,
+  ): boolean;
 };
