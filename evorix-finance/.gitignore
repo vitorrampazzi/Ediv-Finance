@@ -37,3 +37,6 @@ dist-ssr
 docs/harness/state.json.lock/
 docs/harness/state.json.*.tmp
 docs/harness/state.v1.archive.json
+
+# Load test output (generated in CI)
+tests/load/out/

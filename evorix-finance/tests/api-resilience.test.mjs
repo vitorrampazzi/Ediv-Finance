@@ -145,14 +145,15 @@ test("API sem banco alcançável: 503 honesto, limites por IP antes de contas e 
   pool.execute = async (sql, params = []) => {
     const text = sql.replace(/\s+/g, " ").trim();
     state.calls.push(text.slice(0, 40));
+    // An unreachable database fails every statement, not only the counters.
+    if (state.mode === "down") throw coded("ENOTFOUND");
+    if (state.mode === "refused") throw coded("ECONNREFUSED");
     if (text.startsWith("DELETE FROM request_limits")) {
       if (state.mode === "cleanup-down") throw coded("ENOTFOUND");
       if (state.mode === "cleanup-lock") throw coded("ER_LOCK_WAIT_TIMEOUT");
       return [{ affectedRows: 0 }];
     }
     if (text.startsWith("INSERT INTO request_limits")) {
-      if (state.mode === "down") throw coded("ENOTFOUND");
-      if (state.mode === "refused") throw coded("ECONNREFUSED");
       counters.set(params[0], (counters.get(params[0]) || 0) + 1);
       return [{ affectedRows: 1 }];
     }
@@ -207,10 +208,13 @@ test("API sem banco alcançável: 503 honesto, limites por IP antes de contas e 
     return { status: response.status, headers: response.headers, body: await response.json() };
   };
 
-  // Cleanup that cannot reach the database fails fast, without a second attempt.
+  // Reads count in memory: an unreachable limit table does not block them.
   state.mode = "cleanup-down";
   state.calls = [];
-  const first = await call("/api/health");
+  assert.equal((await call("/api/health")).status, 200);
+  assert.ok(!state.calls.some((sql) => sql.includes("request_limits")));
+  // Writes keep the shared counter; its cleanup fails fast, without a second attempt.
+  const first = await call("/api/nao-existe", {});
   assert.equal(first.status, 503);
   assert.equal(first.body.error, unavailableMessage);
   assert.ok(!state.calls.some((sql) => sql.startsWith("INSERT INTO request_limits")));
@@ -223,10 +227,12 @@ test("API sem banco alcançável: 503 honesto, limites por IP antes de contas e 
   assert.equal(down.status, 503);
   assert.equal(down.body.error, unavailableMessage);
   assert.equal(down.headers.get("cache-control"), "no-store");
-  assert.equal(logs.error.length, 1, "Mesma causa fica no throttle");
+  assert.equal(logs.error.length, 2);
+  assert.equal((await call("/api/rankings/public")).status, 503);
+  assert.equal(logs.error.length, 2, "Mesma causa fica no throttle");
   state.mode = "refused";
   assert.equal((await call("/api/health")).status, 503);
-  assert.match(logs.error.at(-1), /cause=ECONNREFUSED/);
+  assert.match(logs.error.at(-1), /unavailable ECONNREFUSED/);
 
   state.mode = "busy";
   const busy = await call("/api/health");
@@ -242,7 +248,7 @@ test("API sem banco alcançável: 503 honesto, limites por IP antes de contas e 
   Date.now = () => realNow() + 2 * 3_600_000;
   try {
     state.mode = "cleanup-lock";
-    assert.equal((await call("/api/health")).status, 200);
+    assert.equal((await call("/api/nao-existe", {})).status, 404);
   } finally {
     Date.now = realNow;
   }
