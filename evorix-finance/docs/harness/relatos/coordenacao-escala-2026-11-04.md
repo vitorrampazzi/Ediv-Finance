@@ -16,3 +16,10 @@
 
 ## Próximo passo
 - Publicar a PR de analytics/SEO (`vitorrampazzi/analytics-seo-2026-11-04`) depois desta.
+
+## Segunda entrega (PR de analytics, SEO e layout)
+- GA4: eventos com lista fechada (`click_signup`, `click_login`, `click_stock_card`, `complete_signup`), `utm_*` da página de entrada e novas origens; nada de texto livre, ticker ou identificador.
+- SEO: JSON-LD (Organization, WebSite, BreadcrumbList), sem `og:url` vazio, `trailingSlash: false`, CSP com `*.analytics.google.com`.
+- Layout: `src/lib/lazyPage.ts` pré-carrega a página pré-renderizada antes do primeiro render (sem "Abrindo página…", que causava CLS 0,39–0,48); foco no título só depois da primeira página; cache `immutable` em `/assets`.
+- Verificado: `npm test` 136/136, lint, build; suítes de navegador da home, ranking, página de ação e tema passando localmente.
+- Teste de carga com a função ao lado do banco: até 200 pessoas simultâneas com p95 de 174 ms e 0,3% de erros; MySQL ≤ 34% de CPU.
