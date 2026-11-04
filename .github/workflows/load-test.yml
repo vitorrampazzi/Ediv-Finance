@@ -88,4 +88,5 @@ jobs:
         working-directory: evorix-finance
         run: |
           node tests/load/report.mjs | tee -a "$GITHUB_STEP_SUMMARY"
+          node tests/load/report.mjs --annotations
           tail -n 25 tests/load/out/*-k6.txt || true

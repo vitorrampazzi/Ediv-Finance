@@ -3,10 +3,17 @@
   "workspace": ".",
   "sessions": {
     "coordenacao": {
-      "phase": "revisao",
-      "summary": "Auditoria 02/11: QA aprovado 131/lint/build; publicação via PR em andamento",
-      "updatedAt": "2026-11-03T03:30:36.360Z",
-      "claims": []
+      "phase": "trabalhando",
+      "summary": "Missão de escala 04/11: limitador geral em memória, cache do ranking, funções em sfo1, cabeçalhos draft-7, monitor e teste de carga; PR em preparo",
+      "updatedAt": "2026-11-04T12:01:56.512Z",
+      "claims": [
+        "server",
+        "tests",
+        "vercel.json",
+        ".gitignore",
+        "docs/harness/relatos/coordenacao-escala-2026-11-04.md",
+        "docs/escalabilidade.md"
+      ]
     },
     "interface": {
       "phase": "revisao",
