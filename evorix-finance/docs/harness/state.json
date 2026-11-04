@@ -5,8 +5,19 @@
     "coordenacao": {
       "phase": "revisao",
       "summary": "Auditoria 02/11: QA aprovado 131/lint/build; publicação via PR em andamento",
-      "updatedAt": "2026-11-03T03:30:36.360Z",
-      "claims": []
+      "updatedAt": "2026-11-04T12:03:36.600Z",
+      "claims": [
+        "analytics-policy.mjs",
+        "src/lib/analytics.ts",
+        "src/components/sitechrome.tsx",
+        "src/components/home/publichome.tsx",
+        "src/components/home/researchsample.tsx",
+        "src/components/accountgate.tsx",
+        "src/components/accountonboarding.tsx",
+        "src/components/rankinghighlights.tsx",
+        "site-pages.mjs",
+        "scripts/prerender.mjs"
+      ]
     },
     "interface": {
       "phase": "revisao",

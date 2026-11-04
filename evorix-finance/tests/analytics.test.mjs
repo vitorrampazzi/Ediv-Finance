@@ -1,6 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import {
+  analyticsCampaign,
   analyticsPage,
   analyticsReferrer,
   validMeasurementId,
@@ -314,4 +315,74 @@ test("a newer denial from another tab overrides a session-only grant", () => {
   second.choose("denied");
   first.reconcile();
   assert.deepEqual(first.get(), { choice: "denied", persisted: true });
+});
+
+test("only valid campaign tags of the landing page reach Google", () => {
+  assert.equal(
+    analyticsCampaign(
+      "?utm_source=instagram&utm_medium=bio&utm_campaign=lancamento+nov&email=a@b.com&token=x",
+    ),
+    "utm_source=instagram&utm_medium=bio&utm_campaign=lancamento+nov",
+  );
+  assert.equal(analyticsCampaign("?utm_source=pessoa@email.com"), "");
+  assert.equal(analyticsCampaign("?utm_source=https://evil.example/x"), "");
+  assert.equal(analyticsCampaign("?utm_term=" + "a".repeat(65)), "");
+  assert.equal(analyticsCampaign(undefined), "");
+  const fixture = controllerFixture({
+    initialSearch: "?utm_source=whatsapp&utm_medium=grupo&next=/app",
+  });
+  fixture.controller.update({ choice: "granted", pathname: "/" });
+  fixture.controller.update({ choice: "granted", pathname: "/ranking" });
+  const [first, second] = fixture.pageviews();
+  assert.equal(
+    first[2].page_location,
+    "https://escoladodividendo.com.br/?utm_source=whatsapp&utm_medium=grupo",
+  );
+  assert.equal(second[2].page_location, "https://escoladodividendo.com.br/ranking");
+  assert.equal(second[2].page_referrer, "https://escoladodividendo.com.br/");
+});
+
+test("new social and AI sources keep only their origin", () => {
+  for (const host of ["www.linkedin.com", "lnkd.in", "t.me", "chatgpt.com"])
+    assert.equal(
+      analyticsReferrer(`https://${host}/algum/caminho?x=1`),
+      `https://${host}/`,
+    );
+});
+
+test("events use a closed list and only leave measured pages with consent", () => {
+  const fixture = controllerFixture();
+  const events = () =>
+    fixture.calls.filter(([type, name]) => type === "event" && name !== "page_view");
+  assert.equal(fixture.controller.track("click_signup", { cta_location: "hero" }), false);
+  fixture.controller.update({ choice: "granted", pathname: "/" });
+  assert.equal(fixture.controller.track("click_signup", { cta_location: "hero" }), true);
+  assert.deepEqual(events().at(-1), [
+    "event",
+    "click_signup",
+    { cta_location: "hero", send_to: id },
+  ]);
+  assert.equal(
+    fixture.controller.track("click_stock_card", {
+      list_location: "ranking_preview",
+      list_position: 2,
+    }),
+    true,
+  );
+  for (const [name, params] of [
+    ["click_signup", { cta_location: "pessoa@email.com" }],
+    ["click_signup", { cta_location: "hero", email: "a@b.com" }],
+    ["click_stock_card", { list_location: "ranking_preview", list_position: 11 }],
+    ["click_stock_card", { list_location: "ranking_preview", ticker: "TIMS3" }],
+    ["purchase", {}],
+  ])
+    assert.equal(fixture.controller.track(name, params), false, name);
+  assert.equal(events().length, 2);
+  fixture.controller.update({ choice: "granted", pathname: "/cadastro" });
+  assert.equal(fixture.controller.track("click_login", { cta_location: "header" }), false);
+  fixture.controller.update({ choice: "granted", pathname: "/", audienceAllowed: false });
+  assert.equal(fixture.controller.track("complete_signup"), false);
+  fixture.controller.update({ choice: "denied", pathname: "/" });
+  assert.equal(fixture.controller.track("complete_signup"), false);
+  assert.equal(events().length, 2);
 });

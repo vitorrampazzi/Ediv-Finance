@@ -5,6 +5,7 @@ import { rankingDemoEntries } from "../lib/rankingDemo";
 import { useAuth } from "../context/authContext";
 import { CompanyLogo } from "./CompanyLogo";
 import type { Entry } from "../lib/ranking";
+import { trackEvent } from "../lib/analytics";
 import {
   formatDividendValue,
   type DividendFormat,
@@ -151,9 +152,15 @@ function MemberRankingHighlights() {
               : "Ranking de Ações"}
           </p>
           <div className="mt-3 border-t border-evo-border">
-            {entries.slice(0, 3).map((entry) => (
+            {entries.slice(0, 3).map((entry, index) => (
               <Link
                 key={entry.ticker}
+                onClick={() =>
+                  trackEvent("click_stock_card", {
+                    list_location: "member_highlights",
+                    list_position: index + 1,
+                  })
+                }
                 to={
                   "/app/ranking/acao/" +
                   encodeURIComponent(entry.ticker) +

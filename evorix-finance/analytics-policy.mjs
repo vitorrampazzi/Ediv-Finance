@@ -64,6 +64,15 @@ export function analyticsReferrer(value) {
       "l.facebook.com",
       "facebook.com",
       "t.co",
+      "www.linkedin.com",
+      "linkedin.com",
+      "lnkd.in",
+      "t.me",
+      "web.whatsapp.com",
+      "news.google.com",
+      "chatgpt.com",
+      "www.perplexity.ai",
+      "perplexity.ai",
       "escoladodividendo.com.br",
       "www.escoladodividendo.com.br",
     ];
@@ -72,6 +81,46 @@ export function analyticsReferrer(value) {
     return "";
   }
 }
+
+const campaignKeys = [
+  "utm_source",
+  "utm_medium",
+  "utm_campaign",
+  "utm_content",
+  "utm_term",
+];
+// Only the landing page's campaign tags leave the site, never other query
+// values: short labels without "@", slashes or symbols that could carry data.
+export function analyticsCampaign(search) {
+  const params = new URLSearchParams(typeof search === "string" ? search : "");
+  const kept = new URLSearchParams();
+  for (const key of campaignKeys) {
+    const value = params.get(key);
+    if (value && /^[\p{L}\p{N}_.+ -]{1,64}$/u.test(value)) kept.set(key, value);
+  }
+  return kept.toString();
+}
+
+const ctaPlaces = [
+  "header",
+  "mobile_menu",
+  "footer",
+  "hero",
+  "final_cta",
+  "ranking_preview",
+  "account_gate",
+];
+// Closed list: event names and parameter values are fixed here, so no free
+// text, name, e-mail, ticker or identifier can leave the site.
+export const analyticsEvents = Object.freeze({
+  click_signup: { cta_location: ctaPlaces },
+  click_login: { cta_location: ctaPlaces },
+  click_stock_card: {
+    list_location: ["ranking_preview", "member_highlights"],
+    list_position: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+  },
+  complete_signup: {},
+});
 
 export function createConsentStore(storage, now = Date.now) {
   let snapshot;
@@ -161,6 +210,7 @@ export function createAnalyticsController({
   setDisabled,
   clearCookies,
   initialReferrer = "",
+  initialSearch = "",
 }) {
   const configured = validMeasurementId(measurementId);
   const allowedOrigin = [
@@ -171,6 +221,8 @@ export function createAnalyticsController({
   let consentGranted = false;
   let lastPage = null;
   let previousLocation = analyticsReferrer(initialReferrer);
+  let campaign = analyticsCampaign(initialSearch);
+  let measuring = false;
   if (configured) setDisabled(true);
   return {
     configured,
@@ -183,6 +235,7 @@ export function createAnalyticsController({
         audienceAllowed &&
         choice === "granted" &&
         Boolean(page);
+      measuring = active;
       if (!configured) return false;
       setDisabled(!active);
       if (choice !== "granted") {
@@ -199,7 +252,8 @@ export function createAnalyticsController({
       }
       const location = "https://escoladodividendo.com.br" + page.path;
       const metadata = {
-        page_location: location,
+        // The first measured page keeps the campaign that brought the visit.
+        page_location: campaign ? location + "?" + campaign : location,
         page_title: page.title,
         page_referrer: previousLocation,
       };
@@ -240,6 +294,21 @@ export function createAnalyticsController({
       });
       lastPage = page.path;
       previousLocation = location;
+      campaign = "";
+      return true;
+    },
+    // Sends only while the current page is measured with consent.
+    track(name, params = {}) {
+      const rules = analyticsEvents[name];
+      if (!measuring || !rules || !params || typeof params !== "object")
+        return false;
+      const entries = Object.entries(params);
+      if (entries.some(([key, value]) => !rules[key]?.includes(value)))
+        return false;
+      enqueue("event", name, {
+        ...Object.fromEntries(entries),
+        send_to: measurementId,
+      });
       return true;
     },
   };

@@ -1,5 +1,6 @@
 import { useSyncExternalStore } from "react";
 import {
+  type AnalyticsEventName,
   createAnalyticsController,
   createConsentStore,
   analyticsConsentKey,
@@ -96,6 +97,7 @@ export function analyticsController() {
       measurementId: analyticsMeasurementId,
       origin: window.location.origin,
       initialReferrer: document.referrer,
+      initialSearch: window.location.search,
       enqueue(...args) {
         target.dataLayer ??= [];
         target.gtag ??= function () {
@@ -122,4 +124,13 @@ export function analyticsController() {
     });
   }
   return controller;
+}
+
+// Measures an interaction only where page views are already measured with
+// consent; the closed list in analytics-policy.mjs rejects anything else.
+export function trackEvent(
+  name: AnalyticsEventName,
+  params?: Record<string, string | number>,
+) {
+  controller?.track(name, params);
 }

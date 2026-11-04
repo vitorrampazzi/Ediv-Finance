@@ -1,6 +1,7 @@
 import { ArrowRight, BookOpen } from "lucide-react";
 import { Link } from "react-router-dom";
 import { authLink } from "../../lib/authDestination";
+import { trackEvent } from "../../lib/analytics";
 import { PublicHeroBrand } from "./PublicHeroBrand";
 import { TeachingJourney } from "./TeachingJourney";
 import { ResearchSample } from "./ResearchSample";
@@ -10,8 +11,10 @@ import "./public-home.css";
 
 function StartAction({
   awaitingRegistration,
+  place,
 }: {
   awaitingRegistration: boolean;
+  place: "hero" | "final_cta";
 }) {
   return (
     <div className="ph-start">
@@ -19,6 +22,10 @@ function StartAction({
         <Link
           className="ph-primary"
           to={awaitingRegistration ? "/aprender" : authLink("cadastro", "/app")}
+          onClick={() => {
+            if (!awaitingRegistration)
+              trackEvent("click_signup", { cta_location: place });
+          }}
         >
           {awaitingRegistration
             ? "Começar pela primeira aula"
@@ -28,6 +35,10 @@ function StartAction({
         <Link
           className="ph-text-link"
           to={awaitingRegistration ? "/entrar" : "/aprender"}
+          onClick={() => {
+            if (awaitingRegistration)
+              trackEvent("click_login", { cta_location: place });
+          }}
         >
           {!awaitingRegistration && <BookOpen size={17} aria-hidden="true" />}
           {awaitingRegistration ? "Entrar" : "Explorar as aulas"}
@@ -65,7 +76,10 @@ export function PublicHome({
               Pesquisas de ações e aulas para estudar com mais critério.
             </p>
             <div className="ph-hero-entry">
-              <StartAction awaitingRegistration={awaitingRegistration} />
+              <StartAction
+                awaitingRegistration={awaitingRegistration}
+                place="hero"
+              />
             </div>
           </div>
           <div className="ph-hero-brand-entry">
@@ -91,7 +105,10 @@ export function PublicHome({
             </h2>
             <p>Pesquisas, conceitos e exercícios no mesmo lugar.</p>
           </div>
-          <StartAction awaitingRegistration={awaitingRegistration} />
+          <StartAction
+            awaitingRegistration={awaitingRegistration}
+            place="final_cta"
+          />
         </div>
       </section>
     </div>

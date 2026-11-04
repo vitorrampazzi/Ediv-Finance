@@ -8,6 +8,7 @@ import {
   retiredPages,
   retiredPageDestination,
   siteOrigin,
+  structuredData,
 } from "../site-pages.mjs";
 
 test("llms.txt contém somente links públicos canônicos e descreve o acesso restrito", async () => {
@@ -129,4 +130,24 @@ test("rotas desconhecidas não são reescritas para HTML com status 200", async 
   assert.deepEqual(directives["object-src"], ["'none'"]);
   assert.equal(headers["X-Frame-Options"], "DENY");
   assert.equal(headers["X-Content-Type-Options"], "nosniff");
+});
+
+test("dados estruturados: marca na home e trilha nas páginas públicas", () => {
+  const [organization, website] = structuredData("/");
+  assert.equal(organization["@type"], "Organization");
+  assert.equal(organization.url, siteOrigin + "/");
+  assert.equal(website["@type"], "WebSite");
+  assert.equal(website.name, "Escola do Dividendo");
+  const [crumbs] = structuredData("/ranking/");
+  assert.equal(crumbs["@type"], "BreadcrumbList");
+  assert.deepEqual(
+    crumbs.itemListElement.map((item) => [item.name, item.item]),
+    [
+      ["Início", siteOrigin + "/"],
+      ["Ranking de Ações", siteOrigin + "/ranking"],
+    ],
+  );
+  for (const path of [...accountPaths, "/app", "/app/ranking", "/404"])
+    assert.deepEqual(structuredData(path), []);
+  assert.deepEqual(structuredData("/ranking", true), []);
 });

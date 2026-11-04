@@ -14,7 +14,7 @@ import { Link, NavLink, Outlet, useLocation } from "react-router-dom";
 import { useAuth } from "../context/authContext";
 import { PageContent } from "./PageContent";
 import { ThemeToggle } from "./ThemeToggle";
-import { openPrivacyPreferences } from "../lib/analytics";
+import { openPrivacyPreferences, trackEvent } from "../lib/analytics";
 import "./navigation-chrome.css";
 
 export function SiteHeader({
@@ -118,12 +118,21 @@ export function SiteHeader({
               <>
                 <Link
                   to="/entrar"
+                  onClick={() =>
+                    trackEvent("click_login", { cta_location: "header" })
+                  }
                   className="ediv-chrome-link inline-flex min-h-11 items-center px-3 text-sm"
                 >
                   Entrar
                 </Link>
                 {showRegistrationAction && (
-                  <Link to="/cadastro" className="action ediv-chrome-primary">
+                  <Link
+                    to="/cadastro"
+                    onClick={() =>
+                      trackEvent("click_signup", { cta_location: "header" })
+                    }
+                    className="action ediv-chrome-primary"
+                  >
                     Criar conta <ArrowRight size={15} />
                   </Link>
                 )}
@@ -141,6 +150,13 @@ export function SiteHeader({
                       ? "/cadastro"
                       : "/entrar"
                 }
+                onClick={() => {
+                  if (!user)
+                    trackEvent(
+                      showRegistrationAction ? "click_signup" : "click_login",
+                      { cta_location: "header" },
+                    );
+                }}
                 className={`ediv-chrome-link inline-flex min-h-11 items-center gap-1 rounded-lg px-3 text-sm font-semibold ${user || showRegistrationAction ? "ediv-chrome-primary" : ""}`}
               >
                 {user
@@ -212,7 +228,12 @@ export function SiteHeader({
                 {!user && (
                   <Link
                     to="/entrar"
-                    onClick={() => setMenuRoute(null)}
+                    onClick={() => {
+                      trackEvent("click_login", {
+                        cta_location: "mobile_menu",
+                      });
+                      setMenuRoute(null);
+                    }}
                     className="ediv-chrome-link flex min-h-11 items-center px-3 text-sm"
                   >
                     Entrar
@@ -313,6 +334,10 @@ export function SiteFooter({
                 <Link
                   className="inline-flex min-h-11 items-center hover:text-evo-textMain"
                   to={user ? "/app" : "/entrar"}
+                  onClick={() => {
+                    if (!user)
+                      trackEvent("click_login", { cta_location: "footer" });
+                  }}
                 >
                   {user ? "Acessar painel" : "Entrar"}
                 </Link>
@@ -348,6 +373,9 @@ export function SiteFooter({
                   <Link
                     className="inline-flex min-h-11 items-center hover:text-evo-textMain"
                     to="/cadastro"
+                    onClick={() =>
+                      trackEvent("click_signup", { cta_location: "footer" })
+                    }
                   >
                     Criar conta
                   </Link>

@@ -29,6 +29,10 @@ export function PageLoading() {
   );
 }
 
+// The first page of a visit leaves focus where the browser starts it, so the
+// skip link stays the first Tab stop; later route changes announce the title.
+let firstPageOfVisit = true;
+
 // This mounts after the lazy route is ready. Query/hash changes keep the same
 // page instance, its forms, filters, videos and lesson position.
 function RevealedPage({ children }: { children: ReactNode }) {
@@ -37,10 +41,12 @@ function RevealedPage({ children }: { children: ReactNode }) {
   const reducedMotion = useReducedMotion();
   const entryHash = useRef(hash);
   const announceRoute = useRef(
-    navigationType !== "POP" || (pathname !== "/" && pathname !== "/app"),
+    !firstPageOfVisit &&
+      (navigationType !== "POP" || (pathname !== "/" && pathname !== "/app")),
   );
   const content = useRef<HTMLDivElement>(null);
   useLayoutEffect(() => {
+    firstPageOfVisit = false;
     if (!entryHash.current) {
       window.scrollTo({ top: 0, left: 0, behavior: "instant" });
       const heading = content.current?.querySelector<HTMLElement>("h1");
