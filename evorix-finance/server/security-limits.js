@@ -1,5 +1,5 @@
 import { isIP } from "node:net";
-import { ipKeyGenerator, rateLimit } from "express-rate-limit";
+import { ipKeyGenerator, MemoryStore, rateLimit } from "express-rate-limit";
 import { z } from "zod";
 import { config } from "./config.js";
 import { MysqlLimitStore } from "./limit-store.js";
@@ -75,9 +75,9 @@ function limiter(prefix, windowMs, limit, options = {}) {
     windowMs,
     limit,
     identifier: prefix,
-    store: new MysqlLimitStore(prefix),
+    store: options.store ?? new MysqlLimitStore(prefix),
     keyGenerator: (req) => req.securityIpKey,
-    standardHeaders: "draft-8",
+    standardHeaders: "draft-7",
     legacyHeaders: false,
     passOnStoreError: false,
     message: {
@@ -88,10 +88,17 @@ function limiter(prefix, windowMs, limit, options = {}) {
   });
 }
 
+// The general budget counts in each instance's memory. A shared MySQL counter
+// here added an insert and a select to every API call, most of the database
+// work of a typical read. Writes, login, registration and e-mail keep the
+// shared counters below.
+const apiTotalStore = new MemoryStore();
+export const resetApiTotalCounters = () => apiTotalStore.resetAll();
 export const apiLimiter = limiter(
   "api-total",
   MINUTE,
   securityPolicy.apiPerMinute,
+  { store: apiTotalStore },
 );
 export const writeLimiter = limiter(
   "api-writes",

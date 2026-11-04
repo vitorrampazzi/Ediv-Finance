@@ -20,7 +20,7 @@ const limiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   limit: 30,
   store: new MysqlLimitStore("admin-access"),
-  standardHeaders: "draft-8",
+  standardHeaders: "draft-7",
   legacyHeaders: false,
   message: { error: "Muitas alterações de acesso. Aguarde alguns minutos." },
 });
@@ -29,7 +29,7 @@ const emailCheckLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   limit: 3,
   store: new MysqlLimitStore("launch-email-check"),
-  standardHeaders: "draft-8",
+  standardHeaders: "draft-7",
   legacyHeaders: false,
   message: {
     error: "Aguarde alguns minutos antes de verificar o e-mail novamente.",

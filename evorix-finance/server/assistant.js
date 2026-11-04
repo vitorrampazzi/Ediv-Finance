@@ -10,7 +10,7 @@ const chatLimiter = rateLimit({
   store: new MysqlLimitStore("assistant"),
   windowMs: 15 * 60 * 1000,
   limit: 8,
-  standardHeaders: "draft-8",
+  standardHeaders: "draft-7",
   legacyHeaders: false,
   message: {
     error:

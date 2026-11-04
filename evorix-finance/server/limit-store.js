@@ -99,3 +99,11 @@ export class MysqlLimitStore {
     for (const store of instances) store.blocked.clear();
   }
 }
+
+// A CDN copy is shared by every visitor: drop the limit counters of the request
+// that filled it before allowing the cache.
+export function sharedCache(res, cacheControl) {
+  res.removeHeader("RateLimit");
+  res.removeHeader("RateLimit-Policy");
+  res.setHeader("Cache-Control", cacheControl);
+}

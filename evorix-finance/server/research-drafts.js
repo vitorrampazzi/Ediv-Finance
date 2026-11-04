@@ -16,7 +16,7 @@ const limiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   limit: 60,
   store: new MysqlLimitStore("drafts"),
-  standardHeaders: "draft-8",
+  standardHeaders: "draft-7",
   legacyHeaders: false,
 });
 const lengths = {

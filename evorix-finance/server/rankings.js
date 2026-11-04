@@ -5,7 +5,7 @@ import { Router } from "express";
 import { rateLimit } from "express-rate-limit";
 import { pool } from "./database.js";
 import { requireAuthenticatedUser } from "./auth.js";
-import { MysqlLimitStore } from "./limit-store.js";
+import { MysqlLimitStore, sharedCache } from "./limit-store.js";
 import {
   hasPermission,
   lockActiveUser,
@@ -25,7 +25,7 @@ const limiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   limit: 20,
   store: new MysqlLimitStore("ranking-upload"),
-  standardHeaders: "draft-8",
+  standardHeaders: "draft-7",
   legacyHeaders: false,
   message: { error: "Muitas importações. Aguarde alguns minutos." },
 });
@@ -84,7 +84,7 @@ router.get("/public", async (_req, res) => {
     "SELECT id,title,created_at,entries_json FROM ranking_publications ORDER BY id DESC LIMIT 1",
   );
   const body = publicRanking(rows[0]);
-  res.setHeader("Cache-Control", publicRankingCacheControl);
+  sharedCache(res, publicRankingCacheControl);
   return res.json(body);
 });
 router.get("/history/:ticker", requireAuthenticatedUser, (req, res) => {
@@ -98,40 +98,62 @@ router.get("/history/:ticker", requireAuthenticatedUser, (req, res) => {
       .json({ error: "Histórico não disponível para esta ação." });
   return res.json(history);
 });
+// Ranking views reuse the latest publication while it stays the latest: a
+// one-row index check replaces reading its JSON and the history list again.
+let latestCache = null;
+async function latestRanking() {
+  const [[version]] = await pool.execute(
+    "SELECT MAX(id) AS id, COUNT(*) AS total FROM ranking_publications",
+  );
+  if (version.id === null) return null;
+  const key = `${version.id}:${version.total}`;
+  if (latestCache?.key === key) return latestCache;
+  const [rows] = await pool.execute(
+    "SELECT * FROM ranking_publications WHERE id = ?",
+    [version.id],
+  );
+  const [history] = await pool.execute(
+    "SELECT id, title, author_name, created_at FROM ranking_publications ORDER BY id DESC LIMIT 50",
+  );
+  if (!rows[0]) return null;
+  latestCache = {
+    key,
+    data: publication(rows[0]),
+    history: history.map((row) => ({
+      id: String(row.id),
+      title: row.title,
+      authorName: row.author_name,
+      createdAt: row.created_at,
+    })),
+  };
+  return latestCache;
+}
 router.get("/", requireAuthenticatedUser, async (req, res) => {
   const user = req.authenticatedUser;
   const id = req.query.publication;
   if (id && (typeof id !== "string" || !/^\d{1,20}$/.test(id)))
     return res.status(400).json({ error: "Publicação inválida." });
-  const [rows] = await pool.execute(
-    id
-      ? "SELECT * FROM ranking_publications WHERE id = ?"
-      : "SELECT * FROM ranking_publications ORDER BY id DESC LIMIT 1",
-    id ? [id] : [],
-  );
-  const [history] = await pool.execute(
-    "SELECT id, title, author_name, created_at FROM ranking_publications ORDER BY id DESC LIMIT 50",
-  );
-  let data = rows[0]
-    ? publication(rows[0])
-    : {
-        id: null,
-        title: "Ranking de cenários",
-        authorName: null,
-        professionalCategory: null,
-        professionalRegistration: null,
-        updatedAt: null,
-        sourceFileName: null,
-        entries: [],
-      };
-  if (!rows[0] && id)
-    return res.status(404).json({ error: "Publicação não encontrada." });
-  if (!rows[0] && !id) {
+  const latest = await latestRanking();
+  let data = latest?.data;
+  if (id && id !== data?.id) {
+    const [rows] = await pool.execute(
+      "SELECT * FROM ranking_publications WHERE id = ?",
+      [id],
+    );
+    if (!rows[0])
+      return res.status(404).json({ error: "Publicação não encontrada." });
+    data = publication(rows[0]);
+  }
+  if (!data) {
     const [legacy] = await pool.execute(
       "SELECT * FROM income_ranking_entries ORDER BY rank_position",
     );
     data = {
-      ...data,
+      id: null,
+      title: "Ranking de cenários",
+      authorName: null,
+      professionalCategory: null,
+      professionalRegistration: null,
       updatedAt: legacy[0]?.created_at || null,
       sourceFileName: legacy[0]?.source_file_name || null,
       entries: legacy.map((row) => ({
@@ -152,12 +174,7 @@ router.get("/", requireAuthenticatedUser, async (req, res) => {
     access: "full",
     totalEntries: data.entries.length,
     canManage: canManageRankings(user),
-    history: history.map((row) => ({
-      id: String(row.id),
-      title: row.title,
-      authorName: row.author_name,
-      createdAt: row.created_at,
-    })),
+    history: latest?.history ?? [],
   });
 });
 async function manage(req, res, next) {

@@ -140,6 +140,9 @@ export async function createFixture() {
     const { app } = await import("../server/app.js");
     const { requestAdmission } = await import("../server/request-admission.js");
     const { MysqlLimitStore } = await import("../server/limit-store.js");
+    const { resetApiTotalCounters } = await import(
+      "../server/security-limits.js"
+    );
     server = await new Promise((resolve) => {
       const instance = app.listen(0, "127.0.0.1", () => resolve(instance));
     });
@@ -249,6 +252,7 @@ export async function createFixture() {
         // New requests may start while SQL yields; drain and clear again.
       } while (!requestAdmission.isIdle());
       MysqlLimitStore.clearLocalCaches();
+      resetApiTotalCounters();
       requestAdmission.reset();
     }
     return {
