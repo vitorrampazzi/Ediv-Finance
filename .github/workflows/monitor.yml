@@ -1,0 +1,41 @@
+name: Monitor do site
+
+# A failed run e-mails the owner of the schedule. GitHub pauses schedules in
+# public repositories after 60 days without commits; re-enable it in Actions.
+on:
+  schedule:
+    - cron: "*/20 * * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Página inicial, API e banco
+        run: |
+          set -u
+          failed=0
+          check() {
+            local url=$1 expected=$2 result status seconds
+            for attempt in 1 2 3; do
+              result=$(curl --silent --output /dev/null --max-time 20 \
+                --write-out "%{http_code} %{time_total}" "$url") || result="000 0"
+              read -r status seconds <<<"$result"
+              [ "$status" = "$expected" ] && break
+              sleep 20
+            done
+            echo "$url -> $status em ${seconds}s"
+            if [ "$status" != "$expected" ]; then
+              echo "::error::$url respondeu $status (esperado $expected)"
+              failed=1
+            fi
+          }
+          check https://escoladodividendo.com.br/ 200
+          check https://escoladodividendo.com.br/ranking 200
+          check https://escoladodividendo.com.br/api/health 200
+          check https://escoladodividendo.com.br/api/rankings/public 200
+          exit "$failed"

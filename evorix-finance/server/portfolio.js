@@ -25,7 +25,7 @@ const importLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   limit: 20,
   store: new MysqlLimitStore("portfolio-import"),
-  standardHeaders: "draft-8",
+  standardHeaders: "draft-7",
   legacyHeaders: false,
 });
 const decimal = z.string().regex(/^\d{1,12}(?:\.\d{1,8})?$/);

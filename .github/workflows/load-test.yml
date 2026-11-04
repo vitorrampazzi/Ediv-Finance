@@ -1,0 +1,92 @@
+name: Teste de carga
+
+# Disposable MySQL limited like the free Aiven plan (1 CPU, 1 GB). It never
+# reaches production or Aiven, and compares main with this branch under the
+# same load.
+on:
+  workflow_dispatch:
+    inputs:
+      levels:
+        description: Pessoas simultâneas em cada etapa
+        default: "50,100,200,400,800"
+  push:
+    branches: ["vitorrampazzi/escala-*"]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: load-test-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  load:
+    runs-on: ubuntu-latest
+    timeout-minutes: 50
+    services:
+      mysql:
+        image: mysql:8.4
+        env:
+          MYSQL_ROOT_PASSWORD: ediv_disposable_ci_only
+          MYSQL_DATABASE: ediv_load
+        ports:
+          - 3306:3306
+        options: >-
+          --cpus 1
+          --memory 1g
+          --health-cmd="mysqladmin ping -h 127.0.0.1 -pediv_disposable_ci_only"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=12
+    env:
+      LEVELS: ${{ inputs.levels || '50,100,200,400,800' }}
+      EDIV_LOAD_TEST_DISPOSABLE: "true"
+      NODE_ENV: development
+      HOST: 127.0.0.1
+      MYSQL_HOST: 127.0.0.1
+      MYSQL_PORT: "3306"
+      MYSQL_USER: root
+      MYSQL_PASSWORD: ediv_disposable_ci_only
+      MYSQL_DATABASE: ediv_load
+      MYSQL_SSL: "false"
+      # Same per-instance pool as on Vercel.
+      MYSQL_CONNECTION_LIMIT: "3"
+      SKIP_STARTUP_MIGRATIONS: "true"
+      TRUST_PROXY: "true"
+      APP_BASE_URL: http://127.0.0.1:4180
+      APP_ORIGIN: http://127.0.0.1:4180
+      SMTP_URL: ""
+      MAIL_FROM: ""
+      # No Aiven, SMTP, Vercel or production secrets are available here.
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: evorix-finance/package-lock.json
+      - name: Instalar esta versão e a da main
+        run: |
+          git worktree add ../antes origin/main
+          (cd evorix-finance && npm ci)
+          (cd ../antes/evorix-finance && npm ci)
+      - name: Criar 10 mil contas de teste
+        working-directory: evorix-finance
+        run: node tests/load/seed.mjs tests/load/out/sessions.json
+      - name: Rodar os três cenários
+        working-directory: evorix-finance
+        run: |
+          docker pull --quiet grafana/k6:1.0.0
+          tests/load/run.sh antes-70 ../../antes/evorix-finance 70
+          tests/load/run.sh depois-70 . 70
+          tests/load/run.sh depois-1 . 1
+      - name: Resumo
+        if: always()
+        working-directory: evorix-finance
+        run: |
+          node tests/load/report.mjs | tee -a "$GITHUB_STEP_SUMMARY"
+          node tests/load/report.mjs --annotations
+          tail -n 25 tests/load/out/*-k6.txt || true

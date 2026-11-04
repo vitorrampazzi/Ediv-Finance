@@ -32,7 +32,7 @@ const limiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   limit: 30,
   store: new MysqlLimitStore("support"),
-  standardHeaders: "draft-8",
+  standardHeaders: "draft-7",
   legacyHeaders: false,
 });
 const bodySchema = z.string().trim().min(2).max(3000);
