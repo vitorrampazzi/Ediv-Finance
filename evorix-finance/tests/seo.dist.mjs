@@ -57,6 +57,25 @@ test("contas, área logada e 404 ficam fora do índice", () => {
   }
 });
 
+test("página de empresa: casca indexável, sem canonical próprio", () => {
+  // The page sets its canonical for the three open companies, or noindex.
+  const html = read("acao.html");
+  assert.equal(meta(html, "name", "robots"), "index, follow");
+  assert.doesNotMatch(html, /rel="canonical"/);
+  assert.equal(meta(html, "property", "og:url"), undefined);
+  assert.doesNotMatch(html, /application\/ld\+json/);
+  const config = JSON.parse(
+    readFileSync(new URL("../vercel.json", import.meta.url), "utf8"),
+  );
+  assert.ok(
+    config.rewrites.some(
+      (rule) =>
+        rule.source === "/ranking/acao/:ticker" &&
+        rule.destination === "/acao.html",
+    ),
+  );
+});
+
 test("sitemap lista só páginas públicas, com a data real de cada uma", () => {
   const sitemap = read("sitemap.xml");
   assert.match(sitemap, /^<\?xml version="1.0" encoding="UTF-8"\?><urlset /);

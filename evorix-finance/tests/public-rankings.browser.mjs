@@ -367,23 +367,49 @@ try {
     },
   );
   await run(
-    "Link público preserva ticker/publicação no destino autenticado",
+    "Página pública das três primeiras: indexável e conta preserva a publicação",
     async () => {
+      const ticker = entries[0].ticker;
       const link = page
         .locator("#public-ranking-results .ph-ranking-company-link")
         .first();
-      await expect(link).toHaveAttribute(
-        "href",
-        "/app/ranking/acao/" + entries[0].ticker + "?publication=27",
-      );
+      await expect(link).toHaveAttribute("href", "/ranking/acao/" + ticker);
       await link.focus();
       await link.press("Enter");
-      await expect(page).toHaveURL(/\/entrar$/);
-      assert.equal(
-        await page.evaluate(() => window.history.state.usr.from),
-        "/app/ranking/acao/" + entries[0].ticker + "?publication=27",
+      await expect(page).toHaveURL(origin + "/ranking/acao/" + ticker);
+      await expect(page.getByRole("heading", { level: 1 })).toContainText(
+        ticker,
       );
+      await expect(
+        page.locator('dl [class*="font-numbers"]').first(),
+      ).toBeVisible();
+      await expect(page.locator('meta[name="robots"]')).toHaveAttribute(
+        "content",
+        "index, follow",
+      );
+      await expect(page.locator('link[rel="canonical"]')).toHaveAttribute(
+        "href",
+        "https://escoladodividendo.com.br/ranking/acao/" + ticker,
+      );
+      await expect(
+        page.getByRole("link", { name: "Já tenho conta" }),
+      ).toHaveAttribute(
+        "href",
+        "/entrar?next=" +
+          encodeURIComponent("/app/ranking/acao/" + ticker + "?publication=27"),
+      );
+      // A company outside the open three is never a public, indexable page.
+      await page.goto(origin + "/ranking/acao/ZZZZ3");
+      await expect(
+        page.getByRole("heading", { level: 1, name: "Ranking de Ações" }),
+      ).toBeVisible();
+      await expect(page.locator('meta[name="robots"]')).toHaveAttribute(
+        "content",
+        "noindex, nofollow",
+      );
+      await expect(page.locator('link[rel="canonical"]')).toHaveCount(0);
       assert.equal(privateReads, 0);
+      await page.goto(origin);
     },
   );
   await run(

@@ -2,7 +2,7 @@
 
 ## Precisa de decisão do dono
 
-1. **Páginas públicas por ação.** Decidir quais empresas podem ter página aberta.
+1. **Páginas públicas por ação (feito para as 3 primeiras).** Ampliar para outras empresas exige decidir quais podem ser abertas.
    - Hoje a composição e o tamanho do ranking são fechados; a API pública mostra só as 3 primeiras.
    - Proposta: uma lista aprovada em `site-pages.mjs`, com ticker e nome. Cada empresa ganha uma página pré-renderizada com H1, texto sobre o que a pesquisa cobre, links para glossário, aulas e metodologia, e convite ao cadastro.
    - Números aparecem só quando já forem públicos.

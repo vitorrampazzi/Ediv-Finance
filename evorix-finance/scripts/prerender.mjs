@@ -115,6 +115,8 @@ export async function prerender() {
     await writeFile("dist" + path + "/index.html", html(path, ""));
   }
   await writeFile("dist/app.html", html("/app", ""));
+  // Shell for /ranking/acao/:ticker: indexable, with no canonical of its own.
+  await writeFile("dist/acao.html", html("/ranking/acao/empresa", ""));
   await writeFile(
     "dist/404.html",
     html(

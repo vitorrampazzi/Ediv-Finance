@@ -1,32 +1,18 @@
-import { useEffect, useState } from "react";
 import { LockKeyhole } from "lucide-react";
 import { Link } from "react-router-dom";
-import { apiRequest } from "../../lib/api";
 import { authLink } from "../../lib/authDestination";
 import { trackEvent } from "../../lib/analytics";
 import { CompanyLogo } from "../CompanyLogo";
+import {
+  publicMetrics as metrics,
+  usePublicRanking,
+} from "../../hooks/usePublicRanking";
 import {
   dividendColumns,
   formatDividendValue,
 } from "../../../dividend-analysis.mjs";
 import "./public-sections.css";
 import "./public-home.css";
-
-const metrics = [
-  "estimatedGrossDividendYield",
-  "projectedPE",
-  "safetyMargin",
-] as const;
-type PublicRanking = {
-  id: string | null;
-  title: string;
-  entries: {
-    rank: number;
-    ticker: string;
-    companyName: string;
-    dividendAnalysis: Record<(typeof metrics)[number], string | null>;
-  }[];
-};
 
 export function ResearchSample({
   showAccessActions = true,
@@ -35,37 +21,7 @@ export function ResearchSample({
   showAccessActions?: boolean;
   lockedPreview?: boolean;
 }) {
-  const [publication, setPublication] = useState<PublicRanking | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
-  const [revision, setRevision] = useState(0);
-  useEffect(() => {
-    const controller = new AbortController();
-    apiRequest<PublicRanking>("/api/rankings/public", {
-      signal: controller.signal,
-    })
-      .then((data) => {
-        if (!controller.signal.aborted) setPublication(data);
-      })
-      .catch((reason) => {
-        if (!controller.signal.aborted)
-          setError(
-            reason instanceof Error
-              ? reason.message
-              : "Não foi possível carregar o ranking.",
-          );
-      })
-      .finally(() => {
-        if (!controller.signal.aborted) setLoading(false);
-      });
-    return () => controller.abort();
-  }, [revision]);
-  const retry = () => {
-    setLoading(true);
-    setError("");
-    setPublication(null);
-    setRevision((value) => value + 1);
-  };
+  const { publication, loading, error, retry } = usePublicRanking();
   return (
     <section
       id="caderno-de-exemplo"
@@ -121,13 +77,7 @@ export function ResearchSample({
                   <h3>
                     <Link
                       className="ph-ranking-company-link"
-                      to={
-                        "/app/ranking/acao/" +
-                        encodeURIComponent(entry.ticker) +
-                        (publication.id
-                          ? "?publication=" + encodeURIComponent(publication.id)
-                          : "")
-                      }
+                      to={"/ranking/acao/" + encodeURIComponent(entry.ticker)}
                       onClick={() =>
                         trackEvent("click_stock_card", {
                           list_location: "ranking_preview",
@@ -142,7 +92,7 @@ export function ResearchSample({
                       </span>
                       <span className="sr-only">
                         {" "}
-                        · Entrar para acessar a análise completa
+                        · Ver a pesquisa da empresa
                       </span>
                     </Link>
                   </h3>

@@ -76,6 +76,11 @@ const IncomeRanking = lazyPage(
   () => pageImports.ranking().then((module) => module.IncomeRanking),
   ["/ranking"],
 );
+const PublicStock = lazy(() =>
+  pageImports.publicStock().then((module) => ({
+    default: module.PublicStock,
+  })),
+);
 const StockResearch = lazy(() =>
   pageImports.stockResearch().then((module) => ({
     default: module.StockResearch,
@@ -133,10 +138,7 @@ function App() {
                   element={<Navigate to="/ranking" replace />}
                 />
                 <Route path="/ranking" element={<IncomeRanking />} />
-                <Route
-                  path="/ranking/acao/:ticker"
-                  element={<StockResearch />}
-                />
+                <Route path="/ranking/acao/:ticker" element={<PublicStock />} />
                 <Route path="/assessoria" element={<Assessoria />} />
                 <Route path="/aprender" element={<Aprender />} />
                 <Route path="/metodologia" element={<Metodologia />} />
