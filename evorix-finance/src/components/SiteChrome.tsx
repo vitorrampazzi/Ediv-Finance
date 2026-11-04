@@ -9,7 +9,6 @@ import {
 } from "lucide-react";
 import type { ReactNode } from "react";
 import { useEffect, useRef, useState } from "react";
-import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { Link, NavLink, Outlet, useLocation } from "react-router-dom";
 import { useAuth } from "../context/authContext";
 import { PageContent } from "./PageContent";
@@ -28,7 +27,6 @@ export function SiteHeader({
   const mobileMenuOpen = menuRoute === routeKey;
   const menuButton = useRef<HTMLButtonElement>(null);
   const headerRef = useRef<HTMLElement>(null);
-  const reducedMotion = useReducedMotion();
   const links = [
     { to: "/suporte", label: "Fale conosco", Icon: MessageCircle },
     {
@@ -189,59 +187,41 @@ export function SiteHeader({
               </Tooltip>
             </div>
           </div>
-          <AnimatePresence initial={false}>
-            {mobileMenuOpen && (
-              <motion.nav
-                id="public-mobile-menu"
-                aria-label="Navegação móvel"
-                initial={{
-                  opacity: 0,
-                  y: reducedMotion ? 0 : -6,
-                  scale: reducedMotion ? 1 : 0.985,
-                }}
-                animate={{ opacity: 1, y: 0, scale: 1 }}
-                exit={{
-                  opacity: 0,
-                  y: reducedMotion ? 0 : -6,
-                  scale: reducedMotion ? 1 : 0.985,
-                }}
-                transition={{
-                  type: "spring",
-                  bounce: 0,
-                  duration: reducedMotion ? 0.12 : 0.25,
-                }}
-                className="ediv-chrome-popover ediv-public-menu absolute inset-x-4 top-[calc(100%-0.25rem)] z-50 grid gap-1 p-2 lg:hidden"
-              >
-                {links.map(({ to, label, Icon }) => (
-                  <NavLink
-                    key={to}
-                    to={to}
-                    onClick={() => setMenuRoute(null)}
-                    className={({ isActive }) =>
-                      `ediv-chrome-link flex min-h-11 items-center gap-3 rounded-lg px-3 text-sm ${isActive ? "is-current" : ""}`
-                    }
-                  >
-                    <Icon size={17} aria-hidden="true" />
-                    {label}
-                  </NavLink>
-                ))}
-                {!user && (
-                  <Link
-                    to="/entrar"
-                    onClick={() => {
-                      trackEvent("click_login", {
-                        cta_location: "mobile_menu",
-                      });
-                      setMenuRoute(null);
-                    }}
-                    className="ediv-chrome-link flex min-h-11 items-center px-3 text-sm"
-                  >
-                    Entrar
-                  </Link>
-                )}
-              </motion.nav>
-            )}
-          </AnimatePresence>
+          {mobileMenuOpen && (
+            <nav
+              id="public-mobile-menu"
+              aria-label="Navegação móvel"
+              className="ediv-chrome-popover ediv-public-menu absolute inset-x-4 top-[calc(100%-0.25rem)] z-50 grid gap-1 p-2 lg:hidden"
+            >
+              {links.map(({ to, label, Icon }) => (
+                <NavLink
+                  key={to}
+                  to={to}
+                  onClick={() => setMenuRoute(null)}
+                  className={({ isActive }) =>
+                    `ediv-chrome-link flex min-h-11 items-center gap-3 rounded-lg px-3 text-sm ${isActive ? "is-current" : ""}`
+                  }
+                >
+                  <Icon size={17} aria-hidden="true" />
+                  {label}
+                </NavLink>
+              ))}
+              {!user && (
+                <Link
+                  to="/entrar"
+                  onClick={() => {
+                    trackEvent("click_login", {
+                      cta_location: "mobile_menu",
+                    });
+                    setMenuRoute(null);
+                  }}
+                  className="ediv-chrome-link flex min-h-11 items-center px-3 text-sm"
+                >
+                  Entrar
+                </Link>
+              )}
+            </nav>
+          )}
         </div>
       </header>
     </>
@@ -276,6 +256,11 @@ export function SiteFooter({
             </Link>
             <p className="mt-3 max-w-sm text-sm leading-relaxed text-evo-textSec">
               Pesquisa de ações e educação sobre dividendos.
+            </p>
+            <p className="mt-2 max-w-sm text-xs leading-relaxed text-evo-textSec">
+              Conteúdo educativo, sem recomendação individual de investimento.
+              Investir envolve riscos, e resultados passados não garantem
+              resultados futuros.
             </p>
           </div>
           <div>

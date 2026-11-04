@@ -263,6 +263,31 @@ button:disabled {
   min-width: 0;
 }
 
+/* Later pages rise into place; the prerendered first page is already shown. */
+.page-enter-motion {
+  animation: ediv-page-rise 260ms cubic-bezier(0.2, 0, 0, 1) both;
+}
+@keyframes ediv-page-rise {
+  from {
+    transform: translateY(5px);
+  }
+}
+.ediv-public-menu {
+  animation: ediv-menu-open 250ms cubic-bezier(0.2, 0, 0, 1) both;
+}
+@keyframes ediv-menu-open {
+  from {
+    opacity: 0;
+    transform: translateY(-6px) scale(0.985);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .page-enter-motion,
+  .ediv-public-menu {
+    animation: none;
+  }
+}
+
 .ediv-member-intro > div:first-child {
   max-width: 38rem;
 }

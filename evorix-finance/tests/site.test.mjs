@@ -151,3 +151,11 @@ test("dados estruturados: marca na home e trilha nas páginas públicas", () => 
     assert.deepEqual(structuredData(path), []);
   assert.deepEqual(structuredData("/ranking", true), []);
 });
+
+test("cada página pública tem a data real da última mudança de conteúdo", () => {
+  const today = new Date().toISOString().slice(0, 10);
+  for (const [path, page] of Object.entries(publicPages)) {
+    assert.match(page.updated, /^\d{4}-\d{2}-\d{2}$/, path);
+    assert.ok(page.updated <= today, path);
+  }
+});
