@@ -265,6 +265,14 @@ test("API sem banco alcançável: 503 honesto, limites por IP antes de contas e 
     "public, max-age=0, s-maxage=60, stale-while-revalidate=300",
   );
   assert.equal(ranking.headers.get("set-cookie"), null);
+  // Registration availability depends only on configuration: the CDN shares it.
+  const availability = await call("/api/auth/availability");
+  assert.equal(availability.status, 200);
+  assert.equal(
+    availability.headers.get("cache-control"),
+    "public, max-age=0, s-maxage=300, stale-while-revalidate=600",
+  );
+  assert.equal(availability.headers.get("set-cookie"), null);
 
   // Login: the 8-per-IP gate runs before the account counters are touched.
   const victim = "vitima@ediv.test";

@@ -294,9 +294,14 @@ export async function requireAuthenticatedUser(req, res, next) {
   return next();
 }
 
-router.get("/availability", (_req, res) =>
-  res.json(registrationAvailability()),
-);
+// Depends only on this deployment's configuration, so the CDN may share it.
+router.get("/availability", (_req, res) => {
+  res.setHeader(
+    "Cache-Control",
+    "public, max-age=0, s-maxage=300, stale-while-revalidate=600",
+  );
+  return res.json(registrationAvailability());
+});
 
 router.post("/register", registrationLimiter, async (req, res) => {
   const availability = registrationAvailability();
