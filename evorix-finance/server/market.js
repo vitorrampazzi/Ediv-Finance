@@ -26,7 +26,7 @@ const quoteLimiter = rateLimit({
   windowMs: 60_000,
   limit: 30,
   store: new MysqlLimitStore("market"),
-  standardHeaders: "draft-8",
+  standardHeaders: "draft-7",
   legacyHeaders: false,
 });
 

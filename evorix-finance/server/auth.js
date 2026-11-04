@@ -11,7 +11,7 @@ import {
   sessionRenewalExpiry,
 } from "./session-policy.js";
 import { pool } from "./database.js";
-import { MysqlLimitStore } from "./limit-store.js";
+import { MysqlLimitStore, sharedCache } from "./limit-store.js";
 import { withPasswordWork } from "./password-work.js";
 import { passwordPolicyHint } from "../password-policy.mjs";
 import { retiredPageDestination } from "../site-pages.mjs";
@@ -68,7 +68,7 @@ const registrationLimiter = rateLimit({
   store: new MysqlLimitStore("register"),
   windowMs: 15 * 60 * 1000,
   limit: 5,
-  standardHeaders: "draft-8",
+  standardHeaders: "draft-7",
   legacyHeaders: false,
   message: {
     error:
@@ -82,7 +82,7 @@ const verificationLimiter = (prefix) =>
     store: new MysqlLimitStore(prefix),
     windowMs: 15 * 60 * 1000,
     limit: 8,
-    standardHeaders: "draft-8",
+    standardHeaders: "draft-7",
     legacyHeaders: false,
     message: {
       error:
@@ -95,7 +95,7 @@ const accountDeletionLimiter = rateLimit({
   store: new MysqlLimitStore("delete-account"),
   windowMs: 15 * 60 * 1000,
   limit: 3,
-  standardHeaders: "draft-8",
+  standardHeaders: "draft-7",
   legacyHeaders: false,
   message: {
     error:
@@ -296,8 +296,8 @@ export async function requireAuthenticatedUser(req, res, next) {
 
 // Depends only on this deployment's configuration, so the CDN may share it.
 router.get("/availability", (_req, res) => {
-  res.setHeader(
-    "Cache-Control",
+  sharedCache(
+    res,
     "public, max-age=0, s-maxage=300, stale-while-revalidate=600",
   );
   return res.json(registrationAvailability());
@@ -632,7 +632,7 @@ const recoveryLimiter = (prefix) =>
     windowMs: 15 * 60 * 1000,
     limit: 5,
     store: new MysqlLimitStore(prefix),
-    standardHeaders: "draft-8",
+    standardHeaders: "draft-7",
     legacyHeaders: false,
     message: {
       error: "Aguarde alguns minutos antes de solicitar outro link.",

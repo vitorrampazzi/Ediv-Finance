@@ -5,7 +5,7 @@ import { Router } from "express";
 import { rateLimit } from "express-rate-limit";
 import { pool } from "./database.js";
 import { requireAuthenticatedUser } from "./auth.js";
-import { MysqlLimitStore } from "./limit-store.js";
+import { MysqlLimitStore, sharedCache } from "./limit-store.js";
 import {
   hasPermission,
   lockActiveUser,
@@ -25,7 +25,7 @@ const limiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   limit: 20,
   store: new MysqlLimitStore("ranking-upload"),
-  standardHeaders: "draft-8",
+  standardHeaders: "draft-7",
   legacyHeaders: false,
   message: { error: "Muitas importações. Aguarde alguns minutos." },
 });
@@ -84,7 +84,7 @@ router.get("/public", async (_req, res) => {
     "SELECT id,title,created_at,entries_json FROM ranking_publications ORDER BY id DESC LIMIT 1",
   );
   const body = publicRanking(rows[0]);
-  res.setHeader("Cache-Control", publicRankingCacheControl);
+  sharedCache(res, publicRankingCacheControl);
   return res.json(body);
 });
 router.get("/history/:ticker", requireAuthenticatedUser, (req, res) => {

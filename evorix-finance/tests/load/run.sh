@@ -48,7 +48,7 @@ done
 ') >"$out/$label-rtt.txt"
 
 k6() {
-  docker run --rm --network host -v "$here:/load" \
+  docker run --rm --network host --user "$(id -u):$(id -g)" -v "$here:/load" \
     -e VUS="$1" -e DURATION="$2" -e SESSIONS_FILE=/load/out/sessions.json \
     -e BASE_URLS="$(IFS=,; echo "${bases[*]}")" \
     grafana/k6:1.0.0 run --quiet "${@:3}" /load/api.k6.js

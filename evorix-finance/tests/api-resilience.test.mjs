@@ -265,6 +265,11 @@ test("API sem banco alcançável: 503 honesto, limites por IP antes de contas e 
     "public, max-age=0, s-maxage=60, stale-while-revalidate=300",
   );
   assert.equal(ranking.headers.get("set-cookie"), null);
+  // Shared CDN copies carry no visitor's limit counters or key hash.
+  assert.equal(ranking.headers.get("ratelimit"), null);
+  assert.equal(ranking.headers.get("ratelimit-policy"), null);
+  assert.doesNotMatch(health.headers.get("ratelimit-policy") || "", /pk=/);
+  assert.match(health.headers.get("ratelimit") || "", /remaining=/);
   // Registration availability depends only on configuration: the CDN shares it.
   const availability = await call("/api/auth/availability");
   assert.equal(availability.status, 200);
@@ -273,6 +278,7 @@ test("API sem banco alcançável: 503 honesto, limites por IP antes de contas e 
     "public, max-age=0, s-maxage=300, stale-while-revalidate=600",
   );
   assert.equal(availability.headers.get("set-cookie"), null);
+  assert.equal(availability.headers.get("ratelimit"), null);
 
   // Login: the 8-per-IP gate runs before the account counters are touched.
   const victim = "vitima@ediv.test";

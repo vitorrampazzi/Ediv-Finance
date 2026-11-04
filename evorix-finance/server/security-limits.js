@@ -77,7 +77,7 @@ function limiter(prefix, windowMs, limit, options = {}) {
     identifier: prefix,
     store: options.store ?? new MysqlLimitStore(prefix),
     keyGenerator: (req) => req.securityIpKey,
-    standardHeaders: "draft-8",
+    standardHeaders: "draft-7",
     legacyHeaders: false,
     passOnStoreError: false,
     message: {
