@@ -1,5 +1,12 @@
 User-agent: *
+Allow: /api/auth/me$
+Allow: /api/auth/availability$
+Allow: /api/learning$
+Allow: /api/rankings/public$
+Allow: /api/rankings/status$
+Allow: /api/support/information$
 Disallow: /api/
 Disallow: /app
 Disallow: /verificar
 Disallow: /redefinir-senha
+Sitemap: https://escoladodividendo.com.br/sitemap.xml

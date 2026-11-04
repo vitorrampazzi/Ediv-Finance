@@ -24,6 +24,8 @@
 
 ## Indexabilidade
 
+- **Teste ao vivo do Google, antes desta PR:** `/glossario` deu "Erro soft 404", porque a API bloqueada pelo robots.txt fazia a página mostrar uma mensagem de erro. Depois do deploy, repetir o teste ao vivo e pedir a indexação de `/glossario`, `/aprender` e `/privacidade`.
+
 - **Públicas e indexáveis (sitemap com `lastmod` real):** `/`, `/ranking`, `/aprender`, `/glossario`, `/assessoria`, `/privacidade`, `/suporte` e `/metodologia`.
 - **Fora do índice (`noindex, nofollow`):** `/entrar`, `/cadastro`, `/verificar`, `/recuperar-senha`, `/redefinir-senha`, `/app/*`, `/ranking/acao/*` (até a decisão sobre páginas públicas) e a 404.
 - **Bloqueado no robots.txt:** `/api/`, `/app`, `/verificar` e `/redefinir-senha`.

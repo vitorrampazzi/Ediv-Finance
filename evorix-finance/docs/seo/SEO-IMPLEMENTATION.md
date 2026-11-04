@@ -21,6 +21,7 @@ O `scripts/prerender.mjs` aplica tudo isso no HTML de cada rota. O `src/componen
 | Cache | `/assets/*` com cache de um ano, `immutable` | `vercel.json` | #40 |
 | Acessibilidade | O primeiro Tab da visita cai em "Pular para o conteúdo" | `src/components/PageContent.tsx` | #40 |
 | GA4 | Eventos com lista fechada e `utm_*` da página de entrada | `analytics-policy.mjs`, `src/lib/analytics.ts`, componentes de CTA | #40 |
+| Rastreamento | O robots.txt libera só as APIs públicas que as páginas leem ao renderizar (`crawlableApi`), o que acaba com o soft 404. Toda resposta da API leva `X-Robots-Tag: noindex` | `site-pages.mjs`, `scripts/prerender.mjs`, `public/robots.txt`, `server/app.js` | esta |
 | Sitemap | `lastmod` com a data real de cada página, não a do build | `site-pages.mjs`, `scripts/prerender.mjs` | esta |
 | LCP | Banner de cookies sem esperar a checagem de sessão (a medição continua esperando) | `src/components/PrivacyConsent.tsx` | esta |
 | JS inicial | Animações de página e do menu do celular em CSS; framer-motion sai do JS inicial | `src/components/PageContent.tsx`, `src/components/SiteChrome.tsx`, `src/index.css` | esta |

@@ -51,6 +51,29 @@ export const publicPages = {
       "Conheça como as pesquisas de ações são organizadas, confira autoria, fontes e versões e aprenda a ler os cenários com contexto.",
   },
 };
+// Public pages read these while rendering. Google must reach them, or the
+// rendered page shows an error and is flagged as a soft 404. Every other API
+// path stays blocked, and API responses carry X-Robots-Tag: noindex.
+export const crawlableApi = [
+  "/api/auth/me",
+  "/api/auth/availability",
+  "/api/learning",
+  "/api/rankings/public",
+  "/api/rankings/status",
+  "/api/support/information",
+];
+export function robotsTxt() {
+  return [
+    "User-agent: *",
+    ...crawlableApi.map((path) => `Allow: ${path}$`),
+    "Disallow: /api/",
+    "Disallow: /app",
+    "Disallow: /verificar",
+    "Disallow: /redefinir-senha",
+    `Sitemap: ${siteOrigin}/sitemap.xml`,
+    "",
+  ].join("\n");
+}
 export const accountPaths = [
   "/entrar",
   "/cadastro",

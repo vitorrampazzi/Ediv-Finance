@@ -4,6 +4,7 @@ import assert from "node:assert/strict";
 import { existsSync, readFileSync } from "node:fs";
 import {
   accountPaths,
+  crawlableApi,
   publicPages,
   retiredPages,
   siteOrigin,
@@ -77,6 +78,9 @@ test("robots.txt bloqueia só o que é privado e aponta o sitemap", () => {
   const robots = read("robots.txt");
   for (const rule of ["/api/", "/app", "/verificar", "/redefinir-senha"])
     assert.match(robots, new RegExp(`^Disallow: ${rule}$`, "m"));
+  // Without these, Google renders the public pages with an error (soft 404).
+  for (const path of crawlableApi)
+    assert.ok(robots.split("\n").includes(`Allow: ${path}$`), path);
   for (const path of Object.keys(publicPages).filter((path) => path !== "/"))
     assert.doesNotMatch(robots, new RegExp(`^Disallow: ${path}$`, "m"));
   assert.match(robots, new RegExp(`^Sitemap: ${siteOrigin}/sitemap.xml$`, "m"));

@@ -6,6 +6,7 @@ import {
   publicPages,
   accountPaths,
   pageMetadata,
+  robotsTxt,
   siteOrigin,
   structuredData,
 } from "../site-pages.mjs";
@@ -136,9 +137,7 @@ export async function prerender() {
   );
   await writeFile(
     "dist/robots.txt",
-    qa
-      ? "User-agent: *\nDisallow: /\n"
-      : `User-agent: *\nDisallow: /api/\nDisallow: /app\nDisallow: /verificar\nDisallow: /redefinir-senha\nSitemap: ${siteOrigin}/sitemap.xml\n`,
+    qa ? "User-agent: *\nDisallow: /\n" : robotsTxt(),
   );
   console.info(
     `HTML público gerado para ${Object.keys(publicPages).length} rotas; QA=${qa}.`,
