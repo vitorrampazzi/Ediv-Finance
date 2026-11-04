@@ -21,6 +21,7 @@ for (const [label, title] of scenarios) {
   if (!existsSync(new URL(`${label}-rtt.txt`, out))) continue;
   const rtt = read(`${label}-rtt.txt`).trim();
   let capacity = null;
+  const measured = [];
   for (const vus of levels) {
     const file = `${label}-${vus}.json`;
     if (!existsSync(new URL(file, out))) continue;
@@ -38,10 +39,12 @@ for (const [label, title] of scenarios) {
       `| ${title} (ida e volta ao banco: ${rtt} ms) | ${vus} | ${metrics.http_reqs.rate.toFixed(0)} | ${ms(duration.med)} | ${ms(duration["p(95)"])} | ${ms(duration["p(99)"])} | ${(errors * 100).toFixed(2)}% | ${average.toFixed(0)}% / ${Math.max(0, ...cpu).toFixed(0)}% |`,
     );
     if (duration["p(95)"] <= 1000 && errors <= 0.01) capacity = vus;
-    notes.push(
-      `${title} | ${vus} pessoas | ${metrics.http_reqs.rate.toFixed(0)} req/s | p50 ${ms(duration.med)} | p95 ${ms(duration["p(95)"])} | p99 ${ms(duration["p(99)"])} | erros ${(errors * 100).toFixed(2)}% | MySQL ${average.toFixed(0)}%/${Math.max(0, ...cpu).toFixed(0)}% | ida e volta ${rtt} ms`,
+    measured.push(
+      `${vus} pessoas | ${metrics.http_reqs.rate.toFixed(0)} req/s | p50 ${ms(duration.med)} | p95 ${ms(duration["p(95)"])} | p99 ${ms(duration["p(99)"])} | erros ${(errors * 100).toFixed(2)}% | MySQL ${average.toFixed(0)}%/${Math.max(0, ...cpu).toFixed(0)}% | ida e volta ${rtt} ms`,
     );
   }
+  // GitHub keeps 10 annotations per step: one per scenario fits them all.
+  if (measured.length) notes.push([title, ...measured].join("\n"));
   verdicts.push(
     `- ${title}: ${capacity ? `até ${capacity} pessoas simultâneas com p95 ≤ 1 s e erros ≤ 1%` : "nenhum nível testado ficou dentro de p95 ≤ 1 s e erros ≤ 1%"}.`,
   );
@@ -49,7 +52,7 @@ for (const [label, title] of scenarios) {
 const escape = (text) =>
   text.replaceAll("%", "%25").replaceAll("\r", "%0D").replaceAll("\n", "%0A");
 if (process.argv.includes("--annotations")) {
-  for (const note of [...notes, ...verdicts])
+  for (const note of [...notes, verdicts.join("\n")])
     console.log(`::notice::${escape(note)}`);
   process.exit(0);
 }
