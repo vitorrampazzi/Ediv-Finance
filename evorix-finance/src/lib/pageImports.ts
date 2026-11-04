@@ -8,6 +8,7 @@ export const pageImports = {
   dashboard: () => import("../layouts/DashboardLayout"),
   ranking: () => import("../pages/IncomeRanking"),
   stockResearch: () => import("../pages/StockResearch"),
+  publicStock: () => import("../pages/PublicStock"),
   aprender: () => import("../pages/Aprender"),
   glossario: () => import("../pages/Glossario"),
   assessoria: () => import("../pages/Assessoria"),

@@ -94,8 +94,21 @@ export function retiredPageDestination(path) {
     ? retiredPages[normalizedPath(path)]
     : null;
 }
+// A company page is indexable only while the company is among the three open
+// in the latest publication. The page sets its own canonical once it knows,
+// or noindex for any other ticker; the shell itself carries neither.
+export const publicStockPath = /^\/ranking\/acao\/[A-Za-z0-9]{1,16}$/;
 export function pageMetadata(path, qa = false) {
   const metadata = publicPages[normalizedPath(path)];
+  if (!metadata && publicStockPath.test(normalizedPath(path)))
+    return {
+      title: "Escola do Dividendo",
+      socialTitle: "Pesquisa de uma empresa | Escola do Dividendo",
+      description:
+        "Indicadores de dividendos de uma empresa aberta na pesquisa da Escola do Dividendo: dividend yield estimado, P/L projetado e margem de segurança.",
+      canonical: null,
+      noindex: qa,
+    };
   // A aba sempre mostra a marca; o título da página segue nas prévias sociais.
   return {
     title: "Escola do Dividendo",

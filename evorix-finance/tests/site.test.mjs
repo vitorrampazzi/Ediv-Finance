@@ -159,3 +159,13 @@ test("cada página pública tem a data real da última mudança de conteúdo", (
     assert.ok(page.updated <= today, path);
   }
 });
+
+test("página de empresa só é indexável fora de QA e sem canonical na casca", () => {
+  const shell = pageMetadata("/ranking/acao/TIMS3");
+  assert.equal(shell.noindex, false);
+  assert.equal(shell.canonical, null);
+  assert.equal(shell.title, "Escola do Dividendo");
+  assert.equal(pageMetadata("/ranking/acao/TIMS3", true).noindex, true);
+  assert.equal(pageMetadata("/app/ranking/acao/TIMS3").noindex, true);
+  assert.equal(pageMetadata("/ranking/acao/../x").noindex, true);
+});

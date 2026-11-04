@@ -22,7 +22,7 @@
     },
     {
       "source": "/ranking/acao/:ticker",
-      "destination": "/app.html"
+      "destination": "/acao.html"
     },
     {
       "source": "/aprender",
