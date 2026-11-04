@@ -3,9 +3,9 @@
   "workspace": ".",
   "sessions": {
     "coordenacao": {
-      "phase": "concluido",
-      "summary": "Escala (#39) publicada; analytics/SEO/layout em PR; teste de carga: 200 simultâneos com p95 174 ms; relato coordenacao-escala-2026-11-04",
-      "updatedAt": "2026-11-04T12:47:10.529Z",
+      "phase": "revisao",
+      "summary": "SEO: lastmod real, suíte seo.dist, LCP (banner, fonte, herói), framer fora do JS inicial, CLS da prévia, aviso de risco, docs/seo; testes 137/137, seo 5/5, browser 36/36",
+      "updatedAt": "2026-11-04T15:06:40.317Z",
       "claims": []
     },
     "interface": {

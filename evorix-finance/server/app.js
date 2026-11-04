@@ -85,6 +85,8 @@ app.use("/api", (req, res, next) => {
   req.requestId = id;
   res.setHeader("X-Request-Id", id);
   res.setHeader("Cache-Control", "no-store");
+  // Crawlers may read a few public endpoints to render pages; never index JSON.
+  res.setHeader("X-Robots-Tag", "noindex");
   res.on("finish", () => {
     const now = Date.now();
     const method = allowedMethods.has(req.method) ? req.method : "OTHER";

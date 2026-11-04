@@ -15,6 +15,22 @@
   margin-top: 0.75rem;
   min-height: 2.75rem;
 }
+/* Room for the three companies while they load, measured on the built page,
+   so the sections below do not jump when the list arrives. */
+.ph-ranking-loading {
+  min-height: 59rem;
+}
+.ph-ranking-loading-locked {
+  min-height: 74.5rem;
+}
+@media (min-width: 768px) {
+  .ph-ranking-loading {
+    min-height: 21.5rem;
+  }
+  .ph-ranking-loading-locked {
+    min-height: 36rem;
+  }
+}
 .ph-ranking-publication {
   margin-block: 1.5rem 1rem;
 }

@@ -85,7 +85,10 @@ export function ResearchSample({
           </div>
         </header>
         {loading ? (
-          <p role="status" className="ph-ranking-state">
+          <p
+            role="status"
+            className={`ph-ranking-state ph-ranking-loading${lockedPreview ? " ph-ranking-loading-locked" : ""}`}
+          >
             Carregando ranking publicado…
           </p>
         ) : error ? (

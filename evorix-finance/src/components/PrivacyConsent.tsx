@@ -51,9 +51,12 @@ export function PrivacyConsent() {
     };
   }, [open]);
   const enabled = available && !qaEnvironment;
+  // The banner does not wait for the session check; measurement still does.
+  const bannerAudience =
+    !sessionError && !qaEnvironment && (!user || user.role === "USER");
   const banner =
     enabled &&
-    audienceAllowed &&
+    bannerAudience &&
     Boolean(analyticsPage(pathname)) &&
     consent.choice === null &&
     !open;

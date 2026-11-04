@@ -258,6 +258,7 @@ test("API sem banco alcançável: 503 honesto, limites por IP antes de contas e 
   const health = await call("/api/health");
   assert.equal(health.status, 200);
   assert.equal(health.headers.get("cache-control"), "no-store");
+  assert.equal(health.headers.get("x-robots-tag"), "noindex");
   const ranking = await call("/api/rankings/public");
   assert.equal(ranking.status, 200);
   assert.equal(

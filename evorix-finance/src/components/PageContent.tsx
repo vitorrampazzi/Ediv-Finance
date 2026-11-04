@@ -1,7 +1,6 @@
-import { Suspense, useLayoutEffect, useRef } from "react";
+import { Suspense, useLayoutEffect, useRef, useState } from "react";
 import type { ReactNode } from "react";
 import { useLocation, useNavigationType } from "react-router-dom";
-import { motion, useReducedMotion } from "framer-motion";
 import { PageErrorBoundary } from "./PageErrorBoundary";
 
 export function PageLoading() {
@@ -38,8 +37,9 @@ let firstPageOfVisit = true;
 function RevealedPage({ children }: { children: ReactNode }) {
   const { hash, pathname } = useLocation();
   const navigationType = useNavigationType();
-  const reducedMotion = useReducedMotion();
   const entryHash = useRef(hash);
+  // The prerendered first page is already on screen; only later pages rise in.
+  const [animate] = useState(!firstPageOfVisit);
   const announceRoute = useRef(
     !firstPageOfVisit &&
       (navigationType !== "POP" || (pathname !== "/" && pathname !== "/app")),
@@ -61,19 +61,12 @@ function RevealedPage({ children }: { children: ReactNode }) {
     }
   }, []);
   return (
-    <motion.div
+    <div
       ref={content}
-      className="page-enter min-w-0"
-      initial={reducedMotion ? false : { y: 5 }}
-      animate={{ y: 0 }}
-      transition={
-        reducedMotion
-          ? { duration: 0 }
-          : { type: "spring", bounce: 0, duration: 0.26 }
-      }
+      className={`page-enter min-w-0${animate ? " page-enter-motion" : ""}`}
     >
       {children}
-    </motion.div>
+    </div>
   );
 }
 

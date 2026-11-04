@@ -6,6 +6,7 @@ import {
   publicPages,
   accountPaths,
   pageMetadata,
+  robotsTxt,
   siteOrigin,
   structuredData,
 } from "../site-pages.mjs";
@@ -81,6 +82,11 @@ export async function prerender() {
         value ? `<meta ${attr}="${name}" content="${escape(value)}" />` : "",
       );
     }
+    // The home hero photo is the largest element of its first screen.
+    const heroImage =
+      path === "/"
+        ? '<link rel="preload" as="image" href="/ediv-hero-forest.webp" fetchpriority="high" />'
+        : "";
     const canonical =
       meta.canonical && !meta.noindex
         ? `<link rel="canonical" href="${meta.canonical}" />`
@@ -95,7 +101,7 @@ export async function prerender() {
     return result
       .replace(
         "</head>",
-        `${pageStyles(path)}${canonical}${schema}<meta name="robots" content="${meta.noindex ? "noindex, nofollow" : "index, follow"}" /></head>`,
+        `${heroImage}${pageStyles(path)}${canonical}${schema}<meta name="robots" content="${meta.noindex ? "noindex, nofollow" : "index, follow"}" /></head>`,
       )
       .replace('<div id="root"></div>', `<div id="root">${content}</div>`);
   }
@@ -122,15 +128,16 @@ export async function prerender() {
       qa
         ? ""
         : Object.keys(publicPages)
-            .map((path) => `<url><loc>${siteOrigin}${path}</loc></url>`)
+            .map(
+              (path) =>
+                `<url><loc>${siteOrigin}${path}</loc><lastmod>${publicPages[path].updated}</lastmod></url>`,
+            )
             .join("")
     }</urlset>`,
   );
   await writeFile(
     "dist/robots.txt",
-    qa
-      ? "User-agent: *\nDisallow: /\n"
-      : `User-agent: *\nDisallow: /api/\nDisallow: /app\nDisallow: /verificar\nDisallow: /redefinir-senha\nSitemap: ${siteOrigin}/sitemap.xml\n`,
+    qa ? "User-agent: *\nDisallow: /\n" : robotsTxt(),
   );
   console.info(
     `HTML público gerado para ${Object.keys(publicPages).length} rotas; QA=${qa}.`,
