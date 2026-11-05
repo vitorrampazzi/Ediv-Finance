@@ -4,6 +4,7 @@ import { ArrowRight, BookOpen, FileText } from "lucide-react";
 import { useAuth } from "../context/authContext";
 import { AccountGate } from "../components/AccountGate";
 import { CompanyLogo } from "../components/CompanyLogo";
+import { LiveQuotePanel } from "../components/LiveQuote";
 import { RankingAccessLanding } from "../components/RankingAccessLanding";
 import {
   publicationDate,
@@ -222,9 +223,10 @@ function PublicCompany() {
         </dl>
         <p className="mt-3 text-xs leading-5 text-evo-textSec">
           Fonte: pesquisa da Escola do Dividendo
-          {date ? `, publicação de ${date}` : ""}. Estimativas da pesquisa, sem
-          cotação ao vivo. Margem de segurança não representa retorno garantido.
-          Conteúdo educativo, sem recomendação individual de investimento.
+          {date ? `, publicação de ${date}` : ""}. Estimativas da pesquisa, que
+          não mudam com a cotação do dia. Margem de segurança não representa
+          retorno garantido. Conteúdo educativo, sem recomendação individual de
+          investimento.
         </p>
         <Link
           className="mt-2 inline-flex min-h-11 items-center text-sm text-evo-accent underline"
@@ -233,6 +235,8 @@ function PublicCompany() {
           O que significa cada indicador
         </Link>
       </section>
+
+      <LiveQuotePanel ticker={entry.ticker} variant="public" />
 
       <section aria-labelledby="pesquisa-completa" className="mt-8">
         <h2 id="pesquisa-completa" className="text-xl font-semibold">

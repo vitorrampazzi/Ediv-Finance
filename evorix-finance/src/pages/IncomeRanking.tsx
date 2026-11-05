@@ -1,4 +1,5 @@
 import { useRankingPublication } from "../hooks/useRankingPublication";
+import { useLiveQuotes } from "../hooks/useLiveQuotes";
 import { useEffect, useRef, useState } from "react";
 import { Link, useLocation, useSearchParams } from "react-router-dom";
 import {
@@ -29,6 +30,7 @@ import { CompanyComparison, ToolSummary } from "../components/ResearchTools";
 import "./income-ranking.css";
 
 const noEntries: Entry[] = [];
+const noTickers: string[] = [];
 const rankingFilterKeys = ["busca", "setor", "prazo", "ordem"] as const;
 type RankingFilterKey = (typeof rankingFilterKeys)[number];
 const date = (value: string) =>
@@ -100,6 +102,11 @@ function MemberIncomeRanking() {
       : noEntries;
   const dividendMode =
     !showingDemo && sourceEntries.some((entry) => entry.dividendAnalysis);
+  // One request for the whole publication, so search, filters and "ver mais"
+  // never ask again; demo companies are fictitious and get no quote.
+  const liveQuotes = useLiveQuotes(
+    dividendMode ? sourceEntries.map((entry) => entry.ticker) : noTickers,
+  );
   const horizon =
     !dividendMode && ["6", "12", "24"].includes(requestedHorizon)
       ? requestedHorizon
@@ -901,6 +908,7 @@ function MemberIncomeRanking() {
             <DividendRankingTable
               entries={visibleEntries}
               researchLink={researchLink}
+              liveQuotes={liveQuotes}
             />
           </div>
         ) : (

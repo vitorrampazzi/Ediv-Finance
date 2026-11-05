@@ -10,7 +10,9 @@ import {
 } from "../../dividend-analysis.mjs";
 import type { Entry } from "../lib/ranking";
 import type { DividendColumnKey } from "../../dividend-analysis.mjs";
+import type { LiveQuotes } from "../hooks/useLiveQuotes";
 import { CompanyLogo } from "./CompanyLogo";
+import { LiveQuoteLine } from "./LiveQuote";
 import { Tooltip } from "./Tooltip";
 import "./dividend-research.css";
 
@@ -63,11 +65,14 @@ export function DividendRankingTable({
   researchLink,
   complete = false,
   showRank = false,
+  liveQuotes,
 }: {
   entries: DividendTableEntry[];
   researchLink?: (ticker: string) => string;
   complete?: boolean;
   showRank?: boolean;
+  // brapi.dev quotes, shown apart; the research price and order never change.
+  liveQuotes?: LiveQuotes;
 }) {
   const id = useId();
   const columns = complete
@@ -86,7 +91,9 @@ export function DividendRankingTable({
         {complete
           ? "Informações completas da planilha."
           : "Resumo do ranking. Abra uma empresa para consultar as informações completas."}{" "}
-        Preço de mercado de referência da planilha; sem cotação ao vivo.
+        {liveQuotes
+          ? "Preço de mercado e margem de segurança são os da pesquisa publicada. A linha “agora” traz a cotação da brapi.dev, com atraso, e não muda a ordem nem a margem."
+          : "Preço de mercado de referência da planilha; sem cotação ao vivo."}
         {complete &&
           " Role a tabela na horizontal para consultar todas as colunas."}
       </p>
@@ -138,17 +145,19 @@ export function DividendRankingTable({
                     toggleOnClick
                     content={
                       column.label +
-                      (column.key === "ceilingPrice"
-                        ? ". Premissa histórica da planilha, não uma taxa de mercado atual nem garantia de retorno."
-                        : column.format === "currency"
-                          ? ". Valor em reais (R$)."
-                          : column.format === "quantity"
-                            ? ". Quantidade de ações informada na pesquisa."
-                            : column.format === "number"
-                              ? ". Múltiplo em vezes."
-                              : column.format.startsWith("percent")
-                                ? ". Percentual informado na pesquisa."
-                                : ". Informação preservada da fonte.")
+                      (column.key === "referencePrice" && liveQuotes
+                        ? " da planilha da pesquisa, em reais (R$). A linha “agora” é a cotação da brapi.dev, com atraso."
+                        : column.key === "ceilingPrice"
+                          ? ". Premissa histórica da planilha, não uma taxa de mercado atual nem garantia de retorno."
+                          : column.format === "currency"
+                            ? ". Valor em reais (R$)."
+                            : column.format === "quantity"
+                              ? ". Quantidade de ações informada na pesquisa."
+                              : column.format === "number"
+                                ? ". Múltiplo em vezes."
+                                : column.format.startsWith("percent")
+                                  ? ". Percentual informado na pesquisa."
+                                  : ". Informação preservada da fonte.")
                     }
                   >
                     <button type="button" className="dividend-header-control">
@@ -211,7 +220,16 @@ export function DividendRankingTable({
                           : "font-numbers"
                       }
                     >
-                      {value}
+                      {column.key === "referencePrice" && liveQuotes ? (
+                        <>
+                          <span data-research-value>{value}</span>
+                          <LiveQuoteLine
+                            view={liveQuotes.quoteFor(entry.ticker)}
+                          />
+                        </>
+                      ) : (
+                        value
+                      )}
                     </td>
                   );
                 })}

@@ -9,6 +9,7 @@ import {
 import type { Entry } from "../../lib/ranking";
 import { useStockHistory } from "../../hooks/useStockHistory";
 import { CompanyLogo } from "../CompanyLogo";
+import { LiveQuotePanel } from "../LiveQuote";
 import {
   DividendCalendar,
   DividendChart,
@@ -114,6 +115,7 @@ function Header({
             <Stat
               label="Cotação de referência"
               accent
+              sub="preço da pesquisa"
               tip="Preço da ação usado como base de todos os cálculos da pesquisa, na data indicada."
             >
               {brl(company.price)}
@@ -499,7 +501,9 @@ function Indicators() {
             : 4;
       return {
         key,
-        label: column.label,
+        // The spreadsheet calls it "Cotação atual"; here that name belongs to
+        // the brapi.dev block, so the research price keeps its own label.
+        label: key === "referencePrice" ? "Preço da pesquisa" : column.label,
         value: data.value(key),
         tip: explanations[key] || "Informação preservada da pesquisa.",
         kind,
@@ -877,6 +881,11 @@ function StockPage({
           className="scroll-mt-16 pt-20"
         >
           <SectionHead id="cotacao" n="02" title="Cotação" />
+          <LiveQuotePanel
+            ticker={company.ticker}
+            researchPrice={brl(company.price)}
+            variant="research"
+          />
           <PriceChart />
         </section>
 

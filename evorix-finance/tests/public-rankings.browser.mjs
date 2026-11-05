@@ -14,6 +14,7 @@ import {
   dividendAnnouncementMonths,
   dividendNumber,
 } from "../dividend-insights.mjs";
+import { marketFixture, summaryQuote } from "./market-fixture.mjs";
 
 // Local UI contract fixture; the full workbook is never imported into client code.
 const audit = process.env.EDIV_WORKBOOK_AUDIT
@@ -109,6 +110,10 @@ const origin = "http://127.0.0.1:4198";
 const results = [],
   errors = [],
   unknown = [];
+// brapi.dev is mocked: only the first company has a (summary) quote.
+const market = marketFixture({
+  quotes: { [entries[0].ticker]: summaryQuote(entries[0].ticker) },
+});
 let browser,
   mode = "hold",
   signedIn = false,
@@ -287,7 +292,8 @@ try {
     } else if (url.pathname === "/api/rankings") {
       privateReads++;
       data = privatePublication;
-    } else {
+    } else if (market.handles(url)) ({ status, data } = market.respond(url));
+    else {
       unknown.push(url.pathname);
       status = 503;
       data = { error: "API fora da fixture" };
@@ -398,6 +404,48 @@ try {
         "/entrar?next=" +
           encodeURIComponent("/app/ranking/acao/" + ticker + "?publication=27"),
       );
+      // brapi.dev quote apart from the research: summary has no day range.
+      const block = page.locator("[data-live-quote-block]");
+      await expect(block).toHaveAttribute("data-live-quote-block", "ready");
+      await expect(block).toHaveAttribute("data-live-quote-detail", "summary");
+      await expect(
+        block.getByRole("heading", { level: 2, name: "Cotação atual" }),
+      ).toBeVisible();
+      await expect(block.locator("[data-live-quote-price]")).toHaveText(
+        "R$ 19,62",
+      );
+      await expect(block.locator("[data-live-quote-change]")).toHaveText(
+        "−0,91% no dia",
+      );
+      assert.deepEqual(
+        await block
+          .locator("[data-live-quote-field]")
+          .evaluateAll((nodes) =>
+            nodes.map((node) => node.dataset.liveQuoteField),
+          ),
+        ["volume"],
+      );
+      await expect(block).not.toContainText(
+        /Fechamento anterior|Máxima|Mínima/,
+      );
+      await expect(block.locator("[data-live-quote-source]")).toHaveText(
+        /^brapi\.dev · com atraso · consultada às (05\/11 às )?10:48$/,
+      );
+      await expect(block.locator("[data-live-quote-source]")).toHaveAttribute(
+        "title",
+        /com atraso, consultada às/,
+      );
+      assert.doesNotMatch(
+        await page.locator("body").innerText(),
+        /tempo real/i,
+      );
+      await page.goto(origin + "/ranking/acao/" + entries[1].ticker);
+      await expect(block).toHaveAttribute(
+        "data-live-quote-block",
+        "unavailable",
+      );
+      await expect(block).toContainText("Cotação atual indisponível");
+      await expect(block.locator("[data-live-quote-field]")).toHaveCount(0);
       // A company outside the open three is never a public, indexable page.
       await page.goto(origin + "/ranking/acao/ZZZZ3");
       await expect(
@@ -623,7 +671,7 @@ try {
         }
         await expect(page.locator(".figma-stock [data-field]")).toHaveCount(20);
         const referenceInfo = page.getByRole("button", {
-          name: "O que é Cotação atual?",
+          name: "O que é Preço da pesquisa?",
           exact: true,
         });
         await referenceInfo.focus();
@@ -749,6 +797,25 @@ try {
         });
         await page.screenshot({
           path: output + "/home-viewport-320-" + theme + ".png",
+        });
+        await page.goto(origin + "/ranking/acao/" + entries[0].ticker);
+        await page.evaluate(
+          (theme) => (document.documentElement.dataset.theme = theme),
+          theme,
+        );
+        const quoteBlock = page.locator("[data-live-quote-block]");
+        await expect(quoteBlock).toHaveAttribute(
+          "data-live-quote-block",
+          "ready",
+        );
+        assert.ok(
+          await page.evaluate(
+            () => document.documentElement.scrollWidth <= innerWidth + 1,
+          ),
+          "Página pública com cotação 320px sem overflow em " + theme,
+        );
+        await quoteBlock.screenshot({
+          path: output + "/public-quote-320-" + theme + ".png",
         });
         signedIn = true;
         await page.goto(
@@ -907,6 +974,172 @@ try {
       } finally {
         historyEnabled = false;
         privatePublication.entries = previousEntries;
+      }
+    },
+  );
+  await run(
+    "Histórico + brapi.dev: só datas novas, junção conferida e motivo quando não estende",
+    async () => {
+      const previousEntries = privatePublication.entries;
+      privatePublication.entries = [
+        {
+          ...structuredClone(previousEntries[0]),
+          ticker: "TIMS3",
+          companyName: "Tim",
+        },
+        {
+          ...structuredClone(previousEntries[1]),
+          ticker: "WIZC3",
+          companyName: "Wiz",
+        },
+      ];
+      historyEnabled = true;
+      signedIn = true;
+      try {
+        await page.setViewportSize({ width: 1440, height: 1000 });
+        const tim = stockHistory("TIMS3").prices;
+        assert.equal(tim.at(-1).date, "2026-10-23");
+        const price = page.locator('figure[data-history-chart="price"]');
+        const note = price.locator("[data-history-extension]");
+        // Without the token the server says so and the chart stays packaged.
+        await page.goto(origin + "/app/ranking/acao/TIMS3?publication=27");
+        await expect(note).toHaveAttribute(
+          "data-history-extension",
+          "no_token",
+        );
+        await expect(note).toHaveText(
+          "Histórico até 23/10/2026. A atualização diária pela brapi.dev ainda não está ativa.",
+        );
+        assert.ok(market.calls.includes("/api/market/history/TIMS3?range=3mo"));
+        const added = [
+          {
+            date: "2026-10-26",
+            close: "19.20000000",
+            adjustedClose: null,
+            volume: null,
+          },
+          {
+            date: "2026-10-27",
+            close: "19.31000000",
+            adjustedClose: null,
+            volume: null,
+          },
+          {
+            date: "2026-10-28",
+            close: "19.40000000",
+            adjustedClose: null,
+            volume: null,
+          },
+        ];
+        market.history.TIMS3 = {
+          available: true,
+          reason: null,
+          stale: false,
+          // The overlap repeats the packaged closes, and one date twice.
+          points: [
+            ...tim.slice(-3).map((point) => ({
+              date: point.date,
+              close: String(point.close),
+              adjustedClose: null,
+              volume: null,
+            })),
+            ...added,
+            added[0],
+          ],
+        };
+        await page.goto(origin + "/app/ranking/acao/TIMS3?publication=27");
+        await expect(note).toHaveAttribute(
+          "data-history-extension",
+          "extended",
+        );
+        await expect(note).toHaveText(
+          "Histórico até 23/10/2026 + fechamentos diários da brapi.dev até 28/10.",
+        );
+        const period = price.getByRole("button", { name: "5D", exact: true });
+        await period.press("Enter");
+        await expect(period).toHaveAttribute("aria-pressed", "true");
+        const aside = page.locator(".fmk-chart-layout aside").first();
+        await expect(
+          aside
+            .locator("dl > div")
+            .filter({ hasText: "Último fechamento" })
+            .locator("dd"),
+        ).toHaveText(/19,40/);
+        const plot = price.locator('svg[role="application"]');
+        await plot.focus();
+        for (let index = 0; index < 5; index++)
+          await page.keyboard.press("ArrowLeft");
+        // 5D = 22/10, 23/10 (packaged) + 26/10, 27/10, 28/10 (brapi.dev).
+        await expect(price.getByRole("tooltip")).toContainText("22/10/2026");
+        await expect(price.getByRole("tooltip")).not.toContainText("brapi");
+        for (let index = 0; index < 3; index++)
+          await page.keyboard.press("ArrowRight");
+        await expect(price.getByRole("tooltip")).toContainText(
+          "27/10/2026 · fechamento brapi.dev",
+        );
+        await page.keyboard.press("ArrowRight");
+        await expect(price.getByRole("tooltip")).toContainText("28/10/2026");
+        // Dividend chart does not use quotes.
+        assert.ok(
+          (await page
+            .locator(
+              'figure[data-history-chart="dividends"] .recharts-bar-rectangle',
+            )
+            .count()) > 0,
+        );
+        // A junction more than 0.5% apart keeps the packaged history only.
+        const wiz = stockHistory("WIZC3").prices;
+        market.history.WIZC3 = {
+          available: true,
+          reason: null,
+          points: [
+            {
+              date: wiz.at(-1).date,
+              close: (wiz.at(-1).close * 1.02).toFixed(8),
+            },
+            { date: "2026-10-28", close: "9.99000000" },
+          ],
+        };
+        await page.goto(origin + "/app/ranking/acao/WIZC3?publication=27");
+        await expect(note).toHaveAttribute(
+          "data-history-extension",
+          "mismatch",
+        );
+        await expect(note).toContainText("não conferem com o histórico");
+        await expect(
+          aside
+            .locator("dl > div")
+            .filter({ hasText: "Último fechamento" })
+            .locator("dd"),
+        ).not.toHaveText(/9,99/);
+        assert.doesNotMatch(
+          await page.locator("body").innerText(),
+          /tempo real/i,
+        );
+        for (const theme of ["dark", "light"]) {
+          await page.setViewportSize({ width: 320, height: 1000 });
+          await page.goto(origin + "/app/ranking/acao/TIMS3?publication=27");
+          await page.evaluate(
+            (theme) => (document.documentElement.dataset.theme = theme),
+            theme,
+          );
+          await expect(note).toHaveAttribute(
+            "data-history-extension",
+            "extended",
+          );
+          assert.ok(
+            await page.evaluate(
+              () => document.documentElement.scrollWidth <= innerWidth + 1,
+            ),
+          );
+          await page.locator("#cotacao").screenshot({
+            path: output + "/quote-history-320-" + theme + ".png",
+          });
+        }
+      } finally {
+        historyEnabled = false;
+        privatePublication.entries = previousEntries;
+        market.history = {};
       }
     },
   );

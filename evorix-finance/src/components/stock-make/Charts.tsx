@@ -33,7 +33,7 @@ const TEAL = "var(--fmk-teal)";
 const AMBER = "var(--fmk-amber)";
 
 const chartLabels: Partial<Record<DividendColumnKey, string>> = {
-  referencePrice: "Cotação",
+  referencePrice: "Referência",
   ceilingPrice: "Teto",
   projectedGrossDividendPerShare: "DPA proj.",
   estimatedEps: "LPA est.",
@@ -66,7 +66,11 @@ function PublicationChart({
     const amount = number(key);
     return {
       key,
-      label: dividendColumns.find((column) => column.key === key)!.label,
+      // "Cotação atual" is the brapi.dev block; this is the research price.
+      label:
+        key === "referencePrice"
+          ? "Preço da pesquisa"
+          : dividendColumns.find((column) => column.key === key)!.label,
       short: chartLabels[key],
       amount:
         amount === null || !Number.isFinite(amount)

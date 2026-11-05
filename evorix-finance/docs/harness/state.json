@@ -4,26 +4,26 @@
   "sessions": {
     "coordenacao": {
       "phase": "revisao",
-      "summary": "Páginas públicas das 3 primeiras empresas (/ranking/acao/TICKER): indexáveis, noindex fora do top 3; testes 137, seo 6, browser 36",
-      "updatedAt": "2026-11-05T06:23:45.812Z",
+      "summary": "Cotações brapi: backend, interface e QA integrados; PR aberta para revisão e checks",
+      "updatedAt": "2026-11-05T17:29:13.424Z",
       "claims": []
     },
     "interface": {
       "phase": "revisao",
-      "summary": "Resultados: 4 novos gráficos (lucro→dividendo, CAGR ilustrado, régua Dív/EBITDA, bullet P/L); test 132/lint/build ok; relato interface-resultados-2026-11-03",
-      "updatedAt": "2026-11-03T13:15:51.738Z",
+      "summary": "Cotações brapi: linha agora no ranking, bloco Cotação atual (logada/pública), merge do histórico; test 171/lint/tsc/build ok; dividend 12, public-rankings 11, stock-theme 6 PASS; relato interface-cotacoes-2026-11-05",
+      "updatedAt": "2026-11-05T14:45:44.703Z",
       "claims": []
     },
     "backend": {
       "phase": "revisao",
-      "summary": "PATCH /api/auth/me (nome) e limitadores de verificação separados; npm test 132/132, lint ok; integração pendente CI; relato backend-conta-editavel-2026-11-03",
-      "updatedAt": "2026-11-03T03:52:51.035Z",
+      "summary": "Cotações brapi: provedor/serviço/rotas em server/market; 25 testes novos ok, npm test 146/146, lint ok; package.json (reservado pela interface) precisa dos 2 testes; relato backend-cotacoes-2026-11-05",
+      "updatedAt": "2026-11-05T14:24:05.423Z",
       "claims": []
     },
     "qa": {
-      "phase": "concluido",
-      "summary": "Rodada 02/11: 131 unit, lint/build/check PASS; browser sem banco OK exceto falhas preexistentes/a11y manual desatualizada; 503 home/entrar/ranking OK; cadastro sem form com /api todo fora; relato qa-auditoria-2026-11-02.md",
-      "updatedAt": "2026-11-02T18:13:19.045Z",
+      "phase": "revisao",
+      "summary": "Cotações brapi: apto com ressalvas; teste MySQL provider-cache 9/9 (mutação 9/9), npm test 171, integração 61, browser 121, brapi real 8 chamadas (EMAE4 ausente); relato qa-cotacoes-2026-11-05",
+      "updatedAt": "2026-11-05T17:26:00.820Z",
       "claims": []
     }
   }

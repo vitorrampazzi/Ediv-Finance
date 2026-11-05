@@ -11,6 +11,7 @@ import {
   dividendAnnouncementMonths,
   dividendNumber,
 } from "../dividend-insights.mjs";
+import { marketFixture } from "./market-fixture.mjs";
 const origin = process.env.EDIV_FIGMA_ORIGIN || "http://127.0.0.1:4332";
 assert.equal(new URL(origin).hostname, "127.0.0.1");
 const output =
@@ -21,6 +22,8 @@ const passed = [],
   errors = [],
   fonts = [];
 const widths = [320, 1440];
+// Quotes are mocked (all unavailable) so this suite never reaches brapi.dev.
+const market = marketFixture();
 async function run(name, work) {
   if (
     process.argv.length > 2 &&
@@ -44,6 +47,14 @@ try {
   await context.route("**/*", (route) => {
     const url = new URL(route.request().url());
     if (url.hostname !== "127.0.0.1") return route.abort();
+    if (market.handles(url)) {
+      const { status, data } = market.respond(url);
+      return route.fulfill({
+        status,
+        contentType: "application/json",
+        body: JSON.stringify(data),
+      });
+    }
     if (url.pathname.startsWith("/api/rankings/history/"))
       return route.fulfill({
         status: 404,
@@ -91,7 +102,10 @@ try {
         actual.find((row) => row.key === column.key),
         {
           key: column.key,
-          label: column.label,
+          label:
+            column.key === "referencePrice"
+              ? "Preço da pesquisa"
+              : column.label,
           value: formatDividendValue(
             dividendValue(entry, column.key),
             column.format,
@@ -163,8 +177,11 @@ try {
       );
       assert.doesNotMatch(
         await page.locator(".figma-stock").innerText(),
-        /DEMO3|Companhia Modelo|Marina Albuquerque|1962|18:40|série ilustrativa|empresa fictícia/i,
+        /DEMO3|Companhia Modelo|Marina Albuquerque|1962|18:40|série ilustrativa|empresa fictícia|tempo real/i,
       );
+      await expect(
+        page.locator("#cotacao [data-live-quote-block]"),
+      ).toHaveAttribute("data-live-quote-block", "unavailable");
     }
   });
   await run(

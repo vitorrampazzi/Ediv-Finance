@@ -15,11 +15,15 @@ import {
   groupDividends,
   formatHistoricalDividend,
   historyPeriods,
+  mergeLiveHistory,
   pricePlot,
   selectPrices,
+  type HistoryExtension,
   type HistoryPeriod,
   type StockHistory,
 } from "../../lib/stockHistory";
+import { useLiveHistory } from "../../hooks/useLiveHistory";
+import { firstOpenDate } from "../../lib/liveQuotes";
 import {
   axisProps,
   brl,
@@ -39,6 +43,25 @@ const dateText = (date: string | null) =>
 const tickDate = (time: number) =>
   dateText(new Date(time).toISOString().slice(0, 10));
 const tooltipBox = { maxWidth: "100%" };
+const reasons: Record<Exclude<HistoryExtension, "extended">, string> = {
+  loading: "Consultando os fechamentos mais recentes na brapi.dev…",
+  unavailable: "Não foi possível consultar os fechamentos da brapi.dev agora.",
+  provider_error:
+    "Não foi possível consultar os fechamentos da brapi.dev agora.",
+  no_token: "A atualização diária pela brapi.dev ainda não está ativa.",
+  not_covered: "A brapi.dev não cobre os fechamentos diários desta ação.",
+  budget:
+    "Limite diário de consultas à brapi.dev atingido; o gráfico será atualizado mais tarde.",
+  range_not_in_plan:
+    "O período de fechamentos não está disponível no plano atual da brapi.dev.",
+  empty: "A brapi.dev não enviou fechamentos válidos.",
+  no_new_points:
+    "Ainda não há fechamentos da brapi.dev posteriores a essa data.",
+  no_overlap:
+    "Sem datas em comum para conferir os fechamentos da brapi.dev, por isso o gráfico não foi estendido.",
+  mismatch:
+    "Os fechamentos da brapi.dev não conferem com o histórico nas datas em comum (diferença acima de 0,5%), por isso o gráfico não foi estendido.",
+};
 
 export function HistoryFeedback({ empty }: { empty: string }) {
   const { loading, error, retry } = useHistory();
@@ -66,6 +89,18 @@ export function HistoryFeedback({ empty }: { empty: string }) {
 
 export function HistoricalPriceChart({ history }: { history: StockHistory }) {
   const { company } = useStockData();
+  const live = useLiveHistory(history.ticker, history.prices.length > 0);
+  // Packaged closes plus later brapi.dev closes, only when the junction agrees.
+  const merged = useMemo(
+    () =>
+      mergeLiveHistory(history.prices, live.data, {
+        openSession: firstOpenDate(),
+      }),
+    [history.prices, live.data],
+  );
+  const extension: HistoryExtension = live.loading
+    ? "loading"
+    : merged.extension;
   const [period, setPeriod] = useState<HistoryPeriod>("1A");
   const [on, setOn] = useState<Record<string, boolean>>({
     price: true,
@@ -73,8 +108,8 @@ export function HistoricalPriceChart({ history }: { history: StockHistory }) {
     reference: true,
   });
   const prices = useMemo(
-    () => selectPrices(history.prices, period),
-    [history.prices, period],
+    () => selectPrices(merged.prices, period),
+    [merged.prices, period],
   );
   const data = useMemo(
     () => pricePlot(prices, company.price, company.teto),
@@ -157,7 +192,13 @@ export function HistoricalPriceChart({ history }: { history: StockHistory }) {
                 content={
                   <ChartTip
                     fmt={brl}
-                    title={(_, point) => dateText(String(point.date))}
+                    title={(_, point) =>
+                      dateText(String(point.date)) +
+                      (merged.snapshotEnd &&
+                      String(point.date) > merged.snapshotEnd
+                        ? " · fechamento brapi.dev"
+                        : "")
+                    }
                   />
                 }
               />
@@ -209,6 +250,20 @@ export function HistoricalPriceChart({ history }: { history: StockHistory }) {
         {!on.price && !on.ceiling && !on.reference && (
           <p role="status" className="text-sm text-fmk-sub">
             Séries ocultas. Ative uma legenda para exibir o gráfico.
+          </p>
+        )}
+        {merged.snapshotEnd && (
+          <p
+            className="mt-3 min-h-10 text-xs leading-5 text-fmk-sub"
+            data-history-extension={extension}
+          >
+            Histórico até {dateText(merged.snapshotEnd)}
+            {extension === "extended" && merged.liveEnd
+              ? ` + fechamentos diários da brapi.dev até ${dateText(merged.liveEnd).slice(0, 5)}` +
+                (live.data?.stale || live.failed
+                  ? ", da última consulta válida (defasados)."
+                  : ".")
+              : `. ${reasons[extension === "extended" ? "empty" : extension]}`}
           </p>
         )}
       </figure>

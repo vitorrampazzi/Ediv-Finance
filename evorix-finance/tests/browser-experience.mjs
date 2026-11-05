@@ -6,6 +6,8 @@ import { chromium } from "playwright";
 import { expect } from "playwright/test";
 import { createFixture } from "./fixture.mjs";
 import { lessons } from "../server/learning-content.js";
+import { marketFixture } from "./market-fixture.mjs";
+const market = marketFixture();
 
 const fixture = await createFixture();
 const root = "http://127.0.0.1:4180";
@@ -39,6 +41,14 @@ async function context(account, width = 1366) {
   const result = await browser.newContext({
     viewport: { width, height: 900 },
     reducedMotion: "reduce",
+  });
+  // Quotes never leave the machine: brapi.dev answers come from the fixture.
+  await result.route("**/api/market/**", (route) => {
+    const url = new URL(route.request().url());
+    if (!market.handles(url) || url.pathname === "/api/market/assets")
+      return route.fallback();
+    const { status, data } = market.respond(url);
+    return route.fulfill({ status, json: data });
   });
   if (account) {
     const [name, value] = account.cookie.split("=");

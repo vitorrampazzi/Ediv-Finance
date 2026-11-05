@@ -9,7 +9,7 @@ como demonstração usam dados fictícios; não são pesquisas publicadas do ana
 
 ## Conheça a escola
 
-- [Início](https://escoladodividendo.com.br/): apresentação da Escola do Dividendo e ranking publicado, com dez ações iniciais e mais dez por clique. As cotações são referências da planilha, sem atualização ao vivo.
+- [Início](https://escoladodividendo.com.br/): apresentação da Escola do Dividendo e ranking publicado, com dez ações iniciais e mais dez por clique. Os preços e margens são os da pesquisa publicada; a cotação atual da brapi.dev aparece à parte, com atraso.
 - [Pesquisa e metodologia](https://escoladodividendo.com.br/metodologia): organização das pesquisas, fontes e cenários.
 - [Ranking de ações](https://escoladodividendo.com.br/ranking): apresentação pública e acesso às pesquisas mediante cadastro.
 
