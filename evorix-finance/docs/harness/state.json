@@ -21,9 +21,9 @@
       "claims": []
     },
     "qa": {
-      "phase": "concluido",
-      "summary": "Rodada 02/11: 131 unit, lint/build/check PASS; browser sem banco OK exceto falhas preexistentes/a11y manual desatualizada; 503 home/entrar/ranking OK; cadastro sem form com /api todo fora; relato qa-auditoria-2026-11-02.md",
-      "updatedAt": "2026-11-02T18:13:19.045Z",
+      "phase": "revisao",
+      "summary": "Login/confirmação de e-mail: 15 cenários novos + integração 19/19, sessão 7/7, browser 7/7, npm test 138/138; achado UX no reenvio (429 no 1º minuto); produção não testada (rede bloqueada); relato qa-login-email-2026-11-05",
+      "updatedAt": "2026-11-05T00:50:19.376Z",
       "claims": []
     }
   }
