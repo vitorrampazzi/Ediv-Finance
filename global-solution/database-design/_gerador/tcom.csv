@@ -1,0 +1,13 @@
+
+"TABLE_NAME","COMMENTS"
+"T_EC_ALERTA","Alerta enviado a um trajeto afetado por uma ocorrência"
+"T_EC_CONFIRMACAO","Confirmação ou contestação de uma ocorrência por outro passageiro"
+"T_EC_ESTACAO","Estação ou parada; pode atender mais de uma linha"
+"T_EC_LINHA","Linha de transporte sobre trilhos ou BRT"
+"T_EC_LINHA_ESTACAO","Estações de cada linha, em ordem, com o tempo até a próxima (grafo da rede)"
+"T_EC_OCORRENCIA","Problema relatado por passageiro ou divulgado pela operadora"
+"T_EC_OPERADORA","Empresa que opera linhas de metrô, trem ou BRT"
+"T_EC_REGISTRO_LOTACAO","Nível de lotação (1 a 5) informado na plataforma de uma linha"
+"T_EC_TIPO_OCORRENCIA","Classificação das ocorrências (atraso, superlotação, elevador...)"
+"T_EC_TRAJETO","Trajeto frequente salvo pelo passageiro para receber alertas"
+"T_EC_USUARIO","Passageiro cadastrado no aplicativo (dados fictícios)"

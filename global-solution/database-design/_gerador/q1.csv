@@ -1,0 +1,12 @@
+
+"ESTACAO","OCORRENCIA","DESCRICAO","SITUACAO","ATRASO_MIN","INICIO"
+"Consolação",12,"Trem recolhido por falha de porta","DESCARTADA",5,"04/11/2026 10:20"
+"Paulista",11,"Elevador da saída Rua da Consolação fora de serviço","CONFIRMADA",0,"04/11/2026 08:15"
+"Brás",10,"Trem parado antes da plataforma do Brás","ABERTA",20,"04/11/2026 07:30"
+"Tatuapé",9,"Plataforma sentido Palmeiras-Barra Funda superlotada; embarque só no terceiro trem","CONFIRMADA",12,"04/11/2026 07:25"
+"Sé",7,"Plataforma da Linha 3 muito cheia na transferência","ENCERRADA",5,"03/11/2026 07:05"
+"Sé",6,"Escada rolante da transferência para a Linha 3 parada","ENCERRADA",0,"30/10/2026 17:55"
+"República",4,"Elevador de acesso à plataforma da Linha 4 fora de serviço","ENCERRADA",0,"28/10/2026 08:40"
+"Tamanduateí",3,"Trem parado na plataforma há 10 minutos com as portas abertas","ENCERRADA",15,"27/10/2026 18:05"
+"Tatuapé",2,"Plataforma sentido Palmeiras-Barra Funda lotada; deixei passar dois trens","ENCERRADA",10,"26/10/2026 07:20"
+"Brás",1,"Velocidade reduzida entre Brás e Tatuapé por falha de sinalização","ENCERRADA",12,"26/10/2026 07:12"

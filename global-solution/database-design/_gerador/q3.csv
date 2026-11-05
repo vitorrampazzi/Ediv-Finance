@@ -1,0 +1,7 @@
+
+"LINHA","NOME","SITUACAO","DETALHE","ATRASO_MIN"
+1,"Azul","NORMAL","Operação normal",0
+2,"Verde","NORMAL","Operação normal",0
+3,"Vermelha","CONFIRMADA","Plataforma sentido Palmeiras-Barra Funda superlotada; embarque só no terceiro trem",12
+3,"Vermelha","CONFIRMADA","Velocidade reduzida em toda a linha devido à chuva forte",10
+4,"Amarela","CONFIRMADA","Elevador da saída Rua da Consolação fora de serviço",0
