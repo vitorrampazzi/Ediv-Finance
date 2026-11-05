@@ -20,7 +20,9 @@ test("llms.txt contém somente links públicos canônicos e descreve o acesso re
   assert.match(content, /exigem autenticação/);
   assert.match(content, /dados fictícios/);
   assert.match(content, /ranking real/);
-  assert.match(content, /sem atualização ao vivo/);
+  assert.match(content, /pesquisa publicada/);
+  assert.match(content, /brapi\.dev aparece à parte, com atraso/);
+  assert.doesNotMatch(content, /tempo real/i);
   const links = [...content.matchAll(/\]\((https?:\/\/[^)]+)\)/g)];
   assert.ok(links.length >= 5);
   for (const [, href] of links) {

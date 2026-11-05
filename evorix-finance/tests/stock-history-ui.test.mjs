@@ -6,6 +6,7 @@ import {
   pricePlot,
   groupDividends,
   formatHistoricalDividend,
+  mergeLiveHistory,
 } from "../src/lib/stockHistory.ts";
 
 test("history presentation preserves dates, gaps, events and sub-cent amounts", () => {
@@ -83,4 +84,148 @@ test("history presentation preserves dates, gaps, events and sub-cent amounts", 
   assert.match(formatHistoricalDividend(0), /0,0000/);
   assert.equal(formatHistoricalDividend(null), "Não informado");
   assert.deepEqual(input, original);
+});
+
+test("brapi.dev closes extend the packaged history only after its last date and only when the junction agrees", () => {
+  const snapshot = [
+    { date: "2026-10-19", close: 18.5 },
+    { date: "2026-10-20", close: 18.7 },
+    { date: "2026-10-21", close: 18.9 },
+    { date: "2026-10-22", close: 19 },
+    { date: "2026-10-23", close: 19.09 },
+  ];
+  const original = structuredClone(snapshot);
+  const live = (points, extra = {}) => ({
+    symbol: "TIMS3",
+    available: true,
+    reason: null,
+    points,
+    ...extra,
+  });
+  const overlap = [
+    { date: "2026-10-21", close: "18.92000000" },
+    { date: "2026-10-22", close: "19.0" },
+    { date: "2026-10-23", close: "19.09" },
+  ];
+  const after = [
+    { date: "2026-10-26", close: "19.20" },
+    { date: "2026-10-27", close: "19.31" },
+  ];
+
+  // Overlap within 0.5%: only the later dates are appended, in order.
+  const merged = mergeLiveHistory(snapshot, live([...after, ...overlap]));
+  assert.equal(merged.extension, "extended");
+  assert.equal(merged.snapshotEnd, "2026-10-23");
+  assert.equal(merged.liveEnd, "2026-10-27");
+  assert.equal(merged.added, 2);
+  assert.deepEqual(merged.prices, [
+    ...snapshot,
+    { date: "2026-10-26", close: 19.2 },
+    { date: "2026-10-27", close: 19.31 },
+  ]);
+  assert.equal(
+    new Set(merged.prices.map((point) => point.date)).size,
+    merged.prices.length,
+    "No repeated dates",
+  );
+
+  // A common close more than 0.5% apart keeps the snapshot only.
+  const mismatch = mergeLiveHistory(
+    snapshot,
+    live([{ date: "2026-10-23", close: "19.20" }, ...after]),
+  );
+  assert.equal(mismatch.extension, "mismatch");
+  assert.equal(mismatch.prices, snapshot);
+  assert.equal(mismatch.added, 0);
+  // 0.5% exactly is still accepted; just above it is not.
+  assert.equal(
+    mergeLiveHistory(
+      snapshot,
+      live([{ date: "2026-10-22", close: "19.095" }, ...after]),
+    ).extension,
+    "extended",
+  );
+  assert.equal(
+    mergeLiveHistory(
+      snapshot,
+      live([{ date: "2026-10-22", close: "19.0960" }, ...after]),
+    ).extension,
+    "mismatch",
+  );
+
+  // No common date: nothing to check the junction against.
+  assert.equal(mergeLiveHistory(snapshot, live(after)).extension, "no_overlap");
+  // Only dates already in the snapshot: nothing new to add.
+  const same = mergeLiveHistory(snapshot, live(overlap));
+  assert.equal(same.extension, "no_new_points");
+  assert.equal(same.prices, snapshot);
+
+  // Duplicates: equal repeats count once; a conflicting date is dropped.
+  const duplicated = mergeLiveHistory(
+    snapshot,
+    live([
+      ...overlap,
+      { date: "2026-10-26", close: "19.20" },
+      { date: "2026-10-26", close: "19.2" },
+      { date: "2026-10-27", close: "19.31" },
+      { date: "2026-10-27", close: "19.90" },
+    ]),
+  );
+  assert.equal(duplicated.extension, "extended");
+  assert.deepEqual(duplicated.prices.slice(snapshot.length), [
+    { date: "2026-10-26", close: 19.2 },
+  ]);
+
+  // Invalid points are skipped, never turned into zero or invented values.
+  const invalid = mergeLiveHistory(
+    snapshot,
+    live([
+      ...overlap,
+      { date: "2026-10-26", close: null },
+      { date: "2026-10-27", close: "0" },
+      { date: "2026-10-28", close: "-1" },
+      { date: "2026-02-30", close: "19" },
+      { date: "2026-10-29", close: "abc" },
+      { date: "2026-10-30", close: "19.40" },
+    ]),
+  );
+  assert.deepEqual(invalid.prices.slice(snapshot.length), [
+    { date: "2026-10-30", close: 19.4 },
+  ]);
+
+  // The session still trading has no close yet.
+  const open = mergeLiveHistory(snapshot, live([...overlap, ...after]), {
+    openSession: "2026-10-27",
+  });
+  assert.deepEqual(open.prices.slice(snapshot.length), [
+    { date: "2026-10-26", close: 19.2 },
+  ]);
+
+  // Empty or unavailable live data keeps the snapshot and says why.
+  assert.equal(mergeLiveHistory(snapshot, live([])).extension, "empty");
+  assert.equal(mergeLiveHistory(snapshot, null).extension, "unavailable");
+  for (const reason of [
+    "no_token",
+    "not_covered",
+    "budget",
+    "provider_error",
+    "range_not_in_plan",
+  ]) {
+    const result = mergeLiveHistory(
+      snapshot,
+      live([], { available: false, reason }),
+    );
+    assert.equal(result.extension, reason);
+    assert.equal(result.prices, snapshot);
+  }
+  assert.equal(
+    mergeLiveHistory(snapshot, live([], { available: false, reason: "x" }))
+      .extension,
+    "unavailable",
+  );
+  assert.equal(
+    mergeLiveHistory([], live([...overlap, ...after])).extension,
+    "empty",
+  );
+  assert.deepEqual(snapshot, original);
 });

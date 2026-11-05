@@ -14,6 +14,12 @@ import {
   dividendNumber,
   dividendAnnouncementMonths,
 } from "../dividend-insights.mjs";
+import {
+  fullQuote,
+  marketFixture,
+  summaryQuote,
+  unavailableQuote,
+} from "./market-fixture.mjs";
 
 // UI contract test; workbook audit stays outside the browser bundle. No SQL or publication.
 const realWorkbook = Boolean(process.env.EDIV_WORKBOOK_AUDIT);
@@ -133,6 +139,22 @@ const results = [],
   requests = [];
 let browser;
 let probeEntry = null;
+// brapi.dev quotes are mocked: TIMS3 has one, ALOS3 and the synthetic SYN10+
+// tickers are unavailable, and SYN2..SYN9 are invalid, so never requested.
+const market = marketFixture({
+  quotes: {
+    TIMS3: summaryQuote("TIMS3"),
+    ALOS3: unavailableQuote("ALOS3"),
+  },
+  details: { TIMS3: fullQuote("TIMS3") },
+});
+const validTickers = entries
+  .map((entry) => entry.ticker)
+  .filter((ticker) => /^[A-Z][A-Z0-9]{3}[0-9]{1,2}F?$/.test(ticker))
+  .sort();
+if (!realWorkbook) assert.equal(validTickers.length, 82);
+const quoteCalls = () =>
+  market.calls.filter((call) => call.startsWith("/api/market/quotes"));
 const server = await createServer({
   server: { host: "127.0.0.1", port: 4198, strictPort: true },
 });
@@ -238,6 +260,7 @@ try {
         : publication;
     else if (url.pathname === "/api/learning")
       data = { lessons: [], glossary: [], completed: [], access: "full" };
+    else if (market.handles(url)) ({ status, data } = market.respond(url));
     else {
       unknown.push(url.pathname);
       status = 503;
@@ -303,7 +326,16 @@ try {
       );
       for (let index = 0; index < entries.length; index++) {
         const row = table.locator("tbody tr").nth(index);
-        const cells = await row.locator("th,td").allTextContents();
+        // The brapi.dev line is apart from the research value of the cell.
+        const cells = await row.locator("th,td").evaluateAll((nodes) =>
+          nodes.map((node) => {
+            const copy = node.cloneNode(true);
+            copy
+              .querySelectorAll("[data-live-quote]")
+              .forEach((line) => line.remove());
+            return copy.textContent;
+          }),
+        );
         const expected = rankingColumns.map((column) =>
           formatDividendValue(
             dividendValue(entries[index], column.key),
@@ -328,6 +360,69 @@ try {
         /\b\d{2}\/\d{2}\/\d{4}\b/,
       );
       assert.match(await table.textContent(), /19,37/);
+      // One quotes request for the whole publication, valid tickers only,
+      // even after "Ver mais ações".
+      assert.deepEqual(quoteCalls(), [
+        "/api/market/quotes?symbols=" +
+          encodeURIComponent(validTickers.join(",")),
+      ]);
+      const timLine = table
+        .locator("tbody tr")
+        .nth(0)
+        .locator('td[data-column="referencePrice"] [data-live-quote]');
+      await expect(timLine).toHaveAttribute("data-live-quote", "ready");
+      await expect(timLine).toContainText("agora R$ 19,62 · −0,91%");
+      await expect(timLine.locator(".live-quote-down")).toHaveText("−0,91%");
+      await expect(timLine).toHaveAttribute(
+        "title",
+        /^Cotação brapi\.dev com atraso, consultada às (05\/11 às )?10:48 \(horário de Brasília\)\.$/,
+      );
+      await expect(timLine.locator(".sr-only")).toContainText(
+        "Cotação brapi.dev com atraso, consultada às",
+      );
+      await expect(
+        table
+          .locator("tbody tr")
+          .nth(0)
+          .locator('td[data-column="referencePrice"] [data-research-value]'),
+      ).toHaveText(
+        formatDividendValue(
+          entries[0].dividendAnalysis.referencePrice,
+          "currency",
+        ),
+      );
+      for (const index of [1, 2]) {
+        const line = table
+          .locator("tbody tr")
+          .nth(index)
+          .locator('td[data-column="referencePrice"] [data-live-quote]');
+        await expect(line).toHaveAttribute("data-live-quote", "unavailable");
+        await expect(line).toHaveText("cotação atual indisponível");
+      }
+      await expect(table.locator('[data-live-quote="ready"]')).toHaveCount(1);
+      await expect(
+        table.locator('[data-live-quote="unavailable"]'),
+      ).toHaveCount(89);
+      // The reserved line keeps every row the same height, with or without quote.
+      const heights = await table
+        .locator("tbody tr")
+        .evaluateAll((rows) =>
+          rows.map((row) => row.getBoundingClientRect().height),
+        );
+      assert.equal(new Set(heights).size, 1, JSON.stringify(heights));
+      const fits = await table
+        .locator('td[data-column="referencePrice"]')
+        .evaluateAll((cells) =>
+          cells.every((cell) => cell.scrollWidth <= cell.clientWidth + 1),
+        );
+      assert.ok(fits, "A linha da cotação cabe na coluna");
+      await expect(page.locator(".dividend-table-hint")).toContainText(
+        "Preço de mercado e margem de segurança são os da pesquisa publicada. A linha “agora” traz a cotação da brapi.dev, com atraso",
+      );
+      assert.doesNotMatch(
+        await page.locator("body").innerText(),
+        /tempo real/i,
+      );
     },
   );
   await run(
@@ -532,7 +627,10 @@ try {
             actual.find((item) => item.key === column.key),
             {
               key: column.key,
-              label: column.label,
+              label:
+                column.key === "referencePrice"
+                  ? "Preço da pesquisa"
+                  : column.label,
               value: formatDividendValue(
                 dividendValue(entry, column.key),
                 column.format,
@@ -602,6 +700,77 @@ try {
           0,
         );
       }
+    },
+  );
+  await run(
+    "Cotação atual: bloco completo, indisponível sem cotação e preço da pesquisa intacto",
+    async () => {
+      await page.goto(
+        origin + "/app/ranking/acao/TIMS3?visual=real&publication=2",
+      );
+      const block = page.locator("#cotacao [data-live-quote-block]");
+      await expect(block).toHaveAttribute("data-live-quote-block", "ready");
+      await expect(block).toHaveAttribute("data-live-quote-detail", "full");
+      await expect(block.getByRole("heading")).toHaveText("Cotação atual");
+      await expect(block.locator("[data-live-quote-price]")).toHaveText(
+        "R$ 19,62",
+      );
+      await expect(block.locator("[data-live-quote-change]")).toContainText(
+        "−R$ 0,18 · −0,91%",
+      );
+      assert.deepEqual(
+        await block
+          .locator("[data-live-quote-field]")
+          .evaluateAll((nodes) =>
+            nodes.map((node) => [
+              node.dataset.liveQuoteField,
+              node.querySelector("dt").textContent,
+              node.querySelector("dd").textContent,
+            ]),
+          ),
+        [
+          ["previousClose", "Fechamento anterior", "R$ 19,80"],
+          ["dayHigh", "Máxima do dia", "R$ 19,95"],
+          ["dayLow", "Mínima do dia", "R$ 19,50"],
+          ["volume", "Volume", "367.700"],
+        ],
+      );
+      await expect(block.locator("[data-live-quote-source]")).toHaveText(
+        /^brapi\.dev · com atraso de até 30 min · cotação de (05\/11 às )?10:30$/,
+      );
+      await expect(block).toContainText(/Preço da pesquisa: R\$\s19,37/);
+      const reference = page.locator(
+        '.figma-stock header [data-summary="Cotação de referência"]',
+      );
+      await expect(reference).toContainText("19,37");
+      await expect(reference).toContainText("preço da pesquisa");
+      await expect(
+        page.locator('[data-field="referencePrice"] [data-exact-value]'),
+      ).toHaveText(
+        formatDividendValue(
+          entries[0].dividendAnalysis.referencePrice,
+          "currency",
+        ),
+      );
+      assert.doesNotMatch(
+        await page.locator("body").innerText(),
+        /tempo real/i,
+      );
+      for (const ticker of ["ALOS3", "SYN2"]) {
+        await page.goto(
+          origin + "/app/ranking/acao/" + ticker + "?visual=real&publication=2",
+        );
+        await expect(block).toHaveAttribute(
+          "data-live-quote-block",
+          "unavailable",
+        );
+        await expect(block).toContainText("Cotação atual indisponível");
+        await expect(block.locator("[data-live-quote-field]")).toHaveCount(0);
+        await expect(block.locator("[data-live-quote-price]")).toHaveCount(0);
+        await expect(block).not.toContainText("R$ 0,00");
+      }
+      // Invalid tickers never reach the API.
+      assert.ok(market.calls.every((call) => !/SYN\d(?!\d)/.test(call)));
     },
   );
   await run(
@@ -739,8 +908,11 @@ try {
     "Legado/demo: módulos e cenário permanecem disponíveis",
     async () => {
       await page.setViewportSize({ width: 1366, height: 900 });
+      const quoteRequests = quoteCalls().length;
       await page.goto(origin + "/app/ranking?visual=demo");
       await expect(page.locator(".research-modules-table")).toBeVisible();
+      // Fictitious companies get no quote.
+      assert.equal(quoteCalls().length, quoteRequests);
       await expect(page.locator(".dividend-table")).toHaveCount(0);
       await page.locator(".research-table-company-link").first().click();
       await expect(page.getByRole("heading", { level: 1 })).toContainText(
@@ -750,6 +922,46 @@ try {
       await expect(
         page.getByText("Potencial simulado", { exact: true }).first(),
       ).toBeVisible();
+    },
+  );
+  await run(
+    "Cotações: pausa com aba oculta, retoma ao voltar e mantém números defasados na falha",
+    async () => {
+      await page.clock.install();
+      await page.goto(origin + "/app/ranking?visual=real");
+      const line = page
+        .locator(".dividend-table tbody tr")
+        .first()
+        .locator("[data-live-quote]");
+      await expect(line).toHaveAttribute("data-live-quote", "ready");
+      const before = quoteCalls().length;
+      const setHidden = (hidden) =>
+        page.evaluate((hidden) => {
+          Object.defineProperty(document, "hidden", {
+            configurable: true,
+            get: () => hidden,
+          });
+          document.dispatchEvent(new Event("visibilitychange"));
+        }, hidden);
+      await setHidden(true);
+      await page.clock.fastForward("16:00");
+      assert.equal(
+        quoteCalls().length,
+        before,
+        "Sem consulta com a aba oculta",
+      );
+      market.failQuotes = true;
+      await setHidden(false);
+      await expect.poll(() => quoteCalls().length).toBe(before + 1);
+      // The failed refresh keeps the last numbers, marked as stale.
+      await expect(line).toHaveAttribute("data-live-quote", "stale");
+      await expect(line).toContainText("defasada R$ 19,62 · −0,91%");
+      await expect(line).toHaveAttribute("title", /Defasada/);
+      market.failQuotes = false;
+      await page.clock.fastForward("02:10");
+      await expect.poll(() => quoteCalls().length).toBe(before + 2);
+      await expect(line).toHaveAttribute("data-live-quote", "ready");
+      await expect(line).toContainText("agora R$ 19,62");
     },
   );
   assert.deepEqual(errors, []);

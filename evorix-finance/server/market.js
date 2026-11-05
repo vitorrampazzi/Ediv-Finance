@@ -1,18 +1,38 @@
 import { Router } from "express";
 import { rateLimit } from "express-rate-limit";
 import { z } from "zod";
-import { readCache, saveCache } from "./provider-cache.js";
+import { readCache, saveCache, reserveProviderCall } from "./provider-cache.js";
 import { config } from "./config.js";
 import { MysqlLimitStore } from "./limit-store.js";
-import { companyLogoUrl } from "../company-logo.mjs";
+import { hasStockHistory } from "./stock-history.js";
+import { createBrapiProvider } from "./market/brapi-provider.js";
+import {
+  createQuoteService,
+  unavailableQuote,
+} from "./market/quote-service.js";
+import {
+  historyQuerySchema,
+  isValidTicker,
+  symbolsSchema,
+  tickerSchema,
+} from "./market/validation.js";
 
+// Routes only: caching, budget and provider rules live in ./market/.
+// Contract: docs/COTACOES.md.
 const router = Router();
-const quoteCache = new Map();
-const inFlight = new Map();
-let assetCatalogCache = null;
-let assetCatalogInFlight = null;
-const CACHE_TTL_MS = 15 * 60 * 1000;
-const ASSET_CATALOG_TTL_MS = 15 * 60 * 1000;
+const quoteService = createQuoteService({
+  provider: createBrapiProvider({ token: config.brapiApiKey }),
+  store: {
+    read: readCache,
+    write: saveCache,
+    reserveCall: reserveProviderCall,
+  },
+  hasToken: Boolean(config.brapiApiKey),
+  plan: config.brapiPlan,
+  dailyBudget: config.brapiDailyBudget,
+  isCovered: hasStockHistory,
+});
+
 function isEquityAsset(asset) {
   return (
     asset?.type === "stock" &&
@@ -30,204 +50,19 @@ const quoteLimiter = rateLimit({
   legacyHeaders: false,
 });
 
-async function fetchQuote(symbol) {
-  let cached = quoteCache.get(symbol);
-  if (cached && Date.now() - cached.cachedAt < CACHE_TTL_MS)
-    return { ...cached.quote, stale: false };
-  if (inFlight.has(symbol)) return inFlight.get(symbol);
+router.use((_req, res, next) => {
+  res.setHeader("Cache-Control", "no-store");
+  next();
+});
 
-  const request = (async () => {
-    try {
-      const shared = await readCache("quote:" + symbol);
-      if (shared) {
-        cached = {
-          quote: shared.data,
-          cachedAt: shared.fresh ? Date.now() : 0,
-        };
-        quoteCache.set(symbol, cached);
-        if (shared.fresh) return { ...shared.data, stale: false };
-      }
-      if (!config.brapiApiKey) {
-        const catalog = await getAssetCatalog();
-        const asset = catalog.stocks.find((result) => result.stock === symbol);
-        if (
-          !asset ||
-          asset.close === null ||
-          !Number.isFinite(Number(asset.close)) ||
-          Number(asset.close) <= 0
-        )
-          throw new Error("Quote unavailable");
-        const quote = {
-          symbol,
-          name: String(asset.name || symbol).slice(0, 120),
-          logoUrl: companyLogoUrl(symbol, asset.logo),
-          currency: "BRL",
-          price: Number(asset.close).toFixed(8),
-          change: null,
-          changePercent:
-            asset.change != null && Number.isFinite(Number(asset.change))
-              ? Number(asset.change).toFixed(4)
-              : null,
-          marketTime: null,
-          checkedAt: catalog.requestedAt || new Date().toISOString(),
-          source: "brapi.dev",
-        };
-        quoteCache.set(symbol, { quote, cachedAt: Date.now() });
-        await saveCache("quote:" + symbol, quote, CACHE_TTL_MS);
-        return { ...quote, stale: false };
-      }
-      const url = `https://brapi.dev/api/quote/${encodeURIComponent(symbol)}`;
-      const response = await fetch(url, {
-        headers: config.brapiApiKey
-          ? { Authorization: `Bearer ${config.brapiApiKey}` }
-          : {},
-        signal: AbortSignal.timeout(7000),
-      });
-      if (!response.ok)
-        throw new Error(`Market provider returned ${response.status}`);
-      const payload = await response.json();
-      const item = Array.isArray(payload.results)
-        ? payload.results.find((result) => result.symbol === symbol)
-        : null;
-      const price = Number(item?.regularMarketPrice);
-      if (
-        !item ||
-        !Number.isFinite(price) ||
-        price < 0.00000001 ||
-        price >= 1e12
-      )
-        throw new Error("Quote unavailable");
-      const quote = {
-        symbol,
-        name: String(item.shortName || item.longName || symbol).slice(0, 120),
-        logoUrl: companyLogoUrl(symbol, item.logourl),
-        currency: String(item.currency || "BRL"),
-        price: price.toFixed(8),
-        change:
-          item.regularMarketChange != null &&
-          Number.isFinite(Number(item.regularMarketChange))
-            ? Number(item.regularMarketChange).toFixed(8)
-            : null,
-        changePercent:
-          item.regularMarketChangePercent != null &&
-          Number.isFinite(Number(item.regularMarketChangePercent))
-            ? Number(item.regularMarketChangePercent).toFixed(4)
-            : null,
-        marketTime:
-          typeof item.regularMarketTime === "string"
-            ? item.regularMarketTime
-            : null,
-        checkedAt: new Date().toISOString(),
-        source: "brapi.dev",
-      };
-      quoteCache.set(symbol, { quote, cachedAt: Date.now() });
-      await saveCache("quote:" + symbol, quote, CACHE_TTL_MS);
-      return { ...quote, stale: false };
-    } catch {
-      if (cached) return { ...cached.quote, stale: true };
-      return {
-        symbol,
-        name: symbol,
-        currency: "BRL",
-        price: null,
-        change: null,
-        changePercent: null,
-        marketTime: null,
-        source: "brapi.dev",
-        stale: true,
-        unavailable: true,
-      };
-    } finally {
-      inFlight.delete(symbol);
-    }
-  })();
-  inFlight.set(symbol, request);
-  return request;
-}
-
-async function getAssetCatalog() {
-  if (
-    assetCatalogCache &&
-    Date.now() - assetCatalogCache.cachedAt < ASSET_CATALOG_TTL_MS
-  )
-    return assetCatalogCache.data;
-  if (assetCatalogInFlight) return assetCatalogInFlight;
-  assetCatalogInFlight = (async () => {
-    try {
-      const shared = await readCache("catalog");
-      if (shared?.fresh) {
-        assetCatalogCache = { data: shared.data, cachedAt: Date.now() };
-        return shared.data;
-      }
-      const response = await fetch(
-        "https://brapi.dev/api/quote/list?limit=2000&sortBy=volume&sortOrder=desc",
-        {
-          headers: config.brapiApiKey
-            ? { Authorization: `Bearer ${config.brapiApiKey}` }
-            : {},
-          signal: AbortSignal.timeout(12_000),
-        },
-      );
-      if (!response.ok)
-        throw new Error(`Market provider returned ${response.status}`);
-      const payload = await response.json();
-      if (!Array.isArray(payload.stocks))
-        throw new Error("Market provider returned an invalid asset list");
-      const data = {
-        stocks: payload.stocks.filter(
-          (asset) =>
-            typeof asset.stock === "string" &&
-            asset.close !== null &&
-            Number.isFinite(Number(asset.close)) &&
-            Number(asset.close) > 0,
-        ),
-        indexes: Array.isArray(payload.indexes) ? payload.indexes : [],
-        availableSectors: Array.isArray(payload.availableSectors)
-          ? payload.availableSectors
-          : [],
-        requestedAt:
-          typeof payload.requestedAt === "string"
-            ? payload.requestedAt
-            : new Date().toISOString(),
-      };
-      await saveCache("catalog", data, ASSET_CATALOG_TTL_MS);
-      assetCatalogCache = { data, cachedAt: Date.now() };
-      return data;
-    } finally {
-      assetCatalogInFlight = null;
-    }
-  })();
-  return assetCatalogInFlight;
-}
-
+// Portfolio valuation: summary quotes from the general list, in input order.
 export async function getMarketQuotes(symbols) {
   const unique = [...new Set(symbols)];
-  const results = new Array(unique.length);
-  let cursor = 0;
-  const deadline = Date.now() + 20_000;
-  await Promise.all(
-    Array.from({ length: Math.min(4, unique.length) }, async () => {
-      while (cursor < unique.length) {
-        const index = cursor++;
-        results[index] =
-          Date.now() < deadline
-            ? await fetchQuote(unique[index])
-            : {
-                symbol: unique[index],
-                name: unique[index],
-                currency: "BRL",
-                price: null,
-                change: null,
-                changePercent: null,
-                marketTime: null,
-                source: "brapi.dev",
-                stale: true,
-                unavailable: true,
-              };
-      }
-    }),
+  const { quotes } = await quoteService.quotes(unique.filter(isValidTicker));
+  const bySymbol = new Map(quotes.map((quote) => [quote.symbol, quote]));
+  return unique.map(
+    (symbol) => bySymbol.get(symbol) || unavailableQuote(symbol),
   );
-  return results;
 }
 
 router.get("/assets", quoteLimiter, async (req, res) => {
@@ -248,45 +83,49 @@ router.get("/assets", quoteLimiter, async (req, res) => {
       .status(400)
       .json({ error: "Filtros inválidos para o catálogo de ações." });
   const filters = parsed.data;
-  const catalog = await getAssetCatalog();
+  const catalog = await quoteService.catalog();
+  if (!catalog.entry)
+    return res
+      .status(503)
+      .json({ error: "Catálogo de ações indisponível no momento." });
   const normalizedSearch = filters.search.toLocaleLowerCase("pt-BR");
-  const filtered = catalog.stocks
+  const filtered = catalog.entry.value.items
+    .filter((asset) => asset.price !== null)
     .filter(isEquityAsset)
     .filter(
       (asset) =>
         !normalizedSearch ||
-        `${asset.stock} ${asset.name} ${asset.sector || ""} ${asset.subsector || ""}`
+        `${asset.symbol} ${asset.name} ${asset.sector || ""} ${asset.subSector || ""}`
           .toLocaleLowerCase("pt-BR")
           .includes(normalizedSearch),
     );
+  const sortField = {
+    volume: "volume",
+    change: "changePercent",
+    market_cap: "marketCap",
+  }[filters.sortBy];
   filtered.sort((left, right) => {
     const sign = filters.sortOrder === "asc" ? 1 : -1;
     if (filters.sortBy === "name")
       return (
         sign * String(left.name).localeCompare(String(right.name), "pt-BR")
       );
-    const field =
-      filters.sortBy === "market_cap" ? "market_cap" : filters.sortBy;
-    return sign * ((Number(left[field]) || 0) - (Number(right[field]) || 0));
+    return (
+      sign * ((Number(left[sortField]) || 0) - (Number(right[sortField]) || 0))
+    );
   });
   const offset = (filters.page - 1) * filters.limit;
   return res.json({
     assets: filtered.slice(offset, offset + filters.limit).map((asset) => ({
-      symbol: asset.stock,
-      name: String(asset.name || asset.stock).slice(0, 120),
-      logoUrl: companyLogoUrl(asset.stock, asset.logo),
-      price: Number(asset.close).toFixed(8),
-      changePercent: Number.isFinite(Number(asset.change))
-        ? Number(asset.change).toFixed(4)
-        : null,
-      volume: Number.isFinite(Number(asset.volume))
-        ? String(asset.volume)
-        : null,
-      marketCap: Number.isFinite(Number(asset.market_cap))
-        ? String(asset.market_cap)
-        : null,
-      sector: typeof asset.sector === "string" ? asset.sector : null,
-      subSector: typeof asset.subsector === "string" ? asset.subsector : null,
+      symbol: asset.symbol,
+      name: asset.name,
+      logoUrl: asset.logoUrl,
+      price: asset.price,
+      changePercent: asset.changePercent,
+      volume: asset.volume,
+      marketCap: asset.marketCap,
+      sector: asset.sector,
+      subSector: asset.subSector,
       type: asset.type,
       subType: asset.subType,
       source: "brapi.dev",
@@ -294,33 +133,44 @@ router.get("/assets", quoteLimiter, async (req, res) => {
     total: filtered.length,
     page: filters.page,
     pageSize: filters.limit,
-    requestedAt: catalog.requestedAt,
-    availableSectors: catalog.availableSectors,
+    requestedAt: catalog.entry.checkedAt,
+    availableSectors: catalog.entry.value.availableSectors,
   });
 });
 
 router.get("/quotes", quoteLimiter, async (req, res) => {
-  const parsed = z.string().max(160).safeParse(req.query.symbols);
+  const parsed = symbolsSchema.safeParse(req.query.symbols);
   if (!parsed.success)
+    return res.status(400).json({
+      error: "Informe de 1 a 100 tickers válidos, separados por vírgula.",
+    });
+  // Saved favorites may hold symbols outside the B3 rule: answer them as
+  // unavailable, in the requested order, instead of failing the batch.
+  const result = await quoteService.quotes(parsed.data.filter(isValidTicker));
+  const bySymbol = new Map(result.quotes.map((quote) => [quote.symbol, quote]));
+  return res.json({
+    ...result,
+    quotes: parsed.data.map(
+      (symbol) => bySymbol.get(symbol) || unavailableQuote(symbol),
+    ),
+  });
+});
+
+router.get("/quote/:ticker", quoteLimiter, async (req, res) => {
+  const ticker = tickerSchema.safeParse(req.params.ticker);
+  if (!ticker.success)
+    return res.status(400).json({ error: "Código da ação inválido." });
+  return res.json(await quoteService.quote(ticker.data));
+});
+
+router.get("/history/:ticker", quoteLimiter, async (req, res) => {
+  const ticker = tickerSchema.safeParse(req.params.ticker);
+  const query = historyQuerySchema.safeParse(req.query);
+  if (!ticker.success || !query.success)
     return res
       .status(400)
-      .json({ error: "Informe tickers separados por vírgula." });
-  const symbols = [
-    ...new Set(
-      parsed.data
-        .split(",")
-        .map((value) => value.trim().toUpperCase())
-        .filter(Boolean),
-    ),
-  ];
-  if (
-    !symbols.length ||
-    symbols.length > 8 ||
-    symbols.some((symbol) => !/^[A-Z0-9.-]{1,16}$/.test(symbol))
-  ) {
-    return res.status(400).json({ error: "Informe de 1 a 8 tickers válidos." });
-  }
-  return res.json({ quotes: await getMarketQuotes(symbols) });
+      .json({ error: "Código da ação ou período inválido." });
+  return res.json(await quoteService.history(ticker.data, query.data.range));
 });
 
 export { router as marketRouter };

@@ -4,6 +4,7 @@ import { createServer } from "vite";
 import { chromium } from "playwright";
 import { expect } from "playwright/test";
 import { dividendColumns } from "../dividend-analysis.mjs";
+import { marketFixture, summaryQuote } from "./market-fixture.mjs";
 
 // Real authenticated React route with synthetic API responses. No database writes.
 const artifacts = ".test-artifacts/stock-theme";
@@ -12,6 +13,8 @@ const server = await createServer({
   server: { host: "127.0.0.1", port: 4193, strictPort: true },
 });
 const root = "http://127.0.0.1:4193";
+// brapi.dev is mocked; the quote block must read well in both themes too.
+const market = marketFixture({ quotes: { TEST3: summaryQuote("TEST3") } });
 const entry = {
   rank: 1,
   ticker: "TEST3",
@@ -88,7 +91,12 @@ try {
         reducedMotion: "reduce",
       });
       await context.route("**/api/**", (route) => {
-        const path = new URL(route.request().url()).pathname;
+        const url = new URL(route.request().url());
+        const path = url.pathname;
+        if (market.handles(url)) {
+          const { status, data } = market.respond(url);
+          return route.fulfill({ status, json: data });
+        }
         const responses = {
           "/api/auth/me": { user },
           "/api/auth/availability": { available: true },

@@ -1,6 +1,11 @@
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { assistantFeatureEnabled } from "../deployment-policy.mjs";
+import {
+  brapiPlans,
+  parseBrapiPlan,
+  parseDailyBudget,
+} from "./market/plans.js";
 
 const isProduction = process.env.NODE_ENV === "production";
 
@@ -104,6 +109,11 @@ export const config = Object.freeze({
   turnstileSecretKey: process.env.TURNSTILE_SECRET_KEY?.trim() || null,
   trustProxy: process.env.TRUST_PROXY === "true" || process.env.VERCEL === "1",
   brapiApiKey: process.env.BRAPI_API_KEY?.trim() || null,
+  // free (default), startup or pro: declared delay, symbols per call, history.
+  brapiPlan: parseBrapiPlan(process.env.BRAPI_PLAN),
+  brapiPlanLimits: brapiPlans[parseBrapiPlan(process.env.BRAPI_PLAN)],
+  // Daily ceiling for per-ticker calls (detailed quote and history).
+  brapiDailyBudget: parseDailyBudget(process.env.BRAPI_DAILY_BUDGET),
   geminiApiKey: process.env.GEMINI_API_KEY?.trim() || null,
   geminiModel: process.env.GEMINI_MODEL?.trim() || "gemini-3.8-flash",
   aiDailyLimit: Math.min(

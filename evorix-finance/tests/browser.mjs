@@ -3,6 +3,8 @@ import { spawn } from "node:child_process";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { pathToFileURL } from "node:url";
 import { createFixture } from "./fixture.mjs";
+import { marketFixture } from "./market-fixture.mjs";
+const market = marketFixture();
 const runtime = process.env.EDIV_PLAYWRIGHT_PATH;
 const { chromium } = await import(
   runtime ? pathToFileURL(runtime).href : "playwright"
@@ -53,6 +55,14 @@ async function context(account, viewport = { width: 1366, height: 900 }) {
     baseURL: root,
     viewport,
     reducedMotion: "reduce",
+  });
+  // Quotes never leave the machine: brapi.dev answers come from the fixture.
+  await result.route("**/api/market/**", (route) => {
+    const url = new URL(route.request().url());
+    if (!market.handles(url) || url.pathname === "/api/market/assets")
+      return route.fallback();
+    const { status, data } = market.respond(url);
+    return route.fulfill({ status, json: data });
   });
   if (account) {
     const [name, value] = account.cookie.split("=");
