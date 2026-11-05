@@ -7,6 +7,7 @@ import {
   dividendColumns,
   dividendValue,
   formatDividendValue,
+  rankingColumns,
 } from "../dividend-analysis.mjs";
 import {
   dividendComparison,
@@ -253,7 +254,7 @@ try {
   await page.goto(origin + "/app/ranking");
   await page.waitForLoadState("networkidle");
   await run(
-    "Ranking: 10→20→90/fim com foco e contagem, 11 colunas e ordem exata",
+    "Ranking: 10→20→90/fim com foco e contagem, 7 colunas e ordem exata",
     async () => {
       await expect(page.getByRole("heading", { level: 1 })).toHaveText(
         "Ranking de Ações",
@@ -265,13 +266,11 @@ try {
         await table
           .locator("thead th")
           .evaluateAll((nodes) => nodes.map((node) => node.dataset.column)),
-        dividendColumns
-          .filter((column) => column.ranking)
-          .map((column) => column.key),
+        rankingColumns.map((column) => column.key),
       );
       await page.mouse.move(0, 0);
       await page.keyboard.press("Tab");
-      for (const column of dividendColumns.filter((column) => column.ranking)) {
+      for (const column of rankingColumns) {
         const header = table.locator(
           '[data-column="' + column.key + '"] button',
         );
@@ -305,14 +304,12 @@ try {
       for (let index = 0; index < entries.length; index++) {
         const row = table.locator("tbody tr").nth(index);
         const cells = await row.locator("th,td").allTextContents();
-        const expected = dividendColumns
-          .filter((column) => column.ranking)
-          .map((column) =>
-            formatDividendValue(
-              dividendValue(entries[index], column.key),
-              column.format,
-            ),
-          );
+        const expected = rankingColumns.map((column) =>
+          formatDividendValue(
+            dividendValue(entries[index], column.key),
+            column.format,
+          ),
+        );
         assert.equal(
           await row
             .locator(".dividend-company-link > span")

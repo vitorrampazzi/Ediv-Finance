@@ -1,14 +1,18 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { dividendColumns, dividendValue, formatDividendValue } from '../dividend-analysis.mjs';
+import { dividendColumns, dividendValue, formatDividendValue, rankingColumns } from '../dividend-analysis.mjs';
 
-test('ranking follows the eleven visible workbook columns; details retain all twenty-one', () => {
+test('ranking shows seven columns in the agreed order; details retain all twenty-one', () => {
   assert.equal(dividendColumns.length, 21);
   assert.equal(new Set(dividendColumns.map(column => column.key)).size, 21);
-  assert.deepEqual(dividendColumns.filter(column => column.ranking).map(column => column.key), [
-    'companyName', 'ticker', 'sector', 'totalShares', 'marketValue', 'estimatedNetIncome',
-    'projectedPE', 'referencePrice', 'ceilingPrice', 'safetyMargin', 'announcementMonths',
+  assert.deepEqual(rankingColumns.map(column => column.key), [
+    'companyName', 'ticker', 'sector', 'projectedGrossDividendPerShare',
+    'ceilingPrice', 'referencePrice', 'safetyMargin',
   ]);
+  assert.deepEqual(
+    dividendColumns.filter(column => column.ranking).map(column => column.key).sort(),
+    rankingColumns.map(column => column.key).sort(),
+  );
   const ceiling = dividendColumns.find(column => column.key === 'ceilingPrice');
   assert.match(ceiling.label, /6,81%.*2037/);
 });
