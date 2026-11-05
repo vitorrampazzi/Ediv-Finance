@@ -3,25 +3,35 @@ export const dividendColumns = [
   { key: 'companyName', label: 'Empresa', format: 'text', ranking: true },
   { key: 'ticker', label: 'Código', format: 'text', ranking: true },
   { key: 'sector', label: 'Atuação', format: 'text', ranking: true },
-  { key: 'totalShares', label: 'Quantidade total de ações', format: 'quantity', ranking: true },
-  { key: 'marketValue', label: 'Valor de mercado', format: 'currency', ranking: true },
-  { key: 'estimatedNetIncome', label: 'Lucro líquido estimado', format: 'currency', ranking: true },
-  { key: 'projectedPE', label: 'P/L projetado', format: 'number', ranking: true },
+  { key: 'totalShares', label: 'Quantidade total de ações', format: 'quantity', ranking: false },
+  { key: 'marketValue', label: 'Valor de mercado', format: 'currency', ranking: false },
+  { key: 'estimatedNetIncome', label: 'Lucro líquido estimado', format: 'currency', ranking: false },
+  { key: 'projectedPE', label: 'P/L projetado', format: 'number', ranking: false },
   { key: 'averagePE10Years', label: 'P/L médio (últ. 10 anos)', format: 'number', ranking: false },
   { key: 'peDeviation', label: 'Desvio do P/L da sua média', format: 'percent', ranking: false },
   { key: 'earningsCagr5Years', label: 'CAGR lucros (últ. 5 anos)', format: 'percent', ranking: false },
   { key: 'netDebtToEbitda', label: 'Dívida líquida/EBITDA', format: 'number', ranking: false },
   { key: 'estimatedEps', label: 'Lucro por ação estimado', format: 'currency', ranking: false },
   { key: 'expectedPayout', label: 'Payout esperado', format: 'percent', ranking: false },
-  { key: 'projectedGrossDividendPerShare', label: 'Dividendo por ação bruto projetado', format: 'currency', ranking: false },
+  { key: 'projectedGrossDividendPerShare', label: 'Dividendo por ação bruto projetado', format: 'currency', ranking: true },
   { key: 'estimatedGrossDividendYield', label: 'Dividend Yield bruto estimado', format: 'percent', ranking: false },
   { key: 'referencePrice', label: 'Cotação atual', format: 'currency', ranking: true },
   { key: 'ceilingPrice', label: 'Preço Teto baseado em 6,81% de yield (Taxa do Tesouro IPCA+ 2037 com juros semestrais)', format: 'currency', ranking: true },
   { key: 'safetyMargin', label: 'Margem de segurança', format: 'percentInteger', ranking: true },
   { key: 'announcementFrequency', label: 'Frequência nos anúncios', format: 'text', ranking: false },
-  { key: 'announcementMonths', label: 'Meses que costumam anunciar dividendos', format: 'text', ranking: true },
+  { key: 'announcementMonths', label: 'Meses que costumam anunciar dividendos', format: 'text', ranking: false },
   { key: 'updatedOn', label: 'Última atualização', format: 'date', ranking: false },
 ];
+
+// Ranking list columns, in this order. The rest stays on each company's page,
+// so the list compares companies without scrolling sideways.
+export const rankingColumnKeys = [
+  'companyName', 'ticker', 'sector', 'projectedGrossDividendPerShare',
+  'ceilingPrice', 'referencePrice', 'safetyMargin',
+];
+export const rankingColumns = rankingColumnKeys.map((key) =>
+  dividendColumns.find((column) => column.key === key),
+);
 
 export function dividendValue(entry, key) {
   return ['companyName', 'ticker', 'sector'].includes(key)

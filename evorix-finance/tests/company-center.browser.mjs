@@ -56,7 +56,7 @@ try {
         .evaluateAll((nodes) =>
           nodes.map((node) => node.getBoundingClientRect().height),
         );
-      assert.equal(heights.length, 11);
+      assert.equal(heights.length, 7);
       assert.ok(heights.every((height) => Math.abs(height - 72) < 1));
       const ceiling = page.locator('th[data-column="ceilingPrice"] button');
       await page.mouse.move(0, 0);

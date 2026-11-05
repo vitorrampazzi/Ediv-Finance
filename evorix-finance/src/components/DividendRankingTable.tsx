@@ -6,6 +6,7 @@ import {
   dividendColumns,
   dividendValue,
   formatDividendValue,
+  rankingColumns,
 } from "../../dividend-analysis.mjs";
 import type { Entry } from "../lib/ranking";
 import type { DividendColumnKey } from "../../dividend-analysis.mjs";
@@ -22,7 +23,7 @@ export type DividendTableEntry = Pick<
 const tableLabels: Record<DividendColumnKey, string> = {
   companyName: "Empresa",
   ticker: "Código",
-  sector: "Atuação",
+  sector: "Setor",
   totalShares: "Total de ações",
   marketValue: "Valor de mercado",
   estimatedNetIncome: "Lucro estimado",
@@ -33,23 +34,27 @@ const tableLabels: Record<DividendColumnKey, string> = {
   netDebtToEbitda: "Dívida líq./EBITDA",
   estimatedEps: "LPA estimado",
   expectedPayout: "Payout esperado",
-  projectedGrossDividendPerShare: "DPA bruto projetado",
+  projectedGrossDividendPerShare: "Dividendo projetado",
   estimatedGrossDividendYield: "DY bruto estimado",
-  referencePrice: "Cotação de referência",
+  referencePrice: "Preço de mercado",
   ceilingPrice: "Preço teto",
   safetyMargin: "Margem de segurança",
   announcementFrequency: "Frequência",
   announcementMonths: "Meses de anúncios",
   updatedOn: "Atualização",
 };
+// Ranking columns stay narrow enough for the seven to fit beside the menu.
 const columnWidths: Partial<Record<DividendColumnKey, number>> = {
   companyName: 224,
-  ticker: 104,
-  sector: 176,
+  ticker: 88,
+  sector: 152,
+  projectedGrossDividendPerShare: 136,
+  ceilingPrice: 136,
+  referencePrice: 136,
   projectedPE: 128,
   averagePE10Years: 152,
   netDebtToEbitda: 152,
-  safetyMargin: 152,
+  safetyMargin: 136,
   announcementMonths: 224,
 };
 
@@ -65,9 +70,9 @@ export function DividendRankingTable({
   showRank?: boolean;
 }) {
   const id = useId();
-  const columns = dividendColumns.filter(
-    (column) => column.key !== "updatedOn" && (complete || column.ranking),
-  );
+  const columns = complete
+    ? dividendColumns.filter((column) => column.key !== "updatedOn")
+    : rankingColumns;
   const tableWidth = columns.reduce(
     (width, column) => width + (columnWidths[column.key] ?? 176),
     showRank ? 72 : 0,
@@ -80,9 +85,10 @@ export function DividendRankingTable({
       <p id={id} className="dividend-table-hint">
         {complete
           ? "Informações completas da planilha."
-          : "Resumo da aba Ranking. Abra uma empresa para consultar as informações completas."}{" "}
-        Cotação de referência da planilha; sem cotação ao vivo. Role a tabela na
-        horizontal para consultar todas as colunas.
+          : "Resumo do ranking. Abra uma empresa para consultar as informações completas."}{" "}
+        Preço de mercado de referência da planilha; sem cotação ao vivo.
+        {complete &&
+          " Role a tabela na horizontal para consultar todas as colunas."}
       </p>
       <div
         role="region"
@@ -111,9 +117,7 @@ export function DividendRankingTable({
             ))}
           </colgroup>
           <caption className="sr-only">
-            {complete
-              ? "Informações completas a publicar"
-              : "Ranking de Ações"}{" "}
+            {complete ? "Informações completas a publicar" : "Ranking de Ações"}{" "}
             · {columns.length + (showRank ? 1 : 0)} colunas
           </caption>
           <thead>

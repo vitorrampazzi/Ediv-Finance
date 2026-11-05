@@ -13,6 +13,8 @@ export const dividendColumns: readonly Readonly<{
   format: DividendFormat;
   ranking: boolean;
 }>[];
+export const rankingColumnKeys: readonly DividendColumnKey[];
+export const rankingColumns: typeof dividendColumns;
 export function dividendValue(entry: {
   companyName: string;
   ticker: string;
