@@ -280,7 +280,7 @@ export function PriceSeriesChart() {
       : []),
   ];
   return (
-    <div className="fmk-chart-layout grid gap-10 lg:grid-cols-[1fr_300px]">
+    <div className="fmk-chart-layout grid min-w-0 gap-10 lg:grid-cols-[1fr_300px] [&>*]:min-w-0">
       <figure
         data-price-chart={state}
         data-ticker={company.ticker}

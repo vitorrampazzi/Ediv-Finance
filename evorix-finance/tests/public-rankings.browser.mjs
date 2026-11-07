@@ -1345,11 +1345,28 @@ try {
             theme,
           );
           await expect(price).toHaveAttribute("data-price-chart", "ready");
-          assert.ok(
-            await page.evaluate(
-              () => document.documentElement.scrollWidth <= innerWidth + 1,
-            ),
-            "Gráfico 320px sem overflow em " + theme,
+          // On failure, name the widest elements past the viewport: fonts
+          // differ between Windows and the Linux CI runner.
+          const overflow = await page.evaluate(() => {
+            if (document.documentElement.scrollWidth <= innerWidth + 1)
+              return null;
+            return [...document.querySelectorAll("body *")]
+              .map((element) => ({
+                element,
+                right: element.getBoundingClientRect().right,
+              }))
+              .filter(({ right }) => right > innerWidth + 1)
+              .sort((a, b) => b.right - a.right)
+              .slice(0, 5)
+              .map(
+                ({ element, right }) =>
+                  `${element.tagName.toLowerCase()}.${String(element.className).slice(0, 80)} → ${Math.round(right)}px`,
+              );
+          });
+          assert.equal(
+            overflow,
+            null,
+            "Gráfico 320px sem overflow em " + theme + ": " + overflow,
           );
           await price.scrollIntoViewIfNeeded();
           await page.locator("#cotacao").screenshot({
