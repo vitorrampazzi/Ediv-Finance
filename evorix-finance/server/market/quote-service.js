@@ -461,7 +461,6 @@ export function createQuoteService({
     let timer;
     const deadline = new Promise((resolve) => {
       timer = setTimeout(() => resolve(timedOut), onCatalogWaitMs);
-      timer.unref?.();
     });
     try {
       if ((await Promise.race([pending, deadline])) === timedOut)

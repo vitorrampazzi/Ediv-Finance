@@ -193,7 +193,6 @@ export function createDailyCloses({
         log({ event: "market_closes_error", day, code: "TIMEOUT" });
         resolve({ day, status: "timeout" });
       }, wait);
-      timer.unref?.();
     });
     return Promise.race([work, timeout]).finally(() => clearTimeout(timer));
   }
