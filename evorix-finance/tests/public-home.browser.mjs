@@ -3,14 +3,29 @@ import { spawn } from "node:child_process";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { chromium } from "playwright";
 import { expect } from "playwright/test";
+import { marketState, summaryQuote } from "./market-fixture.mjs";
 
 // Public UI regression only: local production build, no database or real API.
 const root = "http://127.0.0.1:4191";
 const artifacts = ".test-artifacts/public-home";
 const report = [];
+// Quote and margin of each company come in the same public answer.
+const market = (ticker, price, percent) => {
+  const quote = summaryQuote(ticker, { price });
+  return {
+    quote,
+    safetyMargin: {
+      percent,
+      basis: "market",
+      price,
+      checkedAt: quote.checkedAt,
+    },
+  };
+};
 const publication = {
   id: "27",
   title: "Pesquisa de teste — empresas e dividendos",
+  market: marketState,
   entries: [
     {
       rank: 1,
@@ -21,6 +36,7 @@ const publication = {
         projectedPE: "8.7",
         safetyMargin: "0.24",
       },
+      market: market("TEST1", "19.62000000", "24.00"),
     },
     {
       rank: 2,
@@ -32,6 +48,7 @@ const publication = {
         projectedPE: "11.6",
         safetyMargin: "0.18",
       },
+      market: market("TEST2", "21.40000000", "18.00"),
     },
     {
       rank: 3,
@@ -42,6 +59,7 @@ const publication = {
         projectedPE: "9.2",
         safetyMargin: "0.31",
       },
+      market: market("TEST3", "8.90000000", "31.00"),
     },
   ],
 };

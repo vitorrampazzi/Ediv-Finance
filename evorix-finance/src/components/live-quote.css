@@ -1,7 +1,16 @@
-/* brapi.dev quotes shown apart from the research numbers (docs/COTACOES.md). */
-.live-quote-line {
+/* Market price and safety margin (docs/MARGEM-E-HISTORICO.md). */
+.market-cell {
   /* Contains the screen-reader text inside the table's scroll area. */
   position: relative;
+  display: block;
+  font-variant-numeric: tabular-nums;
+}
+/* Both lines keep their height while the first answer is on its way. */
+.market-cell-value {
+  display: block;
+  min-height: 1.5em;
+}
+.market-cell-sub {
   display: block;
   min-height: 1rem;
   margin-top: 0.15rem;
@@ -10,10 +19,9 @@
   font-weight: 400;
   line-height: 1rem;
   white-space: nowrap;
-  font-variant-numeric: tabular-nums;
 }
-/* Right-aligned with the research price; longer text may use the left padding. */
-.dividend-table .live-quote-line {
+/* Right-aligned with the value; longer text may use the left padding. */
+.dividend-table .market-cell-sub {
   margin-inline-start: -0.6rem;
 }
 .live-quote-up {

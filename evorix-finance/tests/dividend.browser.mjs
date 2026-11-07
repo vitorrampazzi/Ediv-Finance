@@ -15,14 +15,29 @@ import {
   dividendAnnouncementMonths,
 } from "../dividend-insights.mjs";
 import {
+  formatSafetyMarginPercent,
+  safetyMarginPercent,
+} from "../safety-margin.mjs";
+import {
+  fixtureNow,
   fullQuote,
   marketFixture,
+  rankingMarket,
+  staleQuote,
   summaryQuote,
   unavailableQuote,
 } from "./market-fixture.mjs";
 
 // UI contract test; workbook audit stays outside the browser bundle. No SQL or publication.
 const realWorkbook = Boolean(process.env.EDIV_WORKBOOK_AUDIT);
+// The five examples of the broker: ceiling 10 and these market prices.
+const brokerPrices = {
+  SYN10: "5",
+  SYN11: "8",
+  SYN12: "10",
+  SYN13: "12",
+  SYN14: "4",
+};
 const workbook = realWorkbook
   ? JSON.parse(await readFile(process.env.EDIV_WORKBOOK_AUDIT, "utf8"))
   : {
@@ -59,7 +74,13 @@ const workbook = realWorkbook
                 projectedGrossDividendPerShare: "2.23",
                 estimatedGrossDividendYield: "0.115",
                 referencePrice: "19.37",
-                ceilingPrice: "32.74",
+                // SYN10..SYN14: the broker's ceiling; SYN16: no valid ceiling.
+                ceilingPrice:
+                  identity[1] in brokerPrices
+                    ? "10"
+                    : index === 16
+                      ? null
+                      : "32.74",
                 safetyMargin: String(index / 100),
                 announcementFrequency: "Mensal",
                 announcementMonths: "jan-dez",
@@ -113,7 +134,7 @@ const publication = {
   professionalRegistration: null,
   entries,
   sourceFileName: "Lista de Ações analisadas.xlsx",
-  updatedAt: null,
+  updatedAt: "2026-10-22T12:32:01Z",
   canManage: true,
   totalEntries: 90,
   history: [
@@ -139,28 +160,51 @@ const results = [],
   requests = [];
 let browser;
 let probeEntry = null;
-// brapi.dev quotes are mocked: TIMS3 has one, ALOS3 and the synthetic SYN10+
-// tickers are unavailable, and SYN2..SYN9 are invalid, so never requested.
+// Market answers are mocked: TIMS3 has the list quote (and a v2 session),
+// ALOS3 is unavailable (research basis), SYN10..SYN14 are the broker's
+// examples, SYN15 is the last valid quote (stale) and SYN16 has no ceiling.
+// SYN2..SYN9 are invalid tickers: the client never asks anything for them.
 const market = marketFixture({
+  publication,
   quotes: {
     TIMS3: summaryQuote("TIMS3"),
     ALOS3: unavailableQuote("ALOS3"),
+    ...Object.fromEntries(
+      Object.entries(brokerPrices).map(([ticker, price]) => [
+        ticker,
+        summaryQuote(ticker, { price, changePercent: "0.5000" }),
+      ]),
+    ),
+    SYN15: staleQuote("SYN15", { price: "18.00000000" }),
+    SYN16: summaryQuote("SYN16"),
   },
   details: { TIMS3: fullQuote("TIMS3") },
 });
-const validTickers = entries
-  .map((entry) => entry.ticker)
-  .filter((ticker) => /^[A-Z][A-Z0-9]{3}[0-9]{1,2}F?$/.test(ticker))
-  .sort();
-if (!realWorkbook) assert.equal(validTickers.length, 82);
-const quoteCalls = () =>
-  market.calls.filter((call) => call.startsWith("/api/market/quotes"));
+const rankingCalls = () =>
+  market.calls.filter((call) => call.startsWith("/api/rankings/market"));
+// Margin the server sends for a ticker, as the screen must show it.
+const shownMargin = (ticker) =>
+  formatSafetyMarginPercent(
+    rankingMarket(publication, market.quotes).entries.find(
+      (entry) => entry.ticker === ticker,
+    ).safetyMargin.percent,
+  );
+const money = (value) =>
+  "R$ " +
+  Number(value).toLocaleString("pt-BR", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  });
+const spaces = (text) => text.replace(/\s/g, " ");
+// Held /api/rankings/market answers, to see the screen before they arrive.
+let holdMarket = false;
+const heldMarket = [];
 const server = await createServer({
   server: { host: "127.0.0.1", port: 4198, strictPort: true },
 });
 async function assertPublicationCharts(page, entry) {
+  // The price chart now comes from /api/rankings/price-series.
   const groups = {
-    price: ["referencePrice", "ceilingPrice"],
     dividends: ["projectedGrossDividendPerShare", "estimatedEps"],
     earnings: [
       "estimatedNetIncome",
@@ -174,7 +218,7 @@ async function assertPublicationCharts(page, entry) {
   };
   await expect(
     page.locator(".figma-stock figure.fmk-publication-chart"),
-  ).toHaveCount(6);
+  ).toHaveCount(5);
   for (const [id, keys] of Object.entries(groups)) {
     const figure = page.locator(
       `figure.fmk-publication-chart[data-publication-chart="${id}"]`,
@@ -227,6 +271,8 @@ try {
     viewport: { width: 1366, height: 900 },
     reducedMotion: "reduce",
   });
+  // Every quote of the fixture was read at 10:48; the page starts at 11:00.
+  await context.clock.install({ time: fixtureNow });
   await context.route("**/*", (route) => {
     const url = new URL(route.request().url());
     if (url.hostname !== "127.0.0.1") return route.abort();
@@ -257,11 +303,21 @@ try {
     } else if (url.pathname === "/api/rankings")
       data = probeEntry
         ? { ...publication, entries: [probeEntry], totalEntries: 1 }
-        : publication;
+        : url.searchParams.get("publication") === "1"
+          ? // An older version: the market data never applies to it.
+            {
+              ...publication,
+              id: "1",
+              updatedAt: "2026-10-19T12:00:00Z",
+            }
+          : publication;
     else if (url.pathname === "/api/learning")
       data = { lessons: [], glossary: [], completed: [], access: "full" };
-    else if (market.handles(url)) ({ status, data } = market.respond(url));
-    else {
+    else if (market.handles(url)) {
+      if (holdMarket && url.pathname === "/api/rankings/market")
+        return heldMarket.push(route);
+      ({ status, data } = market.respond(url));
+    } else {
       unknown.push(url.pathname);
       status = 503;
       data = { error: "API fora da fixture" };
@@ -274,6 +330,20 @@ try {
   });
   const page = await context.newPage();
   page.on("pageerror", (error) => errors.push(error.message));
+  const table = page
+    .getByRole("region", { name: "Ranking de Ações por empresa" })
+    .locator("table");
+  const rowOf = (ticker) =>
+    table.locator("tbody tr", {
+      has: page.locator('td[data-column="ticker"]', {
+        hasText: new RegExp(`^${ticker}$`),
+      }),
+    });
+  const cell = (row, column) =>
+    row.locator(`td[data-column="${column}"] [data-market-cell]`);
+  const value = (row, column) =>
+    cell(row, column).locator("[data-market-value]");
+  const sub = (row, column) => cell(row, column).locator(".market-cell-sub");
   await page.goto(origin + "/app/ranking");
   await page.waitForLoadState("networkidle");
   await run(
@@ -282,9 +352,6 @@ try {
       await expect(page.getByRole("heading", { level: 1 })).toHaveText(
         "Ranking de Ações",
       );
-      const table = page
-        .getByRole("region", { name: "Ranking de Ações por empresa" })
-        .locator("table");
       assert.deepEqual(
         await table
           .locator("thead th")
@@ -299,6 +366,14 @@ try {
         );
         await header.focus();
         await expect(page.getByRole("tooltip")).toContainText(column.label);
+        if (column.key === "safetyMargin")
+          await expect(page.getByRole("tooltip")).toContainText(
+            "(preço-teto − cotação de mercado) ÷ preço-teto",
+          );
+        if (column.key === "referencePrice")
+          await expect(page.getByRole("tooltip")).toContainText(
+            "da brapi.dev, com atraso",
+          );
         await header.press("Escape");
       }
       await expect(table.locator("tbody tr")).toHaveCount(10);
@@ -324,18 +399,12 @@ try {
       await expect(page.locator("#ranking-count")).toContainText(
         "90 exibidas de 90 filtradas",
       );
+      const marketColumns = ["referencePrice", "safetyMargin"];
       for (let index = 0; index < entries.length; index++) {
         const row = table.locator("tbody tr").nth(index);
-        // The brapi.dev line is apart from the research value of the cell.
-        const cells = await row.locator("th,td").evaluateAll((nodes) =>
-          nodes.map((node) => {
-            const copy = node.cloneNode(true);
-            copy
-              .querySelectorAll("[data-live-quote]")
-              .forEach((line) => line.remove());
-            return copy.textContent;
-          }),
-        );
+        const cells = await row
+          .locator("th,td")
+          .evaluateAll((nodes) => nodes.map((node) => node.textContent));
         const expected = rankingColumns.map((column) =>
           formatDividendValue(
             dividendValue(entries[index], column.key),
@@ -349,75 +418,123 @@ try {
             .evaluate((element) => element.firstChild.textContent),
           expected[0],
         );
-        assert.deepEqual(cells.slice(1), expected.slice(1));
+        // Every research column is exactly the spreadsheet's.
+        rankingColumns.forEach((column, position) => {
+          if (position && !marketColumns.includes(column.key))
+            assert.equal(cells[position], expected[position], column.key);
+        });
+        // The margin on screen is the one the server computed, two decimals.
+        await expect(value(row, "safetyMargin")).toHaveText(
+          shownMargin(entries[index].ticker),
+        );
       }
-      await expect(page.getByLabel("Filtrar horizonte")).toHaveCount(0);
-      await expect(page.getByRole("option", { name: /potencial/ })).toHaveCount(
-        0,
+      // Canonical quote, change below in the subtle color, source in title.
+      const tim = rowOf("TIMS3");
+      await expect(cell(tim, "referencePrice")).toHaveAttribute(
+        "data-market-state",
+        "market",
       );
-      assert.doesNotMatch(
-        await page.locator(".dividend-table-hint").textContent(),
-        /\b\d{2}\/\d{2}\/\d{4}\b/,
-      );
-      assert.match(await table.textContent(), /19,37/);
-      // One quotes request for the whole publication, valid tickers only,
-      // even after "Ver mais ações".
-      assert.deepEqual(quoteCalls(), [
-        "/api/market/quotes?symbols=" +
-          encodeURIComponent(validTickers.join(",")),
-      ]);
-      const timLine = table
-        .locator("tbody tr")
-        .nth(0)
-        .locator('td[data-column="referencePrice"] [data-live-quote]');
-      await expect(timLine).toHaveAttribute("data-live-quote", "ready");
-      await expect(timLine).toContainText("agora R$ 19,62 · −0,91%");
-      await expect(timLine.locator(".live-quote-down")).toHaveText("−0,91%");
-      await expect(timLine).toHaveAttribute(
+      await expect(value(tim, "referencePrice")).toHaveText("R$ 19,62");
+      await expect(sub(tim, "referencePrice")).toHaveText("−0,91%");
+      await expect(
+        sub(tim, "referencePrice").locator(".live-quote-down"),
+      ).toHaveText("−0,91%");
+      await expect(cell(tim, "referencePrice")).toHaveAttribute(
         "title",
-        /^Cotação brapi\.dev com atraso, consultada às (05\/11 às )?10:48 \(horário de Brasília\)\.$/,
+        "Cotação brapi.dev com atraso, consultada às 10:48 (horário de Brasília).",
       );
-      await expect(timLine.locator(".sr-only")).toContainText(
-        "Cotação brapi.dev com atraso, consultada às",
+      await expect(cell(tim, "referencePrice").locator(".sr-only")).toHaveText(
+        "Cotação brapi.dev com atraso, consultada às 10:48 (horário de Brasília).",
       );
-      await expect(
-        table
-          .locator("tbody tr")
-          .nth(0)
-          .locator('td[data-column="referencePrice"] [data-research-value]'),
-      ).toHaveText(
-        formatDividendValue(
-          entries[0].dividendAnalysis.referencePrice,
-          "currency",
-        ),
+      assert.equal(
+        safetyMarginPercent("32.74", "19.62000000"),
+        "40.07",
+        "cross-check of the shared formula",
       );
-      for (const index of [1, 2]) {
-        const line = table
-          .locator("tbody tr")
-          .nth(index)
-          .locator('td[data-column="referencePrice"] [data-live-quote]');
-        await expect(line).toHaveAttribute("data-live-quote", "unavailable");
-        await expect(line).toHaveText("cotação atual indisponível");
-      }
-      await expect(table.locator('[data-live-quote="ready"]')).toHaveCount(1);
-      await expect(
-        table.locator('[data-live-quote="unavailable"]'),
-      ).toHaveCount(89);
-      // The reserved line keeps every row the same height, with or without quote.
+      await expect(value(tim, "safetyMargin")).toHaveText("40,07%");
+      await expect(cell(tim, "safetyMargin")).toHaveAttribute(
+        "title",
+        "Margem de segurança = (preço-teto − cotação de mercado) ÷ preço-teto = (R$ 32,74 − R$ 19,62) ÷ R$ 32,74 = 40,07%. Preço-teto da pesquisa de 20/10; cotação brapi.dev consultada às 10:48 (horário de Brasília).",
+      );
+      // No valid quote: the research price and margin, with the research day.
+      const allos = rowOf("ALOS3");
+      await expect(cell(allos, "referencePrice")).toHaveAttribute(
+        "data-market-state",
+        "research",
+      );
+      await expect(value(allos, "referencePrice")).toHaveText("R$ 19,37");
+      await expect(sub(allos, "referencePrice")).toHaveText(
+        "da pesquisa (20/10)",
+      );
+      await expect(value(allos, "safetyMargin")).toHaveText("1,00%");
+      await expect(sub(allos, "safetyMargin")).toHaveText(
+        "da pesquisa (20/10)",
+      );
+      // Last valid quote after a failed refresh on the server: "defasada".
+      const stale = rowOf("SYN15");
+      await expect(cell(stale, "referencePrice")).toHaveAttribute(
+        "data-market-state",
+        "stale",
+      );
+      await expect(value(stale, "referencePrice")).toHaveText("R$ 18,00");
+      await expect(sub(stale, "referencePrice")).toHaveText(
+        "defasada · −0,91%",
+      );
+      await expect(value(stale, "safetyMargin")).toHaveText(
+        formatSafetyMarginPercent(safetyMarginPercent("32.74", "18")),
+      );
+      await expect(sub(stale, "safetyMargin")).toHaveText("defasada");
+      await expect(cell(stale, "safetyMargin")).toHaveAttribute(
+        "title",
+        /Defasada: a consulta mais recente falhou/,
+      );
+      // No valid ceiling: the price still shows, the margin is not informed.
+      const noCeiling = rowOf("SYN16");
+      await expect(value(noCeiling, "referencePrice")).toHaveText("R$ 19,62");
+      await expect(value(noCeiling, "safetyMargin")).toHaveText(
+        "Não informado",
+      );
+      await expect(cell(noCeiling, "safetyMargin")).toHaveAttribute(
+        "data-market-state",
+        "unavailable",
+      );
+      await expect(cell(noCeiling, "safetyMargin")).toHaveAttribute(
+        "title",
+        /não informa um preço-teto válido/,
+      );
+      // The "agora" line of PR #44 is gone.
+      await expect(table.locator("[data-live-quote]")).toHaveCount(0);
+      assert.doesNotMatch(await table.textContent(), /agora R\$/);
+      // One market request for the whole publication, even after "Ver mais".
+      assert.equal(rankingCalls().length, 1);
+      assert.ok(
+        market.calls.every((call) => !call.startsWith("/api/market/quotes")),
+      );
+      // Every row the same height; the two lines fit in their columns.
       const heights = await table
         .locator("tbody tr")
         .evaluateAll((rows) =>
           rows.map((row) => row.getBoundingClientRect().height),
         );
       assert.equal(new Set(heights).size, 1, JSON.stringify(heights));
-      const fits = await table
-        .locator('td[data-column="referencePrice"]')
-        .evaluateAll((cells) =>
-          cells.every((cell) => cell.scrollWidth <= cell.clientWidth + 1),
-        );
-      assert.ok(fits, "A linha da cotação cabe na coluna");
-      await expect(page.locator(".dividend-table-hint")).toContainText(
-        "Preço de mercado e margem de segurança são os da pesquisa publicada. A linha “agora” traz a cotação da brapi.dev, com atraso",
+      for (const column of marketColumns) {
+        const fits = await table
+          .locator(`td[data-column="${column}"]`)
+          .evaluateAll((cells) =>
+            cells.every((cell) => cell.scrollWidth <= cell.clientWidth + 1),
+          );
+        assert.ok(fits, "Os valores de mercado cabem na coluna " + column);
+      }
+      const hint = page.locator(".dividend-table-hint");
+      assert.doesNotMatch(await hint.textContent(), /\b\d{2}\/\d{2}\/\d{4}\b/);
+      await expect(hint).toContainText(
+        "Preço de mercado: cotação da brapi.dev, com atraso, consultada às 10:48 (horário de Brasília).",
+      );
+      await expect(hint).toContainText(
+        "Margem de segurança = (preço-teto − cotação de mercado) ÷ preço-teto, recalculada a cada cotação",
+      );
+      await expect(hint).toContainText(
+        "O preço-teto vem da publicação de 22/10 e só muda com uma nova análise.",
       );
       assert.doesNotMatch(
         await page.locator("body").innerText(),
@@ -426,7 +543,41 @@ try {
     },
   );
   await run(
-    "Filtros: busca, setor e margem; URL antiga não aplica prazo/potencial",
+    "Os cinco exemplos do corretor: teto 10 e cotações 5, 8, 10, 12 e 4",
+    async () => {
+      await page.getByLabel("Buscar empresa ou ticker").fill("SYN1");
+      const expected = [
+        ["SYN10", "R$ 5,00", "50,00%"],
+        ["SYN11", "R$ 8,00", "20,00%"],
+        ["SYN12", "R$ 10,00", "0,00%"],
+        ["SYN13", "R$ 12,00", "−20,00%"],
+        ["SYN14", "R$ 4,00", "60,00%"],
+      ];
+      for (const [ticker, price, margin] of expected) {
+        // Cross-check of the shared module before reading the screen.
+        assert.equal(
+          formatSafetyMarginPercent(
+            safetyMarginPercent("10", brokerPrices[ticker]),
+          ),
+          margin,
+        );
+        const row = rowOf(ticker);
+        await expect(row.locator('td[data-column="ceilingPrice"]')).toHaveText(
+          /R\$\s10,00/,
+        );
+        await expect(value(row, "referencePrice")).toHaveText(price);
+        await expect(value(row, "safetyMargin")).toHaveText(margin);
+        await expect(cell(row, "safetyMargin")).toHaveAttribute(
+          "title",
+          `Margem de segurança = (preço-teto − cotação de mercado) ÷ preço-teto = (R$ 10,00 − ${price}) ÷ R$ 10,00 = ${margin}. Preço-teto da pesquisa de 20/10; cotação brapi.dev consultada às 10:48 (horário de Brasília).`,
+        );
+      }
+      await page.screenshot({ path: output + "/broker-examples.png" });
+      await page.getByLabel("Buscar empresa ou ticker").fill("");
+    },
+  );
+  await run(
+    "Filtros: busca, setor e margem exibida; URL antiga não aplica prazo/potencial",
     async () => {
       await page.goto(origin + "/app/ranking?prazo=6&ordem=potential");
       await expect(page.locator(".dividend-table tbody tr")).toHaveCount(10);
@@ -446,16 +597,27 @@ try {
         .getByRole("button", { name: "Ver mais ações", exact: true })
         .click();
       await expect(page.locator(".dividend-table tbody tr")).toHaveCount(20);
+      // "Maior margem" orders by the margin on screen, dynamic or research.
       await page.getByLabel("Ordenar ranking").selectOption("safety");
       await expect(page.locator(".dividend-table tbody tr")).toHaveCount(10);
+      const percent = new Map(
+        rankingMarket(publication, market.quotes).entries.map((entry) => [
+          entry.ticker,
+          entry.safetyMargin.percent === null
+            ? -Infinity
+            : Number(entry.safetyMargin.percent),
+        ]),
+      );
       const expected = [...entries].sort(
         (a, b) =>
-          Number(b.dividendAnalysis.safetyMargin) -
-            Number(a.dividendAnalysis.safetyMargin) || a.rank - b.rank,
+          percent.get(b.ticker) - percent.get(a.ticker) || a.rank - b.rank,
       );
-      await expect(
-        page.locator(".dividend-table tbody tr").first().locator("td").first(),
-      ).toHaveText(expected[0].ticker);
+      assert.deepEqual(
+        await page
+          .locator('.dividend-table tbody td[data-column="ticker"]')
+          .allTextContents(),
+        expected.slice(0, 10).map((entry) => entry.ticker),
+      );
       await page.getByLabel("Ordenar ranking").selectOption("rank");
       await expect(
         page.locator(".dividend-table tbody tr").first().locator("td").first(),
@@ -464,10 +626,72 @@ try {
         .getByRole("button", { name: "Ver mais ações", exact: true })
         .click();
       await expect(page.locator(".dividend-table tbody tr")).toHaveCount(20);
+      // An older version shows its own research price and margin.
       await page.getByLabel("Histórico de publicações").selectOption("1");
       await expect(page.locator(".dividend-table tbody tr")).toHaveCount(10);
+      const first = page.locator(".dividend-table tbody tr").first();
+      await expect(cell(first, "referencePrice")).toHaveAttribute(
+        "data-market-state",
+        "research",
+      );
+      await expect(value(first, "referencePrice")).toHaveText("R$ 19,37");
+      await expect(value(first, "safetyMargin")).toHaveText("0,00%");
+      await expect(sub(first, "safetyMargin")).toHaveText(
+        "da pesquisa (20/10)",
+      );
+      await expect(page.locator(".dividend-table-hint")).toContainText(
+        "Nesta versão, preço de mercado e margem de segurança são os da pesquisa publicada em 19/10",
+      );
       await page.getByLabel("Histórico de publicações").selectOption("");
       await expect(page.locator(".dividend-table tbody tr")).toHaveCount(10);
+      await expect(
+        cell(
+          page.locator(".dividend-table tbody tr").first(),
+          "referencePrice",
+        ),
+      ).toHaveAttribute("data-market-state", "market");
+    },
+  );
+  await run(
+    "Sem salto: células e nota mantêm a altura até a cotação chegar",
+    async () => {
+      holdMarket = true;
+      await page.goto(origin + "/app/ranking?visual=real");
+      const tim = rowOf("TIMS3");
+      await expect(cell(tim, "referencePrice")).toHaveAttribute(
+        "data-market-state",
+        "loading",
+      );
+      await expect(cell(tim, "referencePrice").locator(".sr-only")).toHaveText(
+        "Consultando a cotação na brapi.dev.",
+      );
+      const measure = () =>
+        page.evaluate(() => ({
+          region: document
+            .querySelector(".dividend-table-region")
+            .getBoundingClientRect().top,
+          rows: [...document.querySelectorAll(".dividend-table tbody tr")].map(
+            (row) => row.getBoundingClientRect().height,
+          ),
+          more: document
+            .querySelector('[aria-controls="ranking-results"]')
+            ?.getBoundingClientRect().top,
+        }));
+      const before = await measure();
+      holdMarket = false;
+      for (const route of heldMarket.splice(0)) {
+        const { status, data } = market.respond(new URL(route.request().url()));
+        await route.fulfill({
+          status,
+          contentType: "application/json",
+          body: JSON.stringify(data),
+        });
+      }
+      await expect(cell(tim, "referencePrice")).toHaveAttribute(
+        "data-market-state",
+        "market",
+      );
+      assert.deepEqual(await measure(), before);
     },
   );
   await run(
@@ -507,7 +731,7 @@ try {
         .getByRole("button", { name: "O que é P/L projetado?", exact: true });
       await tip.focus();
       await expect(page.getByRole("tooltip")).toHaveText(
-        "Preço dividido pelo lucro por ação projetado: quantos anos de lucro, no ritmo projetado, o preço representa.",
+        "Preço da pesquisa dividido pelo lucro por ação projetado: quantos anos de lucro, no ritmo projetado, o preço representa. Fica como na data da pesquisa.",
       );
       await tip.press("Escape");
       await expect(page.getByRole("tooltip")).toHaveCount(0);
@@ -550,6 +774,14 @@ try {
       await expect(
         page.locator("#visao-geral").getByRole("status"),
       ).toContainText("Comparação indisponível");
+      // No quote and no research price: the block says so, without numbers.
+      const quoteBlock = page.locator("#cotacao [data-market-quote]");
+      await expect(quoteBlock).toHaveAttribute(
+        "data-market-quote",
+        "unavailable",
+      );
+      await expect(quoteBlock).toContainText("Cotação atual indisponível");
+      await expect(quoteBlock).not.toContainText("R$ 0,00");
       await expect(
         page.locator('[data-field="expectedPayout"] [data-exact-value]'),
       ).toHaveText("150,00%");
@@ -630,7 +862,9 @@ try {
               label:
                 column.key === "referencePrice"
                   ? "Preço da pesquisa"
-                  : column.label,
+                  : column.key === "safetyMargin"
+                    ? "Margem da pesquisa"
+                    : column.label,
               value: formatDividendValue(
                 dividendValue(entry, column.key),
                 column.format,
@@ -692,6 +926,12 @@ try {
             ? "Comparação indisponível sem bases positivas."
             : `P/L projetado ${formatDividendValue(entry.dividendAnalysis.projectedPE, peColumn.format)}, média ${formatDividendValue(entry.dividendAnalysis.averagePE10Years, averageColumn.format)}: diferença relativa ${difference}.`,
         );
+        // The dynamic margin in the header is the server's, as in the ranking.
+        await expect(
+          page.locator(
+            '.figma-stock header [data-summary="Margem de segurança"] [data-summary-value]',
+          ),
+        ).toHaveText(shownMargin(entry.ticker));
         await expect(page.locator(".research-insight")).toHaveCount(0);
         assert.equal(
           await page
@@ -703,47 +943,92 @@ try {
     },
   );
   await run(
-    "Cotação atual: bloco completo, indisponível sem cotação e preço da pesquisa intacto",
+    "Empresa: cotação canônica, pregão, teto da pesquisa, margem dinâmica e referência",
     async () => {
       await page.goto(
         origin + "/app/ranking/acao/TIMS3?visual=real&publication=2",
       );
-      const block = page.locator("#cotacao [data-live-quote-block]");
-      await expect(block).toHaveAttribute("data-live-quote-block", "ready");
-      await expect(block).toHaveAttribute("data-live-quote-detail", "full");
+      const header = page.locator(".figma-stock header");
+      const stat = (label) => header.locator(`[data-summary="${label}"]`);
+      await expect(stat("Preço de mercado")).toHaveAttribute(
+        "data-market-state",
+        "market",
+      );
+      await expect(
+        stat("Preço de mercado").locator("[data-summary-value]"),
+      ).toHaveText("R$ 19,62");
+      await expect(
+        stat("Preço de mercado").locator("[data-summary-sub]"),
+      ).toHaveText("brapi.dev, com atraso · 10:48");
+      await expect(
+        stat("Margem de segurança").locator("[data-summary-value]"),
+      ).toHaveText("40,07%");
+      await expect(
+        stat("Margem de segurança").locator("[data-summary-sub]"),
+      ).toHaveText("com a cotação de 10:48");
+      await expect(
+        stat("Margem de segurança").locator("[data-summary-value]"),
+      ).toHaveAttribute(
+        "title",
+        /= \(R\$ 32,74 − R\$ 19,62\) ÷ R\$ 32,74 = 40,07%/,
+      );
+      for (const label of ["DY bruto estimado", "P/L projetado"])
+        await expect(stat(label).locator("[data-summary-sub]")).toHaveText(
+          "na data da pesquisa",
+        );
+      await expect(stat("Preço-teto")).toContainText("32,74");
+      await expect(stat("Preço-teto").locator("[data-summary-sub]")).toHaveText(
+        "da pesquisa de 20/10",
+      );
+      const block = page.locator("#cotacao [data-market-quote]");
+      await expect(block).toHaveAttribute("data-market-quote", "market");
       await expect(block.getByRole("heading")).toHaveText("Cotação atual");
-      await expect(block.locator("[data-live-quote-price]")).toHaveText(
+      await expect(block.locator("[data-market-quote-price]")).toHaveText(
         "R$ 19,62",
       );
-      await expect(block.locator("[data-live-quote-change]")).toContainText(
+      // R$ change from the v2 session, only because its price is the same.
+      await expect(block.locator("[data-market-quote-change]")).toContainText(
         "−R$ 0,18 · −0,91%",
+      );
+      await expect(block.locator("[data-market-session-time]")).toHaveText(
+        "Dados do pregão · cotação de 10:30",
       );
       assert.deepEqual(
         await block
-          .locator("[data-live-quote-field]")
+          .locator("[data-market-session-field]")
           .evaluateAll((nodes) =>
             nodes.map((node) => [
-              node.dataset.liveQuoteField,
+              node.dataset.marketSessionField,
               node.querySelector("dt").textContent,
               node.querySelector("dd").textContent,
             ]),
           ),
         [
-          ["previousClose", "Fechamento anterior", "R$ 19,80"],
+          ["open", "Abertura", "R$ 19,70"],
           ["dayHigh", "Máxima do dia", "R$ 19,95"],
           ["dayLow", "Mínima do dia", "R$ 19,50"],
-          ["volume", "Volume", "367.700"],
+          ["previousClose", "Fechamento anterior", "R$ 19,80"],
         ],
       );
-      await expect(block.locator("[data-live-quote-source]")).toHaveText(
-        /^brapi\.dev · com atraso de até 30 min · cotação de (05\/11 às )?10:30$/,
+      await expect(block.locator("[data-market-source]")).toHaveText(
+        "brapi.dev · com atraso · consultada às 10:48",
       );
-      await expect(block).toContainText(/Preço da pesquisa: R\$\s19,37/);
-      const reference = page.locator(
-        '.figma-stock header [data-summary="Cotação de referência"]',
+      await expect(
+        block.locator('[data-market-quote-field="ceiling"]'),
+      ).toContainText("R$ 32,74");
+      await expect(
+        block.locator('[data-market-quote-field="ceiling"]'),
+      ).toContainText("da pesquisa de 20/10");
+      await expect(
+        block.locator('[data-market-quote-field="margin"] dd').first(),
+      ).toHaveText("40,07%");
+      await expect(
+        block.locator('[data-market-quote-field="volume"] dd'),
+      ).toHaveText("367.700");
+      await expect(block.locator("[data-market-reference]")).toHaveText(
+        "Na publicação de 22/10: preço R$ 19,37 e margem de segurança de 0,00%.",
       );
-      await expect(reference).toContainText("19,37");
-      await expect(reference).toContainText("preço da pesquisa");
+      // The 20 research fields keep the spreadsheet values.
       await expect(
         page.locator('[data-field="referencePrice"] [data-exact-value]'),
       ).toHaveText(
@@ -756,20 +1041,37 @@ try {
         await page.locator("body").innerText(),
         /tempo real/i,
       );
-      for (const ticker of ["ALOS3", "SYN2"]) {
-        await page.goto(
-          origin + "/app/ranking/acao/" + ticker + "?visual=real&publication=2",
-        );
-        await expect(block).toHaveAttribute(
-          "data-live-quote-block",
-          "unavailable",
-        );
-        await expect(block).toContainText("Cotação atual indisponível");
-        await expect(block.locator("[data-live-quote-field]")).toHaveCount(0);
-        await expect(block.locator("[data-live-quote-price]")).toHaveCount(0);
-        await expect(block).not.toContainText("R$ 0,00");
-      }
+      // No valid quote: research price with its day; stale: last valid one.
+      await page.goto(
+        origin + "/app/ranking/acao/ALOS3?visual=real&publication=2",
+      );
+      await expect(block).toHaveAttribute("data-market-quote", "research");
+      await expect(block.locator("[data-market-quote-price]")).toHaveText(
+        "R$ 19,37",
+      );
+      await expect(block).toContainText("da pesquisa (20/10)");
+      await expect(block.locator("[data-market-quote-research]")).toBeVisible();
+      await expect(block.locator("[data-market-session-field]")).toHaveCount(0);
+      await expect(
+        stat("Margem de segurança").locator("[data-summary-sub]"),
+      ).toHaveText("da pesquisa (20/10)");
+      await page.goto(
+        origin + "/app/ranking/acao/SYN15?visual=real&publication=2",
+      );
+      await expect(block).toHaveAttribute("data-market-quote", "stale");
+      await expect(block.locator("[data-market-quote-stale]")).toBeVisible();
+      await expect(
+        stat("Preço de mercado").locator("[data-summary-sub]"),
+      ).toHaveText("defasada · 10:48");
       // Invalid tickers never reach the API.
+      await page.goto(
+        origin + "/app/ranking/acao/SYN2?visual=real&publication=2",
+      );
+      await expect(block).toHaveAttribute("data-market-quote", "research");
+      await expect(page.locator("[data-price-chart]")).toHaveAttribute(
+        "data-price-chart",
+        "invalid",
+      );
       assert.ok(market.calls.every((call) => !/SYN\d(?!\d)/.test(call)));
     },
   );
@@ -824,6 +1126,8 @@ try {
       });
       await expect(preview.locator("thead th")).toHaveCount(20);
       await expect(preview.locator("tbody tr")).toHaveCount(90);
+      // The preview is the spreadsheet: no market cells.
+      await expect(preview.locator("[data-market-cell]")).toHaveCount(0);
       await page
         .getByRole("button", {
           name: "Confirmar e publicar esta versão",
@@ -851,6 +1155,10 @@ try {
           name: "Ranking de Ações por empresa",
         });
         await expect(region.locator("tbody tr")).toHaveCount(10);
+        await expect(cell(rowOf("TIMS3"), "referencePrice")).toHaveAttribute(
+          "data-market-state",
+          "market",
+        );
         await region.focus();
         await page.keyboard.press("ArrowRight");
         await expect
@@ -869,6 +1177,9 @@ try {
           origin + "/app/ranking/acao/TIMS3?visual=real&publication=2",
         );
         await expect(page.locator(".figma-stock [data-field]")).toHaveCount(20);
+        await expect(
+          page.locator("#cotacao [data-market-quote]"),
+        ).toHaveAttribute("data-market-quote", "market");
         await page.evaluate(
           (theme) => (document.documentElement.dataset.theme = theme),
           theme,
@@ -882,11 +1193,14 @@ try {
           path: output + "/company-320-" + theme + ".png",
           fullPage: true,
         });
+        await page.locator("#cotacao").screenshot({
+          path: output + "/company-quote-320-" + theme + ".png",
+        });
       }
     },
   );
   await run(
-    "Destaques /app: margem e referência, sem potencial/prazo inventados",
+    "Destaques /app: preço e margem do mercado, iguais ao ranking",
     async () => {
       await page.setViewportSize({ width: 1366, height: 900 });
       await page.goto(origin + "/app");
@@ -902,17 +1216,29 @@ try {
       await expect(highlights).not.toContainText("Prazo não informado");
       await expect(highlights).toContainText("Pesquisa de dividendos");
       await expect(highlights).not.toContainText("Referência:");
+      const tim = highlights.locator('a[href*="/app/ranking/acao/TIMS3"]');
+      await expect(
+        tim.locator('[data-kpi="Preço de mercado"] dd').first(),
+      ).toHaveText("R$ 19,62");
+      await expect(
+        tim.locator('[data-kpi="Margem de segurança"] dd').first(),
+      ).toHaveText("40,07%");
+      await expect(
+        highlights
+          .locator('a[href*="/app/ranking/acao/ALOS3"]')
+          .locator('[data-kpi="Margem de segurança"]'),
+      ).toContainText("da pesquisa (20/10)");
     },
   );
   await run(
     "Legado/demo: módulos e cenário permanecem disponíveis",
     async () => {
       await page.setViewportSize({ width: 1366, height: 900 });
-      const quoteRequests = quoteCalls().length;
+      const marketRequests = rankingCalls().length;
       await page.goto(origin + "/app/ranking?visual=demo");
       await expect(page.locator(".research-modules-table")).toBeVisible();
       // Fictitious companies get no quote.
-      assert.equal(quoteCalls().length, quoteRequests);
+      assert.equal(rankingCalls().length, marketRequests);
       await expect(page.locator(".dividend-table")).toHaveCount(0);
       await page.locator(".research-table-company-link").first().click();
       await expect(page.getByRole("heading", { level: 1 })).toContainText(
@@ -922,46 +1248,147 @@ try {
       await expect(
         page.getByText("Potencial simulado", { exact: true }).first(),
       ).toBeVisible();
+      assert.equal(rankingCalls().length, marketRequests);
     },
   );
+  const setHidden = (hidden) =>
+    page.evaluate((hidden) => {
+      Object.defineProperty(document, "hidden", {
+        configurable: true,
+        get: () => hidden,
+      });
+      document.dispatchEvent(new Event("visibilitychange"));
+    }, hidden);
   await run(
     "Cotações: pausa com aba oculta, retoma ao voltar e mantém números defasados na falha",
     async () => {
-      await page.clock.install();
       await page.goto(origin + "/app/ranking?visual=real");
-      const line = page
-        .locator(".dividend-table tbody tr")
-        .first()
-        .locator("[data-live-quote]");
-      await expect(line).toHaveAttribute("data-live-quote", "ready");
-      const before = quoteCalls().length;
-      const setHidden = (hidden) =>
-        page.evaluate((hidden) => {
-          Object.defineProperty(document, "hidden", {
-            configurable: true,
-            get: () => hidden,
-          });
-          document.dispatchEvent(new Event("visibilitychange"));
-        }, hidden);
+      const tim = rowOf("TIMS3");
+      await expect(cell(tim, "referencePrice")).toHaveAttribute(
+        "data-market-state",
+        "market",
+      );
+      const before = rankingCalls().length;
       await setHidden(true);
       await page.clock.fastForward("16:00");
       assert.equal(
-        quoteCalls().length,
+        rankingCalls().length,
         before,
         "Sem consulta com a aba oculta",
       );
-      market.failQuotes = true;
+      market.failRanking = true;
       await setHidden(false);
-      await expect.poll(() => quoteCalls().length).toBe(before + 1);
+      await expect.poll(() => rankingCalls().length).toBe(before + 1);
       // The failed refresh keeps the last numbers, marked as stale.
-      await expect(line).toHaveAttribute("data-live-quote", "stale");
-      await expect(line).toContainText("defasada R$ 19,62 · −0,91%");
-      await expect(line).toHaveAttribute("title", /Defasada/);
-      market.failQuotes = false;
+      await expect(cell(tim, "referencePrice")).toHaveAttribute(
+        "data-market-state",
+        "stale",
+      );
+      await expect(value(tim, "referencePrice")).toHaveText("R$ 19,62");
+      await expect(sub(tim, "referencePrice")).toHaveText("defasada · −0,91%");
+      await expect(cell(tim, "referencePrice")).toHaveAttribute(
+        "title",
+        /Defasada/,
+      );
+      await expect(value(tim, "safetyMargin")).toHaveText("40,07%");
+      await expect(sub(tim, "safetyMargin")).toHaveText("defasada");
+      await expect(page.locator(".dividend-table-hint")).toContainText(
+        "última cotação válida da brapi.dev",
+      );
+      market.failRanking = false;
       await page.clock.fastForward("02:10");
-      await expect.poll(() => quoteCalls().length).toBe(before + 2);
-      await expect(line).toHaveAttribute("data-live-quote", "ready");
-      await expect(line).toContainText("agora R$ 19,62");
+      await expect.poll(() => rankingCalls().length).toBe(before + 2);
+      await expect(cell(tim, "referencePrice")).toHaveAttribute(
+        "data-market-state",
+        "market",
+      );
+      await expect(sub(tim, "safetyMargin")).toHaveText("");
+    },
+  );
+  await run(
+    "Teste C: nova cotação muda preço e margem sem recarregar, iguais no ranking e na empresa",
+    async () => {
+      await page.goto(origin + "/app/ranking?visual=real");
+      const tim = rowOf("TIMS3");
+      await expect(value(tim, "referencePrice")).toHaveText("R$ 19,62");
+      await expect(value(tim, "safetyMargin")).toHaveText("40,07%");
+      const before = rankingCalls().length;
+      const quote = (price, changePercent, checkedAt) => {
+        market.quotes.TIMS3 = summaryQuote("TIMS3", {
+          price,
+          changePercent,
+          checkedAt,
+        });
+        // The v2 session keeps its previous close of R$ 19,80.
+        market.details.TIMS3 = fullQuote("TIMS3", {
+          price,
+          change: (Number(price) - 19.8).toFixed(8),
+          changePercent,
+          checkedAt,
+        });
+        market.checkedAt = checkedAt;
+      };
+      const sameScreen = async (price, margin) => {
+        const header = page.locator(".figma-stock header");
+        await expect(
+          header.locator(
+            '[data-summary="Preço de mercado"] [data-summary-value]',
+          ),
+        ).toHaveText(price);
+        await expect(
+          header.locator(
+            '[data-summary="Margem de segurança"] [data-summary-value]',
+          ),
+        ).toHaveText(margin);
+        const block = page.locator("#cotacao [data-market-quote]");
+        await expect(block.locator("[data-market-quote-price]")).toHaveText(
+          price,
+        );
+        await expect(
+          block.locator('[data-market-quote-field="margin"] dd').first(),
+        ).toHaveText(margin);
+      };
+      // The list of the next cycle: a new price for TIMS3.
+      quote("20.10000000", "1.5800", "2026-11-05T14:03:14.389Z");
+      const second = formatSafetyMarginPercent(
+        safetyMarginPercent("32.74", "20.10000000"),
+      );
+      assert.equal(second, "38,61%");
+      await page.clock.fastForward("15:01");
+      await expect.poll(() => rankingCalls().length).toBe(before + 1);
+      await expect(value(tim, "referencePrice")).toHaveText("R$ 20,10");
+      await expect(value(tim, "safetyMargin")).toHaveText(second);
+      await expect(
+        sub(tim, "referencePrice").locator(".live-quote-up"),
+      ).toHaveText("+1,58%");
+      await expect(cell(tim, "referencePrice")).toHaveAttribute(
+        "title",
+        /consultada às 11:03/,
+      );
+      // Client-side navigation: the company page reads the same store.
+      await tim.locator(".dividend-company-link").click();
+      await expect(page.getByRole("heading", { level: 1 })).toHaveText(
+        entries[0].companyName,
+      );
+      await sameScreen("R$ 20,10", second);
+      assert.equal(rankingCalls().length, before + 1, "Sem nova consulta");
+      // A newer quote while the company page is open.
+      quote("21.00000000", "2.0000", "2026-11-05T14:18:14.389Z");
+      const third = formatSafetyMarginPercent(
+        safetyMarginPercent("32.74", "21.00000000"),
+      );
+      assert.equal(third, "35,86%");
+      await page.clock.fastForward("15:01");
+      await expect.poll(() => rankingCalls().length).toBe(before + 2);
+      await sameScreen("R$ 21,00", third);
+      await page.goBack();
+      await expect(value(tim, "referencePrice")).toHaveText("R$ 21,00");
+      await expect(value(tim, "safetyMargin")).toHaveText(third);
+      assert.equal(rankingCalls().length, before + 2);
+      assert.doesNotMatch(
+        await page.locator("body").innerText(),
+        /tempo real/i,
+      );
     },
   );
   assert.deepEqual(errors, []);

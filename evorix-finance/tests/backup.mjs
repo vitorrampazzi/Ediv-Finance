@@ -58,6 +58,18 @@ try {
     "INSERT INTO notification_reads(user_id,publication_id) VALUES(?,?)",
     [fixture.accounts.a.id, publication.insertId],
   );
+  // Closes consolidated by the Escola (migration 009) cannot be fetched again.
+  await fixture.pool.execute(
+    "INSERT INTO market_daily_closes(ticker,trade_date,close,volume,source,captured_at) VALUES(?,?,?,?,?,?)",
+    [
+      "PETR4",
+      "2026-10-30",
+      "52.71000000",
+      "61743200",
+      "brapi_list",
+      "2026-10-30 21:40:00.250",
+    ],
+  );
   assert.equal(command("backup").status, 0, "Backup do schema isolado falhou.");
   const files = (await readdir(env.BACKUP_DIRECTORY)).sort();
   const file = resolve(env.BACKUP_DIRECTORY, files.at(-1));
@@ -136,8 +148,25 @@ try {
   );
   assert.equal(reads[0].user_id, fixture.accounts.a.id);
   assert.equal(Number(reads[0].publication_id), Number(publication.insertId));
+  const [closes] = await restoredPool.execute(
+    "SELECT ticker,trade_date,close,volume,source,captured_at FROM market_daily_closes WHERE ticker=? AND trade_date=?",
+    ["PETR4", "2026-10-30"],
+  );
+  assert.deepEqual(
+    closes.map((row) => ({ ...row, volume: String(row.volume) })),
+    [
+      {
+        ticker: "PETR4",
+        trade_date: "2026-10-30",
+        close: "52.71000000",
+        volume: "61743200",
+        source: "brapi_list",
+        captured_at: "2026-10-30 21:40:00.250",
+      },
+    ],
+  );
   console.info(
-    "PASS: backup criptografado, recusa de destino preenchido, autenticação da chave, restauração de contas/perfis/rascunhos/progresso/notificações e exclusão de sessões.",
+    "PASS: backup criptografado, recusa de destino preenchido, autenticação da chave, restauração de contas/perfis/rascunhos/progresso/notificações/fechamentos e exclusão de sessões.",
   );
 } finally {
   if (restoredPool) await restoredPool.end();

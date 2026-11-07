@@ -10,9 +10,9 @@ import {
 } from "../../dividend-analysis.mjs";
 import type { Entry } from "../lib/ranking";
 import type { DividendColumnKey } from "../../dividend-analysis.mjs";
-import type { LiveQuotes } from "../hooks/useLiveQuotes";
+import type { MarketView } from "../lib/marketData";
 import { CompanyLogo } from "./CompanyLogo";
-import { LiveQuoteLine } from "./LiveQuote";
+import { MarketMarginCell, MarketPriceCell } from "./LiveQuote";
 import { Tooltip } from "./Tooltip";
 import "./dividend-research.css";
 
@@ -21,6 +21,13 @@ export type DividendTableEntry = Pick<
   Entry,
   "rank" | "ticker" | "companyName" | "sector" | "dividendAnalysis"
 >;
+// Market price and dynamic margin of each row, from the shared market data.
+export type RankingMarketCells = {
+  viewFor: (ticker: string) => MarketView | undefined;
+  note: string;
+  // The note as it reads with a fresh quote: it holds the note's height.
+  noteSizer: string;
+};
 
 const tableLabels: Record<DividendColumnKey, string> = {
   companyName: "Empresa",
@@ -65,14 +72,14 @@ export function DividendRankingTable({
   researchLink,
   complete = false,
   showRank = false,
-  liveQuotes,
+  market,
 }: {
   entries: DividendTableEntry[];
   researchLink?: (ticker: string) => string;
   complete?: boolean;
   showRank?: boolean;
-  // brapi.dev quotes, shown apart; the research price and order never change.
-  liveQuotes?: LiveQuotes;
+  // Without it (publication preview) the cells are the spreadsheet's.
+  market?: RankingMarketCells;
 }) {
   const id = useId();
   const columns = complete
@@ -87,16 +94,24 @@ export function DividendRankingTable({
       className="dividend-table"
       style={{ "--dividend-table-width": tableWidth + "px" } as CSSProperties}
     >
-      <p id={id} className="dividend-table-hint">
-        {complete
-          ? "Informações completas da planilha."
-          : "Resumo do ranking. Abra uma empresa para consultar as informações completas."}{" "}
-        {liveQuotes
-          ? "Preço de mercado e margem de segurança são os da pesquisa publicada. A linha “agora” traz a cotação da brapi.dev, com atraso, e não muda a ordem nem a margem."
-          : "Preço de mercado de referência da planilha; sem cotação ao vivo."}
-        {complete &&
-          " Role a tabela na horizontal para consultar todas as colunas."}
-      </p>
+      <div className="dividend-table-hint-frame">
+        <p id={id} className="dividend-table-hint">
+          {complete
+            ? "Informações completas da planilha."
+            : "Resumo do ranking. Abra uma empresa para consultar as informações completas."}{" "}
+          {market
+            ? market.note
+            : "Preço de mercado de referência da planilha; sem cotação da brapi.dev."}
+          {complete &&
+            " Role a tabela na horizontal para consultar todas as colunas."}
+        </p>
+        {market && (
+          <p aria-hidden="true" className="dividend-table-hint-sizer">
+            Resumo do ranking. Abra uma empresa para consultar as informações
+            completas. {market.noteSizer}
+          </p>
+        )}
+      </div>
       <div
         role="region"
         aria-label={
@@ -145,19 +160,22 @@ export function DividendRankingTable({
                     toggleOnClick
                     content={
                       column.label +
-                      (column.key === "referencePrice" && liveQuotes
-                        ? " da planilha da pesquisa, em reais (R$). A linha “agora” é a cotação da brapi.dev, com atraso."
-                        : column.key === "ceilingPrice"
-                          ? ". Premissa histórica da planilha, não uma taxa de mercado atual nem garantia de retorno."
-                          : column.format === "currency"
-                            ? ". Valor em reais (R$)."
-                            : column.format === "quantity"
-                              ? ". Quantidade de ações informada na pesquisa."
-                              : column.format === "number"
-                                ? ". Múltiplo em vezes."
-                                : column.format.startsWith("percent")
-                                  ? ". Percentual informado na pesquisa."
-                                  : ". Informação preservada da fonte.")
+                      (column.key === "referencePrice" && market
+                        ? " da brapi.dev, com atraso, em reais (R$). Sem cotação válida, aparece o preço da pesquisa, com a data."
+                        : column.key === "safetyMargin" && market
+                          ? ": (preço-teto − cotação de mercado) ÷ preço-teto, com duas casas e recalculada a cada cotação. Fica negativa quando a cotação passa do teto e não representa retorno garantido."
+                          : column.key === "ceilingPrice"
+                            ? ". Premissa histórica da planilha, não uma taxa de mercado atual nem garantia de retorno." +
+                              (market ? " Só muda com uma nova análise." : "")
+                            : column.format === "currency"
+                              ? ". Valor em reais (R$)."
+                              : column.format === "quantity"
+                                ? ". Quantidade de ações informada na pesquisa."
+                                : column.format === "number"
+                                  ? ". Múltiplo em vezes."
+                                  : column.format.startsWith("percent")
+                                    ? ". Percentual informado na pesquisa."
+                                    : ". Informação preservada da fonte.")
                     }
                   >
                     <button type="button" className="dividend-header-control">
@@ -182,6 +200,11 @@ export function DividendRankingTable({
                     dividendValue(entry, column.key),
                     column.format,
                   );
+                  const view =
+                    column.key === "referencePrice" ||
+                    column.key === "safetyMargin"
+                      ? market?.viewFor(entry.ticker)
+                      : undefined;
                   return column.key === "companyName" ? (
                     <th scope="row" key={column.key} data-column={column.key}>
                       {researchLink ? (
@@ -220,13 +243,10 @@ export function DividendRankingTable({
                           : "font-numbers"
                       }
                     >
-                      {column.key === "referencePrice" && liveQuotes ? (
-                        <>
-                          <span data-research-value>{value}</span>
-                          <LiveQuoteLine
-                            view={liveQuotes.quoteFor(entry.ticker)}
-                          />
-                        </>
+                      {view && column.key === "referencePrice" ? (
+                        <MarketPriceCell view={view} />
+                      ) : view ? (
+                        <MarketMarginCell view={view} />
                       ) : (
                         value
                       )}

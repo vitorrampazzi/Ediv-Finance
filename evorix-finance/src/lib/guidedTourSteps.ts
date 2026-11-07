@@ -18,7 +18,7 @@ export const guidedTourSteps = [
     route: "/app/ranking",
     title: "Abra a pesquisa de uma empresa",
     description:
-      "No Ranking, clique no nome de uma empresa para abrir as informações completas. As colunas resumem valor de mercado, lucro estimado, P/L projetado, cotação de referência, preço-teto, margem de segurança e os meses em que a empresa costuma anunciar dividendos. A cotação vem da planilha publicada, não é ao vivo, e a margem de segurança não garante retorno.",
+      "No Ranking, clique no nome de uma empresa para abrir as informações completas. As colunas resumem valor de mercado, lucro estimado, P/L projetado, preço de mercado, preço-teto, margem de segurança e os meses em que a empresa costuma anunciar dividendos. O preço de mercado é a cotação da brapi.dev, com atraso; a margem de segurança acompanha essa cotação, o preço-teto só muda com uma nova análise e nada disso garante retorno.",
   },
   {
     target: "aprender",

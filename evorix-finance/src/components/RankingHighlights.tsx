@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { apiRequest, ApiError } from "../lib/api";
 import { rankingDemoEntries } from "../lib/rankingDemo";
@@ -6,6 +6,8 @@ import { useAuth } from "../context/authContext";
 import { CompanyLogo } from "./CompanyLogo";
 import type { Entry } from "../lib/ranking";
 import { trackEvent } from "../lib/analytics";
+import { publicationMarket, type MarketView } from "../lib/marketData";
+import { useRankingMarket } from "../hooks/useRankingMarket";
 import {
   formatDividendValue,
   type DividendFormat,
@@ -24,11 +26,32 @@ const shown = (value: string | null | undefined, format: DividendFormat) => {
   return text === "Não informado" ? "—" : text;
 };
 
-function kpis(entry: Entry, demo: boolean): [string, string][] {
+const noEntries: Entry[] = [];
+type Kpi = [string, string, string?, string?];
+// Market price and margin are the ranking ones: the same shared market data.
+function kpis(entry: Entry, demo: boolean, view?: MarketView): Kpi[] {
   const analysis = entry.dividendAnalysis;
+  if (analysis && view)
+    return [
+      [
+        "Preço de mercado",
+        view.price.state === "loading" ? "—" : view.price.text,
+        view.price.state === "market"
+          ? undefined
+          : (view.price.qualifier ?? undefined),
+        view.price.title,
+      ],
+      ["Preço teto", shown(analysis.ceilingPrice, "currency")],
+      [
+        "Margem de segurança",
+        view.margin.state === "loading" ? "—" : view.margin.text,
+        view.margin.qualifier ?? undefined,
+        view.margin.title,
+      ],
+    ];
   if (analysis)
     return [
-      ["Cotação de referência", shown(analysis.referencePrice, "currency")],
+      ["Preço da pesquisa", shown(analysis.referencePrice, "currency")],
       ["Preço teto", shown(analysis.ceilingPrice, "currency")],
       ["Margem de segurança", shown(analysis.safetyMargin, "percentInteger")],
     ];
@@ -58,7 +81,20 @@ function MemberRankingHighlights() {
   const showingDemo = Boolean(publication && !publication.entries.length);
   const entries: Entry[] = showingDemo
     ? rankingDemoEntries
-    : publication?.entries || [];
+    : publication?.entries || noEntries;
+  const dividend =
+    !showingDemo && entries.some((entry) => entry.dividendAnalysis);
+  const market = useRankingMarket(dividend);
+  const views = useMemo(
+    () =>
+      dividend
+        ? publicationMarket(entries.slice(0, 3), market, {
+            id: publication?.id ?? null,
+            publishedAt: publication?.updatedAt ?? null,
+          }).views
+        : null,
+    [dividend, entries, market, publication?.id, publication?.updatedAt],
+  );
   useEffect(() => {
     const controller = new AbortController();
     const request = () =>
@@ -106,7 +142,7 @@ function MemberRankingHighlights() {
             {showingDemo ? (
               "Abra uma empresa de exemplo para conhecer o formato da pesquisa."
             ) : entries.some((entry) => entry.dividendAnalysis) ? (
-              "Consulte as análises de dividendos e a referência da planilha de cada empresa."
+              "Consulte as análises de dividendos: preço de mercado da brapi.dev, com atraso, e a margem de segurança que acompanha a cotação."
             ) : (
               <>Leia a tese e confira o prazo de cada cenário.</>
             )}
@@ -189,16 +225,26 @@ function MemberRankingHighlights() {
                   </div>
                 </div>
                 <dl className="col-span-2 row-start-2 grid grid-cols-3 items-end gap-x-3 lg:col-span-1 lg:col-start-2 lg:row-start-1 lg:gap-x-6">
-                  {kpis(entry, showingDemo).map(([label, value]) => (
-                    <div key={label} className="min-w-0">
-                      <dt className="text-[0.6875rem] leading-4 text-evo-textSec sm:text-xs">
-                        {label}
-                      </dt>
-                      <dd className="mt-1 font-numbers text-base sm:text-lg">
-                        {value}
-                      </dd>
-                    </div>
-                  ))}
+                  {kpis(entry, showingDemo, views?.get(entry.ticker)).map(
+                    ([label, value, qualifier, title]) => (
+                      <div key={label} className="min-w-0" data-kpi={label}>
+                        <dt className="text-[0.6875rem] leading-4 text-evo-textSec sm:text-xs">
+                          {label}
+                        </dt>
+                        <dd
+                          className="mt-1 font-numbers text-base sm:text-lg"
+                          title={title}
+                        >
+                          {value}
+                        </dd>
+                        {qualifier && (
+                          <dd className="text-[0.6875rem] leading-4 text-evo-textSec">
+                            {qualifier}
+                          </dd>
+                        )}
+                      </div>
+                    ),
+                  )}
                 </dl>
                 <span className="col-start-2 row-start-1 text-xs text-evo-accent sm:text-sm lg:col-start-3">
                   {showingDemo ? "Abrir exemplo" : "Ler pesquisa"}

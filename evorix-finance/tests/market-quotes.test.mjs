@@ -112,6 +112,7 @@ test("normaliza a cotação v2 real da brapi em texto decimal", () => {
     price: "47.90000000",
     change: "0.78000000",
     changePercent: "1.6600",
+    open: "47.90000000",
     previousClose: "47.12000000",
     dayHigh: "48.04000000",
     dayLow: "47.76000000",
@@ -246,6 +247,7 @@ test("null, vazio e lixo nunca viram zero; zero informado continua zero", () => 
   assert.equal(quote.change, "0.00000000");
   for (const field of [
     "changePercent",
+    "open",
     "previousClose",
     "dayHigh",
     "dayLow",
@@ -319,9 +321,13 @@ test("TTL: aberto 15/15/60 min; fechado até a abertura, no máximo 12 h", () =>
   assert.equal(minutes("quote", "2026-11-07T15:00:00Z"), 720);
   // Sem TTL menor que 1 minuto perto da abertura.
   assert.equal(minutes("quote", "2026-11-05T12:59:30Z"), 1);
-  // 45 min depois do fechamento o feed atrasado ainda publica o call final.
+  // Até 19:40 (100 min depois do fechamento) o TTL curto continua, para que
+  // uma lista nova seja buscada depois das 19:00, quando o fechamento é final.
   assert.equal(minutes("quote", "2026-11-05T21:10:00Z"), 15);
-  assert.equal(minutes("quote", "2026-11-05T21:50:00Z"), 720);
+  assert.equal(minutes("catalog", "2026-11-05T21:50:00Z"), 15, "18:50");
+  assert.equal(minutes("catalog", "2026-11-05T22:39:00Z"), 15, "19:39");
+  assert.equal(minutes("catalog", "2026-11-05T22:40:00Z"), 720, "19:40");
+  assert.equal(minutes("history", "2026-11-05T22:39:00Z"), 60);
   assert.throws(() => cacheTtlMs("other", Date.now()));
 });
 

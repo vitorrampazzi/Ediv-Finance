@@ -1,12 +1,18 @@
 import { companyLogoUrl } from "../../company-logo.mjs";
-import { cacheTtlMs, publicMarket, saoPauloDate } from "./market-session.js";
-import { brapiPlans } from "./plans.js";
+import {
+  cacheTtlMs,
+  publicMarket,
+  saoPauloDate,
+  tradingSessionDate,
+} from "./market-session.js";
+import { brapiPlans, demoSeries } from "./plans.js";
 import { demoTickers, isValidTicker } from "./validation.js";
 
 // Quote service behind /api/market. It owns caching, deduplication, the 429
 // cooldown, retries, the per-ticker queue and the daily budget; the provider
 // only fetches and normalizes. Every dependency is injected so unit tests run
-// without MySQL, network or the real clock. Rules: docs/COTACOES.md.
+// without MySQL, network or the real clock. Rules: docs/COTACOES.md and
+// docs/MARGEM-E-HISTORICO.md (canonical quote, chart series).
 
 const source = "brapi.dev";
 const cooldownKey = "brapi:cooldown";
@@ -17,13 +23,33 @@ const rejectedCatalogMs = 15 * 60_000;
 const maxMemoryEntries = 3000;
 
 export class QuoteServiceError extends Error {
-  constructor(code, reason = null) {
+  constructor(code, reason = null, status = null) {
     super(`Quote service ${code}`);
     this.name = "QuoteServiceError";
     // cooldown | budget | queue | recent_failure
     this.code = code;
     this.reason = reason;
+    // HTTP status of the refusal behind a recent_failure, when there was one.
+    this.status = status;
   }
+}
+
+const eightDecimals = /^\d+\.\d{8}$/;
+
+// price − previous close, exact on the 8-decimal texts made by priceText().
+export function priceDifference(price, previous) {
+  if (
+    typeof price !== "string" ||
+    typeof previous !== "string" ||
+    !eightDecimals.test(price) ||
+    !eightDecimals.test(previous)
+  )
+    return null;
+  const units =
+    BigInt(price.replace(".", "")) - BigInt(previous.replace(".", ""));
+  const negative = units < 0n;
+  const digits = String(negative ? -units : units).padStart(9, "0");
+  return `${negative ? "-" : ""}${digits.slice(0, -8)}.${digits.slice(-8)}`;
 }
 
 export function unavailableQuote(
@@ -60,20 +86,26 @@ function isTransient(error) {
   );
 }
 
-// 401, 403, 404 or an unusable payload: the detailed quote is not obtainable
-// now, so the summary from the general list is the better answer.
-function isRejection(error) {
-  if (!error) return false;
-  if (error.code === "recent_failure") return error.reason === "rejected";
-  if (error.code === "invalid") return true;
-  return error.code === "http" && error.status !== 429 && error.status < 500;
-}
-
 function validValue(kind, value) {
   if (kind === "catalog") return Array.isArray(value?.items);
   if (kind === "quote")
     return typeof value?.symbol === "string" && typeof value.price === "string";
+  if (kind === "series")
+    return (
+      Array.isArray(value) && (value.length === 0 || Array.isArray(value[0]))
+    );
   return Array.isArray(value);
+}
+
+// Why the brapi chart series is missing, in the contract's words.
+function seriesFailure(error) {
+  if (error?.code === "budget") return "budget";
+  if (
+    (error?.code === "http" || error?.code === "recent_failure") &&
+    error.status === 404
+  )
+    return "not_covered";
+  return "provider_error";
 }
 
 function defaultLog(entry) {
@@ -94,6 +126,11 @@ export function createQuoteService({
   retryDelayMs = 500,
   maxQueue = 25,
   maxQueueWaitMs = 15_000,
+  // Called after every general-list read that has data (consolidation of the
+  // daily closes). When it returns a promise, the read waits for it, at most
+  // onCatalogWaitMs; it never fails the request. null means nothing to wait.
+  onCatalog = null,
+  onCatalogWaitMs = 3_000,
 }) {
   const limits = brapiPlans[plan] || brapiPlans.free;
   // Without a token brapi declares neither a delay nor a plan.
@@ -211,7 +248,11 @@ export function createQuoteService({
   async function callProvider(key, kind, fetcher) {
     const block = blocked.get(key);
     if (block && block.until > now())
-      throw new QuoteServiceError("recent_failure", block.reason);
+      throw new QuoteServiceError(
+        "recent_failure",
+        block.reason,
+        block.status ?? null,
+      );
     await assertNoCooldown();
     const perTicker = kind !== "catalog";
     const run = async () => {
@@ -244,7 +285,11 @@ export function createQuoteService({
             key,
             isTransient(error)
               ? { until: now() + transientBackoffMs, reason: "transient" }
-              : { until: now() + rejectedMs, reason: "rejected" },
+              : {
+                  until: now() + rejectedMs,
+                  reason: "rejected",
+                  status: error?.status ?? null,
+                },
           );
           throw error;
         } finally {
@@ -359,34 +404,78 @@ export function createQuoteService({
     };
   }
 
-  function fullQuote(result) {
-    const value = result.entry.value;
+  // The v2 quote only describes the trading session; its price is not used.
+  function sessionData(entry) {
+    const value = entry.value;
     return {
-      symbol: value.symbol,
-      name: value.name,
-      logoUrl: value.logoUrl,
-      currency: value.currency,
-      price: value.price,
-      change: value.change,
-      changePercent: value.changePercent,
-      previousClose: value.previousClose,
-      dayHigh: value.dayHigh,
-      dayLow: value.dayLow,
-      volume: value.volume,
-      quoteTime: value.quoteTime,
-      marketTime: value.quoteTime,
-      checkedAt: result.entry.checkedAt,
-      freshness: result.freshness,
-      stale: result.freshness === "stale",
-      unavailable: false,
-      detail: "full",
-      delayMinutes,
-      source,
+      open: value.open ?? null,
+      dayHigh: value.dayHigh ?? null,
+      dayLow: value.dayLow ?? null,
+      previousClose: value.previousClose ?? null,
+      quoteTime: value.quoteTime ?? null,
+      checkedAt: entry.checkedAt,
     };
   }
 
-  function catalog() {
-    return load(catalogKey, "catalog", () => provider.catalog());
+  // Canonical quote (docs/MARGEM-E-HISTORICO.md): price, change %, volume,
+  // checkedAt and freshness always come from the general list, and the v2
+  // quote only fills `session`. The R$ change is the listed price minus the
+  // session's previous close, and only when the session quote time is in the
+  // current B3 session and the listed price was read in that same session.
+  function canonicalQuote(base, session) {
+    const current = tradingSessionDate(now());
+    const sameSession =
+      session !== null &&
+      typeof session.quoteTime === "string" &&
+      saoPauloDate(Date.parse(session.quoteTime)) === current &&
+      typeof base.checkedAt === "string" &&
+      tradingSessionDate(Date.parse(base.checkedAt)) === current;
+    return {
+      ...base,
+      change: sameSession
+        ? priceDifference(base.price, session.previousClose)
+        : null,
+      detail: session ? "full" : "summary",
+      session,
+    };
+  }
+
+  // Waits for the hook's work when it returns some, never longer than
+  // onCatalogWaitMs and never with an error reaching the request.
+  async function settleCatalogHook(result) {
+    if (!onCatalog || !result.entry) return;
+    const failed = (error) =>
+      log({
+        event: "market_catalog_hook_error",
+        code: String(error?.code || error?.name || "Error").slice(0, 40),
+      });
+    let pending;
+    try {
+      pending = onCatalog(result.entry, result.freshness);
+    } catch (error) {
+      failed(error);
+      return;
+    }
+    if (!pending || typeof pending.then !== "function") return;
+    const timedOut = Symbol("timeout");
+    let timer;
+    const deadline = new Promise((resolve) => {
+      timer = setTimeout(() => resolve(timedOut), onCatalogWaitMs);
+    });
+    try {
+      if ((await Promise.race([pending, deadline])) === timedOut)
+        failed({ code: "TIMEOUT" });
+    } catch (error) {
+      failed(error);
+    } finally {
+      clearTimeout(timer);
+    }
+  }
+
+  async function catalog() {
+    const result = await load(catalogKey, "catalog", () => provider.catalog());
+    await settleCatalogHook(result);
+    return result;
   }
 
   // One general-list call answers every ticker and every visitor in the TTL.
@@ -410,16 +499,88 @@ export function createQuoteService({
       isCovered(symbol) ||
       !listed.entry ||
       catalogItem(listed.entry, symbol) !== null;
+    let base = summaryQuote(symbol, listed);
+    let session = null;
     if ((hasToken || demo) && known) {
       const full = await load(`market:quote:${symbol}`, "quote", () =>
         provider.quote(symbol),
       );
-      const preferSummary =
-        full.error?.code === "budget" || isRejection(full.error);
-      if (full.entry && (full.freshness === "delayed" || !preferSummary))
-        return { quote: fullQuote(full), market: publicMarket(now()) };
+      // The last valid v2 answer still describes its own session (it carries
+      // its quote time and checkedAt); it never replaces the listed price.
+      if (full.entry) {
+        session = sessionData(full.entry);
+        if (base.unavailable)
+          base = {
+            ...base,
+            name: full.entry.value.name ?? base.name,
+            logoUrl: full.entry.value.logoUrl ?? base.logoUrl,
+          };
+      }
     }
-    return { quote: summaryQuote(symbol, listed), market: publicMarket(now()) };
+    return {
+      quote: canonicalQuote(base, session),
+      market: publicMarket(now()),
+    };
+  }
+
+  // One general-list read for many tickers (ranking routes): canonical quotes
+  // without a session, so no per-ticker call is ever made here.
+  async function canonicalQuotes(symbols) {
+    const listed = await catalog();
+    const checkedAt = listed.entry?.checkedAt ?? null;
+    const result = new Map();
+    for (const symbol of symbols) {
+      if (typeof symbol !== "string" || result.has(symbol)) continue;
+      const base = isValidTicker(symbol)
+        ? summaryQuote(symbol, listed)
+        : unavailableQuote(symbol, { checkedAt, delayMinutes });
+      result.set(symbol, canonicalQuote(base, null));
+    }
+    return {
+      quotes: result,
+      checkedAt,
+      freshness: listed.freshness,
+      market: publicMarket(now()),
+      listed,
+    };
+  }
+
+  // brapi daily series for the chart: the plan's longest range, with the raw
+  // price for demonstration tickers and the Pro plan. Compact rows
+  // `[date, adjustedClose, rawClose]` are what the cache keeps.
+  async function series(symbol, listed = null) {
+    if (!isValidTicker(symbol)) throw new TypeError("Invalid ticker");
+    const demo = demoTickers.has(symbol);
+    const options = demo
+      ? demoSeries
+      : hasToken
+        ? { range: limits.seriesRange, includeRaw: limits.includeRaw }
+        : null;
+    const base = {
+      points: null,
+      checkedAt: null,
+      freshness: "unavailable",
+      reason: null,
+      range: options?.range ?? null,
+      includeRaw: options?.includeRaw === true,
+    };
+    if (!options) return { ...base, reason: "no_token" };
+    // Do not spend the budget on a ticker the loaded general list lacks.
+    if (!demo && listed?.entry && catalogItem(listed.entry, symbol) === null)
+      return { ...base, reason: "not_covered" };
+    const result = await load(
+      `market:series:${symbol}:${options.range}${base.includeRaw ? ":raw" : ""}`,
+      "series",
+      () => provider.series(symbol, options),
+    );
+    if (result.entry)
+      return {
+        ...base,
+        points: result.entry.value,
+        checkedAt: result.entry.checkedAt,
+        freshness: result.freshness,
+      };
+    return { ...base, reason: seriesFailure(result.error) };
   }
 
   async function history(symbol, range) {
@@ -462,7 +623,9 @@ export function createQuoteService({
   return {
     quotes,
     quote,
+    canonicalQuotes,
     history,
+    series,
     catalog,
     market: () => publicMarket(now()),
     delayMinutes,

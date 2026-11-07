@@ -1,6 +1,13 @@
 import { parseRankingUpload } from "./dividend-import.js";
-import { publicRanking } from "./public-ranking.js";
-import { stockHistory } from "./stock-history.js";
+import { publicRankingWithMarket } from "./public-ranking.js";
+import { hasStockHistory } from "./stock-history.js";
+import {
+  priceSeries,
+  quoteService,
+  servedStockHistory,
+} from "./market-service.js";
+import { rankingMarketBody } from "./market/ranking-market.js";
+import { priceSeriesQuerySchema, tickerSchema } from "./market/validation.js";
 import { Router } from "express";
 import { rateLimit } from "express-rate-limit";
 import { pool } from "./database.js";
@@ -83,15 +90,73 @@ router.get("/public", async (_req, res) => {
   const [rows] = await pool.execute(
     "SELECT id,title,created_at,entries_json FROM ranking_publications ORDER BY id DESC LIMIT 1",
   );
-  const body = publicRanking(rows[0]);
+  // Market price and margin of the three entries come from one general-list
+  // read. If it fails, the margin falls back to the research or unavailable.
+  let market = quoteService.market();
+  let quotes = new Map();
+  try {
+    const tickers = [...readEntries(rows[0]?.entries_json)]
+      .sort((a, b) => a.rank - b.rank)
+      .slice(0, 3)
+      .map((entry) => entry.ticker);
+    ({ quotes, market } = await quoteService.canonicalQuotes(tickers));
+  } catch (error) {
+    console.warn(
+      "Public ranking market data failed:",
+      String(error?.code || error?.name || "Error").slice(0, 40),
+    );
+  }
+  const body = publicRankingWithMarket(rows[0], { quotes, market });
   sharedCache(res, publicRankingCacheControl);
   return res.json(body);
 });
+// Market price and dynamic safety margin of the latest publication. Per-user
+// authentication, so the global no-store header stays.
+router.get("/market", requireAuthenticatedUser, async (_req, res) => {
+  const latest = await latestRanking();
+  const publication = latest?.data ?? null;
+  const { quotes, checkedAt, market } = await quoteService.canonicalQuotes(
+    publication?.entries.map((entry) => entry.ticker) ?? [],
+  );
+  return res.json(
+    rankingMarketBody({ publication, quotes, checkedAt, market }),
+  );
+});
+const priceSeriesLimiter = rateLimit({
+  windowMs: 60_000,
+  limit: 30,
+  store: new MysqlLimitStore("price-series"),
+  standardHeaders: "draft-7",
+  legacyHeaders: false,
+});
+router.get(
+  "/price-series/:ticker",
+  requireAuthenticatedUser,
+  priceSeriesLimiter,
+  async (req, res) => {
+    const ticker = tickerSchema.safeParse(req.params.ticker);
+    const query = priceSeriesQuerySchema.safeParse(req.query);
+    if (!ticker.success || !query.success)
+      return res
+        .status(400)
+        .json({ error: "Código da ação, base ou período inválido." });
+    // Only the snapshot companies and those of the latest publication.
+    const latest = hasStockHistory(ticker.data) ? null : await latestRanking();
+    if (
+      !hasStockHistory(ticker.data) &&
+      !latest?.data?.entries.some((entry) => entry.ticker === ticker.data)
+    )
+      return res
+        .status(404)
+        .json({ error: "Histórico não disponível para esta ação." });
+    return res.json(await priceSeries(ticker.data, query.data));
+  },
+);
 router.get("/history/:ticker", requireAuthenticatedUser, (req, res) => {
   const { ticker } = req.params;
   if (!/^[A-Z0-9]{4}\d{1,2}$/.test(ticker))
     return res.status(400).json({ error: "Código da ação inválido." });
-  const history = stockHistory(ticker);
+  const history = servedStockHistory(ticker);
   if (!history || history.ticker !== ticker)
     return res
       .status(404)

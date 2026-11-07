@@ -3,13 +3,13 @@
 > Plataforma de educação sobre ações e dividendos, com aulas, glossário e pesquisas de empresas.
 
 O conteúdo público apresenta a escola, seus materiais educativos e o ranking real
-da última publicação da equipe, preservando a ordem e os valores da fonte. As pesquisas
+da última publicação da equipe, preservando a ordem e os indicadores da fonte. As pesquisas
 completas e as ferramentas da conta exigem autenticação. Exemplos identificados
 como demonstração usam dados fictícios; não são pesquisas publicadas do analista.
 
 ## Conheça a escola
 
-- [Início](https://escoladodividendo.com.br/): apresentação da Escola do Dividendo e ranking publicado, com dez ações iniciais e mais dez por clique. Os preços e margens são os da pesquisa publicada; a cotação atual da brapi.dev aparece à parte, com atraso.
+- [Início](https://escoladodividendo.com.br/): apresentação da Escola do Dividendo e ranking publicado, com dez ações iniciais e mais dez por clique. O preço de mercado é a cotação da brapi.dev, com atraso, e a margem de segurança acompanha essa cotação; preço-teto, DY e P/L são os da pesquisa publicada.
 - [Pesquisa e metodologia](https://escoladodividendo.com.br/metodologia): organização das pesquisas, fontes e cenários.
 - [Ranking de ações](https://escoladodividendo.com.br/ranking): apresentação pública e acesso às pesquisas mediante cadastro.
 

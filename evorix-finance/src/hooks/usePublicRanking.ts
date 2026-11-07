@@ -1,69 +1,50 @@
-import { useEffect, useState } from "react";
 import { apiRequest } from "../lib/api";
+import { refreshMs } from "../lib/liveQuotes";
+import {
+  parsePublicRanking,
+  publicationInstant,
+  type PublicRanking,
+} from "../lib/marketData";
+import { createPolledStore } from "../lib/polledStore";
+import { usePolledStore } from "./usePolledStore";
 
-// The only indicators the public API opens, for the first three companies.
-export const publicMetrics = [
-  "estimatedGrossDividendYield",
-  "projectedPE",
-  "safetyMargin",
-] as const;
+export { publicMetrics } from "../lib/marketData";
+export type { PublicEntry, PublicRanking } from "../lib/marketData";
 
-export type PublicRanking = {
-  id: string | null;
-  title: string;
-  updatedAt: string | null;
-  totalEntries?: number;
-  entries: {
-    rank: number;
-    ticker: string;
-    companyName: string;
-    dividendAnalysis: Record<(typeof publicMetrics)[number], string | null>;
-  }[];
-};
+// The home, the /ranking landing and the public company pages read the same
+// answer: its quotes and margins refresh at the interval the server gives.
+const store = createPolledStore<PublicRanking>({
+  retryMs: 120_000,
+  load: async (signal) => {
+    const data = parsePublicRanking(
+      await apiRequest<unknown>("/api/rankings/public", { signal }),
+    );
+    return { data, refreshMs: refreshMs(data.market) };
+  },
+});
 
 export function usePublicRanking() {
-  const [publication, setPublication] = useState<PublicRanking | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
-  const [revision, setRevision] = useState(0);
-  useEffect(() => {
-    const controller = new AbortController();
-    apiRequest<PublicRanking>("/api/rankings/public", {
-      signal: controller.signal,
-    })
-      .then((data) => {
-        if (!controller.signal.aborted) setPublication(data);
-      })
-      .catch((reason) => {
-        if (!controller.signal.aborted)
-          setError(
-            reason instanceof Error
-              ? reason.message
-              : "Não foi possível carregar o ranking.",
-          );
-      })
-      .finally(() => {
-        if (!controller.signal.aborted) setLoading(false);
-      });
-    return () => controller.abort();
-  }, [revision]);
-  const retry = () => {
-    setLoading(true);
-    setError("");
-    setPublication(null);
-    setRevision((value) => value + 1);
+  const snapshot = usePolledStore(store);
+  return {
+    publication: snapshot.data,
+    loading: snapshot.loading,
+    // Only a first load can fail on screen; later failures keep the numbers.
+    error:
+      snapshot.data || snapshot.loading || !snapshot.failed
+        ? ""
+        : snapshot.error || "Não foi possível carregar o ranking.",
+    // The latest refresh failed: quotes and margins on screen are stale.
+    stale: Boolean(snapshot.data) && snapshot.failed,
+    retry: store.refresh,
   };
-  return { publication, loading, error, retry };
 }
 
 // Publication dates arrive as UTC, either ISO or MySQL "YYYY-MM-DD HH:MM:SS".
 export function publicationDate(value: string | null) {
-  if (!value) return null;
-  const iso = /[zZ]$|[+-]\d\d:?\d\d$/.test(value)
-    ? value
-    : value.replace(" ", "T") + "Z";
-  const date = new Date(iso);
-  return Number.isNaN(date.getTime())
+  const time = publicationInstant(value);
+  return time === null
     ? null
-    : date.toLocaleDateString("pt-BR", { timeZone: "America/Sao_Paulo" });
+    : new Date(time).toLocaleDateString("pt-BR", {
+        timeZone: "America/Sao_Paulo",
+      });
 }

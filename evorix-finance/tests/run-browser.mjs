@@ -9,6 +9,7 @@ const suites = [
   "stock-theme.browser.mjs",
   "public-rankings.browser.mjs",
   "dividend.browser.mjs",
+  "qa-margem.browser.mjs",
   "notifications.browser.mjs",
   "browser.mjs",
   "browser-experience.mjs",

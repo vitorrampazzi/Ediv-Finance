@@ -34,6 +34,11 @@ export function hasStockHistory(ticker) {
   return snapshotTickers.has(ticker);
 }
 
+// The 90 snapshot tickers, e.g. for the daily closes the Escola consolidates.
+export function stockHistoryTickers() {
+  return [...snapshotTickers];
+}
+
 export function stockHistory(ticker) {
   const all = loadStocks();
   return Object.hasOwn(all, ticker) ? all[ticker] : null;

@@ -1,7 +1,7 @@
 import {
-  HistoricalPriceChart,
   HistoricalDividendChart,
   HistoryFeedback,
+  PriceSeriesChart,
 } from "./HistoryCharts";
 import {
   Area,
@@ -33,8 +33,6 @@ const TEAL = "var(--fmk-teal)";
 const AMBER = "var(--fmk-amber)";
 
 const chartLabels: Partial<Record<DividendColumnKey, string>> = {
-  referencePrice: "Referência",
-  ceilingPrice: "Teto",
   projectedGrossDividendPerShare: "DPA proj.",
   estimatedEps: "LPA est.",
   estimatedNetIncome: "Lucro est.",
@@ -66,11 +64,7 @@ function PublicationChart({
     const amount = number(key);
     return {
       key,
-      // "Cotação atual" is the brapi.dev block; this is the research price.
-      label:
-        key === "referencePrice"
-          ? "Preço da pesquisa"
-          : dividendColumns.find((column) => column.key === key)!.label,
+      label: dividendColumns.find((column) => column.key === key)!.label,
       short: chartLabels[key],
       amount:
         amount === null || !Number.isFinite(amount)
@@ -169,27 +163,11 @@ function PublicationChart({
   );
 }
 
-/* Historical areas/bars use only the separately approved AGF endpoint. */
+/* Prices come from /api/rankings/price-series: the AGF price snapshot mixes
+   bases and is not drawn. Dividend bars keep the approved AGF endpoint. */
 export function PriceChart() {
-  const history = useHistory();
-  if (history.data?.prices.length)
-    return (
-      <HistoricalPriceChart key={history.data.ticker} history={history.data} />
-    );
-  return (
-    <>
-      <HistoryFeedback empty="Sem histórico disponível." />
-      {!history.loading && (
-        <PublicationChart
-          id="price"
-          title="Cotação e preço-teto"
-          keys={["referencePrice", "ceilingPrice"]}
-          unit="R$ por ação"
-          height={380}
-        />
-      )}
-    </>
-  );
+  const { company } = useStockData();
+  return <PriceSeriesChart key={company.ticker} />;
 }
 export function DividendChart() {
   const history = useHistory();

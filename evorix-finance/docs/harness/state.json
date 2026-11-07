@@ -4,26 +4,26 @@
   "sessions": {
     "coordenacao": {
       "phase": "revisao",
-      "summary": "Cotações brapi: backend, interface e QA integrados; PR aberta para revisão e checks",
-      "updatedAt": "2026-11-05T17:29:13.424Z",
+      "summary": "Margem dinâmica e histórico: QA apto com ressalvas; M1 corrigido; PR para revisão e checks",
+      "updatedAt": "2026-11-07T19:50:57.048Z",
       "claims": []
     },
     "interface": {
       "phase": "revisao",
-      "summary": "Cotações brapi: linha agora no ranking, bloco Cotação atual (logada/pública), merge do histórico; test 171/lint/tsc/build ok; dividend 12, public-rankings 11, stock-theme 6 PASS; relato interface-cotacoes-2026-11-05",
-      "updatedAt": "2026-11-05T14:45:44.703Z",
+      "summary": "Margem dinâmica: loja única /api/rankings/market, ranking/empresa/destaques, gráfico price-series, públicas; test 170 + novos 20, lint/tsc/build ok; dividend 15, public-rankings 10, stock-theme 6, seo 6, public-home 10 PASS; relato interface-margem-2026-11-06",
+      "updatedAt": "2026-11-06T22:39:34.943Z",
       "claims": []
     },
     "backend": {
       "phase": "revisao",
-      "summary": "Cotações brapi: provedor/serviço/rotas em server/market; 25 testes novos ok, npm test 146/146, lint ok; package.json (reservado pela interface) precisa dos 2 testes; relato backend-cotacoes-2026-11-05",
-      "updatedAt": "2026-11-05T14:24:05.423Z",
+      "summary": "M1: fechamento final a partir das 19:00 (closingMinute e finalFromMinute 19:00) e TTL curto até 19:40 (settleMinutes 100); testes ajustados (inclusive qa-margem e market-no-migration); npm test 257/257, qa-margem 23/23, lint ok, node --check ok; relato atualizado",
+      "updatedAt": "2026-11-07T08:14:34.355Z",
       "claims": []
     },
     "qa": {
       "phase": "revisao",
-      "summary": "Cotações brapi: apto com ressalvas; teste MySQL provider-cache 9/9 (mutação 9/9), npm test 171, integração 61, browser 121, brapi real 8 chamadas (EMAE4 ausente); relato qa-cotacoes-2026-11-05",
-      "updatedAt": "2026-11-05T17:26:00.820Z",
+      "summary": "Margem dinâmica: apto com ressalvas; A–F 23/23 + navegador 2/2 (mutação 11/11), sem 009 7/7, npm test 234, integração 67, browser 123 (public-home instável 1/6), brapi real 8 chamadas; 3 correções pequenas; relato qa-margem-2026-11-06",
+      "updatedAt": "2026-11-07T04:13:50.643Z",
       "claims": []
     }
   }

@@ -3,7 +3,8 @@ import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { createServer } from "vite";
 import { chromium } from "playwright";
 import { expect } from "playwright/test";
-import { publicRanking } from "../server/public-ranking.js";
+import { publicRankingWithMarket } from "../server/public-ranking.js";
+import { rankingMarketBody } from "../server/market/ranking-market.js";
 import { stockHistory } from "../server/stock-history.js";
 import {
   dividendColumns,
@@ -14,7 +15,20 @@ import {
   dividendAnnouncementMonths,
   dividendNumber,
 } from "../dividend-insights.mjs";
-import { marketFixture, summaryQuote } from "./market-fixture.mjs";
+import {
+  formatSafetyMarginPercent,
+  safetyMarginPercent,
+} from "../safety-margin.mjs";
+import {
+  fixtureNow,
+  marketCheckedAt,
+  marketFixture,
+  marketState,
+  seriesAnswer,
+  staleQuote,
+  summaryQuote,
+  unavailableQuote,
+} from "./market-fixture.mjs";
 
 // Local UI contract fixture; the full workbook is never imported into client code.
 const audit = process.env.EDIV_WORKBOOK_AUDIT
@@ -71,12 +85,23 @@ const completePublication = {
   totalEntries: entries.length,
   entries,
 };
-const publication = publicRanking({
-  id: "27",
-  title: completePublication.title,
-  created_at: completePublication.updatedAt,
-  entries_json: entries,
-});
+// Canonical quotes of the list: the first company has one, the second has
+// none (research basis) and the third keeps the last valid one (stale).
+const quotes = {
+  [entries[0].ticker]: summaryQuote(entries[0].ticker, { price: "0.80000000" }),
+  [entries[1].ticker]: unavailableQuote(entries[1].ticker),
+  [entries[2].ticker]: staleQuote(entries[2].ticker, { price: "0.90000000" }),
+};
+// The real public serializer: no ceiling, no research price.
+const publication = publicRankingWithMarket(
+  {
+    id: "27",
+    title: completePublication.title,
+    created_at: completePublication.updatedAt,
+    entries_json: entries,
+  },
+  { quotes: new Map(Object.entries(quotes)), market: marketState },
+);
 const privatePublication = {
   ...completePublication,
   canManage: false,
@@ -110,19 +135,23 @@ const origin = "http://127.0.0.1:4198";
 const results = [],
   errors = [],
   unknown = [];
-// brapi.dev is mocked: only the first company has a (summary) quote.
-const market = marketFixture({
-  quotes: { [entries[0].ticker]: summaryQuote(entries[0].ticker) },
-});
+// brapi.dev is mocked; the price series of the logged-in page too.
+const market = marketFixture({ quotes });
 let browser,
   mode = "hold",
   signedIn = false,
   pending = [],
   privateReads = 0,
   historyEnabled = false;
+// Expected dynamic margins, cross-checked with the shared module.
+const margins = {
+  first: formatSafetyMarginPercent(safetyMarginPercent("1", "0.80")),
+  stale: formatSafetyMarginPercent(safetyMarginPercent("1", "0.90")),
+};
+assert.deepEqual(margins, { first: "20,00%", stale: "10,00%" });
 async function assertPublicationCharts(page, entry) {
+  // The price chart comes from /api/rankings/price-series.
   const groups = {
-    price: ["referencePrice", "ceilingPrice"],
     dividends: ["projectedGrossDividendPerShare", "estimatedEps"],
     earnings: [
       "estimatedNetIncome",
@@ -136,7 +165,7 @@ async function assertPublicationCharts(page, entry) {
   };
   await expect(
     page.locator(".figma-stock figure.fmk-publication-chart"),
-  ).toHaveCount(6);
+  ).toHaveCount(5);
   for (const [id, keys] of Object.entries(groups)) {
     const figure = page.locator(
       `figure.fmk-publication-chart[data-publication-chart="${id}"]`,
@@ -239,6 +268,8 @@ try {
     viewport: { width: 1366, height: 950 },
     reducedMotion: "reduce",
   });
+  // Every quote was read at 10:48; the pages start at 11:00, same day.
+  await context.clock.install({ time: fixtureNow });
   await context.route("**/*", async (route) => {
     const url = new URL(route.request().url());
     if (url.hostname !== "127.0.0.1") return route.abort();
@@ -292,6 +323,23 @@ try {
     } else if (url.pathname === "/api/rankings") {
       privateReads++;
       data = privatePublication;
+    } else if (url.pathname === "/api/rankings/market") {
+      // The real serializer of the server, from the private publication.
+      market.calls.push(url.pathname);
+      data = rankingMarketBody({
+        publication: privatePublication,
+        quotes: new Map(Object.entries(market.quotes)),
+        checkedAt: marketCheckedAt,
+        market: marketState,
+      });
+    } else if (
+      url.pathname === "/api/rankings/price-series/ABEV3" &&
+      signedIn
+    ) {
+      // Outside the snapshot and the latest publication: 404 on the server.
+      market.calls.push(url.pathname + url.search);
+      status = 404;
+      data = { error: "Histórico não disponível para esta ação." };
     } else if (market.handles(url)) ({ status, data } = market.respond(url));
     else {
       unknown.push(url.pathname);
@@ -308,7 +356,7 @@ try {
   page.on("pageerror", (error) => errors.push(error.message));
   await page.goto(origin);
   await run(
-    "Home: três empresas reais, três KPIs, ordem e cadastro por teclado",
+    "Home: três empresas reais, três KPIs, margem da cotação e cadastro por teclado",
     async () => {
       const section = page.locator("#caderno-de-exemplo");
       await expect(section.getByRole("status")).toHaveText(
@@ -330,6 +378,11 @@ try {
       await expect(section).not.toContainText("22/10/2026");
       await expectInstrumentSans(section.locator("h2"));
       await expect(cards).toHaveCount(3);
+      const margin = [
+        [margins.first, "market"],
+        ["100,00%da pesquisa (22/10)", "research"],
+        [margins.stale + "defasada", "stale"],
+      ];
       for (let i = 0; i < 3; i++) {
         await expect(cards.nth(i).getByRole("heading")).toContainText(
           entries[i].companyName,
@@ -344,15 +397,25 @@ try {
         await expect(cards.nth(i).locator("dt")).toHaveText(
           keys.map((key) => dividendColumns.find((c) => c.key === key).label),
         );
-        await expect(cards.nth(i).locator("dd")).toHaveText(
-          keys.map((key) =>
+        // DY and P/L from the research; the margin follows the quote.
+        for (const key of keys.slice(0, 2))
+          await expect(
+            cards.nth(i).locator(`[data-field="${key}"] dd`),
+          ).toHaveText(
             formatDividendValue(
               entries[i].dividendAnalysis[key],
               dividendColumns.find((c) => c.key === key).format,
             ),
-          ),
-        );
+          );
+        const field = cards.nth(i).locator('[data-field="safetyMargin"]');
+        await expect(field.locator("dd")).toHaveText(margin[i][0]);
+        await expect(field).toHaveAttribute("data-market-state", margin[i][1]);
       }
+      await expect(section.locator(".ph-ranking-publication p")).toContainText(
+        "a margem de segurança acompanha a cotação da brapi.dev, com atraso",
+      );
+      // The ceiling never reaches a public page.
+      await expect(section).not.toContainText("R$ 1,00");
       await expect(
         section.getByRole("button", { name: "Ver mais ações", exact: true }),
       ).toHaveCount(0);
@@ -373,7 +436,7 @@ try {
     },
   );
   await run(
-    "Página pública das três primeiras: indexável e conta preserva a publicação",
+    "Página pública das três primeiras: cotação e margem da mesma resposta, sem teto",
     async () => {
       const ticker = entries[0].ticker;
       const link = page
@@ -397,6 +460,10 @@ try {
         "href",
         "https://escoladodividendo.com.br/ranking/acao/" + ticker,
       );
+      await expect(page.locator('meta[name="description"]')).toHaveAttribute(
+        "content",
+        /a margem de segurança acompanha a cotação\.$/,
+      );
       await expect(
         page.getByRole("link", { name: "Já tenho conta" }),
       ).toHaveAttribute(
@@ -404,48 +471,84 @@ try {
         "/entrar?next=" +
           encodeURIComponent("/app/ranking/acao/" + ticker + "?publication=27"),
       );
-      // brapi.dev quote apart from the research: summary has no day range.
-      const block = page.locator("[data-live-quote-block]");
-      await expect(block).toHaveAttribute("data-live-quote-block", "ready");
-      await expect(block).toHaveAttribute("data-live-quote-detail", "summary");
+      for (const key of ["estimatedGrossDividendYield", "projectedPE"])
+        await expect(
+          page.locator(`[data-indicator="${key}"] [data-indicator-sub]`),
+        ).toHaveText("na data da pesquisa");
+      const indicator = page.locator('[data-indicator="safetyMargin"]');
+      await expect(indicator).toHaveAttribute("data-market-state", "market");
+      await expect(indicator.locator("[data-indicator-value]")).toHaveText(
+        margins.first,
+      );
+      await expect(indicator.locator("[data-indicator-sub]")).toHaveText(
+        "com a cotação de 10:48",
+      );
+      await expect(indicator.locator("[data-indicator-value]")).toHaveAttribute(
+        "title",
+        "Margem de segurança = (preço-teto − cotação de mercado) ÷ preço-teto: 20,00%, com a cotação brapi.dev de R$ 0,80 consultada às 10:48 (horário de Brasília). O preço-teto está na pesquisa completa.",
+      );
+      await expect(page.locator("article")).toContainText(
+        "DY e P/L são estimativas da pesquisa, na data da publicação, e não mudam com a cotação. A margem de segurança acompanha a cotação da brapi.dev, com atraso.",
+      );
+      // Quote of the same public answer: summary, so no session or R$ change.
+      const block = page.locator("[data-market-quote]");
+      await expect(block).toHaveAttribute("data-market-quote", "market");
       await expect(
         block.getByRole("heading", { level: 2, name: "Cotação atual" }),
       ).toBeVisible();
-      await expect(block.locator("[data-live-quote-price]")).toHaveText(
-        "R$ 19,62",
+      await expect(block.locator("[data-market-quote-price]")).toHaveText(
+        "R$ 0,80",
       );
-      await expect(block.locator("[data-live-quote-change]")).toHaveText(
+      await expect(block.locator("[data-market-quote-change]")).toHaveText(
         "−0,91% no dia",
       );
-      assert.deepEqual(
-        await block
-          .locator("[data-live-quote-field]")
-          .evaluateAll((nodes) =>
-            nodes.map((node) => node.dataset.liveQuoteField),
-          ),
-        ["volume"],
+      await expect(block.locator("[data-market-session-field]")).toHaveCount(0);
+      await expect(
+        block.locator('[data-market-quote-field="volume"] dd'),
+      ).toHaveText("367.700");
+      await expect(
+        block.locator('[data-market-quote-field="ceiling"]'),
+      ).toHaveCount(0);
+      await expect(block.locator("[data-market-source]")).toHaveText(
+        "brapi.dev · com atraso · consultada às 10:48",
       );
-      await expect(block).not.toContainText(
-        /Fechamento anterior|Máxima|Mínima/,
-      );
-      await expect(block.locator("[data-live-quote-source]")).toHaveText(
-        /^brapi\.dev · com atraso · consultada às (05\/11 às )?10:48$/,
-      );
-      await expect(block.locator("[data-live-quote-source]")).toHaveAttribute(
-        "title",
-        /com atraso, consultada às/,
-      );
+      await expect(page.locator("article")).not.toContainText("R$ 1,00");
       assert.doesNotMatch(
         await page.locator("body").innerText(),
         /tempo real/i,
       );
+      // No valid quote: research margin dated by the publication, no price.
       await page.goto(origin + "/ranking/acao/" + entries[1].ticker);
-      await expect(block).toHaveAttribute(
-        "data-live-quote-block",
-        "unavailable",
-      );
+      await expect(block).toHaveAttribute("data-market-quote", "unavailable");
       await expect(block).toContainText("Cotação atual indisponível");
-      await expect(block.locator("[data-live-quote-field]")).toHaveCount(0);
+      await expect(indicator.locator("[data-indicator-value]")).toHaveText(
+        "100,00%",
+      );
+      await expect(indicator.locator("[data-indicator-sub]")).toHaveText(
+        "da pesquisa (22/10)",
+      );
+      // The last valid quote: marked as stale, margin with it.
+      await page.goto(origin + "/ranking/acao/" + entries[2].ticker);
+      await expect(block).toHaveAttribute("data-market-quote", "stale");
+      await expect(block.locator("[data-market-quote-stale]")).toBeVisible();
+      await expect(block.locator("[data-market-source]")).toHaveText(
+        "defasada · brapi.dev · com atraso · consultada às 10:48",
+      );
+      await expect(indicator.locator("[data-indicator-value]")).toHaveText(
+        margins.stale,
+      );
+      await expect(indicator.locator("[data-indicator-sub]")).toHaveText(
+        "defasada",
+      );
+      // Public pages read only the public answer.
+      assert.ok(
+        market.calls.every(
+          (call) =>
+            !call.startsWith("/api/market/") &&
+            !call.startsWith("/api/rankings/market"),
+        ),
+        JSON.stringify(market.calls),
+      );
       // A company outside the open three is never a public, indexable page.
       await page.goto(origin + "/ranking/acao/ZZZZ3");
       await expect(
@@ -597,6 +700,7 @@ try {
   await run(
     "Conta mantém ranking completo, filtros e paginação10+10",
     async () => {
+      await page.setViewportSize({ width: 1366, height: 950 });
       await page.goto(origin + "/app/ranking");
       await expect(
         page.getByRole("heading", { level: 1, name: "Ranking de Ações" }),
@@ -612,6 +716,12 @@ try {
       await page.goto(origin + "/app/ranking");
       const table = page.locator(".dividend-table tbody tr");
       await expect(table).toHaveCount(10);
+      // The ranking shows the same dynamic margin as the public answer.
+      await expect(
+        table
+          .first()
+          .locator('td[data-column="safetyMargin"] [data-market-value]'),
+      ).toHaveText(margins.first);
       const more = page.getByRole("button", {
         name: "Ver mais ações",
         exact: true,
@@ -639,9 +749,14 @@ try {
     },
   );
   await run(
-    "Empresa: cinco resumos, seis gráficos da publicação e20campos/3tickers",
+    "Empresa: cinco resumos de mercado e pesquisa, cinco gráficos da publicação e20campos/3tickers",
     async () => {
-      for (const entry of entries.slice(0, 3)) {
+      const expectedMarket = [
+        ["R$ 0,80", margins.first, "market"],
+        ["R$ 1,00", "100,00%", "research"],
+        ["R$ 0,90", margins.stale, "stale"],
+      ];
+      for (const [index, entry] of entries.slice(0, 3).entries()) {
         await page.goto(
           origin + "/app/ranking/acao/" + entry.ticker + "?publication=27",
         );
@@ -650,21 +765,30 @@ try {
         );
         await expectInstrumentSans(page.getByRole("heading", { level: 1 }));
         await expect(page.getByRole("heading", { level: 1 })).toBeFocused();
+        const stats = page.locator(".figma-stock header .fmk-stats");
+        await expect(stats.locator("[data-summary]")).toHaveCount(5);
+        const [price, margin, state] = expectedMarket[index];
         await expect(
-          page.locator(".figma-stock header .fmk-stats [data-summary]"),
-        ).toHaveCount(5);
+          stats.locator(
+            '[data-summary="Preço de mercado"] [data-summary-value]',
+          ),
+        ).toHaveText(price);
+        await expect(
+          stats.locator('[data-summary="Preço de mercado"]'),
+        ).toHaveAttribute("data-market-state", state);
+        await expect(
+          stats.locator(
+            '[data-summary="Margem de segurança"] [data-summary-value]',
+          ),
+        ).toHaveText(margin);
         for (const [label, key] of [
-          ["Cotação de referência", "referencePrice"],
           ["DY bruto estimado", "estimatedGrossDividendYield"],
           ["P/L projetado", "projectedPE"],
           ["Preço-teto", "ceilingPrice"],
-          ["Margem de segurança", "safetyMargin"],
         ]) {
           const column = dividendColumns.find((column) => column.key === key);
           await expect(
-            page.locator(
-              `.figma-stock header .fmk-stats [data-summary="${label}"]`,
-            ),
+            stats.locator(`[data-summary="${label}"]`),
           ).toContainText(
             formatDividendValue(dividendValue(entry, key), column.format),
           );
@@ -676,7 +800,7 @@ try {
         });
         await referenceInfo.focus();
         await expect(page.getByRole("tooltip")).toContainText(
-          "Cotação de referência da planilha; não é preço ao vivo.",
+          "Preço da ação na planilha, na data da pesquisa; não é a cotação de mercado.",
         );
         await referenceInfo.press("Escape");
         const fields = await page
@@ -744,7 +868,7 @@ try {
       await page.mouse.move(0, 0);
       await page.keyboard.press("Tab");
       const summaryLabels = [
-        "Cotação de referência",
+        "Preço de mercado",
         "DY bruto estimado",
         "P/L projetado",
         "Preço-teto",
@@ -768,7 +892,7 @@ try {
         .locator(".figma-stock header")
         .screenshot({ path: output + "/company-header.png" });
       await page.locator("#cotacao").screenshot({
-        path: output + "/company-publication-price-chart.png",
+        path: output + "/company-quote-desktop.png",
       });
     },
   );
@@ -803,17 +927,17 @@ try {
           (theme) => (document.documentElement.dataset.theme = theme),
           theme,
         );
-        const quoteBlock = page.locator("[data-live-quote-block]");
-        await expect(quoteBlock).toHaveAttribute(
-          "data-live-quote-block",
-          "ready",
-        );
+        const quoteBlock = page.locator("[data-market-quote]");
+        await expect(quoteBlock).toHaveAttribute("data-market-quote", "market");
         assert.ok(
           await page.evaluate(
             () => document.documentElement.scrollWidth <= innerWidth + 1,
           ),
           "Página pública com cotação 320px sem overflow em " + theme,
         );
+        await page.locator("#indicadores-abertos").screenshot({
+          path: output + "/public-indicators-320-" + theme + ".png",
+        });
         await quoteBlock.screenshot({
           path: output + "/public-quote-320-" + theme + ".png",
         });
@@ -862,260 +986,357 @@ try {
       }
     },
   );
+  // Deterministic price series: business days of the B3, values in text.
+  const point = (date, close, source, extra = {}) => ({
+    date,
+    close,
+    status: "consolidated",
+    source,
+    ...extra,
+  });
+  const nominalDaily = [
+    point("2026-10-19", "19.00000000", "agf"),
+    point("2026-10-20", "19.10000000", "agf"),
+    point("2026-10-21", "19.05000000", "agf"),
+    point("2026-10-22", "19.20000000", "agf"),
+    point("2026-10-23", "19.30000000", "agf"),
+    point("2026-10-26", "19.25000000", "escola"),
+    // 27 and 28/10 have no close in the series.
+    point("2026-10-29", "19.40000000", "brapi", { gapBefore: true }),
+    point("2026-10-30", "19.45000000", "brapi"),
+    point("2026-11-03", "19.50000000", "brapi"),
+    point("2026-11-04", "19.55000000", "brapi"),
+  ];
+  const adjustedDaily = nominalDaily.map((item) => ({
+    ...item,
+    close: (Number(item.close) - 1).toFixed(8),
+    source: "brapi",
+  }));
+  const months = [
+    ["2025-11", "2025-11-28"],
+    ["2025-12", "2025-12-30"],
+    ["2026-01", "2026-01-30"],
+    // February is missing: March starts a new stroke.
+    ["2026-03", "2026-03-31"],
+    ["2026-04", "2026-04-30"],
+    ["2026-05", "2026-05-29"],
+    ["2026-06", "2026-06-30"],
+    // July ends at 24/07 in the series: an incomplete month.
+    ["2026-07", "2026-07-24"],
+    ["2026-08", "2026-08-31"],
+    ["2026-09", "2026-09-30"],
+    ["2026-10", "2026-10-30"],
+  ];
+  const monthly = (offset) =>
+    months.map(([month, date], index) =>
+      point(date, (17 + index * 0.2 + offset).toFixed(8), "brapi", {
+        month,
+        status: month === "2026-07" ? "incomplete" : "consolidated",
+        ...(month === "2026-03" ? { gapBefore: true } : {}),
+      }),
+    );
+  const latest = (connect, reason = null) => ({
+    price: "19.62000000",
+    checkedAt: marketCheckedAt,
+    freshness: "delayed",
+    connect,
+    reason,
+  });
+  const both = ["adjusted", "nominal"];
+  const timSeries = {
+    adjusted: {
+      daily: seriesAnswer("TIMS3", {
+        basis: "adjusted",
+        availableBases: both,
+        points: adjustedDaily,
+        latestQuote: latest(false, "base_mismatch"),
+        notes: [
+          "Preços ajustados por proventos e eventos pela brapi, sem ajuste próprio da Escola.",
+        ],
+      }),
+      monthly: seriesAnswer("TIMS3", {
+        basis: "adjusted",
+        granularity: "monthly",
+        availableBases: both,
+        points: monthly(-1),
+        latestQuote: latest(false, "base_mismatch"),
+      }),
+    },
+    nominal: {
+      daily: seriesAnswer("TIMS3", {
+        basis: "nominal",
+        availableBases: both,
+        defaultBasis: "adjusted",
+        points: nominalDaily,
+        latestQuote: latest(true),
+      }),
+      monthly: seriesAnswer("TIMS3", {
+        basis: "nominal",
+        granularity: "monthly",
+        availableBases: both,
+        defaultBasis: "adjusted",
+        points: monthly(0),
+        latestQuote: latest(true),
+      }),
+    },
+  };
+  // Only the traded price exists: "auto" follows the server's default basis.
+  const valeSeries = {
+    adjusted: {
+      daily: seriesAnswer("VALE3", {
+        basis: "adjusted",
+        availableBases: ["nominal"],
+        unavailableReason: "no_token",
+      }),
+    },
+    nominal: {
+      daily: seriesAnswer("VALE3", {
+        basis: "nominal",
+        points: nominalDaily,
+        latestQuote: latest(false, "gap"),
+      }),
+    },
+  };
+  const budget = (basis) =>
+    seriesAnswer("ITUB4", {
+      basis,
+      availableBases: [],
+      unavailableReason: "budget",
+    });
   await run(
-    "Históricos aprovados: área/linhas, barras, datas e controles por teclado",
+    "Gráfico de preços: diário/mensal, duas bases, marcador, lacuna, mês incompleto e indisponível",
     async () => {
       const previousEntries = privatePublication.entries;
       privatePublication.entries = [
-        {
-          ...structuredClone(previousEntries[0]),
-          ticker: "TIMS3",
-          companyName: "Tim",
+        "TIMS3",
+        "WIZC3",
+        "VALE3",
+        "ITUB4",
+        "ABEV3",
+      ].map((ticker, index) => ({
+        ...structuredClone(previousEntries[index]),
+        ticker,
+        companyName: "Empresa " + ticker,
+      }));
+      market.series = {
+        TIMS3: timSeries,
+        VALE3: valeSeries,
+        ITUB4: {
+          adjusted: { daily: budget("adjusted") },
+          nominal: { daily: budget("nominal") },
         },
-        {
-          ...structuredClone(previousEntries[1]),
-          ticker: "WIZC3",
-          companyName: "Wiz",
-        },
-      ];
+      };
+      market.quotes.TIMS3 = summaryQuote("TIMS3");
       historyEnabled = true;
       signedIn = true;
       try {
         await page.setViewportSize({ width: 1440, height: 1000 });
         await page.goto(origin + "/app/ranking/acao/TIMS3?publication=27");
-        const price = page.locator('figure[data-history-chart="price"]');
+        const price = page.locator("figure[data-price-chart]");
         const dividends = page.locator(
           'figure[data-history-chart="dividends"]',
         );
-        await expect(price).toHaveAttribute("data-history-ticker", "TIMS3");
-        await expect(dividends).toHaveAttribute("data-history-ticker", "TIMS3");
-        await expect(page.locator("figure.fmk-publication-chart")).toHaveCount(
-          4,
+        await expect(price).toHaveAttribute("data-price-chart", "ready");
+        await expect(price).toHaveAttribute("data-ticker", "TIMS3");
+        // Adjusted is the default when it exists, and it is always named.
+        await expect(price).toHaveAttribute("data-basis", "adjusted");
+        await expect(price).toHaveAttribute("data-granularity", "daily");
+        await expect(price.locator("[data-price-basis]")).toHaveText(
+          "Base: ajustada por proventos e por eventos (desdobramento, grupamento e bonificação), pela metodologia da brapi.dev.",
         );
-        await expect(price.locator(".recharts-area-area")).toHaveCount(1);
-        await expect(price.locator(".recharts-line-curve")).toHaveCount(2);
-        await expect(price.locator(".recharts-bar-rectangle")).toHaveCount(0);
+        assert.ok(
+          market.calls.includes(
+            "/api/rankings/price-series/TIMS3?basis=adjusted&granularity=daily",
+          ),
+        );
+        const basisButton = (name) =>
+          price
+            .getByRole("group", { name: "Base do preço no gráfico" })
+            .getByRole("button", { name, exact: true });
+        await expect(basisButton("Ajustado por proventos")).toHaveAttribute(
+          "aria-pressed",
+          "true",
+        );
+        await expect(basisButton("Sem ajuste")).toBeEnabled();
+        // The dividend chart keeps the approved AGF endpoint.
+        await expect(dividends).toHaveAttribute("data-history-ticker", "TIMS3");
         assert.ok(
           (await dividends.locator(".recharts-bar-rectangle").count()) > 0,
         );
-        await expect(price.locator("table")).toHaveCount(0);
-        await expect(dividends.locator("table")).toHaveCount(0);
-        await expect(
-          page.getByRole("region", { name: "Origem dos dados" }),
-        ).toHaveCount(0);
-        assert.doesNotMatch(
-          await page.locator(".dividend-company").innerText(),
-          /AGF|Fonte:|Origem:|Pesquisa de dividendos|Data passada não comprova pagamento/,
+        await expect(page.locator("figure.fmk-publication-chart")).toHaveCount(
+          4,
         );
-        await expect(
-          price.getByRole("button", { name: "1D", exact: true }),
-        ).toHaveCount(0);
-        const period = price.getByRole("button", { name: "5D", exact: true });
-        await period.focus();
-        await period.press("Enter");
-        await expect(period).toHaveAttribute("aria-pressed", "true");
+        // Missing sessions break the stroke in two.
+        const segments = () =>
+          price
+            .locator(".recharts-area-curve")
+            .first()
+            .evaluate(
+              (path) => (path.getAttribute("d").match(/M/g) || []).length,
+            );
+        await expect.poll(segments).toBe(2);
+        // The latest quote is a marker of its own; on the adjusted basis the
+        // last close has another factor, so there is no dashed line.
+        await expect(price.locator("[data-latest-marker]")).toHaveCount(1);
+        await expect(price.locator(".price-series-connector")).toHaveCount(0);
+        await expect(price.locator("[data-marker-note]")).toHaveAttribute(
+          "data-marker-note",
+          "alone",
+        );
+        await expect(price.locator("[data-marker-note]")).toContainText(
+          "Cotação mais recente — preço nominal de mercado, consultada às 10:48: R$ 19,62.",
+        );
+        await expect(price.locator("[data-marker-note]")).toContainText(
+          "a série ajustada não está na mesma base do preço de mercado",
+        );
+        await expect(price.locator("[data-gap-note]")).toBeVisible();
+        await expect(price.locator("[data-coverage]")).toHaveText(
+          "Fontes: brapi.dev de 19/10/2026 a 04/11/2026.",
+        );
+        await expect(price.locator("[data-coverage-note]")).toHaveText(
+          "Preços ajustados por proventos e eventos pela brapi, sem ajuste próprio da Escola.",
+        );
+        // Tooltips by keyboard: São Paulo date, value, basis, status, source.
         const plot = price.locator('svg[role="application"]');
         await plot.focus();
-        for (let index = 0; index < 5; index++)
+        for (let index = 0; index < 15; index++)
           await page.keyboard.press("ArrowLeft");
-        await expect(price.getByRole("tooltip")).toBeVisible();
-        await expectInstrumentSans(price.getByRole("tooltip"));
-        await expect(
-          price.locator(".recharts-cartesian-axis-tick-value"),
-        ).not.toHaveCount(0);
-        const history = stockHistory("TIMS3");
-        await expect(price.getByRole("tooltip")).toContainText(
-          history.prices.at(-5).date.split("-").reverse().join("/"),
-        );
-        await page.keyboard.press("ArrowRight");
-        await expect(price.getByRole("tooltip")).toContainText(
-          history.prices.at(-4).date.split("-").reverse().join("/"),
-        );
-        const ceiling = price.getByRole("button", {
-          name: "Preço-teto",
-          exact: true,
-        });
-        await ceiling.focus();
-        await ceiling.press("Enter");
-        await expect(ceiling).toHaveAttribute("aria-pressed", "false");
-        await expect(price.locator(".recharts-line-curve")).toHaveCount(1);
-        const monthly = dividends.getByRole("button", {
-          name: "Mensal",
-          exact: true,
-        });
-        await monthly.focus();
-        await monthly.press("Enter");
-        await expect(monthly).toHaveAttribute("aria-pressed", "true");
-        await expect(dividends).toContainText("Agendados");
-        const dividendPlot = dividends.locator('svg[role="application"]');
-        await dividendPlot.focus();
-        await page.keyboard.press("ArrowRight");
-        await expect(dividends.getByRole("tooltip")).toBeVisible();
-        await page.goto(origin + "/app/ranking/acao/WIZC3?publication=27");
-        await expect(price).toHaveAttribute("data-history-ticker", "WIZC3");
-        await expect(dividends).toHaveAttribute("data-history-ticker", "WIZC3");
-        await expect(price).not.toContainText("AGF · TIMS3");
-        for (const theme of ["dark", "light"]) {
-          await page.setViewportSize({ width: 320, height: 1000 });
-          await page.evaluate(
-            (theme) => (document.documentElement.dataset.theme = theme),
-            theme,
-          );
-          assert.ok(
-            await page.evaluate(
-              () => document.documentElement.scrollWidth <= innerWidth + 1,
-            ),
-          );
-          await price.scrollIntoViewIfNeeded();
-          await page.screenshot({
-            path: output + "/history-320-" + theme + ".png",
-          });
-        }
-      } finally {
-        historyEnabled = false;
-        privatePublication.entries = previousEntries;
-      }
-    },
-  );
-  await run(
-    "Histórico + brapi.dev: só datas novas, junção conferida e motivo quando não estende",
-    async () => {
-      const previousEntries = privatePublication.entries;
-      privatePublication.entries = [
-        {
-          ...structuredClone(previousEntries[0]),
-          ticker: "TIMS3",
-          companyName: "Tim",
-        },
-        {
-          ...structuredClone(previousEntries[1]),
-          ticker: "WIZC3",
-          companyName: "Wiz",
-        },
-      ];
-      historyEnabled = true;
-      signedIn = true;
-      try {
-        await page.setViewportSize({ width: 1440, height: 1000 });
-        const tim = stockHistory("TIMS3").prices;
-        assert.equal(tim.at(-1).date, "2026-10-23");
-        const price = page.locator('figure[data-history-chart="price"]');
-        const note = price.locator("[data-history-extension]");
-        // Without the token the server says so and the chart stays packaged.
-        await page.goto(origin + "/app/ranking/acao/TIMS3?publication=27");
-        await expect(note).toHaveAttribute(
-          "data-history-extension",
-          "no_token",
-        );
-        await expect(note).toHaveText(
-          "Histórico até 23/10/2026. A atualização diária pela brapi.dev ainda não está ativa.",
-        );
-        assert.ok(market.calls.includes("/api/market/history/TIMS3?range=3mo"));
-        const added = [
-          {
-            date: "2026-10-26",
-            close: "19.20000000",
-            adjustedClose: null,
-            volume: null,
-          },
-          {
-            date: "2026-10-27",
-            close: "19.31000000",
-            adjustedClose: null,
-            volume: null,
-          },
-          {
-            date: "2026-10-28",
-            close: "19.40000000",
-            adjustedClose: null,
-            volume: null,
-          },
-        ];
-        market.history.TIMS3 = {
-          available: true,
-          reason: null,
-          stale: false,
-          // The overlap repeats the packaged closes, and one date twice.
-          points: [
-            ...tim.slice(-3).map((point) => ({
-              date: point.date,
-              close: String(point.close),
-              adjustedClose: null,
-              volume: null,
-            })),
-            ...added,
-            added[0],
-          ],
-        };
-        await page.goto(origin + "/app/ranking/acao/TIMS3?publication=27");
-        await expect(note).toHaveAttribute(
-          "data-history-extension",
-          "extended",
-        );
-        await expect(note).toHaveText(
-          "Histórico até 23/10/2026 + fechamentos diários da brapi.dev até 28/10.",
-        );
-        const period = price.getByRole("button", { name: "5D", exact: true });
-        await period.press("Enter");
-        await expect(period).toHaveAttribute("aria-pressed", "true");
-        const aside = page.locator(".fmk-chart-layout aside").first();
-        await expect(
-          aside
-            .locator("dl > div")
-            .filter({ hasText: "Último fechamento" })
-            .locator("dd"),
-        ).toHaveText(/19,40/);
-        const plot = price.locator('svg[role="application"]');
-        await plot.focus();
-        for (let index = 0; index < 5; index++)
-          await page.keyboard.press("ArrowLeft");
-        // 5D = 22/10, 23/10 (packaged) + 26/10, 27/10, 28/10 (brapi.dev).
-        await expect(price.getByRole("tooltip")).toContainText("22/10/2026");
-        await expect(price.getByRole("tooltip")).not.toContainText("brapi");
-        for (let index = 0; index < 3; index++)
+        const tooltip = price.getByRole("tooltip");
+        await expect(tooltip).toBeVisible();
+        await expectInstrumentSans(tooltip);
+        await expect(tooltip).toContainText("Pregão de 19/10/2026");
+        await expect(tooltip).toContainText("R$ 18,00");
+        await expect(tooltip).toContainText("ajustado por proventos");
+        await expect(tooltip).toContainText("consolidado");
+        await expect(tooltip).toContainText("brapi.dev");
+        await expect(tooltip).toContainText("Preço-teto");
+        for (let index = 0; index < 6; index++)
           await page.keyboard.press("ArrowRight");
-        await expect(price.getByRole("tooltip")).toContainText(
-          "27/10/2026 · fechamento brapi.dev",
+        await expect(tooltip).toContainText(
+          "sem fechamentos entre 26/10/2026 e 29/10/2026",
         );
-        await page.keyboard.press("ArrowRight");
-        await expect(price.getByRole("tooltip")).toContainText("28/10/2026");
-        // Dividend chart does not use quotes.
-        assert.ok(
-          (await page
-            .locator(
-              'figure[data-history-chart="dividends"] .recharts-bar-rectangle',
-            )
-            .count()) > 0,
+        for (let index = 0; index < 15; index++)
+          await page.keyboard.press("ArrowRight");
+        await expect(tooltip).toContainText(
+          "Cotação mais recente — preço nominal de mercado, consultada às 10:48",
         );
-        // A junction more than 0.5% apart keeps the packaged history only.
-        const wiz = stockHistory("WIZC3").prices;
-        market.history.WIZC3 = {
-          available: true,
-          reason: null,
-          points: [
-            {
-              date: wiz.at(-1).date,
-              close: (wiz.at(-1).close * 1.02).toFixed(8),
-            },
-            { date: "2026-10-28", close: "9.99000000" },
-          ],
-        };
-        await page.goto(origin + "/app/ranking/acao/WIZC3?publication=27");
-        await expect(note).toHaveAttribute(
-          "data-history-extension",
-          "mismatch",
+        await expect(tooltip).toContainText("nominal, sem ajuste");
+        // The ceiling stays a constant reference that can be hidden.
+        const lines = () => price.locator(".recharts-line-curve").count();
+        const withCeiling = await lines();
+        await price
+          .getByRole("button", { name: "Preço-teto", exact: true })
+          .click();
+        await expect.poll(lines).toBe(withCeiling - 1);
+        await price
+          .getByRole("button", { name: "Preço-teto", exact: true })
+          .click();
+        // Without adjustment: the traded price, joined to the quote by a dash.
+        await basisButton("Sem ajuste").click();
+        await expect(price).toHaveAttribute("data-basis", "nominal");
+        await expect(price.locator("[data-price-basis]")).toHaveText(
+          "Base: sem ajuste, com o preço negociado em cada pregão.",
         );
-        await expect(note).toContainText("não conferem com o histórico");
+        await expect(price.locator(".price-series-connector")).toHaveCount(1);
+        await expect(price.locator("[data-marker-note]")).toHaveAttribute(
+          "data-marker-note",
+          "connected",
+        );
+        await expect(price.locator("[data-coverage]")).toHaveText(
+          "Fontes: AGF, no trecho com o preço negociado de 19/10/2026 a 23/10/2026; fechamentos consolidados pela Escola do Dividendo de 26/10/2026 a 26/10/2026; brapi.dev de 29/10/2026 a 04/11/2026.",
+        );
+        const aside = page.locator(".fmk-chart-layout aside").first();
+        await expect(aside).toContainText("No período · 1A · sem ajuste");
         await expect(
           aside
             .locator("dl > div")
             .filter({ hasText: "Último fechamento" })
             .locator("dd"),
-        ).not.toHaveText(/9,99/);
+        ).toHaveText(/19,55/);
+        // Monthly: the short windows go, an incomplete month is marked.
+        await price
+          .getByRole("group", { name: "Intervalo do gráfico de cotação" })
+          .getByRole("button", { name: "Mensal", exact: true })
+          .click();
+        await expect(price).toHaveAttribute("data-granularity", "monthly");
+        await expect(price).toHaveAttribute("data-basis", "nominal");
+        assert.ok(
+          market.calls.includes(
+            "/api/rankings/price-series/TIMS3?basis=nominal&granularity=monthly",
+          ),
+        );
+        await expect(
+          price
+            .getByRole("group", { name: "Período do gráfico de cotação" })
+            .getByRole("button"),
+        ).toHaveText(["6M", "1A", "5A", "Máx"]);
+        await expect(price.locator("[data-incomplete-point]")).toHaveCount(1);
+        await expect(price.locator("[data-incomplete-note]")).toContainText(
+          "07/2026: dados até 24/07",
+        );
+        await expect.poll(segments).toBe(2);
+        await plot.focus();
+        for (let index = 0; index < 15; index++)
+          await page.keyboard.press("ArrowLeft");
+        for (let index = 0; index < 8; index++)
+          await page.keyboard.press("ArrowRight");
+        await expect(tooltip).toContainText(
+          "Mês 07/2026 · pregão de 24/07/2026",
+        );
+        await expect(tooltip).toContainText("mês incompleto, dados até 24/07");
+        // Monthly connects on request too: the last month is the previous one.
+        await expect(price.locator(".price-series-connector")).toHaveCount(1);
+        await basisButton("Ajustado por proventos").click();
+        await expect(price).toHaveAttribute("data-basis", "adjusted");
+        await expect(price.locator(".price-series-connector")).toHaveCount(0);
         assert.doesNotMatch(
           await page.locator("body").innerText(),
           /tempo real/i,
         );
+        // Not covered: an informative state, the dividends still drawn.
+        await page.goto(origin + "/app/ranking/acao/WIZC3?publication=27");
+        await expect(price).toHaveAttribute("data-price-chart", "unavailable");
+        await expect(
+          price.locator("[data-unavailable-reason]"),
+        ).toHaveAttribute("data-unavailable-reason", "not_covered");
+        await expect(price).toContainText(
+          "A brapi.dev não oferece o histórico de preços desta ação.",
+        );
+        await expect(price.locator(".recharts-area-curve")).toHaveCount(0);
+        await expect(dividends).toHaveAttribute("data-history-ticker", "WIZC3");
+        // Only the traded price: "auto" asks for the adjusted one, then the
+        // server's default; the adjusted toggle cannot be chosen.
+        await page.goto(origin + "/app/ranking/acao/VALE3?publication=27");
+        await expect(price).toHaveAttribute("data-basis", "nominal");
+        await expect(price).toHaveAttribute("data-price-chart", "ready");
+        assert.ok(
+          market.calls.includes(
+            "/api/rankings/price-series/VALE3?basis=adjusted&granularity=daily",
+          ) &&
+            market.calls.includes(
+              "/api/rankings/price-series/VALE3?basis=nominal&granularity=daily",
+            ),
+        );
+        await expect(basisButton("Ajustado por proventos")).toBeDisabled();
+        await expect(basisButton("Sem ajuste")).toHaveAttribute(
+          "aria-pressed",
+          "true",
+        );
+        await expect(price.locator("[data-marker-note]")).toContainText(
+          "há pregões sem fechamento entre o último ponto e a cotação",
+        );
+        // Daily budget spent, and a ticker the server does not cover (404).
+        await page.goto(origin + "/app/ranking/acao/ITUB4?publication=27");
+        await expect(
+          price.locator("[data-unavailable-reason]"),
+        ).toHaveAttribute("data-unavailable-reason", "budget");
+        await expect(price).toContainText(
+          "O limite diário de consultas à brapi.dev foi atingido.",
+        );
+        await page.goto(origin + "/app/ranking/acao/ABEV3?publication=27");
+        await expect(
+          price.locator("[data-unavailable-reason]"),
+        ).toHaveAttribute("data-unavailable-reason", "not_covered");
         for (const theme of ["dark", "light"]) {
           await page.setViewportSize({ width: 320, height: 1000 });
           await page.goto(origin + "/app/ranking/acao/TIMS3?publication=27");
@@ -1123,23 +1344,53 @@ try {
             (theme) => (document.documentElement.dataset.theme = theme),
             theme,
           );
-          await expect(note).toHaveAttribute(
-            "data-history-extension",
-            "extended",
+          await expect(price).toHaveAttribute("data-price-chart", "ready");
+          // On failure, name the widest elements past the viewport: fonts
+          // differ between Windows and the Linux CI runner.
+          const overflow = await page.evaluate(() => {
+            if (document.documentElement.scrollWidth <= innerWidth + 1)
+              return null;
+            return [...document.querySelectorAll("body *")]
+              .map((element) => ({
+                element,
+                right: Math.max(
+                  element.getBoundingClientRect().right,
+                  element.getBoundingClientRect().left + element.scrollWidth,
+                ),
+              }))
+              .filter(({ right }) => right > innerWidth + 1)
+              // Content inside a scroll area does not widen the page.
+              .filter(({ element }) => {
+                for (let node = element.parentElement; node && node !== document.body; node = node.parentElement)
+                  if (getComputedStyle(node).overflowX !== "visible") return false;
+                return true;
+              })
+              .sort((a, b) => b.right - a.right)
+              .slice(0, 5)
+              .map(
+                ({ element, right }) =>
+                  `${element.tagName.toLowerCase()}.${String(element.className).slice(0, 80)} → ${Math.round(right)}px`,
+              );
+          });
+          assert.equal(
+            overflow,
+            null,
+            "Gráfico 320px sem overflow em " + theme + ": " + overflow,
           );
-          assert.ok(
-            await page.evaluate(
-              () => document.documentElement.scrollWidth <= innerWidth + 1,
-            ),
-          );
+          await price.scrollIntoViewIfNeeded();
           await page.locator("#cotacao").screenshot({
-            path: output + "/quote-history-320-" + theme + ".png",
+            path: output + "/price-series-320-" + theme + ".png",
           });
         }
+        await page.setViewportSize({ width: 1440, height: 1000 });
+        await page.goto(origin + "/app/ranking/acao/TIMS3?publication=27");
+        await expect(price).toHaveAttribute("data-price-chart", "ready");
+        await price.scrollIntoViewIfNeeded();
+        await price.screenshot({ path: output + "/price-series-desktop.png" });
       } finally {
         historyEnabled = false;
         privatePublication.entries = previousEntries;
-        market.history = {};
+        market.series = {};
       }
     },
   );

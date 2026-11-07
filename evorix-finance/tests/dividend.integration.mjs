@@ -58,13 +58,20 @@ try {
       async () => {
         const result = await request(null, "/api/rankings/public");
         assert.equal(result.status, 200);
-        assert.deepEqual(result.body, {
+        // docs/MARGEM-E-HISTORICO.md: the market state comes with the body.
+        const { market, ...ranking } = result.body;
+        assert.deepEqual(ranking, {
           id: null,
           title: "Ranking de dividendos",
           updatedAt: null,
           totalEntries: 0,
           entries: [],
         });
+        assert.deepEqual(Object.keys(market), [
+          "state",
+          "refreshSeconds",
+          "nextRefreshAt",
+        ]);
         for (const path of [
           "/api/rankings",
           "/api/rankings?publication=1",
@@ -73,6 +80,8 @@ try {
           "/api/rankings/history/TIMS3",
           "/api/rankings/history/TEST3",
           "/api/rankings/history/tims3",
+          "/api/rankings/market",
+          "/api/rankings/price-series/TIMS3",
         ])
           assert.equal((await request(null, path)).status, 401, path);
         assert.equal(
@@ -95,7 +104,13 @@ try {
             "dividends",
           ]);
           assert.equal(result.body.ticker, "TIMS3");
-          assert.equal(result.body.prices.length, 1470);
+          // Only the AGF nominal tail (docs/MARGEM-E-HISTORICO.md): the
+          // 868 older closes, adjusted by an undocumented method, stay out.
+          assert.equal(result.body.prices.length, 602);
+          assert.deepEqual(result.body.prices[0], {
+            date: "2024-04-24",
+            close: 17.28,
+          });
           assert.equal(result.body.dividends.length, 86);
           assert.deepEqual(result.body.prices.at(-1), {
             date: "2026-10-23",
@@ -186,12 +201,75 @@ try {
         assert.equal(publicResult.body.totalEntries, 1);
         assert.deepEqual(
           Object.keys(publicResult.body).sort(),
-          ["id", "title", "updatedAt", "totalEntries", "entries"].sort(),
+          [
+            "id",
+            "title",
+            "updatedAt",
+            "totalEntries",
+            "entries",
+            "market",
+          ].sort(),
         );
         const publicEntry = publicResult.body.entries[0];
         assert.deepEqual(
           Object.keys(publicEntry).sort(),
-          ["rank", "ticker", "companyName", "dividendAnalysis"].sort(),
+          [
+            "rank",
+            "ticker",
+            "companyName",
+            "dividendAnalysis",
+            "market",
+          ].sort(),
+        );
+        // TEST3 is not in the general list: the research margin, with neither
+        // the ceiling nor the research price exposed.
+        assert.deepEqual(publicEntry.market.safetyMargin, {
+          percent: "41.00",
+          basis: "research",
+          price: null,
+          checkedAt: publicEntry.market.safetyMargin.checkedAt,
+        });
+        assert.equal(publicEntry.market.quote.unavailable, true);
+        for (const hidden of [
+          "32.74",
+          "19.37",
+          "ceilingPrice",
+          "referencePrice",
+        ])
+          assert.equal(
+            JSON.stringify(publicResult.body).includes(hidden),
+            false,
+            hidden,
+          );
+        const market = await request(a, "/api/rankings/market");
+        assert.equal(market.status, 200);
+        assert.equal(market.headers.get("cache-control"), "no-store");
+        assert.equal(market.body.publication.id, first);
+        assert.deepEqual(market.body.entries[0].safetyMargin, {
+          percent: "41.00",
+          basis: "research",
+          price: "19.37",
+          checkedAt: "2026-10-20T03:00:00.000Z",
+        });
+        assert.equal(market.body.entries[0].ceilingPrice, "32.74");
+        // The AGF nominal tail plus the Escola closes, read from MySQL.
+        const series = await request(
+          a,
+          "/api/rankings/price-series/TIMS3?basis=nominal",
+        );
+        assert.equal(series.status, 200);
+        assert.equal(series.body.basis, "nominal");
+        assert.equal(series.body.points[0].date, "2024-04-24");
+        assert.equal(series.body.points[0].source, "agf");
+        assert.equal(series.body.unavailableReason, null);
+        assert.equal(
+          (await request(a, "/api/rankings/price-series/TEST3")).status,
+          200,
+          "A company of the latest publication",
+        );
+        assert.equal(
+          (await request(a, "/api/rankings/price-series/WEGE3")).status,
+          404,
         );
         for (const column of dividendColumns.filter(({ key }) =>
           [

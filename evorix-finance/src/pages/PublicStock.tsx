@@ -4,13 +4,14 @@ import { ArrowRight, BookOpen, FileText } from "lucide-react";
 import { useAuth } from "../context/authContext";
 import { AccountGate } from "../components/AccountGate";
 import { CompanyLogo } from "../components/CompanyLogo";
-import { LiveQuotePanel } from "../components/LiveQuote";
+import { MarketQuotePanel } from "../components/LiveQuote";
 import { RankingAccessLanding } from "../components/RankingAccessLanding";
 import {
   publicationDate,
   publicMetrics,
   usePublicRanking,
 } from "../hooks/usePublicRanking";
+import { marginCaption, marketView } from "../lib/marketData";
 import { pageImports } from "../lib/pageImports";
 import {
   dividendColumns,
@@ -55,20 +56,40 @@ function setMeta(attribute: "name" | "property", key: string, value: string) {
 // ranking landing with noindex, so no closed company becomes a public page.
 function PublicCompany() {
   const { ticker = "" } = useParams<{ ticker: string }>();
-  const { publication, loading, error, retry } = usePublicRanking();
+  const { publication, loading, error, retry, stale } = usePublicRanking();
   const open = publication?.entries.slice(0, 3) ?? [];
   const entry = open.find(
     (item) => item.ticker.toUpperCase() === ticker.toUpperCase(),
   );
   const date = publicationDate(publication?.updatedAt ?? null);
+  // Quote and margin come from the same public answer; no ceiling is shown.
+  const view = entry
+    ? marketView(
+        entry.market,
+        { margin: entry.dividendAnalysis.safetyMargin },
+        {
+          loading: false,
+          failed: stale,
+          publishedAt: publication?.updatedAt ?? null,
+          showCeiling: false,
+        },
+      )
+    : null;
   const indicators = publicMetrics.map((key) => {
     const column = dividendColumns.find((item) => item.key === key)!;
+    const margin = key === "safetyMargin" ? view : null;
     return {
       key,
       label: column.label,
-      value: entry
-        ? formatDividendValue(entry.dividendAnalysis[key], column.format)
-        : "",
+      value: margin
+        ? margin.margin.text
+        : entry
+          ? formatDividendValue(entry.dividendAnalysis[key], column.format)
+          : "",
+      // DY and P/L stay as on the research date; the margin follows the quote.
+      sub: margin ? marginCaption(margin) : "na data da pesquisa",
+      title: margin?.margin.title,
+      state: margin?.margin.state,
       known: entry?.dividendAnalysis[key] != null,
     };
   });
@@ -76,11 +97,13 @@ function PublicCompany() {
     ? `${siteOrigin}/ranking/acao/${encodeURIComponent(entry.ticker)}`
     : null;
   const name = entry ? `${entry.companyName} (${entry.ticker})` : "";
+  // The margin changes with the quote, so the description keeps the research
+  // indicators only and says the margin follows the market.
   const description = entry
     ? `Indicadores de ${name} na pesquisa de dividendos da Escola do Dividendo: ${indicators
-        .filter((item) => item.known)
+        .filter((item) => item.known && item.key !== "safetyMargin")
         .map((item) => `${item.label} ${item.value}`)
-        .join(", ")}.`
+        .join(", ")}; a margem de segurança acompanha a cotação.`
     : "";
 
   useEffect(() => {
@@ -213,20 +236,30 @@ function PublicCompany() {
             <div
               key={item.key}
               className="rounded-xl border border-evo-border bg-evo-bgSec p-4"
+              data-indicator={item.key}
+              data-market-state={item.state}
             >
               <dt className="text-sm text-evo-textSec">{item.label}</dt>
-              <dd className="font-numbers mt-2 text-2xl font-semibold">
+              <dd
+                className="font-numbers mt-2 text-2xl font-semibold"
+                title={item.title}
+                data-indicator-value
+              >
                 {item.value}
+              </dd>
+              <dd className="mt-1 text-xs text-evo-textSec" data-indicator-sub>
+                {item.sub}
               </dd>
             </div>
           ))}
         </dl>
         <p className="mt-3 text-xs leading-5 text-evo-textSec">
           Fonte: pesquisa da Escola do Dividendo
-          {date ? `, publicação de ${date}` : ""}. Estimativas da pesquisa, que
-          não mudam com a cotação do dia. Margem de segurança não representa
-          retorno garantido. Conteúdo educativo, sem recomendação individual de
-          investimento.
+          {date ? `, publicação de ${date}` : ""}. DY e P/L são estimativas da
+          pesquisa, na data da publicação, e não mudam com a cotação. A margem
+          de segurança acompanha a cotação da brapi.dev, com atraso. Margem de
+          segurança não representa retorno garantido. Conteúdo educativo, sem
+          recomendação individual de investimento.
         </p>
         <Link
           className="mt-2 inline-flex min-h-11 items-center text-sm text-evo-accent underline"
@@ -236,7 +269,7 @@ function PublicCompany() {
         </Link>
       </section>
 
-      <LiveQuotePanel ticker={entry.ticker} variant="public" />
+      {view && <MarketQuotePanel view={view} variant="public" />}
 
       <section aria-labelledby="pesquisa-completa" className="mt-8">
         <h2 id="pesquisa-completa" className="text-xl font-semibold">

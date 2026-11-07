@@ -24,6 +24,8 @@ const tables = [
   "notification_events",
   "notification_event_reads",
   "research_publication_keys",
+  // Closes consolidated by the Escola cannot be fetched again for free.
+  "market_daily_closes",
 ];
 const keyText = process.env.BACKUP_KEY || "";
 if (!/^[a-f0-9]{64}$/i.test(keyText))

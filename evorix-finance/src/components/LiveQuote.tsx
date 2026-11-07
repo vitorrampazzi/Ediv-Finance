@@ -1,71 +1,77 @@
 import { useId } from "react";
-import { useLiveQuote, type LiveQuoteView } from "../hooks/useLiveQuotes";
 import {
+  consultedAt,
   decimal,
   quoteChange,
-  quoteFields,
-  quoteLine,
   quoteMoney,
-  quotePercent,
-  quoteSourceText,
-  quoteTone,
+  quoteVolume,
   saoPauloMoment,
+  sessionFields,
   type LiveQuote,
 } from "../lib/liveQuotes";
+import type { MarketView } from "../lib/marketData";
 import "./live-quote.css";
 
-const toneClass = (quote: LiveQuote | null) => {
-  const tone = quoteTone(quote);
-  return tone === "up"
-    ? "live-quote-up"
-    : tone === "down"
-      ? "live-quote-down"
-      : undefined;
-};
+const toneClass = (tone: MarketView["price"]["tone"]) =>
+  tone === "up" ? "live-quote-up" : tone === "down" ? "live-quote-down" : "";
 
-// Small line under the research price of the ranking. Its height is reserved
-// from the first paint, so loading, unavailable and ready never move the row.
-export function LiveQuoteLine({ view }: { view: LiveQuoteView }) {
-  const line = quoteLine(view.quote);
-  if (view.loading)
-    return (
-      <span className="live-quote-line" data-live-quote="loading">
-        <span className="sr-only">Consultando a cotação atual.</span>
-      </span>
-    );
-  if (!line || !view.quote)
-    return (
-      <span
-        className="live-quote-line"
-        data-live-quote="unavailable"
-        title="Cotação atual da brapi.dev indisponível no momento."
-      >
-        cotação atual indisponível
-      </span>
-    );
-  const source = quoteSourceText(view.quote);
+// "Preço de mercado" of the ranking: the canonical quote, its change below in
+// a subtle color, or the research price with its date. Both lines keep their
+// height from the first paint, so no row moves when the numbers arrive.
+export function MarketPriceCell({ view }: { view: MarketView }) {
+  const { price } = view;
   return (
     <span
-      className="live-quote-line"
-      data-live-quote={view.quote.stale ? "stale" : "ready"}
-      title={source}
+      className="market-cell"
+      data-market-cell="price"
+      data-market-state={price.state}
+      title={price.title}
     >
-      {line.prefix} {line.price}
-      {line.percent && (
-        <>
-          {" · "}
-          <span className={toneClass(view.quote)}>{line.percent}</span>
-        </>
-      )}
-      <span className="sr-only"> {source}</span>
+      <span className="market-cell-value" data-market-value>
+        {price.text}
+      </span>
+      <span className="market-cell-sub">
+        {price.state === "stale" && price.qualifier}
+        {price.change && (
+          <>
+            {price.state === "stale" ? " · " : ""}
+            <span className={toneClass(price.tone)}>{price.change}</span>
+          </>
+        )}
+        {(price.state === "research" || price.state === "unavailable") &&
+          price.qualifier}
+      </span>
+      <span className="sr-only"> {price.title}</span>
     </span>
   );
 }
 
-// "brapi.dev · com atraso · consultada às 10:48", always without "tempo real".
-function sourceShort(quote: LiveQuote) {
+// "Margem de segurança" of the ranking: two decimals, the formula with the
+// actual values in the title, and "defasada" or the research date below.
+export function MarketMarginCell({ view }: { view: MarketView }) {
+  const { margin } = view;
+  return (
+    <span
+      className="market-cell"
+      data-market-cell="margin"
+      data-market-state={margin.state}
+      title={margin.title}
+    >
+      <span className="market-cell-value" data-market-value>
+        {margin.text}
+      </span>
+      <span className="market-cell-sub">{margin.qualifier}</span>
+      {margin.state === "loading" && (
+        <span className="sr-only">{margin.title}</span>
+      )}
+    </span>
+  );
+}
+
+// "brapi.dev · com atraso · consultada às 10:48", never "tempo real".
+function sourceShort(quote: LiveQuote, stale: boolean) {
   return [
-    quote.stale ? "defasada" : null,
+    stale ? "defasada" : null,
     quote.source,
     quote.delayMinutes
       ? `com atraso de até ${quote.delayMinutes} min`
@@ -73,7 +79,7 @@ function sourceShort(quote: LiveQuote) {
     quote.quoteTime
       ? `cotação de ${saoPauloMoment(quote.quoteTime)}`
       : quote.checkedAt
-        ? `consultada às ${saoPauloMoment(quote.checkedAt)}`
+        ? `consultada ${consultedAt(quote.checkedAt)}`
         : null,
   ]
     .filter(Boolean)
@@ -91,6 +97,7 @@ const variants = {
     change: "font-fmk-mono text-sm",
     fields:
       "mt-5 grid grid-cols-2 gap-x-6 gap-y-3 border-t border-fmk-line-soft pt-4 sm:grid-cols-4",
+    subheading: "mt-5 text-xs text-fmk-sub",
     label: "text-xs text-fmk-sub",
     value: "mt-1 font-fmk-mono text-[15px]",
     note: "mt-4 text-xs leading-relaxed text-fmk-sub",
@@ -104,6 +111,7 @@ const variants = {
     price: "font-numbers text-3xl font-semibold",
     change: "font-numbers text-sm font-semibold",
     fields: "mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4",
+    subheading: "mt-4 text-sm text-evo-textSec",
     label: "text-sm text-evo-textSec",
     value: "font-numbers mt-1 text-lg font-semibold",
     note: "mt-3 text-xs leading-5 text-evo-textSec",
@@ -111,116 +119,179 @@ const variants = {
   },
 } as const;
 
-// "Cotação atual" block of the company pages: brapi.dev numbers apart from
-// the research; each field only when the source sends it.
-export function LiveQuotePanel({
-  ticker,
-  researchPrice,
+// "Cotação atual" of the company pages. Price and margin come from the shared
+// market data, the same as the ranking; the v2 quote only adds the session.
+export function MarketQuotePanel({
+  view,
   variant,
+  detail = null,
+  reference = null,
 }: {
-  ticker: string;
-  // The public page only carries three research indicators, not the price.
-  researchPrice?: string;
+  view: MarketView;
   variant: keyof typeof variants;
+  // /api/market/quote/:ticker: session data and the change in reais.
+  detail?: LiveQuote | null;
+  // The price and margin of the publication, kept as a reference.
+  reference?: string | null;
 }) {
   const id = useId();
   const style = variants[variant];
-  const { quote, loading } = useLiveQuote(ticker);
-  const price = decimal(quote?.price);
-  const ready = quote && !quote.unavailable && price !== null;
-  const change = decimal(quote?.change);
-  const percent = decimal(quote?.changePercent);
-  const fields = ready ? quoteFields(quote) : [];
-  const state = loading
-    ? "loading"
-    : !ready
-      ? "unavailable"
-      : quote.stale
-        ? "stale"
-        : "ready";
+  const { price, margin, quote } = view;
+  const live = price.state === "market" || price.state === "stale";
+  // The change in reais only when it belongs to the price on screen.
+  const change =
+    live &&
+    detail?.change != null &&
+    decimal(detail.price) !== null &&
+    decimal(detail.price) === decimal(price.value)
+      ? decimal(detail.change)
+      : null;
+  const session = live ? (detail?.session ?? quote?.session ?? null) : null;
+  const fields = sessionFields(session);
+  const volume = live ? decimal(quote?.volume) : null;
+  // The v2 quote time when brapi sends it; otherwise only when it was
+  // consulted, never presented as the time of the quote.
+  const sessionWhen = session?.quoteTime
+    ? `cotação de ${saoPauloMoment(session.quoteTime)}`
+    : session?.checkedAt
+      ? `consultada ${consultedAt(session.checkedAt)}`
+      : null;
   const Heading = variant === "public" ? "h2" : "h3";
   return (
     <section
       aria-labelledby={id}
       className={style.root}
-      data-live-quote-block={state}
-      data-live-quote-detail={ready ? quote.detail : undefined}
+      data-market-quote={price.state}
     >
       <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
         <Heading id={id} className={style.heading}>
           Cotação atual
         </Heading>
-        {ready && (
-          <p
-            className={style.meta}
-            title={quoteSourceText(quote)}
-            data-live-quote-source
-          >
-            {sourceShort(quote)}
+        {live && quote && (
+          <p className={style.meta} title={price.title} data-market-source>
+            {sourceShort(quote, price.state === "stale")}
           </p>
         )}
       </div>
       <div className={style.card}>
         <div className="live-quote-body">
-          {loading ? (
+          {price.state === "loading" ? (
             <p role="status" className={style.empty}>
               Consultando a cotação na brapi.dev…
             </p>
-          ) : !ready ? (
-            <p className={style.empty} data-live-quote-unavailable>
+          ) : price.state === "unavailable" ? (
+            <p className={style.empty} data-market-quote-unavailable>
               Cotação atual indisponível no momento. Os números da pesquisa
               continuam valendo como referência.
             </p>
           ) : (
             <>
               <p className="flex flex-wrap items-baseline gap-x-4 gap-y-1">
-                <span className={style.price} data-live-quote-price>
-                  {quoteMoney(price)}
+                <span
+                  className={style.price}
+                  data-market-quote-price
+                  title={price.title}
+                >
+                  {price.text}
                 </span>
-                {(change !== null || percent !== null) && (
+                {live && (change !== null || price.change) && (
                   <span
-                    className={style.change + " " + (toneClass(quote) ?? "")}
-                    data-live-quote-change
+                    className={style.change + " " + toneClass(price.tone)}
+                    data-market-quote-change
                   >
                     {[
                       change === null ? null : quoteChange(change),
-                      percent === null ? null : quotePercent(percent),
+                      price.change,
                     ]
                       .filter(Boolean)
                       .join(" · ")}
                     <span className="sr-only"> no dia</span>
                   </span>
                 )}
+                {price.state === "research" && (
+                  <span className={style.meta}>{price.qualifier}</span>
+                )}
               </p>
-              {quote.stale && (
-                <p className={style.meta + " mt-2"} data-live-quote-stale>
+              {price.state === "stale" && (
+                <p className={style.meta + " mt-2"} data-market-quote-stale>
                   Defasada: a consulta mais recente falhou; esta é a última
                   cotação válida.
                 </p>
               )}
-              {fields.length > 0 && (
-                <dl className={style.fields}>
-                  {fields.map((field) => (
-                    <div
-                      key={field.key}
-                      className="min-w-0"
-                      data-live-quote-field={field.key}
-                    >
-                      <dt className={style.label}>{field.label}</dt>
-                      <dd className={style.value}>{field.value}</dd>
-                    </div>
-                  ))}
-                </dl>
+              {price.state === "research" && (
+                <p className={style.meta + " mt-2"} data-market-quote-research>
+                  Sem cotação válida da brapi.dev agora: este é o preço da
+                  pesquisa.
+                </p>
               )}
             </>
           )}
         </div>
+        {fields.length > 0 && (
+          <>
+            <p className={style.subheading} data-market-session-time>
+              Dados do pregão
+              {sessionWhen ? ` · ${sessionWhen}` : ""}
+            </p>
+            <dl className={style.fields + " mt-2"}>
+              {fields.map((field) => (
+                <div
+                  key={field.key}
+                  className="min-w-0"
+                  data-market-session-field={field.key}
+                >
+                  <dt className={style.label}>{field.label}</dt>
+                  <dd className={style.value}>{field.value}</dd>
+                </div>
+              ))}
+            </dl>
+          </>
+        )}
+        {(variant === "research" || volume !== null) && (
+          <dl className={style.fields}>
+            {variant === "research" && (
+              <div className="min-w-0" data-market-quote-field="ceiling">
+                <dt className={style.label}>Preço-teto</dt>
+                <dd className={style.value}>
+                  {view.ceiling === null
+                    ? "Não informado"
+                    : quoteMoney(decimal(view.ceiling)!)}
+                </dd>
+                <dd className={style.label}>
+                  {view.researchDay
+                    ? `da pesquisa de ${view.researchDay}`
+                    : "da pesquisa"}
+                </dd>
+              </div>
+            )}
+            {/* The public page shows the margin with the research indicators. */}
+            {variant === "research" && (
+              <div className="min-w-0" data-market-quote-field="margin">
+                <dt className={style.label}>Margem de segurança</dt>
+                <dd className={style.value} title={margin.title}>
+                  {margin.state === "loading" ? "…" : margin.text}
+                </dd>
+                {margin.qualifier && (
+                  <dd className={style.label}>{margin.qualifier}</dd>
+                )}
+              </div>
+            )}
+            {volume !== null && (
+              <div className="min-w-0" data-market-quote-field="volume">
+                <dt className={style.label}>Volume</dt>
+                <dd className={style.value}>{quoteVolume(volume)}</dd>
+              </div>
+            )}
+          </dl>
+        )}
+        {reference && (
+          <p className={style.note} data-market-reference>
+            {reference}
+          </p>
+        )}
         <p className={style.note}>
-          {researchPrice
-            ? `Preço da pesquisa: ${researchPrice}, da planilha publicada. `
-            : ""}
-          A cotação da brapi.dev chega com atraso e não altera os números da
-          pesquisa.
+          A cotação da brapi.dev chega com atraso. DY e P/L ficam como na data
+          da pesquisa; a margem de segurança acompanha a cotação.
         </p>
       </div>
     </section>

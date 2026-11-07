@@ -276,11 +276,15 @@ try {
 
         const a = await first.quote("PETR4");
         assert.equal(a.quote.detail, "full");
-        assert.equal(a.quote.price, "11.00000000");
+        // Canonical quote (docs/MARGEM-E-HISTORICO.md): the price is the
+        // general list's; the v2 answer only fills `session`.
+        assert.equal(a.quote.price, "10.00000000");
+        assert.equal(typeof a.quote.session.checkedAt, "string");
         // The other instance reads both rows from MySQL instead of calling brapi.
         const b = await second.quote("PETR4");
         assert.equal(b.quote.detail, "full");
         assert.equal(b.quote.checkedAt, a.quote.checkedAt);
+        assert.equal(b.quote.session.checkedAt, a.quote.session.checkedAt);
         assert.deepEqual(calls, ["catalog", "quote:PETR4"]);
 
         assert.equal((await second.quote("VALE3")).quote.detail, "full");

@@ -1,15 +1,9 @@
 import { Router } from "express";
 import { rateLimit } from "express-rate-limit";
 import { z } from "zod";
-import { readCache, saveCache, reserveProviderCall } from "./provider-cache.js";
-import { config } from "./config.js";
 import { MysqlLimitStore } from "./limit-store.js";
-import { hasStockHistory } from "./stock-history.js";
-import { createBrapiProvider } from "./market/brapi-provider.js";
-import {
-  createQuoteService,
-  unavailableQuote,
-} from "./market/quote-service.js";
+import { quoteService } from "./market-service.js";
+import { unavailableQuote } from "./market/quote-service.js";
 import {
   historyQuerySchema,
   isValidTicker,
@@ -17,21 +11,10 @@ import {
   tickerSchema,
 } from "./market/validation.js";
 
-// Routes only: caching, budget and provider rules live in ./market/.
-// Contract: docs/COTACOES.md.
+// Routes only: caching, budget and provider rules live in ./market/ and the
+// shared service in ./market-service.js. Contracts: docs/COTACOES.md and
+// docs/MARGEM-E-HISTORICO.md (canonical quote with `session`).
 const router = Router();
-const quoteService = createQuoteService({
-  provider: createBrapiProvider({ token: config.brapiApiKey }),
-  store: {
-    read: readCache,
-    write: saveCache,
-    reserveCall: reserveProviderCall,
-  },
-  hasToken: Boolean(config.brapiApiKey),
-  plan: config.brapiPlan,
-  dailyBudget: config.brapiDailyBudget,
-  isCovered: hasStockHistory,
-});
 
 function isEquityAsset(asset) {
   return (

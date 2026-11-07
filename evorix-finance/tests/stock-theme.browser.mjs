@@ -4,7 +4,13 @@ import { createServer } from "vite";
 import { chromium } from "playwright";
 import { expect } from "playwright/test";
 import { dividendColumns } from "../dividend-analysis.mjs";
-import { marketFixture, summaryQuote } from "./market-fixture.mjs";
+import {
+  fixtureNow,
+  marketCheckedAt,
+  marketFixture,
+  seriesAnswer,
+  summaryQuote,
+} from "./market-fixture.mjs";
 
 // Real authenticated React route with synthetic API responses. No database writes.
 const artifacts = ".test-artifacts/stock-theme";
@@ -13,8 +19,6 @@ const server = await createServer({
   server: { host: "127.0.0.1", port: 4193, strictPort: true },
 });
 const root = "http://127.0.0.1:4193";
-// brapi.dev is mocked; the quote block must read well in both themes too.
-const market = marketFixture({ quotes: { TEST3: summaryQuote("TEST3") } });
 const entry = {
   rank: 1,
   ticker: "TEST3",
@@ -60,6 +64,40 @@ const publication = {
   entries: [entry],
   history: [],
 };
+// Market data and price series are mocked; they must read well in both themes.
+const market = marketFixture({
+  publication,
+  quotes: { TEST3: summaryQuote("TEST3", { price: "0.80000000" }) },
+  series: {
+    TEST3: {
+      adjusted: {
+        daily: seriesAnswer("TEST3", {
+          basis: "adjusted",
+          availableBases: ["adjusted", "nominal"],
+          points: [
+            ["2026-10-29", "0.70000000"],
+            ["2026-10-30", "0.72000000"],
+            ["2026-11-03", "0.75000000", true],
+            ["2026-11-04", "0.78000000"],
+          ].map(([date, close, gapBefore]) => ({
+            date,
+            close,
+            status: "consolidated",
+            source: "brapi",
+            ...(gapBefore ? { gapBefore } : {}),
+          })),
+          latestQuote: {
+            price: "0.80000000",
+            checkedAt: marketCheckedAt,
+            freshness: "delayed",
+            connect: true,
+            reason: null,
+          },
+        }),
+      },
+    },
+  },
+});
 const sections = [
   "visao-geral",
   "cotacao",
@@ -90,6 +128,7 @@ try {
         viewport: { width, height },
         reducedMotion: "reduce",
       });
+      await context.clock.install({ time: fixtureNow });
       await context.route("**/api/**", (route) => {
         const url = new URL(route.request().url());
         const path = url.pathname;
@@ -203,6 +242,20 @@ try {
         await expect(page.locator(".fmk-overview-market")).toContainText(
           "Valor de mercado",
         );
+        // Market price, dynamic margin and the price series in this theme.
+        await expect(
+          page.locator("#cotacao [data-market-quote]"),
+        ).toHaveAttribute("data-market-quote", "market");
+        await expect(
+          page.locator(
+            '.figma-stock header [data-summary="Margem de segurança"] [data-summary-value]',
+          ),
+        ).toHaveText("20,00%");
+        await expect(page.locator("figure[data-price-chart]")).toHaveAttribute(
+          "data-price-chart",
+          "ready",
+        );
+        await expect(page.locator(".price-series-connector")).toHaveCount(1);
         const growth = page
           .locator(".fmk-overview-row")
           .filter({ hasText: "CAGR de lucros" });

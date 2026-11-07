@@ -1,6 +1,6 @@
 import { useRankingPublication } from "../hooks/useRankingPublication";
-import { useLiveQuotes } from "../hooks/useLiveQuotes";
-import { useEffect, useRef, useState } from "react";
+import { useRankingMarket } from "../hooks/useRankingMarket";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useLocation, useSearchParams } from "react-router-dom";
 import {
   BookOpen,
@@ -26,11 +26,11 @@ import { PublicationReview } from "../components/PublicationReview";
 import { ResearchRankingTable } from "../components/ResearchRankingTable";
 import { DividendRankingTable } from "../components/DividendRankingTable";
 import { userCan } from "../lib/permissions";
+import { marginSortValue, publicationMarket } from "../lib/marketData";
 import { CompanyComparison, ToolSummary } from "../components/ResearchTools";
 import "./income-ranking.css";
 
 const noEntries: Entry[] = [];
-const noTickers: string[] = [];
 const rankingFilterKeys = ["busca", "setor", "prazo", "ordem"] as const;
 type RankingFilterKey = (typeof rankingFilterKeys)[number];
 const date = (value: string) =>
@@ -102,11 +102,28 @@ function MemberIncomeRanking() {
       : noEntries;
   const dividendMode =
     !showingDemo && sourceEntries.some((entry) => entry.dividendAnalysis);
-  // One request for the whole publication, so search, filters and "ver mais"
-  // never ask again; demo companies are fictitious and get no quote.
-  const liveQuotes = useLiveQuotes(
-    dividendMode ? sourceEntries.map((entry) => entry.ticker) : noTickers,
+  // One shared copy of the market data for the whole publication, so search,
+  // filters and "ver mais" never ask again. It starts with the publication's
+  // request; demo companies are fictitious and get no quote.
+  const market = useRankingMarket(
+    displayMode !== "demo" && !showingDemo && (loading || dividendMode),
   );
+  const marketCells = useMemo(() => {
+    if (!dividendMode) return null;
+    const { views, note, noteSizer } = publicationMarket(
+      sourceEntries,
+      market,
+      { id: ranking.id, publishedAt: ranking.updatedAt },
+    );
+    return {
+      views,
+      cells: {
+        viewFor: (ticker: string) => views.get(ticker),
+        note,
+        noteSizer,
+      },
+    };
+  }, [dividendMode, sourceEntries, market, ranking.id, ranking.updatedAt]);
   const horizon =
     !dividendMode && ["6", "12", "24"].includes(requestedHorizon)
       ? requestedHorizon
@@ -215,8 +232,9 @@ function MemberIncomeRanking() {
     )
     .sort((a, b) =>
       sort === "safety"
-        ? Number(b.dividendAnalysis?.safetyMargin ?? -Infinity) -
-            Number(a.dividendAnalysis?.safetyMargin ?? -Infinity) ||
+        ? // The margin on screen: dynamic, stale or from the research.
+          (marginSortValue(marketCells?.views.get(b.ticker)) ?? -Infinity) -
+            (marginSortValue(marketCells?.views.get(a.ticker)) ?? -Infinity) ||
           a.rank - b.rank
         : sort === "potential"
           ? Number(b.expectedReturnPercent ?? -Infinity) -
@@ -405,8 +423,8 @@ function MemberIncomeRanking() {
         {(dividendMode
           ? [
               [
-                "Consulte a referência",
-                "A cotação é uma referência da planilha; não é uma cotação ao vivo.",
+                "Compare com o mercado",
+                "O preço de mercado é a cotação da brapi.dev, com atraso. A margem de segurança acompanha a cotação; o preço-teto só muda com uma nova análise.",
               ],
               [
                 "Entenda o preço teto",
@@ -908,7 +926,7 @@ function MemberIncomeRanking() {
             <DividendRankingTable
               entries={visibleEntries}
               researchLink={researchLink}
-              liveQuotes={liveQuotes}
+              market={marketCells?.cells}
             />
           </div>
         ) : (

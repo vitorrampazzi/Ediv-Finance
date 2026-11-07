@@ -56,14 +56,19 @@ async function context(account, viewport = { width: 1366, height: 900 }) {
     viewport,
     reducedMotion: "reduce",
   });
-  // Quotes never leave the machine: brapi.dev answers come from the fixture.
-  await result.route("**/api/market/**", (route) => {
+  // Quotes never leave the machine: brapi.dev answers come from the fixture,
+  // including the ranking market data and the price series (no publication
+  // in the fixture: price and margin fall back to the research).
+  const quotes = (route) => {
     const url = new URL(route.request().url());
     if (!market.handles(url) || url.pathname === "/api/market/assets")
       return route.fallback();
     const { status, data } = market.respond(url);
     return route.fulfill({ status, json: data });
-  });
+  };
+  await result.route("**/api/market/**", quotes);
+  await result.route("**/api/rankings/market", quotes);
+  await result.route("**/api/rankings/price-series/**", quotes);
   if (account) {
     const [name, value] = account.cookie.split("=");
     await result.addCookies([
