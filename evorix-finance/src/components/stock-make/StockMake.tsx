@@ -78,7 +78,7 @@ function Stat({
         <InfoTip label={label} text={tip} />
       </div>
       <div
-        className={`mt-1.5 font-fmk-serif text-[28px] leading-none md:text-3xl ${accent ? "text-fmk-teal" : ""}`}
+        className={`mt-1.5 font-fmk-serif text-[clamp(20px,7vw,28px)] leading-none [overflow-wrap:anywhere] md:text-3xl ${accent ? "text-fmk-teal" : ""}`}
         data-summary-value
         title={title}
       >

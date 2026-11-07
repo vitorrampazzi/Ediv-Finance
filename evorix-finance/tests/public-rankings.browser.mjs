@@ -1353,9 +1353,18 @@ try {
             return [...document.querySelectorAll("body *")]
               .map((element) => ({
                 element,
-                right: element.getBoundingClientRect().right,
+                right: Math.max(
+                  element.getBoundingClientRect().right,
+                  element.getBoundingClientRect().left + element.scrollWidth,
+                ),
               }))
               .filter(({ right }) => right > innerWidth + 1)
+              // Content inside a scroll area does not widen the page.
+              .filter(({ element }) => {
+                for (let node = element.parentElement; node && node !== document.body; node = node.parentElement)
+                  if (getComputedStyle(node).overflowX !== "visible") return false;
+                return true;
+              })
               .sort((a, b) => b.right - a.right)
               .slice(0, 5)
               .map(
