@@ -7,9 +7,19 @@ import {
   type RefObject,
 } from "react";
 import type { Entry } from "../../lib/ranking";
+import { safetyMarginFormula } from "../../../safety-margin.mjs";
 import { useStockHistory } from "../../hooks/useStockHistory";
+import { useLiveQuote } from "../../hooks/useLiveQuotes";
+import { useRankingMarket } from "../../hooks/useRankingMarket";
+import { decimal, quoteMoney } from "../../lib/liveQuotes";
+import {
+  marginCaption,
+  priceCaption,
+  publicationMarket,
+  researchReference,
+} from "../../lib/marketData";
 import { CompanyLogo } from "../CompanyLogo";
-import { LiveQuotePanel } from "../LiveQuote";
+import { MarketQuotePanel } from "../LiveQuote";
 import {
   DividendCalendar,
   DividendChart,
@@ -24,7 +34,9 @@ import {
   makeStockData,
   StockContext,
   StockHistoryContext,
+  StockMarketContext,
   useStockData,
+  useStockMarket,
   dividendColumns,
   explanations,
   type DividendColumnKey,
@@ -47,32 +59,50 @@ function Stat({
   children,
   accent,
   sub,
+  state,
+  title,
 }: {
   label: string;
   tip: string;
   children: ReactNode;
   accent?: boolean;
   sub?: string;
+  // Market figures say where they come from: market, stale, research…
+  state?: string;
+  title?: string;
 }) {
   return (
-    <div className="min-w-0" data-summary={label}>
+    <div className="min-w-0" data-summary={label} data-market-state={state}>
       <div className="flex items-center gap-1.5 text-xs text-fmk-sub">
         {label}
         <InfoTip label={label} text={tip} />
       </div>
       <div
         className={`mt-1.5 font-fmk-serif text-[28px] leading-none md:text-3xl ${accent ? "text-fmk-teal" : ""}`}
+        data-summary-value
+        title={title}
       >
         {children}
       </div>
       {sub && (
-        <div className="mt-1.5 font-fmk-mono text-[11px] text-fmk-dim">
+        <div
+          className="mt-1.5 font-fmk-mono text-[11px] text-fmk-dim"
+          data-summary-sub
+        >
           {sub}
         </div>
       )}
     </div>
   );
 }
+
+// Keeps the line height while the first quote is on its way.
+const pending = (label: string) => (
+  <>
+    <span aria-hidden="true">{" "}</span>
+    <span className="sr-only">{label}</span>
+  </>
+);
 
 function Header({
   titleRef,
@@ -82,6 +112,10 @@ function Header({
   backLink: ReactNode;
 }) {
   const { company, value } = useStockData();
+  const { view } = useStockMarket();
+  const research = view.researchDay
+    ? `da pesquisa de ${view.researchDay}`
+    : "da pesquisa";
   return (
     <header>
       <div className="mx-auto max-w-[1280px] px-5 pt-8 md:px-10">
@@ -113,37 +147,49 @@ function Header({
         <div className="fmk-stats mt-8 grid grid-cols-2 gap-x-6 gap-y-7 border-y border-fmk-line py-6 md:grid-cols-5">
           <div className="col-span-2 md:col-span-1">
             <Stat
-              label="Cotação de referência"
+              label="Preço de mercado"
               accent
-              sub="preço da pesquisa"
-              tip="Preço da ação usado como base de todos os cálculos da pesquisa, na data indicada."
+              state={view.price.state}
+              title={view.price.title}
+              sub={priceCaption(view)}
+              tip="Cotação da brapi.dev, com atraso: a mesma do ranking. Sem cotação válida, aparece o preço da pesquisa, com a data."
             >
-              {brl(company.price)}
+              {view.price.state === "loading"
+                ? pending(view.price.title)
+                : view.price.text}
             </Stat>
           </div>
           <Stat
             label="DY bruto estimado"
-            tip="Dividend Yield: dividendos projetados por ação divididos pela cotação. Mostra quanto a empresa distribui em relação ao preço."
+            sub="na data da pesquisa"
+            tip="Dividend Yield: dividendos projetados por ação divididos pelo preço da pesquisa. Fica como na data da pesquisa e não muda com a cotação."
           >
             {value("estimatedGrossDividendYield")}
           </Stat>
           <Stat
             label="P/L projetado"
-            tip="Preço dividido pelo lucro por ação projetado: quantos anos de lucro, no ritmo projetado, o preço representa."
+            sub="na data da pesquisa"
+            tip="Preço da pesquisa dividido pelo lucro por ação projetado: quantos anos de lucro, no ritmo projetado, o preço representa. Fica como na data da pesquisa."
           >
             {value("projectedPE")}
           </Stat>
           <Stat
             label="Preço-teto"
-            tip="Preço máximo que a pesquisa considera coerente para o dividendo projetado."
+            sub={research}
+            tip="Preço máximo que a pesquisa considera coerente para o dividendo projetado. Só muda com uma nova análise."
           >
             {brl(company.teto)}
           </Stat>
           <Stat
             label="Margem de segurança"
-            tip="Margem de segurança e arredondamento preservados da fonte, sem recalcular."
+            state={view.margin.state}
+            title={view.margin.title}
+            sub={marginCaption(view)}
+            tip={`Margem de segurança = ${safetyMarginFormula}, recalculada a cada cotação. Fica negativa quando a cotação passa do teto e não garante retorno.`}
           >
-            {value("safetyMargin")}
+            {view.margin.state === "loading"
+              ? pending(view.margin.title)
+              : view.margin.text}
           </Stat>
         </div>
       </div>
@@ -186,7 +232,6 @@ function Overview() {
   const {
     company,
     dy,
-    marginSeg,
     marketCapBi,
     profitEst,
     cagrLucro,
@@ -194,6 +239,10 @@ function Overview() {
     number,
     peDifference,
   } = useStockData();
+  const { view } = useStockMarket();
+  const marginText =
+    view.margin.text +
+    (view.margin.qualifier ? ` · ${view.margin.qualifier}` : "");
   const rows: [string, string, string, DataKind, string][] = [
     [
       "Lucro líquido estimado",
@@ -227,19 +276,19 @@ function Overview() {
     [
       "Dividend yield estimado",
       pct(dy),
-      "Dividendos projetados ÷ cotação.",
+      "Dividendos projetados ÷ preço da pesquisa, na data da pesquisa.",
       "projetado",
       dy === null || dy === 0 ? "" : dy > 0 ? "text-fmk-teal" : "text-fmk-down",
     ],
   ];
+  // The market price on screen, the same the ranking and the margin use.
+  const price = decimal(view.price.value);
   const comparable =
-    company.price !== null &&
-    company.price > 0 &&
-    company.teto !== null &&
-    company.teto > 0;
-  const scale = comparable ? Math.max(company.price!, company.teto!) : 1;
-  const trackPos = comparable ? (company.price! / scale) * 100 : 0;
+    price !== null && price > 0 && company.teto !== null && company.teto > 0;
+  const scale = comparable ? Math.max(price!, company.teto!) : 1;
+  const trackPos = comparable ? (price! / scale) * 100 : 0;
   const ceilingPos = comparable ? (company.teto! / scale) * 100 : 0;
+  const priceLabel = comparable ? quoteMoney(price!) : "";
   return (
     <section
       id="visao-geral"
@@ -267,17 +316,21 @@ function Overview() {
 
           <figure className="mt-10">
             <figcaption className="mb-3 flex items-center justify-between text-xs text-fmk-sub">
-              <span>
+              <span data-market-state={view.margin.state}>
                 Cotação frente ao preço-teto · margem de segurança{" "}
-                {pct(marginSeg)}
+                {view.margin.state === "loading" ? "…" : marginText}
               </span>
               <Tag kind="estimado" />
             </figcaption>
-            {comparable ? (
+            {view.price.state === "loading" ? (
+              <p role="status" className="h-10 text-sm text-fmk-dim">
+                Consultando a cotação para comparar com o preço-teto.
+              </p>
+            ) : comparable ? (
               <div
                 className="relative h-10"
                 role="img"
-                aria-label={`Cotação ${brl(company.price)}; preço teto ${brl(company.teto)}; margem informada ${value("safetyMargin")}.`}
+                aria-label={`Cotação ${priceLabel}${view.price.qualifier ? ` (${view.price.qualifier})` : ""}; preço teto ${brl(company.teto)}; margem de segurança ${view.margin.text}.`}
               >
                 <div className="absolute inset-x-0 top-5 h-1.5 rounded-full bg-fmk-line" />
                 <div
@@ -301,7 +354,7 @@ function Overview() {
                     transform: `translateX(-${trackPos}%)`,
                   }}
                 >
-                  {brl(company.price)}
+                  {priceLabel}
                 </div>
                 <div
                   className="absolute top-8 whitespace-nowrap font-fmk-mono text-[11px] text-fmk-amber"
@@ -372,7 +425,12 @@ function Overview() {
                     ? "Comparação de P/L indisponível sem bases positivas."
                     : `P/L projetado: ${value("projectedPE")}; média: ${value("averagePE10Years")}. Diferença relativa: ${pct(peDifference, 1, true)}.`,
                 ],
-                ["●", `Margem de segurança: ${value("safetyMargin")}.`],
+                [
+                  "●",
+                  view.margin.state === "loading"
+                    ? "Margem de segurança: consultando a cotação."
+                    : `Margem de segurança: ${marginText}, com a cotação de mercado e o preço-teto da pesquisa.`,
+                ],
                 [
                   "●",
                   number("expectedPayout") === null
@@ -502,8 +560,13 @@ function Indicators() {
       return {
         key,
         // The spreadsheet calls it "Cotação atual"; here that name belongs to
-        // the brapi.dev block, so the research price keeps its own label.
-        label: key === "referencePrice" ? "Preço da pesquisa" : column.label,
+        // the brapi.dev block, so the research price and margin say so.
+        label:
+          key === "referencePrice"
+            ? "Preço da pesquisa"
+            : key === "safetyMargin"
+              ? "Margem da pesquisa"
+              : column.label,
         value: data.value(key),
         tip: explanations[key] || "Informação preservada da pesquisa.",
         kind,
@@ -553,6 +616,7 @@ function Indicators() {
         id="indicadores"
         n="04"
         title="Indicadores"
+        lede="Os 20 campos da planilha publicada, na data da pesquisa. O preço de mercado e a margem de segurança atuais ficam no topo da página e na seção Cotação."
         right={
           <div className="flex flex-wrap gap-x-5 gap-y-2 text-xs text-fmk-sub">
             <span>
@@ -697,6 +761,7 @@ function Company() {
 /* ───────── Entenda os números ───────── */
 function Learn() {
   const { company, value, number, peDifference } = useStockData();
+  const { view } = useStockMarket();
   const lessons = [
     {
       q: "O que significa um P/L acima da média histórica?",
@@ -708,8 +773,11 @@ function Learn() {
     },
     {
       q: "Como interpretar a margem de segurança?",
-      a: "É a margem informada na metodologia da pesquisa. Depende das premissas e não garante retorno. O preço teto usa a premissa histórica de 6,81%, não uma taxa atual de mercado.",
-      ex: `Margem da fonte: ${value("safetyMargin")}; cotação ${brl(company.price)} e preço teto ${brl(company.teto)}.`,
+      a: `É a distância entre a cotação e o preço-teto: ${safetyMarginFormula}. Acompanha a cotação, enquanto o preço-teto só muda com uma nova análise; fica negativa quando a cotação passa do teto. Depende das premissas e não garante retorno. O preço teto usa a premissa histórica de 6,81%, não uma taxa atual de mercado.`,
+      ex:
+        view.margin.state === "loading"
+          ? `Margem da fonte: ${value("safetyMargin")}; preço teto ${brl(company.teto)}. Consultando a cotação para a margem atual.`
+          : `Margem atual: ${view.margin.text}${view.margin.qualifier ? ` (${view.margin.qualifier})` : ""}, com a cotação de ${view.price.text} e o preço teto de ${brl(company.teto)}. Margem da fonte, na publicação: ${value("safetyMargin")}.`,
     },
     {
       q: "O que o payout indica?",
@@ -819,24 +887,67 @@ function Learn() {
   );
 }
 
+// The v2 quote only adds the session data; price and margin are the shared ones.
+function CompanyQuote() {
+  const { company } = useStockData();
+  const { view, reference } = useStockMarket();
+  const detail = useLiveQuote(company.ticker);
+  return (
+    <MarketQuotePanel
+      view={view}
+      variant="research"
+      detail={detail.quote}
+      reference={reference}
+    />
+  );
+}
+
 export function StockMake({
   entry,
   titleRef,
   backLink,
+  publication,
 }: {
   entry: Entry;
   titleRef: RefObject<HTMLHeadingElement | null>;
   backLink: ReactNode;
+  // The publication on screen: market data only applies to the latest one.
+  publication: { id: string | null; publishedAt: string | null };
 }) {
   const model = useMemo(() => makeStockData(entry), [entry]);
   const history = useStockHistory(
     entry.ticker,
     !!entry.dividendAnalysis && /^[A-Z0-9]{4,12}$/.test(entry.ticker),
   );
+  // Same store as the ranking: both always show the same price and margin.
+  const snapshot = useRankingMarket(true);
+  const { id, publishedAt } = publication;
+  const market = useMemo(() => {
+    const { views } = publicationMarket([entry], snapshot, {
+      id,
+      publishedAt,
+    });
+    return {
+      view: views.get(entry.ticker)!,
+      reference: researchReference(
+        {
+          price: entry.dividendAnalysis?.referencePrice,
+          margin: entry.dividendAnalysis?.safetyMargin,
+        },
+        publishedAt,
+      ),
+    };
+  }, [entry, snapshot, id, publishedAt]);
   return (
     <StockContext value={model}>
       <StockHistoryContext value={history}>
-        <StockPage key={entry.ticker} titleRef={titleRef} backLink={backLink} />
+        <StockMarketContext value={market}>
+          <StockPage
+            key={entry.ticker}
+            titleRef={titleRef}
+            backLink={backLink}
+          />
+        </StockMarketContext>
       </StockHistoryContext>
     </StockContext>
   );
@@ -881,11 +992,7 @@ function StockPage({
           className="scroll-mt-16 pt-20"
         >
           <SectionHead id="cotacao" n="02" title="Cotação" />
-          <LiveQuotePanel
-            ticker={company.ticker}
-            researchPrice={brl(company.price)}
-            variant="research"
-          />
+          <CompanyQuote />
           <PriceChart />
         </section>
 
@@ -897,7 +1004,11 @@ function StockPage({
         >
           <SectionHead id="dividendos" n="03" title="Dividendos" />
           <div className="fmk-stats mb-12 grid grid-cols-2 gap-x-6 gap-y-6 md:grid-cols-5">
-            <Stat label="DY estimado" tip="Dividendo projetado ÷ cotação.">
+            <Stat
+              label="DY estimado"
+              sub="na data da pesquisa"
+              tip="Dividendo projetado ÷ preço da pesquisa, na data da pesquisa."
+            >
               {value("estimatedGrossDividendYield")}
             </Stat>
             <Stat

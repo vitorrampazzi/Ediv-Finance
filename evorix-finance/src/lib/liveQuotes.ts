@@ -1,6 +1,16 @@
-// brapi.dev quotes served by /api/market (contract in docs/COTACOES.md).
-// Pure helpers only: the unit tests import this file directly in Node.
+// brapi.dev quotes served by the API (contracts in docs/COTACOES.md and
+// docs/MARGEM-E-HISTORICO.md). Pure helpers only: the unit tests import this
+// file directly in Node.
 
+// Day data of the v2 quote: never replaces the canonical price of the list.
+export type QuoteSession = {
+  open: string | null;
+  dayHigh: string | null;
+  dayLow: string | null;
+  previousClose: string | null;
+  quoteTime: string | null;
+  checkedAt: string | null;
+};
 export type LiveQuote = {
   symbol: string;
   name: string | null;
@@ -8,9 +18,6 @@ export type LiveQuote = {
   price: string | null;
   change: string | null;
   changePercent: string | null;
-  previousClose: string | null;
-  dayHigh: string | null;
-  dayLow: string | null;
   volume: string | null;
   quoteTime: string | null;
   checkedAt: string | null;
@@ -20,6 +27,7 @@ export type LiveQuote = {
   detail: "summary" | "full";
   delayMinutes: number | null;
   source: string;
+  session: QuoteSession | null;
 };
 export type MarketState = {
   state: "open" | "closed";
@@ -29,7 +37,6 @@ export type MarketState = {
 
 // Same rule as company-logo.mjs and the server routes (B3SA3 included).
 export const quoteSymbolPattern = /^[A-Z][A-Z0-9]{3}[0-9]{1,2}F?$/;
-export const quoteChunkSize = 100;
 // Never poll faster than a minute or slower than an hour, whatever the server says.
 export const refreshBounds = { min: 60_000, max: 3_600_000 } as const;
 export const defaultRefreshMs = 900_000;
@@ -41,16 +48,6 @@ export function quoteSymbols(symbols: readonly string[]) {
     .sort();
 }
 
-export function chunkSymbols(
-  symbols: readonly string[],
-  size = quoteChunkSize,
-) {
-  const chunks: string[][] = [];
-  for (let index = 0; index < symbols.length; index += size)
-    chunks.push(symbols.slice(index, index + size));
-  return chunks;
-}
-
 // Decimal text from the API; null and anything unparsable stay null, never 0.
 export function decimal(value: unknown): number | null {
   if (typeof value === "number") return Number.isFinite(value) ? value : null;
@@ -60,9 +57,15 @@ export function decimal(value: unknown): number | null {
   return Number.isFinite(number) ? number : null;
 }
 
+// A price must be positive: zero or a negative number is no price at all.
+export function priceText(value: unknown): string | null {
+  const number = decimal(value);
+  return number === null || number <= 0 ? null : String(value).trim();
+}
+
 const text = (value: unknown) =>
   typeof value === "string" && value.trim() ? value : null;
-const isoTime = (value: unknown) =>
+export const isoTime = (value: unknown) =>
   typeof value === "string" && Number.isFinite(Date.parse(value))
     ? value
     : null;
@@ -87,6 +90,22 @@ export function parseMarket(input: unknown): MarketState | null {
   };
 }
 
+export function parseSession(input: unknown): QuoteSession | null {
+  const session = input as Record<string, unknown> | null;
+  if (!session || typeof session !== "object") return null;
+  const parsed = {
+    open: priceText(session.open),
+    dayHigh: priceText(session.dayHigh),
+    dayLow: priceText(session.dayLow),
+    previousClose: priceText(session.previousClose),
+    quoteTime: isoTime(session.quoteTime),
+    checkedAt: isoTime(session.checkedAt),
+  };
+  return parsed.open || parsed.dayHigh || parsed.dayLow || parsed.previousClose
+    ? parsed
+    : null;
+}
+
 export function parseQuote(input: unknown): LiveQuote | null {
   const quote = input as Record<string, unknown> | null;
   if (!quote || typeof quote !== "object") return null;
@@ -94,7 +113,7 @@ export function parseQuote(input: unknown): LiveQuote | null {
   if (!symbol) return null;
   const numeric = (key: string) =>
     decimal(quote[key]) === null ? null : String(quote[key]).trim();
-  const price = numeric("price");
+  const price = priceText(quote.price);
   const unavailable =
     price === null ||
     quote.unavailable === true ||
@@ -107,11 +126,8 @@ export function parseQuote(input: unknown): LiveQuote | null {
     name: text(quote.name),
     currency: text(quote.currency) ?? "BRL",
     price: unavailable ? null : price,
-    change: numeric("change"),
-    changePercent: numeric("changePercent"),
-    previousClose: numeric("previousClose"),
-    dayHigh: numeric("dayHigh"),
-    dayLow: numeric("dayLow"),
+    change: unavailable ? null : numeric("change"),
+    changePercent: unavailable ? null : numeric("changePercent"),
     volume: numeric("volume"),
     quoteTime: isoTime(quote.quoteTime) ?? isoTime(quote.marketTime),
     checkedAt: isoTime(quote.checkedAt),
@@ -124,6 +140,7 @@ export function parseQuote(input: unknown): LiveQuote | null {
         ? delay
         : null,
     source: text(quote.source) ?? "brapi.dev",
+    session: parseSession(quote.session),
   };
 }
 
@@ -156,29 +173,19 @@ export const saoPauloDay = (time: number | string | Date = Date.now()) =>
   isoDay.format(new Date(time));
 export const saoPauloClock = (time: number | string | Date) =>
   clock.format(new Date(time));
+export const saoPauloDayMonth = (time: number | string | Date) =>
+  dayMonth.format(new Date(time));
 // "10:48" today, "04/11 às 17:55" on any other São Paulo day.
 export function saoPauloMoment(time: string, now: number = Date.now()) {
   return saoPauloDay(time) === saoPauloDay(now)
     ? saoPauloClock(time)
-    : `${dayMonth.format(new Date(time))} às ${saoPauloClock(time)}`;
+    : `${saoPauloDayMonth(time)} às ${saoPauloClock(time)}`;
 }
-
-const weekday = new Intl.DateTimeFormat("en-US", {
-  timeZone: zone,
-  weekday: "short",
-});
-// First São Paulo date whose daily close may not be final yet: today until
-// 18:30 on weekdays (session ends at 18:00), otherwise tomorrow.
-export function firstOpenDate(now: number = Date.now()) {
-  const today = saoPauloDay(now);
-  const [hour, minute] = saoPauloClock(now).split(":").map(Number);
-  const trading =
-    !["Sat", "Sun"].includes(weekday.format(new Date(now))) &&
-    hour * 60 + minute < 18 * 60 + 30;
-  if (trading) return today;
-  const next = new Date(today + "T12:00:00Z");
-  next.setUTCDate(next.getUTCDate() + 1);
-  return next.toISOString().slice(0, 10);
+// "às 10:48" today, "em 04/11 às 17:55" on any other São Paulo day.
+export function consultedAt(time: string, now: number = Date.now()) {
+  return saoPauloDay(time) === saoPauloDay(now)
+    ? `às ${saoPauloClock(time)}`
+    : `em ${saoPauloDayMonth(time)} às ${saoPauloClock(time)}`;
 }
 
 const money = new Intl.NumberFormat("pt-BR", {
@@ -221,14 +228,20 @@ export function quoteTone(quote: LiveQuote | null) {
 }
 
 // The source line never claims live data: it is always "com atraso".
-export function quoteSourceText(quote: LiveQuote, now: number = Date.now()) {
+export function quoteSourceText(
+  quote: Pick<
+    LiveQuote,
+    "source" | "delayMinutes" | "quoteTime" | "checkedAt" | "stale"
+  >,
+  now: number = Date.now(),
+) {
   const delay = quote.delayMinutes
     ? `com atraso de até ${quote.delayMinutes} min`
     : "com atraso";
   const when = quote.quoteTime
     ? `cotação de ${saoPauloMoment(quote.quoteTime, now)}`
     : quote.checkedAt
-      ? `consultada às ${saoPauloMoment(quote.checkedAt, now)}`
+      ? `consultada ${consultedAt(quote.checkedAt, now)}`
       : "horário não informado";
   return (
     `Cotação ${quote.source} ${delay}, ${when} (horário de Brasília)` +
@@ -238,32 +251,17 @@ export function quoteSourceText(quote: LiveQuote, now: number = Date.now()) {
   );
 }
 
-// Short line under the research price in the ranking.
-export function quoteLine(quote: LiveQuote | null) {
-  const price = decimal(quote?.price);
-  if (!quote || quote.unavailable || price === null) return null;
-  const percent = decimal(quote.changePercent);
-  return {
-    prefix: quote.stale ? "defasada" : "agora",
-    price: quoteMoney(price),
-    percent: percent === null ? null : quotePercent(percent),
-  };
-}
-
-// Fields of the "Cotação atual" block; a null value is left out, never shown as 0.
-export function quoteFields(quote: LiveQuote) {
+// Day data of the session block; a null value is left out, never shown as 0.
+export function sessionFields(session: QuoteSession | null) {
   const fields: { key: string; label: string; value: string }[] = [];
-  const add = (
-    key: keyof LiveQuote,
-    label: string,
-    format: (value: number) => string,
-  ) => {
-    const value = decimal(quote[key]);
-    if (value !== null) fields.push({ key, label, value: format(value) });
+  if (!session) return fields;
+  const add = (key: keyof QuoteSession, label: string) => {
+    const value = decimal(session[key]);
+    if (value !== null) fields.push({ key, label, value: quoteMoney(value) });
   };
-  add("previousClose", "Fechamento anterior", quoteMoney);
-  add("dayHigh", "Máxima do dia", quoteMoney);
-  add("dayLow", "Mínima do dia", quoteMoney);
-  add("volume", "Volume", quoteVolume);
+  add("open", "Abertura");
+  add("dayHigh", "Máxima do dia");
+  add("dayLow", "Mínima do dia");
+  add("previousClose", "Fechamento anterior");
   return fields;
 }

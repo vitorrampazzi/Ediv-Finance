@@ -93,6 +93,14 @@
   white-space: nowrap;
   font-size: 1.125rem;
 }
+/* "defasada" or "da pesquisa (22/10)" under a margin, only when it applies. */
+.ph-ranking-qualifier {
+  display: block;
+  color: var(--ediv-muted);
+  font-size: 0.6875rem;
+  line-height: 1rem;
+  text-align: right;
+}
 .ph-ranking-locked {
   position: relative;
   margin-top: 0.5rem;

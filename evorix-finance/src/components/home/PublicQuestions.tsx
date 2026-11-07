@@ -49,8 +49,9 @@ export function PublicQuestions() {
             <div className="ph-faq-expand">
               <p>
                 É a lista de empresas da publicação mais recente da equipe, na
-                ordem original da pesquisa. A tabela apresenta os indicadores da
-                planilha; não é uma cotação ao vivo.
+                ordem original da pesquisa. DY e P/L são os da planilha; a
+                margem de segurança acompanha a cotação da brapi.dev, com
+                atraso.
               </p>
             </div>
           </details>
@@ -62,9 +63,9 @@ export function PublicQuestions() {
             <div className="ph-faq-expand">
               <p>
                 Sim. A home mostra as empresas e os indicadores da pesquisa
-                publicada pela equipe. Os valores refletem a data da planilha,
-                não cotações ao vivo. Abra uma empresa para acessar a análise
-                completa com sua conta.
+                publicada pela equipe. DY e P/L refletem a data da planilha; a
+                margem de segurança usa a cotação da brapi.dev, com atraso. Abra
+                uma empresa para acessar a análise completa com sua conta.
               </p>
             </div>
           </details>

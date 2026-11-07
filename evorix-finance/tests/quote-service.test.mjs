@@ -415,9 +415,15 @@ test("cotação detalhada usa a v2 com token ou ticker de demonstração", async
     null,
     "Without a token brapi declares no delay",
   );
-  assert.equal(demo.quote.quoteTime, "2026-11-05T13:47:30.000Z");
-  assert.equal(demo.quote.marketTime, demo.quote.quoteTime);
-  assert.equal(demo.quote.previousClose, "47.12000000");
+  // Canonical quote (docs/MARGEM-E-HISTORICO.md): the price is the list's, and
+  // the v2 data stays in `session`.
+  assert.equal(demo.quote.price, "47.50000000");
+  assert.equal(demo.quote.quoteTime, null);
+  assert.equal(demo.quote.marketTime, null);
+  assert.equal(demo.quote.previousClose, null);
+  assert.equal(demo.quote.session.quoteTime, "2026-11-05T13:47:30.000Z");
+  assert.equal(demo.quote.session.previousClose, "47.12000000");
+  assert.equal(demo.quote.change, "0.38000000");
   assert.equal(
     anonymous.calls.find((call) => call.kind === "quote").headers.Authorization,
     undefined,

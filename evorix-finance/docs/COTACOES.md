@@ -3,12 +3,12 @@
 Contrato entre o backend e a interface para as cotações do ranking, das páginas
 de empresa e dos gráficos. Decisões do dono (05/11/2026):
 
-- **Os números da pesquisa não mudam.** "Preço de mercado" e "Margem de segurança"
-  continuam os da planilha do corretor. A cotação da brapi aparece à parte, como
-  uma linha discreta ("agora R$ 19,62 · −0,91%"). A ordem do ranking continua a
-  da publicação.
-- Se um dia a margem for recalculada com a cotação, a fórmula do corretor é
-  `(teto − preço) ÷ teto`. Isso não está implementado e exige nova decisão.
+- **Atualizado em 06/11/2026:** o corretor confirmou que a margem de segurança
+  acompanha a cotação, enquanto o preço-teto só muda com uma nova análise. O
+  "Preço de mercado" passa a ser a cotação da brapi, e a margem é recalculada
+  com ela. Regras, fórmula, séries do gráfico e rotas estão em
+  `docs/MARGEM-E-HISTORICO.md`. A ordem do ranking continua a da publicação.
+- A fórmula é `(teto − preço) ÷ teto`, implementada em `safety-margin.mjs`.
 - **Sem token por enquanto.** Tudo funciona sem `BRAPI_API_KEY` e melhora
   sozinho quando o token entrar na Vercel.
 
@@ -43,10 +43,13 @@ de empresa e dos gráficos. Decisões do dono (05/11/2026):
 
 ## Sessão do mercado
 
-- Aberto: segunda a sexta, das 10:00 às 18:00 em `America/Sao_Paulo`, já com o
-  call de fechamento. Fora disso, fechado.
-- Feriados da B3 não estão no calendário. Num feriado, o site só consulta a brapi
-  de 15 em 15 minutos e mostra a última cotação com o horário real.
+- Aberto: das 10:00 às 18:00 em `America/Sao_Paulo`, já com o call de
+  fechamento, só em dia de pregão. Fora disso, fechado.
+- Os pregões vêm de `server/market/b3-calendar.js`, com os feriados de 2024 a
+  2026 conferidos na página oficial da B3 em 06/11/2026.
+- Para 2027, enquanto a B3 não publicar o calendário, valem as segundas a
+  sextas, e as respostas avisam isso.
+- A abertura às 13:00 da Quarta-feira de Cinzas não está no modelo.
 
 ## Cache (compartilhado em `provider_cache`, mais memória do processo)
 
@@ -87,17 +90,19 @@ URL, parâmetro ou endpoint livre à brapi.
 ```
 
 - Valores numéricos vêm como texto decimal ou `null`. `null` nunca vira zero.
-- `quoteTime`: horário da cotação informado pela brapi (`regularMarketTime`).
-  Fica `null` quando a fonte não informa, como na lista geral. `marketTime`
-  repete o mesmo valor, para compatibilidade.
+- **Desde 06/11/2026, o preço é sempre o da lista geral** (cotação canônica,
+  ver `docs/MARGEM-E-HISTORICO.md`). No nível de cima, `quoteTime`,
+  `marketTime`, `previousClose`, `dayHigh` e `dayLow` ficam `null`.
+- Os dados da v2 vão só em `session`: `{ open, dayHigh, dayLow, previousClose,
+  quoteTime, checkedAt }`, com o horário próprio dessa consulta.
 - `checkedAt`: quando o servidor consultou a brapi. Não é o horário da cotação.
 - `freshness`:
   - `delayed`: dado do ciclo atual do cache.
   - `stale`: a brapi falhou e é a última cotação válida.
   - `unavailable`: não há cotação, e `price` é `null`.
 - `detail`:
-  - `summary`: veio da lista geral.
-  - `full`: veio da v2, com máxima, mínima, fechamento anterior e horário.
+  - `summary`: só a lista geral.
+  - `full`: há `session` da v2.
 - `delayMinutes`: atraso declarado pelo plano (30 no gratuito). Fica `null` sem
   token, porque a brapi não declara o atraso.
 
@@ -113,9 +118,11 @@ aberto e 1.800 com ele fechado.
 - `GET /api/market/quotes?symbols=A,B,…` (1 a 100): devolve
   `{ quotes: quote[], market }`. Sempre usa a lista geral: uma chamada à brapi
   atende todas as ações e todos os visitantes durante o TTL.
-- `GET /api/market/quote/:ticker`: devolve `{ quote, market }`. Usa a v2
-  (`detail: "full"`) se houver token ou se o ticker for de demonstração. Sem
-  token, ou com o orçamento diário esgotado, usa a lista geral.
+- `GET /api/market/quote/:ticker`: devolve `{ quote, market }`.
+  - O preço vem da lista geral.
+  - A v2 preenche `session` se houver token ou se o ticker for de
+    demonstração.
+  - Sem token, ou com o orçamento diário esgotado, `session` fica `null`.
 - `GET /api/market/history/:ticker?range=1mo|3mo|1y`: devolve
   `{ symbol, available, reason, interval: "1d", range, points, checkedAt, source }`.
   - Só atende tickers do histórico empacotado ou de demonstração.
@@ -142,15 +149,11 @@ aberto e 1.800 com ele fechado.
   defasados.
 - Nunca escrever "tempo real". O texto é sempre "com atraso" ou "consultado às
   HH:MM" (horário de Brasília).
-- Gráfico de cotação: o histórico empacotado (até 26/10/2026) recebe os
-  fechamentos diários da brapi com data posterior ao último ponto. Antes de
-  juntar, os fechamentos das até 5 datas em comum mais recentes precisam bater
-  (diferença ≤ 0,5%). Só as mais recentes contam porque o histórico empacotado
-  é ajustado por proventos. O pregão em andamento (até 18:30 de dia útil) fica
-  de fora.
-  Se não baterem, o gráfico fica só com o histórico empacotado e avisa. Nada de
-  pontos inventados ou repetidos. Os gráficos de proventos e resultados não
-  usam cotação.
+- Gráfico de cotação: substituído em 06/11/2026. As bases ajustada e sem
+  ajuste, o diário, o mensal e a cotação mais recente estão em
+  `docs/MARGEM-E-HISTORICO.md`. A junção antiga com o histórico da AGF saiu,
+  porque a parte antiga desse histórico mistura bases. Os gráficos de proventos
+  e resultados não usam cotação.
 
 ## Cobertura e pendências (QA de 05/11/2026)
 
@@ -162,5 +165,4 @@ aberto e 1.800 com ele fechado.
   - uma pessoa sozinha consegue gastar o teto diário. Se isso acontecer, o site
     volta para a lista geral até o dia seguinte;
   - EMAE4 ainda gasta chamadas por ação;
-  - entre 18:30 e cerca de 19:00, o fechamento do dia pode não estar final;
   - o Startup aceita 10 ações por chamada, e isso ainda não é usado.

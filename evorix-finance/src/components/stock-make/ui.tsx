@@ -26,12 +26,19 @@ export function Seg<T extends string>({
   onChange,
   label,
   disabled = false,
+  disabledOptions = [],
+  labels,
+  hint,
 }: {
   options: readonly T[];
   value: T;
   onChange: (v: T) => void;
   label: string;
   disabled?: boolean;
+  // Options that exist but cannot be chosen now, each with its reason.
+  disabledOptions?: readonly T[];
+  labels?: Partial<Record<T, string>>;
+  hint?: (option: T) => string | undefined;
 }) {
   return (
     <div
@@ -44,15 +51,16 @@ export function Seg<T extends string>({
           key={o}
           type="button"
           aria-pressed={o === value}
-          disabled={disabled}
+          disabled={disabled || disabledOptions.includes(o)}
+          title={hint?.(o)}
           onClick={() => onChange(o)}
-          className={`min-h-8 min-w-10 rounded px-3 font-fmk-mono text-xs transition-colors ${
+          className={`min-h-8 min-w-10 whitespace-nowrap rounded px-3 font-fmk-mono text-xs transition-colors ${
             o === value
               ? "bg-fmk-raised text-fmk-ink ring-1 ring-fmk-line"
               : "text-fmk-sub hover:text-fmk-ink"
           }`}
         >
-          {o}
+          {labels?.[o] ?? o}
         </button>
       ))}
     </div>
@@ -65,6 +73,8 @@ export type LegendItem = {
   color: string;
   dash?: string;
   hatch?: boolean;
+  // A point of its own (the latest quote), not a line.
+  marker?: boolean;
   value?: string;
 };
 
@@ -96,7 +106,14 @@ export function Legend({
               className={`group flex min-h-8 items-center gap-2 text-xs transition-opacity ${on ? "text-fmk-ink" : "text-fmk-dim line-through opacity-60"}`}
             >
               <svg width="22" height="10" aria-hidden>
-                {it.hatch ? (
+                {it.marker ? (
+                  <path
+                    d="M11 1 L15 5 L11 9 L7 5 Z"
+                    fill="var(--fmk-bg)"
+                    stroke={it.color}
+                    strokeWidth="1.6"
+                  />
+                ) : it.hatch ? (
                   <rect
                     x="1"
                     y="1"

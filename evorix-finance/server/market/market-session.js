@@ -1,14 +1,20 @@
+import { isTradingDay, previousTradingDay } from "./b3-calendar.js";
+
 // B3 session in São Paulo time, as defined in docs/COTACOES.md. Pure functions:
 // every caller passes the instant, so tests never depend on the real clock.
-// B3 holidays are not in the calendar: on a holiday the session reads as open
-// and the site keeps the 15-minute cadence with the real quote time.
+// Trading days come from b3-calendar.js: a B3 holiday reads as closed and the
+// next opening skips it. A year the calendar does not cover falls back to
+// Monday to Friday.
 
 const zone = "America/Sao_Paulo";
 const openMinute = 10 * 60;
 const closeMinute = 18 * 60;
-// Delayed feeds publish the closing call up to ~30 min after 18:00. Keep the
-// short TTL a little longer so the night is not cached with a pre-close price.
-const settleMinutes = 45;
+// Delayed feeds publish the closing call well after 18:00 (brapi's v2 showed
+// 18:31:30 for PETR4 on 06/11). The short TTL lasts until 19:40, so a fresh
+// list is always fetched after 19:00, when the day's closes count as final
+// (daily-closes.js, price-series.js); a list fetched after 19:40 gets the long
+// closed TTL with a checkedAt already from 19:00 on.
+const settleMinutes = 100;
 const minuteMs = 60_000;
 const minimumTtlMs = minuteMs;
 const maximumClosedTtlMs = 12 * 60 * minuteMs;
@@ -18,6 +24,8 @@ export const openTtlMs = Object.freeze({
   catalog: 15 * minuteMs,
   quote: 15 * minuteMs,
   history: 60 * minuteMs,
+  // Chart series (docs/MARGEM-E-HISTORICO.md): same rule as the history.
+  series: 60 * minuteMs,
 });
 
 const formatter = new Intl.DateTimeFormat("en-CA", {
@@ -68,21 +76,39 @@ function calendarDay(year, month, day, offset) {
   };
 }
 
+function dateText({ year, month, day }) {
+  return `${String(year).padStart(4, "0")}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+}
+
 export function saoPauloDate(ms) {
+  return dateText(zonedParts(ms));
+}
+
+// São Paulo calendar date and minute of the day of an instant.
+export function saoPauloClock(ms) {
   const p = zonedParts(ms);
-  return `${String(p.year).padStart(4, "0")}-${String(p.month).padStart(2, "0")}-${String(p.day).padStart(2, "0")}`;
+  return { date: dateText(p), minute: p.hour * 60 + p.minute };
+}
+
+// The B3 session a price seen at `ms` belongs to: today from the opening on a
+// trading day, otherwise the last trading day before today.
+export function tradingSessionDate(ms) {
+  const { date, minute } = saoPauloClock(ms);
+  return isTradingDay(date) && minute >= openMinute
+    ? date
+    : previousTradingDay(date);
 }
 
 export function marketSession(ms) {
   const p = zonedParts(ms);
-  const today = calendarDay(p.year, p.month, p.day, 0);
   const minute = p.hour * 60 + p.minute;
-  const weekday = today.weekday >= 1 && today.weekday <= 5;
-  const open = weekday && minute >= openMinute && minute < closeMinute;
+  const tradingDay = isTradingDay(dateText(p));
+  const open = tradingDay && minute >= openMinute && minute < closeMinute;
   let nextOpenAt = null;
-  for (let offset = 0; offset <= 7 && nextOpenAt === null; offset++) {
+  // Two weeks cover any run of B3 holidays plus weekends.
+  for (let offset = 0; offset <= 14 && nextOpenAt === null; offset++) {
     const day = calendarDay(p.year, p.month, p.day, offset);
-    if (day.weekday < 1 || day.weekday > 5) continue;
+    if (!isTradingDay(dateText(day))) continue;
     const at = zonedTime(day.year, day.month, day.day, 10, 0);
     if (at > ms) nextOpenAt = at;
   }
@@ -99,7 +125,9 @@ export function marketSession(ms) {
     nextOpenAt: new Date(nextOpenAt).toISOString(),
     closesAt: closesAt === null ? null : new Date(closesAt).toISOString(),
     settling:
-      weekday && minute >= closeMinute && minute < closeMinute + settleMinutes,
+      tradingDay &&
+      minute >= closeMinute &&
+      minute < closeMinute + settleMinutes,
     date: saoPauloDate(ms),
   };
 }

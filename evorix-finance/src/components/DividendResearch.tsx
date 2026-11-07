@@ -9,6 +9,7 @@ import { StockMake } from "./stock-make/StockMake";
 
 export function DividendCompanyResearch({
   entry,
+  ranking,
   backLink,
   previous,
   next,
@@ -31,7 +32,12 @@ export function DividendCompanyResearch({
       id="pagina-conteudo"
       className="dividend-company -mx-4 -mt-4 md:-mx-8 md:-mt-10"
     >
-      <StockMake entry={entry} titleRef={title} backLink={backLink} />
+      <StockMake
+        entry={entry}
+        titleRef={title}
+        backLink={backLink}
+        publication={{ id: ranking.id, publishedAt: ranking.updatedAt }}
+      />
       <div className="mx-auto max-w-[1280px] px-5 pb-10 md:px-10">
         <nav
           aria-label="Outras pesquisas desta publicação"

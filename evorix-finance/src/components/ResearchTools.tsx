@@ -28,6 +28,14 @@ const labels: Record<string, string> = {
   dataSource: "Fonte",
   dividendAnalysis: "Análise de dividendos",
 };
+// The spreadsheet's price and margin are research values. The market price
+// and the dynamic margin live on the ranking and the company page.
+const researchLabels: Partial<Record<string, string>> = {
+  referencePrice: "Preço da pesquisa",
+  safetyMargin: "Margem da pesquisa",
+};
+const columnLabel = (column: { key: string; label: string }) =>
+  researchLabels[column.key] ?? column.label;
 function fieldValue(entry: ResearchEntry, field: string) {
   if (field === "dividendAnalysis")
     return (
@@ -41,7 +49,7 @@ function fieldValue(entry: ResearchEntry, field: string) {
           )
           .map((column) => (
             <div key={column.key} className="mt-2">
-              <dt className="font-medium">{column.label}</dt>
+              <dt className="font-medium">{columnLabel(column)}</dt>
               <dd>
                 {formatDividendValue(
                   dividendValue(entry, column.key),
@@ -195,7 +203,7 @@ export function CompanyComparison({
           {(a.dividendAnalysis || b.dividendAnalysis
             ? dividendColumns
                 .filter((column) => column.key !== "updatedOn")
-                .map((column) => [column.key, column.label])
+                .map((column) => [column.key, columnLabel(column)])
             : Object.entries(labels).filter(
                 ([key]) => key !== "rank" && key !== "dividendAnalysis",
               )

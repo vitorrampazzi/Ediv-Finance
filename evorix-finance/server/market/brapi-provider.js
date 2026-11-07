@@ -1,10 +1,10 @@
 import { companyLogoUrl } from "../../company-logo.mjs";
 import { saoPauloDate } from "./market-session.js";
-import { historyRanges, isValidTicker } from "./validation.js";
+import { historyRanges, isValidTicker, seriesRanges } from "./validation.js";
 
 // brapi.dev adapter: the only module that knows brapi URLs and payloads. It
 // returns normalized objects (decimal text or null, never 0 for a missing
-// value). Another provider can replace it with the same three methods.
+// value). Another provider can replace it with the same four methods.
 
 const origin = "https://brapi.dev";
 export const brapiPaths = Object.freeze({
@@ -158,6 +158,7 @@ export function normalizeQuote(payload, symbol) {
     price,
     change: decimalText(data.regularMarketChange, 8),
     changePercent: decimalText(data.regularMarketChangePercent, 4),
+    open: priceText(data.regularMarketOpen),
     previousClose: priceText(data.regularMarketPreviousClose),
     dayHigh: priceText(data.regularMarketDayHigh),
     dayLow: priceText(data.regularMarketDayLow),
@@ -194,6 +195,35 @@ export function normalizeHistory(payload, symbol) {
   return [...byDate.values()]
     .map((entry) => entry.point)
     .sort((left, right) => (left.date < right.date ? -1 : 1));
+}
+
+function seriesNumber(value) {
+  return priceText(value) === null ? null : Number(value);
+}
+
+// Chart series in a compact form that is cached as is: oldest first, one row
+// per São Paulo date, `[date, adjustedClose, rawClose]` with numbers or null.
+// brapi `close` is adjusted for stock events only, so it is never kept: it is
+// neither the traded price nor the fully adjusted one.
+export function normalizeSeries(payload, symbol) {
+  const prices = resultFor(payload, symbol)?.data?.historicalDataPrice;
+  if (!Array.isArray(prices)) throw new ProviderError("invalid");
+  const byDate = new Map();
+  for (const raw of prices) {
+    const time = isoTime(raw?.date);
+    if (time === null) continue;
+    const adjusted = seriesNumber(raw.adjustedClose);
+    const traded = seriesNumber(raw.rawClose);
+    if (adjusted === null && traded === null) continue;
+    const ms = Date.parse(time);
+    const date = saoPauloDate(ms);
+    const previous = byDate.get(date);
+    if (previous && previous.ms >= ms) continue;
+    byDate.set(date, { ms, row: [date, adjusted, traded] });
+  }
+  return [...byDate.values()]
+    .map((entry) => entry.row)
+    .sort((left, right) => (left[0] < right[0] ? -1 : 1));
 }
 
 function defaultLog(entry) {
@@ -300,6 +330,21 @@ export function createBrapiProvider({
       if (!historyRanges.includes(range)) throw new ProviderError("invalid");
       return normalizeHistory(
         await request("history", { symbols: symbol, range, interval: "1d" }),
+        symbol,
+      );
+    },
+    // Longest daily series of the plan; `includeRaw` adds the traded price
+    // (Pro plan or demonstration ticker).
+    async series(symbol, { range, includeRaw = false } = {}) {
+      assertTicker(symbol);
+      if (!seriesRanges.includes(range)) throw new ProviderError("invalid");
+      return normalizeSeries(
+        await request("history", {
+          symbols: symbol,
+          range,
+          interval: "1d",
+          ...(includeRaw === true ? { includeRaw: "true" } : {}),
+        }),
         symbol,
       );
     },

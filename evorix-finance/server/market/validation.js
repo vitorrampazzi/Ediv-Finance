@@ -49,3 +49,14 @@ export const symbolsSchema = z
 export const historyQuerySchema = z.object({
   range: z.enum(historyRanges).optional().default("1mo"),
 });
+
+// Chart series: the plan's longest range ("max" for Pro and demo tickers).
+export const seriesRanges = Object.freeze(["3mo", "1y", "max"]);
+export const priceBases = Object.freeze(["adjusted", "nominal"]);
+
+// GET /api/rankings/price-series/:ticker. Without `basis` the answer uses the
+// default basis (adjusted when it exists).
+export const priceSeriesQuerySchema = z.object({
+  basis: z.enum(priceBases).optional(),
+  granularity: z.enum(["daily", "monthly"]).optional().default("daily"),
+});

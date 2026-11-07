@@ -22,7 +22,9 @@ const passed = [],
   errors = [],
   fonts = [];
 const widths = [320, 1440];
-// Quotes are mocked (all unavailable) so this suite never reaches brapi.dev.
+// Market answers are mocked so this suite never reaches brapi.dev: without a
+// publication in the fixture, price and margin fall back to the research, and
+// every price series reads as not covered.
 const market = marketFixture();
 async function run(name, work) {
   if (
@@ -105,7 +107,9 @@ try {
           label:
             column.key === "referencePrice"
               ? "Preço da pesquisa"
-              : column.label,
+              : column.key === "safetyMargin"
+                ? "Margem da pesquisa"
+                : column.label,
           value: formatDividendValue(
             dividendValue(entry, column.key),
             column.format,
@@ -113,8 +117,8 @@ try {
         },
       );
   }
+  // The price chart comes from /api/rankings/price-series.
   const groups = {
-    price: ["referencePrice", "ceilingPrice"],
     dividends: ["projectedGrossDividendPerShare", "estimatedEps"],
     earnings: [
       "estimatedNetIncome",
@@ -127,7 +131,7 @@ try {
     valuation: ["projectedPE", "averagePE10Years", "peDeviation"],
   };
   async function publicationCharts(entry) {
-    await expect(page.locator("figure.fmk-publication-chart")).toHaveCount(6);
+    await expect(page.locator("figure.fmk-publication-chart")).toHaveCount(5);
     for (const [id, keys] of Object.entries(groups)) {
       const figure = page.locator(
         'figure[data-publication-chart="' + id + '"]',
@@ -180,8 +184,12 @@ try {
         /DEMO3|Companhia Modelo|Marina Albuquerque|1962|18:40|série ilustrativa|empresa fictícia|tempo real/i,
       );
       await expect(
-        page.locator("#cotacao [data-live-quote-block]"),
-      ).toHaveAttribute("data-live-quote-block", "unavailable");
+        page.locator("#cotacao [data-market-quote]"),
+      ).toHaveAttribute("data-market-quote", /^(research|unavailable)$/);
+      await expect(page.locator("figure[data-price-chart]")).toHaveAttribute(
+        "data-price-chart",
+        /^(unavailable|invalid)$/,
+      );
     }
   });
   await run(

@@ -3,12 +3,24 @@
   min-width: 0;
   max-width: 100%;
 }
-.dividend-table-hint {
+.dividend-table-hint,
+.dividend-table-hint-sizer {
   max-width: 80ch;
   margin: 0 0 0.75rem;
   color: var(--ediv-muted);
   font-size: 0.8125rem;
   line-height: 1.6;
+}
+/* The note and its longest usual text share one cell, so the table below
+   does not move when the quote time arrives. */
+.dividend-table-hint-frame {
+  display: grid;
+}
+.dividend-table-hint-frame > * {
+  grid-area: 1 / 1;
+}
+.dividend-table-hint-sizer {
+  visibility: hidden;
 }
 .dividend-table-region {
   max-width: 100%;

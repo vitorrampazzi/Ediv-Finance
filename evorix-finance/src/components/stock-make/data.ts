@@ -1,5 +1,6 @@
 import { createContext, useContext } from "react";
 import type { StockHistoryState } from "../../hooks/useStockHistory";
+import type { MarketView } from "../../lib/marketData";
 import type { Entry } from "../../lib/ranking";
 import {
   dividendColumns,
@@ -95,6 +96,18 @@ export function useStockData() {
   if (!data) throw new Error("StockMake requires its research context");
   return data;
 }
+// Market price and dynamic margin, the same the ranking shows, plus the
+// publication's own price and margin kept as a reference.
+export type StockMarket = {
+  view: MarketView;
+  reference: string | null;
+};
+export const StockMarketContext = createContext<StockMarket | null>(null);
+export function useStockMarket() {
+  const market = useContext(StockMarketContext);
+  if (!market) throw new Error("StockMake requires its market context");
+  return market;
+}
 
 // The current publication supplies snapshots, not authorized historical series.
 export type PricePoint = {
@@ -121,11 +134,12 @@ export const explanations: Partial<Record<DividendColumnKey, string>> = {
   averagePE10Years: "Média dos últimos dez anos informada na pesquisa.",
   peDeviation:
     "Desvio do P/L informado na planilha, preservado sem substituir por outro cálculo.",
-  referencePrice: "Cotação de referência da planilha; não é preço ao vivo.",
+  referencePrice:
+    "Preço da ação na planilha, na data da pesquisa; não é a cotação de mercado.",
   ceilingPrice:
-    "Preço teto da fonte. Premissa histórica de yield de 6,81% do Tesouro IPCA+ 2037 com juros semestrais, não taxa de mercado atual.",
+    "Preço teto da fonte. Premissa histórica de yield de 6,81% do Tesouro IPCA+ 2037 com juros semestrais, não taxa de mercado atual. Só muda com uma nova análise.",
   safetyMargin:
-    "Margem e arredondamento informados na fonte; não representa retorno esperado ou garantia.",
+    "Margem informada na planilha, com o preço da pesquisa. A margem atual, que acompanha a cotação, fica no topo da página e na seção Cotação. Não representa retorno esperado ou garantia.",
   netDebtToEbitda:
     "Relação em vezes. Valor negativo isolado não comprova caixa líquido: faltam os sinais separados de dívida e EBITDA.",
   estimatedNetIncome:
@@ -138,7 +152,7 @@ export const explanations: Partial<Record<DividendColumnKey, string>> = {
   projectedGrossDividendPerShare:
     "Dividendo bruto projetado por ação, antes de eventuais deduções.",
   estimatedGrossDividendYield:
-    "Dividend Yield bruto estimado da fonte, em relação à cotação de referência.",
+    "Dividend Yield bruto estimado da fonte, em relação ao preço da pesquisa, na data da pesquisa.",
   announcementFrequency:
     "Frequência habitual de anúncios, sem garantia de eventos futuros.",
   announcementMonths:

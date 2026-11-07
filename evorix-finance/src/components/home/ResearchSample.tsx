@@ -7,6 +7,7 @@ import {
   publicMetrics as metrics,
   usePublicRanking,
 } from "../../hooks/usePublicRanking";
+import { marketView } from "../../lib/marketData";
 import {
   dividendColumns,
   formatDividendValue,
@@ -21,7 +22,7 @@ export function ResearchSample({
   showAccessActions?: boolean;
   lockedPreview?: boolean;
 }) {
-  const { publication, loading, error, retry } = usePublicRanking();
+  const { publication, loading, error, retry, stale } = usePublicRanking();
   return (
     <section
       id="caderno-de-exemplo"
@@ -63,8 +64,9 @@ export function ResearchSample({
             <div className="ph-ranking-publication">
               <h3>Ranking de Ações</h3>
               <p>
-                Estimativas da pesquisa publicada, sem cotação ao vivo. Margem
-                de segurança não representa retorno garantido.
+                DY e P/L da pesquisa publicada; a margem de segurança acompanha
+                a cotação da brapi.dev, com atraso. Margem de segurança não
+                representa retorno garantido.
               </p>
             </div>
             <ol
@@ -101,13 +103,38 @@ export function ResearchSample({
                       const column = dividendColumns.find(
                         (item) => item.key === key,
                       )!;
+                      // The margin follows the quote of the same answer.
+                      const margin =
+                        key === "safetyMargin"
+                          ? marketView(
+                              entry.market,
+                              { margin: entry.dividendAnalysis.safetyMargin },
+                              {
+                                loading: false,
+                                failed: stale,
+                                publishedAt: publication.updatedAt,
+                                showCeiling: false,
+                              },
+                            ).margin
+                          : null;
                       return (
-                        <div key={key} data-field={key}>
+                        <div
+                          key={key}
+                          data-field={key}
+                          data-market-state={margin?.state}
+                        >
                           <dt>{column.label}</dt>
-                          <dd className="font-numbers">
-                            {formatDividendValue(
-                              entry.dividendAnalysis[key],
-                              column.format,
+                          <dd className="font-numbers" title={margin?.title}>
+                            {margin
+                              ? margin.text
+                              : formatDividendValue(
+                                  entry.dividendAnalysis[key],
+                                  column.format,
+                                )}
+                            {margin?.qualifier && (
+                              <small className="ph-ranking-qualifier">
+                                {margin.qualifier}
+                              </small>
                             )}
                           </dd>
                         </div>
