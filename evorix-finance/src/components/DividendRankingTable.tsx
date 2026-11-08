@@ -161,7 +161,7 @@ export function DividendRankingTable({
                     content={
                       column.label +
                       (column.key === "referencePrice" && market
-                        ? " da brapi.dev, com atraso, em reais (R$). Sem cotação válida, aparece o preço da pesquisa, com a data."
+                        ? " da brapi.dev, em reais (R$). Sem cotação válida, aparece o preço da pesquisa, com a data."
                         : column.key === "safetyMargin" && market
                           ? ": (preço-teto − cotação de mercado) ÷ preço-teto, com duas casas e recalculada a cada cotação. Fica negativa quando a cotação passa do teto e não representa retorno garantido."
                           : column.key === "ceilingPrice"

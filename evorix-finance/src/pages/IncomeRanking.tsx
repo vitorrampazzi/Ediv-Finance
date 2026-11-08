@@ -424,7 +424,7 @@ function MemberIncomeRanking() {
           ? [
               [
                 "Compare com o mercado",
-                "O preço de mercado é a cotação da brapi.dev, com atraso. A margem de segurança acompanha a cotação; o preço-teto só muda com uma nova análise.",
+                "O preço de mercado é a cotação da brapi.dev. A margem de segurança acompanha a cotação; o preço-teto só muda com uma nova análise.",
               ],
               [
                 "Entenda o preço teto",

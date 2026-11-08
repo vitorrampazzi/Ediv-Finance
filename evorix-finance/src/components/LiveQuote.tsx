@@ -68,14 +68,11 @@ export function MarketMarginCell({ view }: { view: MarketView }) {
   );
 }
 
-// "brapi.dev · com atraso · consultada às 10:48", never "tempo real".
+// "brapi.dev · consultada às 10:48", never "tempo real".
 function sourceShort(quote: LiveQuote, stale: boolean) {
   return [
     stale ? "defasada" : null,
     quote.source,
-    quote.delayMinutes
-      ? `com atraso de até ${quote.delayMinutes} min`
-      : "com atraso",
     quote.quoteTime
       ? `cotação de ${saoPauloMoment(quote.quoteTime)}`
       : quote.checkedAt
@@ -290,7 +287,7 @@ export function MarketQuotePanel({
           </p>
         )}
         <p className={style.note}>
-          A cotação da brapi.dev chega com atraso. DY e P/L ficam como na data
+          A cotação vem da brapi.dev. DY e P/L ficam como na data
           da pesquisa; a margem de segurança acompanha a cotação.
         </p>
       </div>

@@ -142,7 +142,7 @@ function MemberRankingHighlights() {
             {showingDemo ? (
               "Abra uma empresa de exemplo para conhecer o formato da pesquisa."
             ) : entries.some((entry) => entry.dividendAnalysis) ? (
-              "Consulte as análises de dividendos: preço de mercado da brapi.dev, com atraso, e a margem de segurança que acompanha a cotação."
+              "Consulte as análises de dividendos: preço de mercado da brapi.dev, e a margem de segurança que acompanha a cotação."
             ) : (
               <>Leia a tese e confira o prazo de cada cenário.</>
             )}

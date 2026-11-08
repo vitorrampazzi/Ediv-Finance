@@ -152,7 +152,7 @@ function Header({
               state={view.price.state}
               title={view.price.title}
               sub={priceCaption(view)}
-              tip="Cotação da brapi.dev, com atraso: a mesma do ranking. Sem cotação válida, aparece o preço da pesquisa, com a data."
+              tip="Cotação da brapi.dev: a mesma do ranking. Sem cotação válida, aparece o preço da pesquisa, com a data."
             >
               {view.price.state === "loading"
                 ? pending(view.price.title)

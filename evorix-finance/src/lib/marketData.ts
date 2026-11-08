@@ -489,7 +489,7 @@ export function priceCaption(view: MarketView, now: number = Date.now()) {
     ? saoPauloMoment(view.quote.checkedAt, now)
     : null;
   if (view.price.state === "market")
-    return `brapi.dev, com atraso${time ? ` · ${time}` : ""}`;
+    return `brapi.dev${time ? ` · ${time}` : ""}`;
   if (view.price.state === "stale")
     return `defasada${time ? ` · ${time}` : ""}`;
   if (view.price.state === "loading") return "consultando a cotação";
@@ -610,11 +610,11 @@ export function rankingMarketNote(
     ? `, consultada ${consultedAt(state.checkedAt, now)} (horário de Brasília)`
     : "";
   if (state.loading)
-    return `Preço de mercado: cotação da brapi.dev, com atraso. ${formula} ${ceiling}`;
+    return `Preço de mercado: cotação da brapi.dev. ${formula} ${ceiling}`;
   if (state.applies)
     return state.failed
       ? `Preço de mercado: última cotação válida da brapi.dev${when}; a consulta mais recente falhou, então os valores aparecem como defasados. ${formula} ${ceiling}`
-      : `Preço de mercado: cotação da brapi.dev, com atraso${when}. ${formula} ${ceiling}`;
+      : `Preço de mercado: cotação da brapi.dev${when}. ${formula} ${ceiling}`;
   const research = `os da pesquisa${day ? ` publicada em ${day}` : ""}`;
   return state.hasData
     ? `Nesta versão, preço de mercado e margem de segurança são ${research}: a cotação da brapi.dev acompanha só a publicação mais recente.`

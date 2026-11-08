@@ -412,7 +412,7 @@ try {
         await expect(field).toHaveAttribute("data-market-state", margin[i][1]);
       }
       await expect(section.locator(".ph-ranking-publication p")).toContainText(
-        "a margem de segurança acompanha a cotação da brapi.dev, com atraso",
+        "a margem de segurança acompanha a cotação da brapi.dev",
       );
       // The ceiling never reaches a public page.
       await expect(section).not.toContainText("R$ 1,00");
@@ -488,7 +488,7 @@ try {
         "Margem de segurança = (preço-teto − cotação de mercado) ÷ preço-teto: 20,00%, com a cotação brapi.dev de R$ 0,80 consultada às 10:48 (horário de Brasília). O preço-teto está na pesquisa completa.",
       );
       await expect(page.locator("article")).toContainText(
-        "DY e P/L são estimativas da pesquisa, na data da publicação, e não mudam com a cotação. A margem de segurança acompanha a cotação da brapi.dev, com atraso.",
+        "DY e P/L são estimativas da pesquisa, na data da publicação, e não mudam com a cotação. A margem de segurança acompanha a cotação da brapi.dev.",
       );
       // Quote of the same public answer: summary, so no session or R$ change.
       const block = page.locator("[data-market-quote]");
@@ -510,7 +510,7 @@ try {
         block.locator('[data-market-quote-field="ceiling"]'),
       ).toHaveCount(0);
       await expect(block.locator("[data-market-source]")).toHaveText(
-        "brapi.dev · com atraso · consultada às 10:48",
+        "brapi.dev · consultada às 10:48",
       );
       await expect(page.locator("article")).not.toContainText("R$ 1,00");
       assert.doesNotMatch(
@@ -532,7 +532,7 @@ try {
       await expect(block).toHaveAttribute("data-market-quote", "stale");
       await expect(block.locator("[data-market-quote-stale]")).toBeVisible();
       await expect(block.locator("[data-market-source]")).toHaveText(
-        "defasada · brapi.dev · com atraso · consultada às 10:48",
+        "defasada · brapi.dev · consultada às 10:48",
       );
       await expect(indicator.locator("[data-indicator-value]")).toHaveText(
         margins.stale,

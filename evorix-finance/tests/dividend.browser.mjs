@@ -372,7 +372,7 @@ try {
           );
         if (column.key === "referencePrice")
           await expect(page.getByRole("tooltip")).toContainText(
-            "da brapi.dev, com atraso",
+            "da brapi.dev",
           );
         await header.press("Escape");
       }
@@ -441,10 +441,10 @@ try {
       ).toHaveText("−0,91%");
       await expect(cell(tim, "referencePrice")).toHaveAttribute(
         "title",
-        "Cotação brapi.dev com atraso, consultada às 10:48 (horário de Brasília).",
+        "Cotação brapi.dev, consultada às 10:48 (horário de Brasília).",
       );
       await expect(cell(tim, "referencePrice").locator(".sr-only")).toHaveText(
-        "Cotação brapi.dev com atraso, consultada às 10:48 (horário de Brasília).",
+        "Cotação brapi.dev, consultada às 10:48 (horário de Brasília).",
       );
       assert.equal(
         safetyMarginPercent("32.74", "19.62000000"),
@@ -528,7 +528,7 @@ try {
       const hint = page.locator(".dividend-table-hint");
       assert.doesNotMatch(await hint.textContent(), /\b\d{2}\/\d{2}\/\d{4}\b/);
       await expect(hint).toContainText(
-        "Preço de mercado: cotação da brapi.dev, com atraso, consultada às 10:48 (horário de Brasília).",
+        "Preço de mercado: cotação da brapi.dev, consultada às 10:48 (horário de Brasília).",
       );
       await expect(hint).toContainText(
         "Margem de segurança = (preço-teto − cotação de mercado) ÷ preço-teto, recalculada a cada cotação",
@@ -959,7 +959,7 @@ try {
       ).toHaveText("R$ 19,62");
       await expect(
         stat("Preço de mercado").locator("[data-summary-sub]"),
-      ).toHaveText("brapi.dev, com atraso · 10:48");
+      ).toHaveText("brapi.dev · 10:48");
       await expect(
         stat("Margem de segurança").locator("[data-summary-value]"),
       ).toHaveText("40,07%");
@@ -1011,7 +1011,7 @@ try {
         ],
       );
       await expect(block.locator("[data-market-source]")).toHaveText(
-        "brapi.dev · com atraso · consultada às 10:48",
+        "brapi.dev · consultada às 10:48",
       );
       await expect(
         block.locator('[data-market-quote-field="ceiling"]'),

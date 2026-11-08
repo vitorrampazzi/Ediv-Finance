@@ -50,8 +50,7 @@ export function PublicQuestions() {
               <p>
                 É a lista de empresas da publicação mais recente da equipe, na
                 ordem original da pesquisa. DY e P/L são os da planilha; a
-                margem de segurança acompanha a cotação da brapi.dev, com
-                atraso.
+                margem de segurança acompanha a cotação da brapi.dev.
               </p>
             </div>
           </details>
@@ -64,7 +63,7 @@ export function PublicQuestions() {
               <p>
                 Sim. A home mostra as empresas e os indicadores da pesquisa
                 publicada pela equipe. DY e P/L refletem a data da planilha; a
-                margem de segurança usa a cotação da brapi.dev, com atraso. Abra
+                margem de segurança usa a cotação da brapi.dev. Abra
                 uma empresa para acessar a análise completa com sua conta.
               </p>
             </div>
