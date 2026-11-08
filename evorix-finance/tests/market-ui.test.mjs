@@ -127,7 +127,7 @@ test("market basis: canonical price, change and margin with the formula", () => 
   assert.equal(view.price.qualifier, null);
   assert.equal(
     view.price.title,
-    "Cotação brapi.dev com atraso, consultada às 10:48 (horário de Brasília).",
+    "Cotação brapi.dev, consultada às 10:48 (horário de Brasília).",
   );
   assert.equal(view.margin.state, "market");
   assert.equal(view.margin.percent, safetyMarginPercent("32.74", "19.62"));
@@ -136,7 +136,7 @@ test("market basis: canonical price, change and margin with the formula", () => 
     view.margin.title,
     "Margem de segurança = (preço-teto − cotação de mercado) ÷ preço-teto = (R$ 32,74 − R$ 19,62) ÷ R$ 32,74 = 40,07%. Preço-teto da pesquisa de 20/10; cotação brapi.dev consultada às 10:48 (horário de Brasília).",
   );
-  assert.equal(priceCaption(view, now), "brapi.dev, com atraso · 10:48");
+  assert.equal(priceCaption(view, now), "brapi.dev · 10:48");
   assert.equal(marginCaption(view, now), "com a cotação de 10:48");
   assert.equal(marginSortValue(view), 40.07);
   assert.doesNotMatch(JSON.stringify(view), /tempo real/i);
@@ -329,7 +329,7 @@ test("a publication: market data applies only to the one it was computed for", (
   assert.equal(latest.views.get("SYN2").margin.state, "research");
   assert.equal(
     latest.note,
-    "Preço de mercado: cotação da brapi.dev, com atraso, consultada às 10:48 (horário de Brasília). Margem de segurança = (preço-teto − cotação de mercado) ÷ preço-teto, recalculada a cada cotação; fica negativa quando a cotação passa do teto. O preço-teto vem da publicação de 22/10 e só muda com uma nova análise.",
+    "Preço de mercado: cotação da brapi.dev, consultada às 10:48 (horário de Brasília). Margem de segurança = (preço-teto − cotação de mercado) ÷ preço-teto, recalculada a cada cotação; fica negativa quando a cotação passa do teto. O preço-teto vem da publicação de 22/10 e só muda com uma nova análise.",
   );
   assert.ok(latest.noteSizer.length >= latest.note.length - 2);
   const older = publicationMarket(
@@ -365,7 +365,7 @@ test("a publication: market data applies only to the one it was computed for", (
   assert.equal(waiting.views.get("TIMS3").price.state, "loading");
   assert.match(
     waiting.note,
-    /^Preço de mercado: cotação da brapi\.dev, com atraso\. Margem/,
+    /^Preço de mercado: cotação da brapi.dev. Margem/,
   );
   const down = publicationMarket(
     entries,

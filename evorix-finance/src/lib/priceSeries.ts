@@ -447,7 +447,7 @@ export function rowTooltip(
       row.latest === null ? "Não informada" : quoteMoney(row.latest),
     ]);
     lines.push(["Base", "nominal, sem ajuste"]);
-    lines.push(["Status", options.marker?.stale ? "defasada" : "com atraso"]);
+    lines.push(["Status", options.marker?.stale ? "defasada" : "mais recente"]);
     lines.push(["Fonte", "brapi.dev"]);
     return {
       title: markerTitle(

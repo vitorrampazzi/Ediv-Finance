@@ -227,7 +227,7 @@ export function quoteTone(quote: LiveQuote | null) {
         : "flat";
 }
 
-// The source line never claims live data: it is always "com atraso".
+// The source line never claims live data: it names the source and the time.
 export function quoteSourceText(
   quote: Pick<
     LiveQuote,
@@ -235,16 +235,13 @@ export function quoteSourceText(
   >,
   now: number = Date.now(),
 ) {
-  const delay = quote.delayMinutes
-    ? `com atraso de até ${quote.delayMinutes} min`
-    : "com atraso";
   const when = quote.quoteTime
     ? `cotação de ${saoPauloMoment(quote.quoteTime, now)}`
     : quote.checkedAt
       ? `consultada ${consultedAt(quote.checkedAt, now)}`
       : "horário não informado";
   return (
-    `Cotação ${quote.source} ${delay}, ${when} (horário de Brasília)` +
+    `Cotação ${quote.source}, ${when} (horário de Brasília)` +
     (quote.stale
       ? ". Defasada: a consulta mais recente falhou e esta é a última cotação válida."
       : ".")

@@ -65,7 +65,7 @@ export function ResearchSample({
               <h3>Ranking de Ações</h3>
               <p>
                 DY e P/L da pesquisa publicada; a margem de segurança acompanha
-                a cotação da brapi.dev, com atraso. Margem de segurança não
+                a cotação da brapi.dev. Margem de segurança não
                 representa retorno garantido.
               </p>
             </div>

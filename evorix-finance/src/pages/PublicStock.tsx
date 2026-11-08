@@ -257,7 +257,7 @@ function PublicCompany() {
           Fonte: pesquisa da Escola do Dividendo
           {date ? `, publicação de ${date}` : ""}. DY e P/L são estimativas da
           pesquisa, na data da publicação, e não mudam com a cotação. A margem
-          de segurança acompanha a cotação da brapi.dev, com atraso. Margem de
+          de segurança acompanha a cotação da brapi.dev. Margem de
           segurança não representa retorno garantido. Conteúdo educativo, sem
           recomendação individual de investimento.
         </p>

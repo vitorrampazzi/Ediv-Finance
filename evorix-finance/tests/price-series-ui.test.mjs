@@ -240,7 +240,7 @@ test("tooltips: São Paulo date, value, basis, status and source", () => {
   assert.deepEqual(latest.lines, [
     ["Cotação", "R$ 19,62"],
     ["Base", "nominal, sem ajuste"],
-    ["Status", "com atraso"],
+    ["Status", "mais recente"],
     ["Fonte", "brapi.dev"],
   ]);
   assert.equal(
