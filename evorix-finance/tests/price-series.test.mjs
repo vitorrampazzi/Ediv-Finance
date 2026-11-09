@@ -684,7 +684,7 @@ test("nominal sem token: AGF e Escola, prioridade, lacunas e feriados", () => {
     { from: "2026-10-23", to: "2026-11-05", source: "escola" },
   ]);
   assert.deepEqual(result.coverage.notes, [
-    "O histórico da AGF anterior a 20/10/2026 foi ajustado por um método não documentado e não é usado.",
+    "O histórico mais antigo da AGF foi ajustado por um método não documentado e não é usado.",
   ]);
   assert.deepEqual(logs, []);
   assert.equal(result.latestQuote.connect, true);

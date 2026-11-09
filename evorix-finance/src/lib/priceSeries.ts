@@ -403,13 +403,10 @@ export function markerTitle(marker: Pick<SeriesMarker, "checkedAt" | "stale">) {
 export function coverageText(coverage: PriceSeries["coverage"]) {
   const segments = coverage.segments.map(
     (segment) =>
-      `${segment.source ? sourceLabels[segment.source] : "fonte não informada"} de ${dateText(segment.from)} a ${dateText(segment.to)}`,
+      segment.source ? sourceLabels[segment.source] : "fonte não informada",
   );
-  return segments.length
-    ? `Fontes: ${segments.join("; ")}.`
-    : coverage.from && coverage.to
-      ? `Fechamentos de ${dateText(coverage.from)} a ${dateText(coverage.to)}.`
-      : "";
+  const unique = [...new Set(segments)];
+  return unique.length ? `Fontes: ${unique.join("; ")}.` : "";
 }
 
 // Tooltip of one chart row: São Paulo date, value, basis, status and source.

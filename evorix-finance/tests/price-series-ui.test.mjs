@@ -111,7 +111,7 @@ test("the series is read strictly: order, repeats, invalid closes and notes", ()
   ]);
   assert.equal(
     coverageText(series.coverage),
-    "Fontes: AGF, no trecho com o preço negociado de 28/10/2026 a 28/10/2026; fechamentos consolidados pela Escola do Dividendo de 30/10/2026 a 30/10/2026; brapi.dev de 04/11/2026 a 04/11/2026.",
+    "Fontes: AGF, no trecho com o preço negociado; fechamentos consolidados pela Escola do Dividendo; brapi.dev.",
   );
   assert.throws(() =>
     parsePriceSeries({ ...daily, ticker: "WIZC3" }, expected),

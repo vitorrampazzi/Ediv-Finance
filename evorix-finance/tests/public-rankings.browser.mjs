@@ -488,7 +488,7 @@ try {
         "Margem de segurança = (preço-teto − cotação de mercado) ÷ preço-teto: 20,00%, com a cotação brapi.dev de R$ 0,80. O preço-teto está na pesquisa completa.",
       );
       await expect(page.locator("article")).toContainText(
-        "DY e P/L são estimativas da pesquisa, na data da publicação, e não mudam com a cotação. A margem de segurança acompanha a cotação da brapi.dev.",
+        "DY e P/L são estimativas da pesquisa e não mudam com a cotação. A margem de segurança acompanha a cotação da brapi.dev.",
       );
       // Quote of the same public answer: summary, so no session or R$ change.
       const block = page.locator("[data-market-quote]");
@@ -1191,7 +1191,7 @@ try {
         );
         await expect(price.locator("[data-gap-note]")).toBeVisible();
         await expect(price.locator("[data-coverage]")).toHaveText(
-          "Fontes: brapi.dev de 19/10/2026 a 04/11/2026.",
+          "Fontes: brapi.dev.",
         );
         await expect(price.locator("[data-coverage-note]")).toHaveText(
           "Preços ajustados por proventos e eventos pela brapi, sem ajuste próprio da Escola.",
@@ -1243,7 +1243,7 @@ try {
           "connected",
         );
         await expect(price.locator("[data-coverage]")).toHaveText(
-          "Fontes: AGF, no trecho com o preço negociado de 19/10/2026 a 23/10/2026; fechamentos consolidados pela Escola do Dividendo de 26/10/2026 a 26/10/2026; brapi.dev de 29/10/2026 a 04/11/2026.",
+          "Fontes: AGF, no trecho com o preço negociado; fechamentos consolidados pela Escola do Dividendo; brapi.dev.",
         );
         const aside = page.locator(".fmk-chart-layout aside").first();
         await expect(aside).toContainText("No período · 1A · sem ajuste");
