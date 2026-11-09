@@ -995,7 +995,7 @@ test("F: cotação defasada e cotação ausente: nada de zero no lugar de preço
     }),
     [
       ["R$ 8,00", "defasada", "20,00%", "defasada"],
-      ["R$ 9,00", "da pesquisa (20/10)", "10,00%", "da pesquisa (20/10)"],
+      ["R$ 9,00", "da pesquisa", "10,00%", "da pesquisa"],
       ["Não informado", "cotação indisponível", "Não informado", null],
     ],
   );

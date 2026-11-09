@@ -441,10 +441,10 @@ try {
       ).toHaveText("−0,91%");
       await expect(cell(tim, "referencePrice")).toHaveAttribute(
         "title",
-        "Cotação brapi.dev, consultada às 10:48 (horário de Brasília).",
+        "Cotação brapi.dev.",
       );
       await expect(cell(tim, "referencePrice").locator(".sr-only")).toHaveText(
-        "Cotação brapi.dev, consultada às 10:48 (horário de Brasília).",
+        "Cotação brapi.dev.",
       );
       assert.equal(
         safetyMarginPercent("32.74", "19.62000000"),
@@ -454,7 +454,7 @@ try {
       await expect(value(tim, "safetyMargin")).toHaveText("40,07%");
       await expect(cell(tim, "safetyMargin")).toHaveAttribute(
         "title",
-        "Margem de segurança = (preço-teto − cotação de mercado) ÷ preço-teto = (R$ 32,74 − R$ 19,62) ÷ R$ 32,74 = 40,07%. Preço-teto da pesquisa de 20/10; cotação brapi.dev consultada às 10:48 (horário de Brasília).",
+        "Margem de segurança = (preço-teto − cotação de mercado) ÷ preço-teto = (R$ 32,74 − R$ 19,62) ÷ R$ 32,74 = 40,07%. Preço-teto da pesquisa; cotação brapi.dev.",
       );
       // No valid quote: the research price and margin, with the research day.
       const allos = rowOf("ALOS3");
@@ -464,11 +464,11 @@ try {
       );
       await expect(value(allos, "referencePrice")).toHaveText("R$ 19,37");
       await expect(sub(allos, "referencePrice")).toHaveText(
-        "da pesquisa (20/10)",
+        "da pesquisa",
       );
       await expect(value(allos, "safetyMargin")).toHaveText("1,00%");
       await expect(sub(allos, "safetyMargin")).toHaveText(
-        "da pesquisa (20/10)",
+        "da pesquisa",
       );
       // Last valid quote after a failed refresh on the server: "defasada".
       const stale = rowOf("SYN15");
@@ -528,13 +528,13 @@ try {
       const hint = page.locator(".dividend-table-hint");
       assert.doesNotMatch(await hint.textContent(), /\b\d{2}\/\d{2}\/\d{4}\b/);
       await expect(hint).toContainText(
-        "Preço de mercado: cotação da brapi.dev, consultada às 10:48 (horário de Brasília).",
+        "Preço de mercado: cotação da brapi.dev.",
       );
       await expect(hint).toContainText(
         "Margem de segurança = (preço-teto − cotação de mercado) ÷ preço-teto, recalculada a cada cotação",
       );
       await expect(hint).toContainText(
-        "O preço-teto vem da publicação de 22/10 e só muda com uma nova análise.",
+        "O preço-teto vem da publicação e só muda com uma nova análise.",
       );
       assert.doesNotMatch(
         await page.locator("body").innerText(),
@@ -569,7 +569,7 @@ try {
         await expect(value(row, "safetyMargin")).toHaveText(margin);
         await expect(cell(row, "safetyMargin")).toHaveAttribute(
           "title",
-          `Margem de segurança = (preço-teto − cotação de mercado) ÷ preço-teto = (R$ 10,00 − ${price}) ÷ R$ 10,00 = ${margin}. Preço-teto da pesquisa de 20/10; cotação brapi.dev consultada às 10:48 (horário de Brasília).`,
+          `Margem de segurança = (preço-teto − cotação de mercado) ÷ preço-teto = (R$ 10,00 − ${price}) ÷ R$ 10,00 = ${margin}. Preço-teto da pesquisa; cotação brapi.dev.`,
         );
       }
       await page.screenshot({ path: output + "/broker-examples.png" });
@@ -637,10 +637,10 @@ try {
       await expect(value(first, "referencePrice")).toHaveText("R$ 19,37");
       await expect(value(first, "safetyMargin")).toHaveText("0,00%");
       await expect(sub(first, "safetyMargin")).toHaveText(
-        "da pesquisa (20/10)",
+        "da pesquisa",
       );
       await expect(page.locator(".dividend-table-hint")).toContainText(
-        "Nesta versão, preço de mercado e margem de segurança são os da pesquisa publicada em 19/10",
+        "Nesta versão, preço de mercado e margem de segurança são os da pesquisa",
       );
       await page.getByLabel("Histórico de publicações").selectOption("");
       await expect(page.locator(".dividend-table tbody tr")).toHaveCount(10);
@@ -959,13 +959,13 @@ try {
       ).toHaveText("R$ 19,62");
       await expect(
         stat("Preço de mercado").locator("[data-summary-sub]"),
-      ).toHaveText("brapi.dev · 10:48");
+      ).toHaveText("brapi.dev");
       await expect(
         stat("Margem de segurança").locator("[data-summary-value]"),
       ).toHaveText("40,07%");
       await expect(
         stat("Margem de segurança").locator("[data-summary-sub]"),
-      ).toHaveText("com a cotação de 10:48");
+      ).toHaveText("com a cotação de mercado");
       await expect(
         stat("Margem de segurança").locator("[data-summary-value]"),
       ).toHaveAttribute(
@@ -978,7 +978,7 @@ try {
         );
       await expect(stat("Preço-teto")).toContainText("32,74");
       await expect(stat("Preço-teto").locator("[data-summary-sub]")).toHaveText(
-        "da pesquisa de 20/10",
+        "da pesquisa",
       );
       const block = page.locator("#cotacao [data-market-quote]");
       await expect(block).toHaveAttribute("data-market-quote", "market");
@@ -991,7 +991,7 @@ try {
         "−R$ 0,18 · −0,91%",
       );
       await expect(block.locator("[data-market-session-time]")).toHaveText(
-        "Dados do pregão · cotação de 10:30",
+        "Dados do pregão",
       );
       assert.deepEqual(
         await block
@@ -1011,23 +1011,21 @@ try {
         ],
       );
       await expect(block.locator("[data-market-source]")).toHaveText(
-        "brapi.dev · consultada às 10:48",
+        "brapi.dev",
       );
       await expect(
         block.locator('[data-market-quote-field="ceiling"]'),
       ).toContainText("R$ 32,74");
       await expect(
         block.locator('[data-market-quote-field="ceiling"]'),
-      ).toContainText("da pesquisa de 20/10");
+      ).toContainText("da pesquisa");
       await expect(
         block.locator('[data-market-quote-field="margin"] dd').first(),
       ).toHaveText("40,07%");
       await expect(
         block.locator('[data-market-quote-field="volume"] dd'),
       ).toHaveText("367.700");
-      await expect(block.locator("[data-market-reference]")).toHaveText(
-        "Na publicação de 22/10: preço R$ 19,37 e margem de segurança de 0,00%.",
-      );
+      await expect(block.locator("[data-market-reference]")).toHaveCount(0);
       // The 20 research fields keep the spreadsheet values.
       await expect(
         page.locator('[data-field="referencePrice"] [data-exact-value]'),
@@ -1049,12 +1047,12 @@ try {
       await expect(block.locator("[data-market-quote-price]")).toHaveText(
         "R$ 19,37",
       );
-      await expect(block).toContainText("da pesquisa (20/10)");
+      await expect(block).toContainText("da pesquisa");
       await expect(block.locator("[data-market-quote-research]")).toBeVisible();
       await expect(block.locator("[data-market-session-field]")).toHaveCount(0);
       await expect(
         stat("Margem de segurança").locator("[data-summary-sub]"),
-      ).toHaveText("da pesquisa (20/10)");
+      ).toHaveText("da pesquisa");
       await page.goto(
         origin + "/app/ranking/acao/SYN15?visual=real&publication=2",
       );
@@ -1062,7 +1060,7 @@ try {
       await expect(block.locator("[data-market-quote-stale]")).toBeVisible();
       await expect(
         stat("Preço de mercado").locator("[data-summary-sub]"),
-      ).toHaveText("defasada · 10:48");
+      ).toHaveText("defasada");
       // Invalid tickers never reach the API.
       await page.goto(
         origin + "/app/ranking/acao/SYN2?visual=real&publication=2",
@@ -1227,7 +1225,7 @@ try {
         highlights
           .locator('a[href*="/app/ranking/acao/ALOS3"]')
           .locator('[data-kpi="Margem de segurança"]'),
-      ).toContainText("da pesquisa (20/10)");
+      ).toContainText("da pesquisa");
     },
   );
   await run(
@@ -1363,7 +1361,7 @@ try {
       ).toHaveText("+1,58%");
       await expect(cell(tim, "referencePrice")).toHaveAttribute(
         "title",
-        /consultada às 11:03/,
+        /Cotação brapi\.dev/,
       );
       // Client-side navigation: the company page reads the same store.
       await tim.locator(".dividend-company-link").click();

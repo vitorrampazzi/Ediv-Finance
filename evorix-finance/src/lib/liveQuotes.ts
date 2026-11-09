@@ -233,15 +233,9 @@ export function quoteSourceText(
     LiveQuote,
     "source" | "delayMinutes" | "quoteTime" | "checkedAt" | "stale"
   >,
-  now: number = Date.now(),
-) {
-  const when = quote.quoteTime
-    ? `cotação de ${saoPauloMoment(quote.quoteTime, now)}`
-    : quote.checkedAt
-      ? `consultada ${consultedAt(quote.checkedAt, now)}`
-      : "horário não informado";
+  ) {
   return (
-    `Cotação ${quote.source}, ${when} (horário de Brasília)` +
+    `Cotação ${quote.source}` +
     (quote.stale
       ? ". Defasada: a consulta mais recente falhou e esta é a última cotação válida."
       : ".")

@@ -96,11 +96,9 @@ export function useStockData() {
   if (!data) throw new Error("StockMake requires its research context");
   return data;
 }
-// Market price and dynamic margin, the same the ranking shows, plus the
-// publication's own price and margin kept as a reference.
+// Market price and dynamic margin, the same the ranking shows.
 export type StockMarket = {
   view: MarketView;
-  reference: string | null;
 };
 export const StockMarketContext = createContext<StockMarket | null>(null);
 export function useStockMarket() {

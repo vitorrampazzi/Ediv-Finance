@@ -3,7 +3,6 @@
 // provider's; nothing here adjusts, joins or invents a close. Pure: the unit
 // tests import this file directly in Node.
 import {
-  consultedAt,
   decimal,
   isoTime,
   priceText,
@@ -394,15 +393,9 @@ export const monthText = (month: string | null) =>
 export const incompleteText = (date: string | null) =>
   `mês incompleto, dados até ${dateText(date).slice(0, 5)}`;
 
-export function markerTitle(
-  marker: Pick<SeriesMarker, "checkedAt" | "stale">,
-  now: number = Date.now(),
-) {
+export function markerTitle(marker: Pick<SeriesMarker, "checkedAt" | "stale">) {
   return (
     "Cotação mais recente — preço nominal de mercado" +
-    (marker.checkedAt
-      ? `, consultada ${consultedAt(marker.checkedAt, now)}`
-      : "") +
     (marker.stale ? " (defasada)" : "")
   );
 }
@@ -452,7 +445,6 @@ export function rowTooltip(
     return {
       title: markerTitle(
         options.marker ?? { checkedAt: null, stale: false },
-        options.now,
       ),
       lines: [...lines, ...ceiling],
     };

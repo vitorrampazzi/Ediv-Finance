@@ -16,7 +16,6 @@ import {
   marginCaption,
   priceCaption,
   publicationMarket,
-  researchReference,
 } from "../../lib/marketData";
 import { CompanyLogo } from "../CompanyLogo";
 import { MarketQuotePanel } from "../LiveQuote";
@@ -113,9 +112,7 @@ function Header({
 }) {
   const { company, value } = useStockData();
   const { view } = useStockMarket();
-  const research = view.researchDay
-    ? `da pesquisa de ${view.researchDay}`
-    : "da pesquisa";
+  const research = "da pesquisa";
   return (
     <header>
       <div className="mx-auto max-w-[1280px] px-5 pt-8 md:px-10">
@@ -890,14 +887,13 @@ function Learn() {
 // The v2 quote only adds the session data; price and margin are the shared ones.
 function CompanyQuote() {
   const { company } = useStockData();
-  const { view, reference } = useStockMarket();
+  const { view } = useStockMarket();
   const detail = useLiveQuote(company.ticker);
   return (
     <MarketQuotePanel
       view={view}
       variant="research"
       detail={detail.quote}
-      reference={reference}
     />
   );
 }
@@ -929,13 +925,6 @@ export function StockMake({
     });
     return {
       view: views.get(entry.ticker)!,
-      reference: researchReference(
-        {
-          price: entry.dividendAnalysis?.referencePrice,
-          margin: entry.dividendAnalysis?.safetyMargin,
-        },
-        publishedAt,
-      ),
     };
   }, [entry, snapshot, id, publishedAt]);
   return (

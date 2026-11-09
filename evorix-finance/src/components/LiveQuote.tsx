@@ -1,11 +1,9 @@
 import { useId } from "react";
 import {
-  consultedAt,
   decimal,
   quoteChange,
   quoteMoney,
   quoteVolume,
-  saoPauloMoment,
   sessionFields,
   type LiveQuote,
 } from "../lib/liveQuotes";
@@ -68,16 +66,11 @@ export function MarketMarginCell({ view }: { view: MarketView }) {
   );
 }
 
-// "brapi.dev · consultada às 10:48", never "tempo real".
+// "brapi.dev", never "tempo real".
 function sourceShort(quote: LiveQuote, stale: boolean) {
   return [
     stale ? "defasada" : null,
     quote.source,
-    quote.quoteTime
-      ? `cotação de ${saoPauloMoment(quote.quoteTime)}`
-      : quote.checkedAt
-        ? `consultada ${consultedAt(quote.checkedAt)}`
-        : null,
   ]
     .filter(Boolean)
     .join(" · ");
@@ -122,14 +115,11 @@ export function MarketQuotePanel({
   view,
   variant,
   detail = null,
-  reference = null,
 }: {
   view: MarketView;
   variant: keyof typeof variants;
   // /api/market/quote/:ticker: session data and the change in reais.
   detail?: LiveQuote | null;
-  // The price and margin of the publication, kept as a reference.
-  reference?: string | null;
 }) {
   const id = useId();
   const style = variants[variant];
@@ -146,13 +136,6 @@ export function MarketQuotePanel({
   const session = live ? (detail?.session ?? quote?.session ?? null) : null;
   const fields = sessionFields(session);
   const volume = live ? decimal(quote?.volume) : null;
-  // The v2 quote time when brapi sends it; otherwise only when it was
-  // consulted, never presented as the time of the quote.
-  const sessionWhen = session?.quoteTime
-    ? `cotação de ${saoPauloMoment(session.quoteTime)}`
-    : session?.checkedAt
-      ? `consultada ${consultedAt(session.checkedAt)}`
-      : null;
   const Heading = variant === "public" ? "h2" : "h3";
   return (
     <section
@@ -228,7 +211,6 @@ export function MarketQuotePanel({
           <>
             <p className={style.subheading} data-market-session-time>
               Dados do pregão
-              {sessionWhen ? ` · ${sessionWhen}` : ""}
             </p>
             <dl className={style.fields + " mt-2"}>
               {fields.map((field) => (
@@ -255,9 +237,7 @@ export function MarketQuotePanel({
                     : quoteMoney(decimal(view.ceiling)!)}
                 </dd>
                 <dd className={style.label}>
-                  {view.researchDay
-                    ? `da pesquisa de ${view.researchDay}`
-                    : "da pesquisa"}
+                  da pesquisa
                 </dd>
               </div>
             )}
@@ -280,11 +260,6 @@ export function MarketQuotePanel({
               </div>
             )}
           </dl>
-        )}
-        {reference && (
-          <p className={style.note} data-market-reference>
-            {reference}
-          </p>
         )}
         <p className={style.note}>
           A cotação vem da brapi.dev. DY e P/L ficam como na data
