@@ -258,9 +258,7 @@ export function PriceSeriesChart() {
           ? "ready"
           : "unavailable";
   const reason = data?.unavailableReason ?? "empty";
-  const research = view.researchDay
-    ? `da pesquisa de ${view.researchDay}`
-    : "da pesquisa";
+  const research = "da pesquisa";
   const items = [
     {
       key: "price",

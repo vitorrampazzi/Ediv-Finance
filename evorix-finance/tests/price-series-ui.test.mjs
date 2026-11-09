@@ -111,7 +111,7 @@ test("the series is read strictly: order, repeats, invalid closes and notes", ()
   ]);
   assert.equal(
     coverageText(series.coverage),
-    "Fontes: AGF, no trecho com o preço negociado de 28/10/2026 a 28/10/2026; fechamentos consolidados pela Escola do Dividendo de 30/10/2026 a 30/10/2026; brapi.dev de 04/11/2026 a 04/11/2026.",
+    "Fontes: AGF, no trecho com o preço negociado; fechamentos consolidados pela Escola do Dividendo; brapi.dev.",
   );
   assert.throws(() =>
     parsePriceSeries({ ...daily, ticker: "WIZC3" }, expected),
@@ -235,7 +235,7 @@ test("tooltips: São Paulo date, value, basis, status and source", () => {
   const latest = rowTooltip(rows[4], series, { ceiling: false, marker, now });
   assert.equal(
     latest.title,
-    "Cotação mais recente — preço nominal de mercado, consultada às 10:48",
+    "Cotação mais recente — preço nominal de mercado",
   );
   assert.deepEqual(latest.lines, [
     ["Cotação", "R$ 19,62"],
@@ -245,7 +245,7 @@ test("tooltips: São Paulo date, value, basis, status and source", () => {
   ]);
   assert.equal(
     markerTitle({ checkedAt: "2026-11-04T20:55:00Z", stale: true }, now),
-    "Cotação mais recente — preço nominal de mercado, consultada em 04/11 às 17:55 (defasada)",
+    "Cotação mais recente — preço nominal de mercado (defasada)",
   );
   const monthly = parsePriceSeries(
     {

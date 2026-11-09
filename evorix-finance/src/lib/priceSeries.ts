@@ -3,7 +3,6 @@
 // provider's; nothing here adjusts, joins or invents a close. Pure: the unit
 // tests import this file directly in Node.
 import {
-  consultedAt,
   decimal,
   isoTime,
   priceText,
@@ -394,15 +393,9 @@ export const monthText = (month: string | null) =>
 export const incompleteText = (date: string | null) =>
   `mês incompleto, dados até ${dateText(date).slice(0, 5)}`;
 
-export function markerTitle(
-  marker: Pick<SeriesMarker, "checkedAt" | "stale">,
-  now: number = Date.now(),
-) {
+export function markerTitle(marker: Pick<SeriesMarker, "checkedAt" | "stale">) {
   return (
     "Cotação mais recente — preço nominal de mercado" +
-    (marker.checkedAt
-      ? `, consultada ${consultedAt(marker.checkedAt, now)}`
-      : "") +
     (marker.stale ? " (defasada)" : "")
   );
 }
@@ -410,13 +403,10 @@ export function markerTitle(
 export function coverageText(coverage: PriceSeries["coverage"]) {
   const segments = coverage.segments.map(
     (segment) =>
-      `${segment.source ? sourceLabels[segment.source] : "fonte não informada"} de ${dateText(segment.from)} a ${dateText(segment.to)}`,
+      segment.source ? sourceLabels[segment.source] : "fonte não informada",
   );
-  return segments.length
-    ? `Fontes: ${segments.join("; ")}.`
-    : coverage.from && coverage.to
-      ? `Fechamentos de ${dateText(coverage.from)} a ${dateText(coverage.to)}.`
-      : "";
+  const unique = [...new Set(segments)];
+  return unique.length ? `Fontes: ${unique.join("; ")}.` : "";
 }
 
 // Tooltip of one chart row: São Paulo date, value, basis, status and source.
@@ -452,7 +442,6 @@ export function rowTooltip(
     return {
       title: markerTitle(
         options.marker ?? { checkedAt: null, stale: false },
-        options.now,
       ),
       lines: [...lines, ...ceiling],
     };

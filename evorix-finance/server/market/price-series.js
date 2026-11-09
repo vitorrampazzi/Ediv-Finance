@@ -53,10 +53,6 @@ function differsMoreThanHalfPercent(kept, other) {
   return difference * 200n > a;
 }
 
-function brazilianDate(date) {
-  return `${date.slice(8, 10)}/${date.slice(5, 7)}/${date.slice(0, 4)}`;
-}
-
 function yearList(years) {
   const ranges = [];
   for (const year of years) {
@@ -265,7 +261,7 @@ export function buildPriceSeries({
     points.some((point) => point.source === "agf")
   )
     notes.push(
-      `O histórico da AGF anterior a ${brazilianDate(agf.firstDate)} foi ajustado por um método não documentado e não é usado.`,
+      `O histórico mais antigo da AGF foi ajustado por um método não documentado e não é usado.`,
     );
   if (basis === "nominal" && conflicts.length)
     notes.push(

@@ -17,7 +17,6 @@ import {
   publicationMarket,
   rankingMarketNote,
   researchDayText,
-  researchReference,
 } from "../src/lib/marketData.ts";
 import { parseQuote } from "../src/lib/liveQuotes.ts";
 
@@ -127,17 +126,17 @@ test("market basis: canonical price, change and margin with the formula", () => 
   assert.equal(view.price.qualifier, null);
   assert.equal(
     view.price.title,
-    "Cotação brapi.dev, consultada às 10:48 (horário de Brasília).",
+    "Cotação brapi.dev.",
   );
   assert.equal(view.margin.state, "market");
   assert.equal(view.margin.percent, safetyMarginPercent("32.74", "19.62"));
   assert.equal(view.margin.text, "40,07%");
   assert.equal(
     view.margin.title,
-    "Margem de segurança = (preço-teto − cotação de mercado) ÷ preço-teto = (R$ 32,74 − R$ 19,62) ÷ R$ 32,74 = 40,07%. Preço-teto da pesquisa de 20/10; cotação brapi.dev consultada às 10:48 (horário de Brasília).",
+    "Margem de segurança = (preço-teto − cotação de mercado) ÷ preço-teto = (R$ 32,74 − R$ 19,62) ÷ R$ 32,74 = 40,07%. Preço-teto da pesquisa; cotação brapi.dev.",
   );
-  assert.equal(priceCaption(view, now), "brapi.dev · 10:48");
-  assert.equal(marginCaption(view, now), "com a cotação de 10:48");
+  assert.equal(priceCaption(view), "brapi.dev");
+  assert.equal(marginCaption(view), "com a cotação de mercado");
   assert.equal(marginSortValue(view), 40.07);
   assert.doesNotMatch(JSON.stringify(view), /tempo real/i);
 });
@@ -181,7 +180,7 @@ test("stale: a failed refresh or a stale basis keeps the values, marked", () => 
     assert.equal(view.margin.text, "40,07%");
     assert.equal(view.margin.qualifier, "defasada");
     assert.equal(marginCaption(view, now), "defasada");
-    assert.equal(priceCaption(view, now), "defasada · 10:48");
+    assert.equal(priceCaption(view, now), "defasada");
   }
 });
 
@@ -193,24 +192,24 @@ test("research basis: research price and margin, with the research day", () => {
   );
   assert.equal(view.price.state, "research");
   assert.equal(view.price.text, "R$ 19,37");
-  assert.equal(view.price.qualifier, "da pesquisa (20/10)");
+  assert.equal(view.price.qualifier, "da pesquisa");
   assert.equal(view.price.change, null);
   assert.equal(view.margin.state, "research");
   assert.equal(view.margin.text, "41,00%");
-  assert.equal(view.margin.qualifier, "da pesquisa (20/10)");
+  assert.equal(view.margin.qualifier, "da pesquisa");
   assert.match(
     view.margin.title,
-    /^Margem de segurança da pesquisa de 20\/10: 41,00%, com o preço da pesquisa de R\$ 19,37\./,
+    /^Margem de segurança da pesquisa: 41,00%, com o preço da pesquisa de R\$ 19,37\./,
   );
   // Without market data at all the research values are used the same way.
   const fallback = marketView(null, research, ready);
   assert.equal(fallback.price.text, "R$ 19,37");
   assert.equal(fallback.margin.percent, researchMarginPercent("0.41"));
-  assert.equal(fallback.margin.qualifier, "da pesquisa (20/10)");
+  assert.equal(fallback.margin.qualifier, "da pesquisa");
   // No research day: the publication day dates it.
   assert.equal(
     marketView(null, { ...research, date: null }, ready).margin.qualifier,
-    "da pesquisa (22/10)",
+    "da pesquisa",
   );
 });
 
@@ -284,7 +283,7 @@ test("public pages: margin and quote of the same answer, never the ceiling", () 
   assert.equal(view.price.text, "R$ 0,80");
   assert.equal(
     view.margin.title,
-    "Margem de segurança = (preço-teto − cotação de mercado) ÷ preço-teto: 20,00%, com a cotação brapi.dev de R$ 0,80 consultada às 10:48 (horário de Brasília). O preço-teto está na pesquisa completa.",
+    "Margem de segurança = (preço-teto − cotação de mercado) ÷ preço-teto: 20,00%, com a cotação brapi.dev de R$ 0,80. O preço-teto está na pesquisa completa.",
   );
   assert.doesNotMatch(view.margin.title, /99/);
   // An answer without market data falls back to the research margin.
@@ -295,7 +294,7 @@ test("public pages: margin and quote of the same answer, never the ceiling", () 
     { ...ready, showCeiling: false },
   );
   assert.equal(fallback.margin.text, "18,00%");
-  assert.equal(fallback.margin.qualifier, "da pesquisa (22/10)");
+  assert.equal(fallback.margin.qualifier, "da pesquisa");
 });
 
 test("a publication: market data applies only to the one it was computed for", () => {
@@ -329,7 +328,7 @@ test("a publication: market data applies only to the one it was computed for", (
   assert.equal(latest.views.get("SYN2").margin.state, "research");
   assert.equal(
     latest.note,
-    "Preço de mercado: cotação da brapi.dev, consultada às 10:48 (horário de Brasília). Margem de segurança = (preço-teto − cotação de mercado) ÷ preço-teto, recalculada a cada cotação; fica negativa quando a cotação passa do teto. O preço-teto vem da publicação de 22/10 e só muda com uma nova análise.",
+    "Preço de mercado: cotação da brapi.dev. Margem de segurança = (preço-teto − cotação de mercado) ÷ preço-teto, recalculada a cada cotação; fica negativa quando a cotação passa do teto. O preço-teto vem da publicação e só muda com uma nova análise.",
   );
   assert.ok(latest.noteSizer.length >= latest.note.length - 2);
   const older = publicationMarket(
@@ -343,7 +342,7 @@ test("a publication: market data applies only to the one it was computed for", (
   assert.equal(older.views.get("TIMS3").margin.text, "41,00%");
   assert.match(
     older.note,
-    /^Nesta versão, preço de mercado e margem de segurança são os da pesquisa publicada em 01\/10/,
+    /^Nesta versão, preço de mercado e margem de segurança são os da pesquisa:/,
   );
   const failed = publicationMarket(
     entries,
@@ -354,7 +353,7 @@ test("a publication: market data applies only to the one it was computed for", (
   assert.equal(failed.views.get("TIMS3").price.state, "stale");
   assert.match(
     failed.note,
-    /última cotação válida da brapi\.dev, consultada às 10:48/,
+    /última cotação válida da brapi\.dev;/,
   );
   const waiting = publicationMarket(
     entries,
@@ -386,33 +385,21 @@ test("a publication: market data applies only to the one it was computed for", (
   }
 });
 
-test("dates and the publication reference", () => {
+test("dates of the research", () => {
   assert.equal(publicationDay("2026-10-22 12:32:01"), "22/10");
   assert.equal(publicationDay("2026-10-22T02:00:00Z"), "21/10");
   assert.equal(publicationDay("data"), null);
   assert.equal(researchDayText("2026-10-20"), "20/10");
   assert.equal(researchDayText("20/10/2026"), null);
-  assert.equal(
-    researchReference({ price: "19.37", margin: "0.41" }, publishedAt),
-    "Na publicação de 22/10: preço R$ 19,37 e margem de segurança de 41,00%.",
-  );
-  assert.equal(
-    researchReference({ price: null, margin: "-0.2" }, null),
-    "Na publicação: preço não informado e margem de segurança de −20,00%.",
-  );
-  assert.equal(researchReference({}, publishedAt), null);
-  assert.equal(
-    rankingMarketNote(
-      {
-        loading: false,
-        failed: false,
-        applies: true,
-        hasData: true,
-        checkedAt: "2026-11-04T20:55:00Z",
-        publishedAt,
-      },
-      now,
-    ).includes("consultada em 04/11 às 17:55"),
-    true,
+  assert.doesNotMatch(
+    rankingMarketNote({
+      loading: false,
+      failed: false,
+      applies: true,
+      hasData: true,
+      checkedAt: "2026-11-04T20:55:00Z",
+      publishedAt,
+    }),
+    /consultada|\d{2}\/\d{2}/,
   );
 });

@@ -9,7 +9,6 @@ import {
   safetyMarginFormula,
 } from "../../safety-margin.mjs";
 import {
-  consultedAt,
   decimal,
   isoTime,
   markStale,
@@ -21,7 +20,6 @@ import {
   quoteSourceText,
   quoteTone,
   saoPauloDayMonth,
-  saoPauloMoment,
   type LiveQuote,
   type MarketState,
 } from "./liveQuotes.ts";
@@ -276,24 +274,18 @@ function marginTitle(
   percent: string | null,
   price: string | null,
   ceiling: string | null,
-  checkedAt: string | null,
   context: MarketViewContext,
-  day: string | null,
 ) {
-  const now = context.now ?? Date.now();
   const text = formatSafetyMarginPercent(percent);
-  const when = checkedAt
-    ? ` consultada ${consultedAt(checkedAt, now)} (horário de Brasília)`
-    : "";
   if (state === "market" || state === "stale")
     return (
       (context.showCeiling !== false && ceiling
-        ? `Margem de segurança = ${safetyMarginFormula} = (${money(ceiling)} − ${money(price)}) ÷ ${money(ceiling)} = ${text}. Preço-teto da pesquisa${day ? ` de ${day}` : ""}; cotação brapi.dev${when}.`
-        : `Margem de segurança = ${safetyMarginFormula}: ${text}, com a cotação brapi.dev de ${money(price)}${when}. O preço-teto está na pesquisa completa.`) +
+        ? `Margem de segurança = ${safetyMarginFormula} = (${money(ceiling)} − ${money(price)}) ÷ ${money(ceiling)} = ${text}. Preço-teto da pesquisa; cotação brapi.dev.`
+        : `Margem de segurança = ${safetyMarginFormula}: ${text}, com a cotação brapi.dev de ${money(price)}. O preço-teto está na pesquisa completa.`) +
       (state === "stale" ? staleNote : "")
     );
   if (state === "research")
-    return `Margem de segurança da pesquisa${day ? ` de ${day}` : ""}: ${text}${price ? `, com o preço da pesquisa de ${money(price)}` : ""}. Sem cotação válida da brapi.dev, ela não acompanha o mercado agora.`;
+    return `Margem de segurança da pesquisa: ${text}${price ? `, com o preço da pesquisa de ${money(price)}` : ""}. Sem cotação válida da brapi.dev, ela não acompanha o mercado agora.`;
   if (state === "loading")
     return "Consultando a cotação para mostrar a margem de segurança.";
   return context.showCeiling !== false && ceiling === null
@@ -316,8 +308,7 @@ export function marketView(
       : null) ??
     researchDayText(research.date) ??
     publicationDay(context.publishedAt);
-  const fromResearch = day ? `da pesquisa (${day})` : "da pesquisa";
-  const now = context.now ?? Date.now();
+  const fromResearch = "da pesquisa";
   const ceiling =
     entry?.ceilingPrice ?? (entry ? null : priceText(research.ceiling));
   if (context.loading && !entry)
@@ -336,7 +327,7 @@ export function marketView(
         percent: null,
         text: "",
         qualifier: null,
-        title: marginTitle("loading", null, null, null, null, context, day),
+        title: marginTitle("loading", null, null, null, context),
       },
       quote: null,
       ceiling,
@@ -423,12 +414,9 @@ export function marketView(
               : null,
       title:
         (priceState === "market" || priceState === "stale") && sourceQuote
-          ? quoteSourceText(
-              { ...sourceQuote, stale: priceState === "stale" },
-              now,
-            )
+          ? quoteSourceText({ ...sourceQuote, stale: priceState === "stale" })
           : priceState === "research"
-            ? `Preço da pesquisa${day ? ` de ${day}` : ""}. A cotação da brapi.dev não está disponível agora.`
+            ? `Preço da pesquisa. A cotação da brapi.dev não está disponível agora.`
             : "Cotação da brapi.dev indisponível no momento.",
     },
     margin: {
@@ -448,33 +436,13 @@ export function marketView(
           ? (margin?.price ?? researchPrice)
           : priceValue,
         ceiling,
-        checkedAt,
         context,
-        day,
       ),
     },
     quote,
     ceiling,
     researchDay: day,
   };
-}
-
-// "Na publicação de 22/10: preço R$ 19,37 e margem de segurança de 41,00%."
-// The publication's own values stay visible next to the dynamic ones.
-export function researchReference(
-  research: ResearchValues,
-  publishedAt: string | null,
-) {
-  const price = priceText(research.price);
-  const percent = researchMarginPercent(research.margin);
-  if (!price && percent === null) return null;
-  const day = publicationDay(publishedAt);
-  return `Na publicação${day ? ` de ${day}` : ""}: ${[
-    price ? `preço ${money(price)}` : "preço não informado",
-    percent === null
-      ? "margem de segurança não informada"
-      : `margem de segurança de ${formatSafetyMarginPercent(percent)}`,
-  ].join(" e ")}.`;
 }
 
 // The order "maior margem de segurança" uses the margin on screen.
@@ -484,23 +452,14 @@ export const marginSortValue = (view: MarketView | undefined) => {
 };
 
 // Short lines under the big figures of the company page.
-export function priceCaption(view: MarketView, now: number = Date.now()) {
-  const time = view.quote?.checkedAt
-    ? saoPauloMoment(view.quote.checkedAt, now)
-    : null;
-  if (view.price.state === "market")
-    return `brapi.dev${time ? ` · ${time}` : ""}`;
-  if (view.price.state === "stale")
-    return `defasada${time ? ` · ${time}` : ""}`;
+export function priceCaption(view: MarketView) {
+  if (view.price.state === "market") return "brapi.dev";
+  if (view.price.state === "stale") return "defasada";
   if (view.price.state === "loading") return "consultando a cotação";
   return view.price.qualifier ?? "";
 }
-export function marginCaption(view: MarketView, now: number = Date.now()) {
-  const time = view.quote?.checkedAt
-    ? saoPauloMoment(view.quote.checkedAt, now)
-    : null;
-  if (view.margin.state === "market")
-    return time ? `com a cotação de ${time}` : "com a cotação de mercado";
+export function marginCaption(view: MarketView) {
+  if (view.margin.state === "market") return "com a cotação de mercado";
   if (view.margin.state === "loading") return "consultando a cotação";
   if (view.margin.state === "unavailable")
     return view.ceiling === null ? "sem preço-teto válido" : "indisponível";
@@ -571,7 +530,6 @@ export function publicationMarket(
         checkedAt: applies ? (market.data?.checkedAt ?? null) : null,
         publishedAt: publication.publishedAt,
       },
-      now,
     ),
     // The usual text once a quote arrives: it reserves the note's height.
     noteSizer: rankingMarketNote(
@@ -583,7 +541,6 @@ export function publicationMarket(
         checkedAt: new Date(now).toISOString(),
         publishedAt: publication.publishedAt,
       },
-      now,
     ),
   };
 }
@@ -599,23 +556,16 @@ export type RankingNoteState = {
 
 // The note next to the ranking: formula, source and time, and which
 // publication the ceiling price comes from.
-export function rankingMarketNote(
-  state: RankingNoteState,
-  now: number = Date.now(),
-) {
-  const day = publicationDay(state.publishedAt);
+export function rankingMarketNote(state: RankingNoteState) {
   const formula = `Margem de segurança = ${safetyMarginFormula}, recalculada a cada cotação; fica negativa quando a cotação passa do teto.`;
-  const ceiling = `O preço-teto vem da publicação${day ? ` de ${day}` : ""} e só muda com uma nova análise.`;
-  const when = state.checkedAt
-    ? `, consultada ${consultedAt(state.checkedAt, now)} (horário de Brasília)`
-    : "";
+  const ceiling = `O preço-teto vem da publicação e só muda com uma nova análise.`;
   if (state.loading)
     return `Preço de mercado: cotação da brapi.dev. ${formula} ${ceiling}`;
   if (state.applies)
     return state.failed
-      ? `Preço de mercado: última cotação válida da brapi.dev${when}; a consulta mais recente falhou, então os valores aparecem como defasados. ${formula} ${ceiling}`
-      : `Preço de mercado: cotação da brapi.dev${when}. ${formula} ${ceiling}`;
-  const research = `os da pesquisa${day ? ` publicada em ${day}` : ""}`;
+      ? `Preço de mercado: última cotação válida da brapi.dev; a consulta mais recente falhou, então os valores aparecem como defasados. ${formula} ${ceiling}`
+      : `Preço de mercado: cotação da brapi.dev. ${formula} ${ceiling}`;
+  const research = "os da pesquisa";
   return state.hasData
     ? `Nesta versão, preço de mercado e margem de segurança são ${research}: a cotação da brapi.dev acompanha só a publicação mais recente.`
     : `A cotação da brapi.dev não está disponível agora: preço de mercado e margem de segurança aparecem como ${research}.`;

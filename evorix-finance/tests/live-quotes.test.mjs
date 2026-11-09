@@ -87,7 +87,7 @@ test("summary quote: canonical price and change %, no session invented", () => {
   const source = quoteSourceText(quote, now);
   assert.equal(
     source,
-    "Cotação brapi.dev, consultada às 10:48 (horário de Brasília).",
+    "Cotação brapi.dev.",
   );
   assert.doesNotMatch(source, /tempo real/i);
 });
@@ -121,7 +121,7 @@ test("session of the v2 quote: day fields in order, with its own time", () => {
   );
   assert.equal(
     quoteSourceText(quote, now),
-    "Cotação brapi.dev, consultada às 10:48 (horário de Brasília).",
+    "Cotação brapi.dev.",
   );
   // A session without any valid price is no session; zero is left out.
   assert.equal(parseSession({ open: "0", dayHigh: null }), null);
@@ -142,7 +142,7 @@ test("another São Paulo day shows the date with the time", () => {
       parseQuote({ ...summary, checkedAt: "2026-11-04T20:55:00Z" }),
       now,
     ),
-    "Cotação brapi.dev, consultada em 04/11 às 17:55 (horário de Brasília).",
+    "Cotação brapi.dev.",
   );
 });
 

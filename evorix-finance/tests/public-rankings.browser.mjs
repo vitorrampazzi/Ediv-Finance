@@ -380,7 +380,7 @@ try {
       await expect(cards).toHaveCount(3);
       const margin = [
         [margins.first, "market"],
-        ["100,00%da pesquisa (22/10)", "research"],
+        ["100,00%da pesquisa", "research"],
         [margins.stale + "defasada", "stale"],
       ];
       for (let i = 0; i < 3; i++) {
@@ -481,14 +481,14 @@ try {
         margins.first,
       );
       await expect(indicator.locator("[data-indicator-sub]")).toHaveText(
-        "com a cotação de 10:48",
+        "com a cotação de mercado",
       );
       await expect(indicator.locator("[data-indicator-value]")).toHaveAttribute(
         "title",
-        "Margem de segurança = (preço-teto − cotação de mercado) ÷ preço-teto: 20,00%, com a cotação brapi.dev de R$ 0,80 consultada às 10:48 (horário de Brasília). O preço-teto está na pesquisa completa.",
+        "Margem de segurança = (preço-teto − cotação de mercado) ÷ preço-teto: 20,00%, com a cotação brapi.dev de R$ 0,80. O preço-teto está na pesquisa completa.",
       );
       await expect(page.locator("article")).toContainText(
-        "DY e P/L são estimativas da pesquisa, na data da publicação, e não mudam com a cotação. A margem de segurança acompanha a cotação da brapi.dev.",
+        "DY e P/L são estimativas da pesquisa e não mudam com a cotação. A margem de segurança acompanha a cotação da brapi.dev.",
       );
       // Quote of the same public answer: summary, so no session or R$ change.
       const block = page.locator("[data-market-quote]");
@@ -510,7 +510,7 @@ try {
         block.locator('[data-market-quote-field="ceiling"]'),
       ).toHaveCount(0);
       await expect(block.locator("[data-market-source]")).toHaveText(
-        "brapi.dev · consultada às 10:48",
+        "brapi.dev",
       );
       await expect(page.locator("article")).not.toContainText("R$ 1,00");
       assert.doesNotMatch(
@@ -525,14 +525,14 @@ try {
         "100,00%",
       );
       await expect(indicator.locator("[data-indicator-sub]")).toHaveText(
-        "da pesquisa (22/10)",
+        "da pesquisa",
       );
       // The last valid quote: marked as stale, margin with it.
       await page.goto(origin + "/ranking/acao/" + entries[2].ticker);
       await expect(block).toHaveAttribute("data-market-quote", "stale");
       await expect(block.locator("[data-market-quote-stale]")).toBeVisible();
       await expect(block.locator("[data-market-source]")).toHaveText(
-        "defasada · brapi.dev · consultada às 10:48",
+        "defasada · brapi.dev",
       );
       await expect(indicator.locator("[data-indicator-value]")).toHaveText(
         margins.stale,
@@ -1184,14 +1184,14 @@ try {
           "alone",
         );
         await expect(price.locator("[data-marker-note]")).toContainText(
-          "Cotação mais recente — preço nominal de mercado, consultada às 10:48: R$ 19,62.",
+          "Cotação mais recente — preço nominal de mercado: R$ 19,62.",
         );
         await expect(price.locator("[data-marker-note]")).toContainText(
           "a série ajustada não está na mesma base do preço de mercado",
         );
         await expect(price.locator("[data-gap-note]")).toBeVisible();
         await expect(price.locator("[data-coverage]")).toHaveText(
-          "Fontes: brapi.dev de 19/10/2026 a 04/11/2026.",
+          "Fontes: brapi.dev.",
         );
         await expect(price.locator("[data-coverage-note]")).toHaveText(
           "Preços ajustados por proventos e eventos pela brapi, sem ajuste próprio da Escola.",
@@ -1218,7 +1218,7 @@ try {
         for (let index = 0; index < 15; index++)
           await page.keyboard.press("ArrowRight");
         await expect(tooltip).toContainText(
-          "Cotação mais recente — preço nominal de mercado, consultada às 10:48",
+          "Cotação mais recente — preço nominal de mercado",
         );
         await expect(tooltip).toContainText("nominal, sem ajuste");
         // The ceiling stays a constant reference that can be hidden.
@@ -1243,7 +1243,7 @@ try {
           "connected",
         );
         await expect(price.locator("[data-coverage]")).toHaveText(
-          "Fontes: AGF, no trecho com o preço negociado de 19/10/2026 a 23/10/2026; fechamentos consolidados pela Escola do Dividendo de 26/10/2026 a 26/10/2026; brapi.dev de 29/10/2026 a 04/11/2026.",
+          "Fontes: AGF, no trecho com o preço negociado; fechamentos consolidados pela Escola do Dividendo; brapi.dev.",
         );
         const aside = page.locator(".fmk-chart-layout aside").first();
         await expect(aside).toContainText("No período · 1A · sem ajuste");

@@ -7,7 +7,6 @@ import { CompanyLogo } from "../components/CompanyLogo";
 import { MarketQuotePanel } from "../components/LiveQuote";
 import { RankingAccessLanding } from "../components/RankingAccessLanding";
 import {
-  publicationDate,
   publicMetrics,
   usePublicRanking,
 } from "../hooks/usePublicRanking";
@@ -61,7 +60,6 @@ function PublicCompany() {
   const entry = open.find(
     (item) => item.ticker.toUpperCase() === ticker.toUpperCase(),
   );
-  const date = publicationDate(publication?.updatedAt ?? null);
   // Quote and margin come from the same public answer; no ceiling is shown.
   const view = entry
     ? marketView(
@@ -221,8 +219,7 @@ function PublicCompany() {
         </div>
         <p className="mt-3 max-w-2xl text-sm leading-6 text-evo-textSec">
           {entry.companyName} está entre as três primeiras empresas da pesquisa
-          de dividendos da Escola do Dividendo
-          {date ? `, publicada em ${date}` : ""}. Abaixo estão os indicadores
+          de dividendos da Escola do Dividendo. Abaixo estão os indicadores
           abertos e o que a pesquisa completa reúne.
         </p>
       </header>
@@ -254,9 +251,8 @@ function PublicCompany() {
           ))}
         </dl>
         <p className="mt-3 text-xs leading-5 text-evo-textSec">
-          Fonte: pesquisa da Escola do Dividendo
-          {date ? `, publicação de ${date}` : ""}. DY e P/L são estimativas da
-          pesquisa, na data da publicação, e não mudam com a cotação. A margem
+          Fonte: pesquisa da Escola do Dividendo. DY e P/L são estimativas da
+          pesquisa e não mudam com a cotação. A margem
           de segurança acompanha a cotação da brapi.dev. Margem de
           segurança não representa retorno garantido. Conteúdo educativo, sem
           recomendação individual de investimento.
