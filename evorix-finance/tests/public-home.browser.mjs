@@ -342,6 +342,83 @@ try {
           await expect(page.locator(".ph-home")).toBeVisible();
           await expect(page).toHaveTitle("Escola do Dividendo");
           await expect(page.locator(".ph-ranking-company")).toHaveCount(3);
+          // Three area cards right under the brand, the ranking first.
+          const areas = page.locator(".ph-hero .home-area-link");
+          await expect(areas).toHaveCount(3);
+          assert.deepEqual(
+            await areas.evaluateAll((links) =>
+              links.map((link) => [
+                link.dataset.homeArea,
+                link.getAttribute("href"),
+                link.querySelector(".home-area-title").textContent,
+              ]),
+            ),
+            [
+              ["ranking", "/ranking", "Ranking de Ações"],
+              ["aulas", "/aprender", "Aulas"],
+              ["glossario", "/glossario", "Glossário"],
+            ],
+          );
+          await expect(page.locator(".home-area--primary")).toHaveCount(1);
+          await expect(
+            page.locator(".home-area--primary .home-area-link"),
+          ).toHaveAttribute("href", "/ranking");
+          // Position in the document: focusing may scroll the viewport.
+          const placement = () =>
+            areas.first().evaluate((link) => {
+              const box = link.getBoundingClientRect();
+              return [
+                Math.round(box.left + scrollX),
+                Math.round(box.top + scrollY),
+                Math.round(box.width),
+                Math.round(box.height),
+              ];
+            });
+          await page
+            .locator(".ph-hero-areas")
+            .evaluate((element) =>
+              Promise.all(element.getAnimations().map((a) => a.finished)),
+            );
+          const cardBox = await placement();
+          await areas.first().focus();
+          await expect(areas.first()).toBeFocused();
+          assert.equal(
+            await areas
+              .first()
+              .evaluate((link) => getComputedStyle(link).outlineStyle),
+            "solid",
+            "Foco visível no card",
+          );
+          assert.deepEqual(
+            await placement(),
+            cardBox,
+            "O foco não move o card",
+          );
+          if (scenario.name === "mobile-320") {
+            for (const theme of ["light", "dark"]) {
+              await page.evaluate(
+                (theme) => (document.documentElement.dataset.theme = theme),
+                theme,
+              );
+              const look = await areas.evaluateAll((links) =>
+                links.map((link) => getComputedStyle(link).backgroundColor),
+              );
+              assert.ok(
+                look.every((color) => color !== "rgb(255, 255, 255)"),
+                `Cards sobre as superfícies do tema ${theme}: ${look}`,
+              );
+              assert.ok(
+                await page.evaluate(
+                  () =>
+                    document.documentElement.scrollWidth <= innerWidth + 1,
+                ),
+                "Home 320px sem rolagem lateral no tema " + theme,
+              );
+              await page
+                .locator(".ph-hero")
+                .screenshot({ path: `${artifacts}/areas-320-${theme}.png` });
+            }
+          }
           await fullHomeCapture(page, scenario.name);
           const hero = page.locator(".ph-brand");
           await hero.scrollIntoViewIfNeeded();
@@ -530,7 +607,7 @@ try {
             .toBeLessThanOrEqual(2);
           const outside = await page
             .locator(
-              ".ph-home h1, .ph-home h2, .ph-ranking-company, .ph-home .ph-primary, .ph-home .ph-text-link, .ph-teaching-action",
+              ".ph-home h1, .ph-home h2, .ph-ranking-company, .ph-home .ph-primary, .ph-home .ph-text-link, .ph-teaching-action, .ph-home .home-area-link",
             )
             .evaluateAll((elements) =>
               elements

@@ -7,6 +7,14 @@ import { publicRankingWithMarket } from "../server/public-ranking.js";
 import { rankingMarketBody } from "../server/market/ranking-market.js";
 import { stockHistory } from "../server/stock-history.js";
 import {
+  attachPayout,
+  formatDividendPerShare,
+  formatPayoutPercent,
+  formatReais,
+  groupDividendsByType,
+  netIncomeSeries,
+} from "../src/lib/stockHistory.ts";
+import {
   dividendColumns,
   dividendValue,
   formatDividendValue,
@@ -24,7 +32,6 @@ import {
   marketCheckedAt,
   marketFixture,
   marketState,
-  seriesAnswer,
   staleQuote,
   summaryQuote,
   unavailableQuote,
@@ -135,7 +142,7 @@ const origin = "http://127.0.0.1:4198";
 const results = [],
   errors = [],
   unknown = [];
-// brapi.dev is mocked; the price series of the logged-in page too.
+// brapi.dev is mocked. The company page no longer asks for a price series.
 const market = marketFixture({ quotes });
 let browser,
   mode = "hold",
@@ -150,7 +157,7 @@ const margins = {
 };
 assert.deepEqual(margins, { first: "20,00%", stale: "10,00%" });
 async function assertPublicationCharts(page, entry) {
-  // The price chart comes from /api/rankings/price-series.
+  // Charts drawn from the publication fields alone.
   const groups = {
     dividends: ["projectedGrossDividendPerShare", "estimatedEps"],
     earnings: [
@@ -332,14 +339,6 @@ try {
         checkedAt: marketCheckedAt,
         market: marketState,
       });
-    } else if (
-      url.pathname === "/api/rankings/price-series/ABEV3" &&
-      signedIn
-    ) {
-      // Outside the snapshot and the latest publication: 404 on the server.
-      market.calls.push(url.pathname + url.search);
-      status = 404;
-      data = { error: "Histórico não disponível para esta ação." };
     } else if (market.handles(url)) ({ status, data } = market.respond(url));
     else {
       unknown.push(url.pathname);
@@ -910,6 +909,8 @@ try {
         await expect(
           page.locator("#public-ranking-results .ph-ranking-company"),
         ).toHaveCount(3);
+        // The three area cards fit at 320 px too.
+        await expect(page.locator(".ph-hero .home-area-link")).toHaveCount(3);
         assert.ok(
           await page.evaluate(
             () => document.documentElement.scrollWidth <= innerWidth + 1,
@@ -986,357 +987,192 @@ try {
       }
     },
   );
-  // Deterministic price series: business days of the B3, values in text.
-  const point = (date, close, source, extra = {}) => ({
-    date,
-    close,
-    status: "consolidated",
-    source,
-    ...extra,
-  });
-  const nominalDaily = [
-    point("2026-10-19", "19.00000000", "agf"),
-    point("2026-10-20", "19.10000000", "agf"),
-    point("2026-10-21", "19.05000000", "agf"),
-    point("2026-10-22", "19.20000000", "agf"),
-    point("2026-10-23", "19.30000000", "agf"),
-    point("2026-10-26", "19.25000000", "escola"),
-    // 27 and 28/10 have no close in the series.
-    point("2026-10-29", "19.40000000", "brapi", { gapBefore: true }),
-    point("2026-10-30", "19.45000000", "brapi"),
-    point("2026-11-03", "19.50000000", "brapi"),
-    point("2026-11-04", "19.55000000", "brapi"),
-  ];
-  const adjustedDaily = nominalDaily.map((item) => ({
-    ...item,
-    close: (Number(item.close) - 1).toFixed(8),
-    source: "brapi",
-  }));
-  const months = [
-    ["2025-11", "2025-11-28"],
-    ["2025-12", "2025-12-30"],
-    ["2026-01", "2026-01-30"],
-    // February is missing: March starts a new stroke.
-    ["2026-03", "2026-03-31"],
-    ["2026-04", "2026-04-30"],
-    ["2026-05", "2026-05-29"],
-    ["2026-06", "2026-06-30"],
-    // July ends at 24/07 in the series: an incomplete month.
-    ["2026-07", "2026-07-24"],
-    ["2026-08", "2026-08-31"],
-    ["2026-09", "2026-09-30"],
-    ["2026-10", "2026-10-30"],
-  ];
-  const monthly = (offset) =>
-    months.map(([month, date], index) =>
-      point(date, (17 + index * 0.2 + offset).toFixed(8), "brapi", {
-        month,
-        status: month === "2026-07" ? "incomplete" : "consolidated",
-        ...(month === "2026-03" ? { gapBefore: true } : {}),
-      }),
-    );
-  const latest = (connect, reason = null) => ({
-    price: "19.62000000",
-    checkedAt: marketCheckedAt,
-    freshness: "delayed",
-    connect,
-    reason,
-  });
-  const both = ["adjusted", "nominal"];
-  const timSeries = {
-    adjusted: {
-      daily: seriesAnswer("TIMS3", {
-        basis: "adjusted",
-        availableBases: both,
-        points: adjustedDaily,
-        latestQuote: latest(false, "base_mismatch"),
-        notes: [
-          "Preços ajustados por proventos e eventos pela brapi, sem ajuste próprio da Escola.",
-        ],
-      }),
-      monthly: seriesAnswer("TIMS3", {
-        basis: "adjusted",
-        granularity: "monthly",
-        availableBases: both,
-        points: monthly(-1),
-        latestQuote: latest(false, "base_mismatch"),
-      }),
-    },
-    nominal: {
-      daily: seriesAnswer("TIMS3", {
-        basis: "nominal",
-        availableBases: both,
-        defaultBasis: "adjusted",
-        points: nominalDaily,
-        latestQuote: latest(true),
-      }),
-      monthly: seriesAnswer("TIMS3", {
-        basis: "nominal",
-        granularity: "monthly",
-        availableBases: both,
-        defaultBasis: "adjusted",
-        points: monthly(0),
-        latestQuote: latest(true),
-      }),
-    },
+  // The team's annual series of the publication: twelve years of net income
+  // (the page shows the last ten) and the payout of three years, one of them
+  // without dividends in the snapshot.
+  const annualHistory = {
+    netIncome: Array.from({ length: 12 }, (_, index) => ({
+      year: 2014 + index,
+      value: (index === 3 ? -150000000 : 900000000 + index * 125000000).toFixed(
+        2,
+      ),
+    })),
+    payout: [
+      { year: 2009, value: "0.500000" },
+      { year: 2023, value: "0.452000" },
+      { year: 2024, value: "0.610000" },
+      { year: 2025, value: "1.105000" },
+    ],
   };
-  // Only the traded price exists: "auto" follows the server's default basis.
-  const valeSeries = {
-    adjusted: {
-      daily: seriesAnswer("VALE3", {
-        basis: "adjusted",
-        availableBases: ["nominal"],
-        unavailableReason: "no_token",
-      }),
-    },
-    nominal: {
-      daily: seriesAnswer("VALE3", {
-        basis: "nominal",
-        points: nominalDaily,
-        latestQuote: latest(false, "gap"),
-      }),
-    },
-  };
-  const budget = (basis) =>
-    seriesAnswer("ITUB4", {
-      basis,
-      availableBases: [],
-      unavailableReason: "budget",
-    });
   await run(
-    "Gráfico de preços: diário/mensal, duas bases, marcador, lacuna, mês incompleto e indisponível",
+    "Proventos por tipo e ano, payout com e sem histórico anual, lucro líquido e 320px nos dois temas",
     async () => {
       const previousEntries = privatePublication.entries;
-      privatePublication.entries = [
-        "TIMS3",
-        "WIZC3",
-        "VALE3",
-        "ITUB4",
-        "ABEV3",
-      ].map((ticker, index) => ({
+      privatePublication.entries = ["TIMS3", "WIZC3"].map((ticker, index) => ({
         ...structuredClone(previousEntries[index]),
         ticker,
         companyName: "Empresa " + ticker,
+        ...(ticker === "TIMS3" ? { annualHistory } : {}),
       }));
-      market.series = {
-        TIMS3: timSeries,
-        VALE3: valeSeries,
-        ITUB4: {
-          adjusted: { daily: budget("adjusted") },
-          nominal: { daily: budget("nominal") },
-        },
-      };
-      market.quotes.TIMS3 = summaryQuote("TIMS3");
       historyEnabled = true;
       signedIn = true;
+      const callsBefore = market.calls.length;
       try {
         await page.setViewportSize({ width: 1440, height: 1000 });
         await page.goto(origin + "/app/ranking/acao/TIMS3?publication=27");
-        const price = page.locator("figure[data-price-chart]");
         const dividends = page.locator(
           'figure[data-history-chart="dividends"]',
         );
-        await expect(price).toHaveAttribute("data-price-chart", "ready");
-        await expect(price).toHaveAttribute("data-ticker", "TIMS3");
-        // Adjusted is the default when it exists, and it is always named.
-        await expect(price).toHaveAttribute("data-basis", "adjusted");
-        await expect(price).toHaveAttribute("data-granularity", "daily");
-        await expect(price.locator("[data-price-basis]")).toHaveText(
-          "Base: ajustada por proventos e por eventos (desdobramento, grupamento e bonificação), pela metodologia da brapi.dev.",
-        );
-        assert.ok(
-          market.calls.includes(
-            "/api/rankings/price-series/TIMS3?basis=adjusted&granularity=daily",
-          ),
-        );
-        const basisButton = (name) =>
-          price
-            .getByRole("group", { name: "Base do preço no gráfico" })
-            .getByRole("button", { name, exact: true });
-        await expect(basisButton("Ajustado por proventos")).toHaveAttribute(
-          "aria-pressed",
-          "true",
-        );
-        await expect(basisButton("Sem ajuste")).toBeEnabled();
-        // The dividend chart keeps the approved AGF endpoint.
         await expect(dividends).toHaveAttribute("data-history-ticker", "TIMS3");
+        // Section 02 keeps the current quote; the price chart is gone.
+        await expect(
+          page.locator("#cotacao [data-market-quote]"),
+        ).toBeVisible();
+        await expect(page.locator("[data-price-chart]")).toHaveCount(0);
+        assert.ok(
+          market.calls
+            .slice(callsBefore)
+            .every((call) => !call.includes("/price-series/")),
+          "A página não pede a série de preços",
+        );
+        // One stacked bar per year, by AGF type, paid and scheduled.
+        const history = stockHistory("TIMS3");
+        const annual = groupDividendsByType(history, "Anual", "Máx");
+        const { rows, matched } = attachPayout(annual, annualHistory.payout);
+        assert.equal(matched, 3);
+        await expect(dividends.locator("[data-dividend-period]")).toHaveCount(
+          annual.length,
+        );
+        for (const row of rows.filter((row) =>
+          ["2023", "2025", "2027"].includes(row.period),
+        )) {
+          const line = dividends.locator(
+            `[data-dividend-period="${row.period}"]`,
+          );
+          await expect(line.locator("[data-dividend-total]")).toHaveText(
+            formatDividendPerShare(row.total),
+          );
+          await expect(line.locator("[data-dividend-payout]")).toHaveText(
+            row.payout === null
+              ? "Não informado"
+              : formatPayoutPercent(row.payout),
+          );
+        }
         assert.ok(
           (await dividends.locator(".recharts-bar-rectangle").count()) > 0,
         );
-        await expect(page.locator("figure.fmk-publication-chart")).toHaveCount(
-          4,
+        const legend = dividends.getByRole("list", {
+          name: "Legenda do gráfico (clique para ocultar ou exibir)",
+        });
+        await expect(legend.getByRole("button")).toHaveText([
+          "Dividendo",
+          "JCP",
+          "Outros",
+          "Agendados",
+          "Payout anual (%)",
+        ]);
+        await expect(dividends).toHaveAttribute("data-payout", "present");
+        await expect(dividends.locator(".fmk-payout-line")).toHaveCount(1);
+        // Recharts draws the dots on a layer of their own; only the payout
+        // line has dots in this figure.
+        await expect(dividends.locator(".recharts-line-dot")).toHaveCount(
+          matched,
         );
-        // Missing sessions break the stroke in two.
-        const segments = () =>
-          price
-            .locator(".recharts-area-curve")
-            .first()
-            .evaluate(
-              (path) => (path.getAttribute("d").match(/M/g) || []).length,
-            );
-        await expect.poll(segments).toBe(2);
-        // The latest quote is a marker of its own; on the adjusted basis the
-        // last close has another factor, so there is no dashed line.
-        await expect(price.locator("[data-latest-marker]")).toHaveCount(1);
-        await expect(price.locator(".price-series-connector")).toHaveCount(0);
-        await expect(price.locator("[data-marker-note]")).toHaveAttribute(
-          "data-marker-note",
-          "alone",
+        await expect(dividends.locator("[data-dividend-source]")).toHaveText(
+          "Fonte: AGF, snapshot de 26/10/2026, agrupado por data de pagamento.",
         );
-        await expect(price.locator("[data-marker-note]")).toContainText(
-          "Cotação mais recente — preço nominal de mercado: R$ 19,62.",
+        await expect(dividends.locator("[data-payout-note]")).toContainText(
+          "informado pela equipe na publicação",
         );
-        await expect(price.locator("[data-marker-note]")).toContainText(
-          "a série ajustada não está na mesma base do preço de mercado",
+        await expect(dividends.locator("[data-dividend-unit]")).toContainText(
+          "R$ por ação, por ano de pagamento",
         );
-        await expect(price.locator("[data-gap-note]")).toBeVisible();
-        await expect(price.locator("[data-coverage]")).toHaveText(
-          "Fontes: brapi.dev.",
-        );
-        await expect(price.locator("[data-coverage-note]")).toHaveText(
-          "Preços ajustados por proventos e eventos pela brapi, sem ajuste próprio da Escola.",
-        );
-        // Tooltips by keyboard: São Paulo date, value, basis, status, source.
-        const plot = price.locator('svg[role="application"]');
-        await plot.focus();
-        for (let index = 0; index < 15; index++)
-          await page.keyboard.press("ArrowLeft");
-        const tooltip = price.getByRole("tooltip");
+        // Tooltip by keyboard: the values per type, the total and the payout.
+        // Focus shows the first bar; the arrows move between years.
+        await dividends.locator('svg[role="application"]').focus();
+        await page.keyboard.press("ArrowRight");
+        const tooltip = dividends.getByRole("tooltip");
         await expect(tooltip).toBeVisible();
+        await expect(tooltip).toContainText("Pagos em");
+        await expect(tooltip.locator("[data-tooltip-total]")).toBeVisible();
         await expectInstrumentSans(tooltip);
-        await expect(tooltip).toContainText("Pregão de 19/10/2026");
-        await expect(tooltip).toContainText("R$ 18,00");
-        await expect(tooltip).toContainText("ajustado por proventos");
-        await expect(tooltip).toContainText("consolidado");
-        await expect(tooltip).toContainText("brapi.dev");
-        await expect(tooltip).toContainText("Preço-teto");
-        for (let index = 0; index < 6; index++)
-          await page.keyboard.press("ArrowRight");
-        await expect(tooltip).toContainText(
-          "sem fechamentos entre 26/10/2026 e 29/10/2026",
-        );
-        for (let index = 0; index < 15; index++)
-          await page.keyboard.press("ArrowRight");
-        await expect(tooltip).toContainText(
-          "Cotação mais recente — preço nominal de mercado",
-        );
-        await expect(tooltip).toContainText("nominal, sem ajuste");
-        // The ceiling stays a constant reference that can be hidden.
-        const lines = () => price.locator(".recharts-line-curve").count();
-        const withCeiling = await lines();
-        await price
-          .getByRole("button", { name: "Preço-teto", exact: true })
+        // The payout line can be hidden like any series.
+        await legend
+          .getByRole("button", { name: "Payout anual (%)", exact: true })
           .click();
-        await expect.poll(lines).toBe(withCeiling - 1);
-        await price
-          .getByRole("button", { name: "Preço-teto", exact: true })
+        await expect(dividends.locator(".fmk-payout-line")).toHaveCount(0);
+        await legend
+          .getByRole("button", { name: "Payout anual (%)", exact: true })
           .click();
-        // Without adjustment: the traded price, joined to the quote by a dash.
-        await basisButton("Sem ajuste").click();
-        await expect(price).toHaveAttribute("data-basis", "nominal");
-        await expect(price.locator("[data-price-basis]")).toHaveText(
-          "Base: sem ajuste, com o preço negociado em cada pregão.",
-        );
-        await expect(price.locator(".price-series-connector")).toHaveCount(1);
-        await expect(price.locator("[data-marker-note]")).toHaveAttribute(
-          "data-marker-note",
-          "connected",
-        );
-        await expect(price.locator("[data-coverage]")).toHaveText(
-          "Fontes: AGF, no trecho com o preço negociado; fechamentos consolidados pela Escola do Dividendo; brapi.dev.",
-        );
-        const aside = page.locator(".fmk-chart-layout aside").first();
-        await expect(aside).toContainText("No período · 1A · sem ajuste");
-        await expect(
-          aside
-            .locator("dl > div")
-            .filter({ hasText: "Último fechamento" })
-            .locator("dd"),
-        ).toHaveText(/19,55/);
-        // Monthly: the short windows go, an incomplete month is marked.
-        await price
-          .getByRole("group", { name: "Intervalo do gráfico de cotação" })
+        await expect(dividends.locator(".fmk-payout-line")).toHaveCount(1);
+        // Monthly view: no annual payout on monthly bars.
+        await dividends
+          .getByRole("group", { name: "Visualização" })
           .getByRole("button", { name: "Mensal", exact: true })
           .click();
-        await expect(price).toHaveAttribute("data-granularity", "monthly");
-        await expect(price).toHaveAttribute("data-basis", "nominal");
-        assert.ok(
-          market.calls.includes(
-            "/api/rankings/price-series/TIMS3?basis=nominal&granularity=monthly",
-          ),
+        await expect(dividends).toHaveAttribute("data-dividend-mode", "Mensal");
+        await expect(dividends).toHaveAttribute("data-payout", "absent");
+        await expect(dividends.locator(".fmk-payout-line")).toHaveCount(0);
+        await expect(dividends.locator("[data-payout-note]")).toHaveText(
+          "O payout anual aparece na visão anual.",
+        );
+        await expect(dividends.locator("[data-dividend-period]")).toHaveCount(
+          groupDividendsByType(history, "Mensal", "Máx").length,
+        );
+        await dividends
+          .getByRole("group", { name: "Visualização" })
+          .getByRole("button", { name: "Anual", exact: true })
+          .click();
+        await expect(dividends).toHaveAttribute("data-payout", "present");
+        // Net income: the last ten informed years, full value in the tooltip.
+        const income = page.locator('[data-annual-chart="net-income"]');
+        await expect(income).toHaveAttribute("data-annual-state", "ready");
+        const shown = netIncomeSeries(annualHistory.netIncome);
+        assert.equal(shown.length, 10);
+        await expect(income.locator("[data-net-income-year]")).toHaveCount(10);
+        await expect(income.locator("[data-annual-unit]")).toHaveText(
+          "Em R$ · 2016 a 2025",
         );
         await expect(
-          price
-            .getByRole("group", { name: "Período do gráfico de cotação" })
-            .getByRole("button"),
-        ).toHaveText(["6M", "1A", "5A", "Máx"]);
-        await expect(price.locator("[data-incomplete-point]")).toHaveCount(1);
-        await expect(price.locator("[data-incomplete-note]")).toContainText(
-          "07/2026: dados até 24/07",
+          income.locator('[data-net-income-year="2017"] td'),
+        ).toHaveText(formatReais(-150000000));
+        await expect(income.locator("[data-annual-source]")).toContainText(
+          "Fonte: informado pela equipe na publicação.",
         );
-        await expect.poll(segments).toBe(2);
-        await plot.focus();
-        for (let index = 0; index < 15; index++)
-          await page.keyboard.press("ArrowLeft");
-        for (let index = 0; index < 8; index++)
+        await expect(income.locator("[data-annual-source]")).toContainText(
+          "prejuízo no ano",
+        );
+        await income.locator('svg[role="application"]').focus();
+        await expect(income.getByRole("tooltip")).toContainText(
+          formatReais(shown[0].value),
+        );
+        for (let index = 1; index < shown.length; index++)
           await page.keyboard.press("ArrowRight");
-        await expect(tooltip).toContainText(
-          "Mês 07/2026 · pregão de 24/07/2026",
+        await expect(income.getByRole("tooltip")).toContainText(
+          "Lucro líquido em 2025",
         );
-        await expect(tooltip).toContainText("mês incompleto, dados até 24/07");
-        // Monthly connects on request too: the last month is the previous one.
-        await expect(price.locator(".price-series-connector")).toHaveCount(1);
-        await basisButton("Ajustado por proventos").click();
-        await expect(price).toHaveAttribute("data-basis", "adjusted");
-        await expect(price.locator(".price-series-connector")).toHaveCount(0);
-        assert.doesNotMatch(
-          await page.locator("body").innerText(),
-          /tempo real/i,
+        await expect(income.getByRole("tooltip")).toContainText(
+          formatReais(shown.at(-1).value),
         );
-        // Not covered: an informative state, the dividends still drawn.
+        await page.locator("#dividendos").screenshot({
+          path: output + "/dividends-desktop.png",
+        });
+        await income.screenshot({ path: output + "/net-income-desktop.png" });
+        // Without annualHistory: no payout line or legend, net income empty.
         await page.goto(origin + "/app/ranking/acao/WIZC3?publication=27");
-        await expect(price).toHaveAttribute("data-price-chart", "unavailable");
-        await expect(
-          price.locator("[data-unavailable-reason]"),
-        ).toHaveAttribute("data-unavailable-reason", "not_covered");
-        await expect(price).toContainText(
-          "A brapi.dev não oferece o histórico de preços desta ação.",
-        );
-        await expect(price.locator(".recharts-area-curve")).toHaveCount(0);
         await expect(dividends).toHaveAttribute("data-history-ticker", "WIZC3");
-        // Only the traded price: "auto" asks for the adjusted one, then the
-        // server's default; the adjusted toggle cannot be chosen.
-        await page.goto(origin + "/app/ranking/acao/VALE3?publication=27");
-        await expect(price).toHaveAttribute("data-basis", "nominal");
-        await expect(price).toHaveAttribute("data-price-chart", "ready");
-        assert.ok(
-          market.calls.includes(
-            "/api/rankings/price-series/VALE3?basis=adjusted&granularity=daily",
-          ) &&
-            market.calls.includes(
-              "/api/rankings/price-series/VALE3?basis=nominal&granularity=daily",
-            ),
-        );
-        await expect(basisButton("Ajustado por proventos")).toBeDisabled();
-        await expect(basisButton("Sem ajuste")).toHaveAttribute(
-          "aria-pressed",
-          "true",
-        );
-        await expect(price.locator("[data-marker-note]")).toContainText(
-          "há pregões sem fechamento entre o último ponto e a cotação",
-        );
-        // Daily budget spent, and a ticker the server does not cover (404).
-        await page.goto(origin + "/app/ranking/acao/ITUB4?publication=27");
+        await expect(dividends).toHaveAttribute("data-payout", "absent");
+        await expect(dividends.locator(".fmk-payout-line")).toHaveCount(0);
+        await expect(dividends.locator("[data-payout-note]")).toHaveCount(0);
         await expect(
-          price.locator("[data-unavailable-reason]"),
-        ).toHaveAttribute("data-unavailable-reason", "budget");
-        await expect(price).toContainText(
-          "O limite diário de consultas à brapi.dev foi atingido.",
+          legend.getByRole("button", { name: "Payout anual (%)" }),
+        ).toHaveCount(0);
+        await expect(income).toHaveAttribute("data-annual-state", "empty");
+        await expect(income.locator("[data-annual-empty]")).toHaveText(
+          "A publicação não traz o lucro líquido histórico desta empresa.",
         );
-        await page.goto(origin + "/app/ranking/acao/ABEV3?publication=27");
-        await expect(
-          price.locator("[data-unavailable-reason]"),
-        ).toHaveAttribute("data-unavailable-reason", "not_covered");
+        await expect(income.locator(".recharts-wrapper")).toHaveCount(0);
+        // 320 px in both themes: nothing wider than the page.
         for (const theme of ["dark", "light"]) {
           await page.setViewportSize({ width: 320, height: 1000 });
           await page.goto(origin + "/app/ranking/acao/TIMS3?publication=27");
@@ -1344,7 +1180,8 @@ try {
             (theme) => (document.documentElement.dataset.theme = theme),
             theme,
           );
-          await expect(price).toHaveAttribute("data-price-chart", "ready");
+          await expect(dividends).toHaveAttribute("data-payout", "present");
+          await expect(income).toHaveAttribute("data-annual-state", "ready");
           // On failure, name the widest elements past the viewport: fonts
           // differ between Windows and the Linux CI runner.
           const overflow = await page.evaluate(() => {
@@ -1375,22 +1212,28 @@ try {
           assert.equal(
             overflow,
             null,
-            "Gráfico 320px sem overflow em " + theme + ": " + overflow,
+            "Gráficos 320px sem overflow em " + theme + ": " + overflow,
           );
-          await price.scrollIntoViewIfNeeded();
-          await page.locator("#cotacao").screenshot({
-            path: output + "/price-series-320-" + theme + ".png",
+          // Only the logo tile is white in the light theme.
+          if (theme === "light")
+            assert.notEqual(
+              await page
+                .locator(".figma-stock")
+                .evaluate((node) => getComputedStyle(node).backgroundColor),
+              "rgb(255, 255, 255)",
+            );
+          await dividends.scrollIntoViewIfNeeded();
+          await page.locator("#dividendos").screenshot({
+            path: output + "/dividends-320-" + theme + ".png",
+          });
+          await income.screenshot({
+            path: output + "/net-income-320-" + theme + ".png",
           });
         }
-        await page.setViewportSize({ width: 1440, height: 1000 });
-        await page.goto(origin + "/app/ranking/acao/TIMS3?publication=27");
-        await expect(price).toHaveAttribute("data-price-chart", "ready");
-        await price.scrollIntoViewIfNeeded();
-        await price.screenshot({ path: output + "/price-series-desktop.png" });
       } finally {
         historyEnabled = false;
         privatePublication.entries = previousEntries;
-        market.series = {};
+        await page.setViewportSize({ width: 1440, height: 1000 });
       }
     },
   );

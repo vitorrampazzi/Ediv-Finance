@@ -296,3 +296,187 @@ test("limites de upload e descompactação continuam ativos", async () => {
     /descompactada/,
   );
 });
+
+// Optional yearly history (docs/HOME-E-GRAFICOS-2026-11-10.md).
+const historyRows = (netIncome, payout, extraHeaders = []) => [
+  [...headers, "Lucro líquido anual", "Payout anual", ...extraHeaders],
+  [...row(), netIncome, payout],
+];
+
+test("colunas opcionais de lucro e payout anuais viram annualHistory ordenado", () => {
+  const [entry] = parseDividendRows(
+    historyRows(
+      "2024: 2.345.678.900,00; 2022 = -1500000\n2023: 2345678900",
+      "2023: 45,2%;2024:-12\n2022 = 0",
+    ),
+  );
+  assert.deepEqual(entry.annualHistory, {
+    netIncome: [
+      { year: 2022, value: "-1500000" },
+      { year: 2023, value: "2345678900" },
+      { year: 2024, value: "2345678900.00" },
+    ],
+    payout: [
+      { year: 2022, value: "0.000000" },
+      { year: 2023, value: "0.452000" },
+      { year: 2024, value: "-0.120000" },
+    ],
+  });
+  assert.equal(entry.dividendAnalysis.expectedPayout, "1.75");
+  assert.ok(
+    Object.keys(entry).indexOf("annualHistory") ===
+      Object.keys(entry).indexOf("dividendAnalysis") + 1,
+  );
+});
+
+test("colunas opcionais aceitam qualquer posição, nomes normalizados e uma só delas", () => {
+  const values = row();
+  const [entry] = parseDividendRows([
+    ["payout_anual", ...headers.slice(0, 5), "LUCRO LIQUIDO ANUAL", ...headers.slice(5)],
+    ["2024: 1000", ...values.slice(0, 5), "2024: 1,5", ...values.slice(5)],
+  ]);
+  assert.deepEqual(entry.annualHistory.payout, [{ year: 2024, value: "10.000000" }]);
+  assert.deepEqual(entry.annualHistory.netIncome, [{ year: 2024, value: "1.5" }]);
+  const [onlyPayout] = parseDividendRows([
+    [...headers, "Payout anual"],
+    [...row(), "2025: 33,3"],
+  ]);
+  assert.deepEqual(onlyPayout.annualHistory, {
+    netIncome: null,
+    payout: [{ year: 2025, value: "0.333000" }],
+  });
+});
+
+test("sem as colunas opcionais ou com células vazias, annualHistory é null", () => {
+  assert.equal(parseDividendRows([headers, row()])[0].annualHistory, null);
+  assert.equal(parseDividendRows(historyRows("", " "))[0].annualHistory, null);
+  const [partial] = parseDividendRows(historyRows("2024: 10", ""));
+  assert.deepEqual(partial.annualHistory, {
+    netIncome: [{ year: 2024, value: "10" }],
+    payout: null,
+  });
+});
+
+test("erros do histórico anual indicam a linha e não reinterpretam valores", () => {
+  const thisYear = new Date().getFullYear();
+  const many = Array.from({ length: 31 }, (_, i) => `${1990 + i}: 1`).join(";");
+  const thirty = Array.from({ length: 30 }, (_, i) => `${1990 + i}: 1`).join(";");
+  assert.equal(
+    parseDividendRows(historyRows(thirty, ""))[0].annualHistory.netIncome.length,
+    30,
+  );
+  for (const [netIncome, payout, message] of [
+    ["2024: 1; 2024: 2", "", /ano 2024 repetido/],
+    ["1989: 1", "", /fora de 1990/],
+    ["", `${thisYear + 1}: 10`, /fora de 1990/],
+    [many, "", /até 30 anos/],
+    ["2024 1", "", /pares ANO: valor/],
+    ["24: 1", "", /pares ANO: valor/],
+    ["2024:", "", /pares ANO: valor/],
+    ["2024: 1e3", "", /Lucro líquido anual inválido/],
+    ["2024: 1,234.5", "", /Lucro líquido anual inválido/],
+    ["2024: =1+2", "", /Lucro líquido anual inválido/],
+    ["2024: 2000000000000000", "", /fora do limite/],
+    ["", "2024: 1000,01%", /entre -1000% e 1000%/],
+    ["", "2024: -1001", /entre -1000% e 1000%/],
+    ["", "2024: 0.45x", /Payout anual inválido/],
+    ["", "2024: 45%%", /Payout anual inválido/],
+  ])
+    assert.throws(
+      () => parseDividendRows(historyRows(netIncome, payout)),
+      (error) =>
+        error instanceof ImportError &&
+        /linha 2/.test(error.message) &&
+        message.test(error.message),
+    );
+});
+
+test("coluna desconhecida ou opcional repetida continua rejeitada", () => {
+  assert.throws(
+    () => parseDividendRows(historyRows("", "", ["Lucro trimestral"])),
+    /Lucro líquido anual e Payout anual, opcionais/,
+  );
+  assert.throws(
+    () =>
+      parseDividendRows([
+        [...headers, "Payout anual", "payout_anual"],
+        [...row(), "", ""],
+      ]),
+    /repetidos/,
+  );
+});
+
+test("abas completam o histórico uma da outra e conflitos de série são rejeitados", () => {
+  const withHistory = (netIncome, payout) => [
+    { sheet: "Ranking", data: historyRows(netIncome, payout) },
+    { sheet: "Informações Completas", data: [headers, row()] },
+  ];
+  assert.deepEqual(
+    parseDividendWorkbook(withHistory("2024: 5", ""))[0].annualHistory,
+    { netIncome: [{ year: 2024, value: "5" }], payout: null },
+  );
+  const split = parseDividendWorkbook([
+    { sheet: "Ranking", data: historyRows("2024: 5", "") },
+    { sheet: "Informações Completas", data: historyRows("", "2024: 50") },
+  ]);
+  assert.deepEqual(split[0].annualHistory, {
+    netIncome: [{ year: 2024, value: "5" }],
+    payout: [{ year: 2024, value: "0.500000" }],
+  });
+  assert.throws(
+    () =>
+      parseDividendWorkbook([
+        { sheet: "Ranking", data: historyRows("2024: 5", "") },
+        { sheet: "Informações Completas", data: historyRows("2024: 6", "") },
+      ]),
+    /conflitantes/,
+  );
+});
+
+test("CSV do modelo legado com as duas colunas e células de várias linhas", async () => {
+  const csv =
+    "ticker;empresa;potencial_percentual;lucro_liquido_anual;payout_anual\r\n" +
+    'OLD3;Empresa anterior;10;"2023: 1.000,50\n2024: -20";"2024: 45,2%"\r\n' +
+    "NEW3;Outra empresa;5;;\r\n";
+  const data = await readUpload({ body: Buffer.from(csv), is: () => false });
+  const [first, second] = parseRankingUpload(data);
+  assert.deepEqual(first.annualHistory, {
+    netIncome: [
+      { year: 2023, value: "1000.50" },
+      { year: 2024, value: "-20" },
+    ],
+    payout: [{ year: 2024, value: "0.452000" }],
+  });
+  assert.equal(second.annualHistory, null);
+});
+
+test("CSV legado recusa célula partida em vez de mudar valores de coluna", async () => {
+  // "2022: 50; 2023: 60" without quotes splits into two cells in a ";" CSV.
+  const csv =
+    "ticker;empresa;potencial_percentual;lucro_liquido_anual;payout_anual\r\n" +
+    "OLD3;Empresa anterior;10;2022: 50; 2023: 60;\r\n";
+  const data = await readUpload({ body: Buffer.from(csv), is: () => false });
+  assert.throws(
+    () => parseRankingUpload(data),
+    (error) =>
+      error instanceof ImportError &&
+      /valores sem cabeçalho na linha 2/.test(error.message) &&
+      /entre aspas/.test(error.message),
+  );
+});
+
+test("histórico de mudanças detecta annualHistory sem acusar publicações antigas", () => {
+  const [before] = parseDividendRows(historyRows("2024: 5", ""));
+  const after = structuredClone(before);
+  assert.equal(compareResearch([before], [after]).changed.length, 0);
+  after.annualHistory.netIncome[0].value = "6";
+  assert.deepEqual(compareResearch([before], [after]).changed[0].fields, [
+    "annualHistory",
+  ]);
+  const old = structuredClone(before);
+  delete old.annualHistory;
+  const [empty] = parseDividendRows([headers, row()]);
+  assert.equal(compareResearch([old], [empty]).changed.length, 0);
+  after.annualHistory = { payout: null, netIncome: before.annualHistory.netIncome };
+  assert.equal(compareResearch([before], [after]).changed.length, 0);
+});

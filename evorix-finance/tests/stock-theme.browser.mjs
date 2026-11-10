@@ -6,9 +6,7 @@ import { expect } from "playwright/test";
 import { dividendColumns } from "../dividend-analysis.mjs";
 import {
   fixtureNow,
-  marketCheckedAt,
   marketFixture,
-  seriesAnswer,
   summaryQuote,
 } from "./market-fixture.mjs";
 
@@ -41,6 +39,18 @@ const entry = {
   horizonMonths: null,
   thesis: null,
   risks: null,
+  // The team's annual series: a payout line and the net income chart.
+  annualHistory: {
+    netIncome: [
+      { year: 2023, value: "1200000000.00" },
+      { year: 2024, value: "-300000000.00" },
+      { year: 2025, value: "1500000000.00" },
+    ],
+    payout: [
+      { year: 2025, value: "0.452000" },
+      { year: 2026, value: "0.600000" },
+    ],
+  },
 };
 const user = {
   id: "theme-ui",
@@ -64,39 +74,10 @@ const publication = {
   entries: [entry],
   history: [],
 };
-// Market data and price series are mocked; they must read well in both themes.
+// Market data is mocked; the page must read well in both themes.
 const market = marketFixture({
   publication,
   quotes: { TEST3: summaryQuote("TEST3", { price: "0.80000000" }) },
-  series: {
-    TEST3: {
-      adjusted: {
-        daily: seriesAnswer("TEST3", {
-          basis: "adjusted",
-          availableBases: ["adjusted", "nominal"],
-          points: [
-            ["2026-10-29", "0.70000000"],
-            ["2026-10-30", "0.72000000"],
-            ["2026-11-03", "0.75000000", true],
-            ["2026-11-04", "0.78000000"],
-          ].map(([date, close, gapBefore]) => ({
-            date,
-            close,
-            status: "consolidated",
-            source: "brapi",
-            ...(gapBefore ? { gapBefore } : {}),
-          })),
-          latestQuote: {
-            price: "0.80000000",
-            checkedAt: marketCheckedAt,
-            freshness: "delayed",
-            connect: true,
-            reason: null,
-          },
-        }),
-      },
-    },
-  },
 });
 const sections = [
   "visao-geral",
@@ -153,7 +134,18 @@ try {
               { date: "2026-10-19", close: 10 },
               { date: "2026-10-20", close: 11 },
             ],
-            dividends: [],
+            // One event of each AGF type; the last one after the snapshot.
+            dividends: [
+              ["Dividendo", 0.5, "2025-05-10"],
+              ["JCP", 0.25, "2025-11-10"],
+              ["Rendimento", 0.1, "2026-03-02"],
+              ["JCP", 0.3, "2026-12-15"],
+            ].map(([type, value, paymentDate]) => ({
+              value,
+              type,
+              recordDate: null,
+              paymentDate,
+            })),
           },
         };
         if (!responses[path]) unknown.push(path);
@@ -214,6 +206,7 @@ try {
               inset: resolve("--ediv-inset"),
               raised: resolve("--fmk-raised"),
               globalSurface: resolve("--ediv-surface"),
+              graphic: resolve("--ediv-graphic-surface"),
               muted: resolve("--fmk-sub"),
               globalMuted: resolve("--ediv-muted"),
             };
@@ -226,7 +219,8 @@ try {
                 value.background === value.canvas &&
                 value.text === value.ink &&
                 value.surface === value.inset &&
-                value.raised === value.globalSurface &&
+                value.raised ===
+                  (theme === "light" ? value.graphic : value.globalSurface) &&
                 value.muted === value.globalMuted
               );
             },
@@ -242,7 +236,7 @@ try {
         await expect(page.locator(".fmk-overview-market")).toContainText(
           "Valor de mercado",
         );
-        // Market price, dynamic margin and the price series in this theme.
+        // Market price and dynamic margin in this theme; no price chart.
         await expect(
           page.locator("#cotacao [data-market-quote]"),
         ).toHaveAttribute("data-market-quote", "market");
@@ -251,11 +245,45 @@ try {
             '.figma-stock header [data-summary="Margem de segurança"] [data-summary-value]',
           ),
         ).toHaveText("20,00%");
-        await expect(page.locator("figure[data-price-chart]")).toHaveAttribute(
-          "data-price-chart",
-          "ready",
+        await expect(page.locator("[data-price-chart]")).toHaveCount(0);
+        // Dividends by type with the payout line, and the net income chart.
+        const dividends = page.locator('figure[data-history-chart="dividends"]');
+        await expect(dividends).toHaveAttribute("data-payout", "present");
+        await expect(dividends.locator(".fmk-payout-line")).toHaveCount(1);
+        await expect(dividends.locator("[data-dividend-period]")).toHaveCount(
+          2,
         );
-        await expect(page.locator(".price-series-connector")).toHaveCount(1);
+        await expect(
+          dividends.getByRole("button", { name: "Agendados", exact: true }),
+        ).toBeVisible();
+        await expect(
+          page.locator('[data-annual-chart="net-income"]'),
+        ).toHaveAttribute("data-annual-state", "ready");
+        // Light theme: light-green surfaces; only the logo tile is white.
+        const backgrounds = await page.evaluate(() =>
+          [".figma-stock", ".figma-stock .company-logo"].map(
+            (selector) =>
+              getComputedStyle(document.querySelector(selector))
+                .backgroundColor,
+          ),
+        );
+        assert.notEqual(backgrounds[0], "rgb(255, 255, 255)");
+        assert.equal(backgrounds[1], "rgb(255, 255, 255)");
+        const whites = await page
+          .locator(".figma-stock *")
+          .evaluateAll((nodes) =>
+            nodes
+              .filter(
+                (node) =>
+                  getComputedStyle(node).backgroundColor ===
+                    "rgb(255, 255, 255)" &&
+                  !node.closest(".company-logo") &&
+                  node.getBoundingClientRect().width > 0,
+              )
+              .map((node) => node.tagName + "." + node.className),
+          );
+        if (theme === "light")
+          assert.deepEqual(whites, [], "Só o logo fica branco no tema claro");
         const growth = page
           .locator(".fmk-overview-row")
           .filter({ hasText: "CAGR de lucros" });
@@ -283,7 +311,10 @@ try {
         assert.equal(palette.background, palette.canvas);
         assert.equal(palette.text, palette.ink);
         assert.equal(palette.surface, palette.inset);
-        assert.equal(palette.raised, palette.globalSurface);
+        assert.equal(
+          palette.raised,
+          theme === "light" ? palette.graphic : palette.globalSurface,
+        );
         assert.equal(palette.muted, palette.globalMuted);
         for (const id of sections) {
           const link = page
@@ -297,10 +328,35 @@ try {
           });
         }
         await expect
-          .poll(() =>
-            page.evaluate(
-              () => document.documentElement.scrollWidth - innerWidth,
-            ),
+          .poll(
+            () =>
+              page.evaluate(
+                () => document.documentElement.scrollWidth - innerWidth,
+              ),
+            {
+              // On failure, name the widest elements outside scroll areas.
+              message: await page.evaluate(() =>
+                [...document.querySelectorAll("body *")]
+                  .filter((element) => {
+                    if (element.getBoundingClientRect().right <= innerWidth + 2)
+                      return false;
+                    for (
+                      let node = element.parentElement;
+                      node && node !== document.body;
+                      node = node.parentElement
+                    )
+                      if (getComputedStyle(node).overflowX !== "visible")
+                        return false;
+                    return true;
+                  })
+                  .slice(-6)
+                  .map(
+                    (element) =>
+                      `${element.tagName}.${String(element.className).slice(0, 60)} → ${Math.round(element.getBoundingClientRect().right)}px`,
+                  )
+                  .join("; "),
+              ),
+            },
           )
           .toBeLessThanOrEqual(2);
         report.push({ name, theme, status: "passed", sections, palette });

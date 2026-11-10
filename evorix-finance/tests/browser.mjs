@@ -148,6 +148,14 @@ try {
     await page.goto(root);
     await expect(page.locator("h1")).toBeVisible();
     await expect(page.locator("body")).toContainText("Escola do Dividendo");
+    // Three area cards under the brand, the ranking first.
+    await expect(page.locator(".home-area-link")).toHaveCount(3);
+    assert.deepEqual(
+      await page
+        .locator(".home-area-link")
+        .evaluateAll((links) => links.map((link) => link.getAttribute("href"))),
+      ["/ranking", "/aprender", "/glossario"],
+    );
     await noOverflow(page);
     await page.screenshot({
       path: ".test-artifacts/home-desktop.png",
@@ -659,6 +667,13 @@ try {
         .getByRole("heading", { name: "Sua mesa de pesquisa.", exact: true })
         .first(),
     ).toBeVisible();
+    // Signed in, the ranking and the lessons open inside the account.
+    assert.deepEqual(
+      await page
+        .locator(".home-area-link")
+        .evaluateAll((links) => links.map((link) => link.getAttribute("href"))),
+      ["/app/ranking", "/app/aprender", "/glossario"],
+    );
   });
   await check("Usuário não acessa Administração nem Atendimentos", async () => {
     for (const path of ["/app/admin", "/app/atendimentos"]) {

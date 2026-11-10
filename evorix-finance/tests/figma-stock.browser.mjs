@@ -23,8 +23,8 @@ const passed = [],
   fonts = [];
 const widths = [320, 1440];
 // Market answers are mocked so this suite never reaches brapi.dev: without a
-// publication in the fixture, price and margin fall back to the research, and
-// every price series reads as not covered.
+// publication in the fixture, price and margin fall back to the research. The
+// company page draws no price chart.
 const market = marketFixture();
 async function run(name, work) {
   if (
@@ -117,7 +117,7 @@ try {
         },
       );
   }
-  // The price chart comes from /api/rankings/price-series.
+  // Charts drawn from the publication fields alone.
   const groups = {
     dividends: ["projectedGrossDividendPerShare", "estimatedEps"],
     earnings: [
@@ -186,10 +186,17 @@ try {
       await expect(
         page.locator("#cotacao [data-market-quote]"),
       ).toHaveAttribute("data-market-quote", /^(research|unavailable)$/);
-      await expect(page.locator("figure[data-price-chart]")).toHaveAttribute(
-        "data-price-chart",
-        /^(unavailable|invalid)$/,
+      await expect(page.locator("[data-price-chart]")).toHaveCount(0);
+      // Net income year by year only when the publication brings it.
+      const income = page.locator('[data-annual-chart="net-income"]');
+      await expect(income).toHaveAttribute(
+        "data-annual-state",
+        entry.annualHistory?.netIncome?.length ? "ready" : "empty",
       );
+      if (!entry.annualHistory?.netIncome?.length)
+        await expect(income.locator("[data-annual-empty]")).toHaveText(
+          "A publicação não traz o lucro líquido histórico desta empresa.",
+        );
     }
   });
   await run(

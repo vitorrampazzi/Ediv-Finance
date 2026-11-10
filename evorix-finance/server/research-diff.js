@@ -16,9 +16,21 @@ export const researchKeys = [
   "referencePeriod",
   "dataSource",
   "dividendAnalysis",
+  "annualHistory",
 ];
 export const readEntries = (value) =>
   typeof value === "string" ? JSON.parse(value) : value || [];
+// Key order never counts as a change; older entries have no annualHistory.
+const canonical = (value) =>
+  Array.isArray(value)
+    ? value.map(canonical)
+    : value && typeof value === "object"
+      ? Object.fromEntries(
+          Object.keys(value)
+            .sort()
+            .map((key) => [key, canonical(value[key])]),
+        )
+      : value ?? null;
 export function compareResearch(before, after) {
   const previous = new Map(before.map((entry) => [entry.ticker, entry]));
   const current = new Map(after.map((entry) => [entry.ticker, entry]));
@@ -31,7 +43,10 @@ export function compareResearch(before, after) {
       key === "dividendAnalysis"
         ? JSON.stringify(Object.entries(old[key] || {}).sort()) !==
           JSON.stringify(Object.entries(entry[key] || {}).sort())
-        : String(old[key] ?? "").trim() !== String(entry[key] ?? "").trim(),
+        : key === "annualHistory"
+          ? JSON.stringify(canonical(old[key])) !==
+            JSON.stringify(canonical(entry[key]))
+          : String(old[key] ?? "").trim() !== String(entry[key] ?? "").trim(),
     );
     return fields.length
       ? [

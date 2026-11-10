@@ -205,7 +205,10 @@ Rotas:
   - mostra a cotação canônica, os dados do pregão, o preço-teto (da pesquisa
     de DD/MM) e a margem dinâmica;
   - o preço e a margem da publicação aparecem como referência.
-- **Gráfico:**
+- **Gráfico (retirado da página da empresa em 10/11/2026,** a pedido do
+  corretor; ver `docs/HOME-E-GRAFICOS-2026-11-10.md`. A rota
+  `/api/rankings/price-series` continua no servidor, sem uso na interface. O
+  texto abaixo descreve como ele era):
   - alternância Diário/Mensal e Ajustado/Sem ajuste, esta só com as bases
     disponíveis, e o nome da base sempre visível;
   - marcador da cotação mais recente;

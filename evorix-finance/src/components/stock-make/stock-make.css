@@ -27,6 +27,9 @@
   --fmk-amber: #8b5e23;
   --fmk-lilac: #7052a1;
   --fmk-steel: #3f678b;
+  /* Light theme: the page sits on the light-green surfaces of the theme and
+     only the logo tile (.company-logo) stays white, with its thin border. */
+  --fmk-raised: var(--ediv-graphic-surface);
 }
 .figma-stock .text-fmk-sub {
   color: var(--fmk-sub);
@@ -298,4 +301,15 @@
   border-left: 3px solid var(--fmk-teal);
   border-radius: 0.5rem;
   background: color-mix(in srgb, var(--fmk-teal) 5%, var(--fmk-bg));
+}
+
+/* Without the price chart the quote block closes the "Cotação" section: the
+   next section head already draws the divider. */
+.figma-stock #cotacao .live-quote-block:last-child {
+  margin-bottom: 0;
+  padding-bottom: 0;
+  border-bottom: 0;
+}
+.figma-stock .fmk-annual-chart {
+  min-width: 0;
 }

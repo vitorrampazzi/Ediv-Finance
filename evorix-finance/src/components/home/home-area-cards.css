@@ -1,0 +1,136 @@
+/* Three area cards of the homes. Static links: the prerendered HTML already
+   has their final size, so nothing moves when the page hydrates. */
+.home-areas {
+  min-width: 0;
+}
+.home-areas-list {
+  display: grid;
+  gap: 0.75rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.home-area {
+  display: flex;
+  min-width: 0;
+}
+.home-area-link {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: start;
+  gap: 0.75rem;
+  width: 100%;
+  min-height: 6rem;
+  padding: 0.95rem;
+  border: 1px solid var(--ediv-border);
+  border-radius: 14px;
+  background: var(--ediv-inset);
+  color: var(--ediv-text);
+  text-decoration: none;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  transition:
+    border-color 150ms,
+    background-color 150ms;
+}
+.home-area--primary .home-area-link {
+  border-color: color-mix(in srgb, var(--ediv-accent) 45%, var(--ediv-border));
+  background: var(--ediv-graphic-surface);
+}
+.home-area-icon {
+  display: grid;
+  width: 2.25rem;
+  height: 2.25rem;
+  flex-shrink: 0;
+  place-items: center;
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--ediv-accent) 12%, transparent);
+  color: var(--ediv-accent);
+}
+.home-area--primary .home-area-icon {
+  width: 2.6rem;
+  height: 2.6rem;
+  background: var(--ediv-primary);
+  color: #fff;
+}
+.home-area-copy {
+  min-width: 0;
+}
+.home-area-title {
+  display: block;
+  font-size: 1.0625rem;
+  font-weight: 600;
+  line-height: 1.3;
+  letter-spacing: -0.02em;
+  overflow-wrap: anywhere;
+}
+.home-area--primary .home-area-title {
+  font-size: 1.25rem;
+}
+.home-area-text {
+  display: block;
+  margin-top: 0.3rem;
+  color: var(--ediv-muted);
+  font-size: 0.875rem;
+  line-height: 1.5;
+}
+.home-area-arrow {
+  margin-top: 0.55rem;
+  color: var(--ediv-accent);
+  transition: transform 150ms;
+}
+.home-area-link:focus-visible {
+  outline: 2px solid var(--ediv-accent);
+  outline-offset: 3px;
+}
+.home-area-link:active {
+  border-color: var(--ediv-accent);
+}
+@media (hover: hover) and (pointer: fine) {
+  .home-area-link:hover {
+    border-color: var(--ediv-accent);
+  }
+  .home-area-link:hover .home-area-arrow {
+    transform: translateX(2px);
+  }
+}
+@media (min-width: 480px) {
+  .home-area-link {
+    gap: 0.9rem;
+    padding: 1.1rem 1.15rem;
+  }
+  .home-area-icon {
+    width: 2.5rem;
+    height: 2.5rem;
+  }
+}
+@media (min-width: 640px) {
+  .home-areas-list {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .home-area--primary {
+    grid-column: 1 / -1;
+  }
+}
+@media (min-width: 960px) {
+  .home-areas-list {
+    grid-template-columns: minmax(0, 1.35fr) repeat(2, minmax(0, 1fr));
+  }
+  .home-area--primary {
+    grid-column: auto;
+  }
+  .home-area--primary .home-area-title {
+    font-size: 1.375rem;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .home-area-link,
+  .home-area-arrow {
+    transition: none;
+  }
+}
+@media (prefers-contrast: more) {
+  .home-area-link {
+    border-color: var(--ediv-muted);
+  }
+}

@@ -33,6 +33,31 @@ preservados no histórico de cada publicação. Arquivos antigos continuam compa
 A estrutura existente `ranking_publications.entries_json` comporta esses campos;
 esta alteração não exige nova migração do MySQL.
 
+## Histórico anual de lucro e payout (opcional)
+
+A planilha da análise de dividendos (21 colunas) e o modelo legado aceitam duas
+colunas opcionais, em qualquer posição. O modelo para download já as traz, vazias.
+
+| Coluna                | Também aceito         | Conteúdo                                                        |
+| --------------------- | --------------------- | --------------------------------------------------------------- |
+| `Lucro líquido anual` | `lucro_liquido_anual` | Reais: `2.345.678.900,00` ou `2345678900`; negativo permitido   |
+| `Payout anual`        | `payout_anual`        | Porcentagem: `45,2` ou `45,2%`, de −1000% a 1000%               |
+
+- Cada célula traz pares `ANO: valor` (ou `ANO = valor`), separados por `;` ou
+  quebra de linha. Exemplo: `2023: 1.000,50; 2024: -20`. No CSV, a célula com
+  `;` ou quebra de linha precisa estar entre aspas.
+- Ano de 1990 até o ano corrente, sem repetir, até 30 anos por célula. A ordem
+  não importa: o histórico é guardado em ordem de ano.
+- No lucro, ponto entre grupos de três dígitos é separador de milhar.
+- Célula vazia significa “não informado”. Erro de formato interrompe a
+  importação e indica a linha.
+- Nas duas abas da análise, cada coluna pode vir em uma só aba. Se vier nas duas,
+  os valores precisam ser iguais.
+- Guardado em `annualHistory`, ao lado de `dividendAnalysis`: `netIncome` com o
+  valor em reais e `payout` como fração com 6 casas (`45,2%` vira `0.452000`).
+  Não sai na rota pública `/api/rankings/public`. Publicações antigas continuam
+  válidas, sem migração.
+
 ## Demonstração visual
 
 Para contas autenticadas, enquanto não existe publicação real, a interface apresenta seis empresas inventadas

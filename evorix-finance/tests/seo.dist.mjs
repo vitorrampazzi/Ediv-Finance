@@ -127,3 +127,21 @@ test("links internos das páginas públicas levam a rotas existentes", () => {
   }
   assert.deepEqual(broken, []);
 });
+
+test("home pré-renderizada traz os três cards das áreas, o ranking primeiro", () => {
+  const html = root(read("index.html"));
+  // Attribute order is React's; read each one from the tag.
+  const cards = [...html.matchAll(/<a [^>]*class="home-area-link"[^>]*>/g)].map(
+    ([tag]) => [
+      tag.match(/data-home-area="([a-z]+)"/)?.[1],
+      tag.match(/href="([^"]+)"/)?.[1],
+    ],
+  );
+  assert.deepEqual(cards, [
+    ["ranking", "/ranking"],
+    ["aulas", "/aprender"],
+    ["glossario", "/glossario"],
+  ]);
+  assert.match(html, /class="home-area home-area--primary"/);
+  assert.match(html, /aria-label="Áreas da Escola do Dividendo"/);
+});

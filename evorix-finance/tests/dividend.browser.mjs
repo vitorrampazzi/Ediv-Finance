@@ -1066,10 +1066,8 @@ try {
         origin + "/app/ranking/acao/SYN2?visual=real&publication=2",
       );
       await expect(block).toHaveAttribute("data-market-quote", "research");
-      await expect(page.locator("[data-price-chart]")).toHaveAttribute(
-        "data-price-chart",
-        "invalid",
-      );
+      // The page draws no price chart, whatever the ticker.
+      await expect(page.locator("[data-price-chart]")).toHaveCount(0);
       assert.ok(market.calls.every((call) => !/SYN\d(?!\d)/.test(call)));
     },
   );
@@ -1092,6 +1090,44 @@ try {
       assert.ok(
         !(await page.locator("body").textContent()).includes("[object Object]"),
       );
+      // The team's annual series: a labelled row, year by year, and
+      // "Não informado" for the company without it.
+      entries[0].annualHistory = {
+        netIncome: [{ year: 2024, value: "2345678900.00" }],
+        payout: [{ year: 2023, value: "0.452000" }],
+      };
+      try {
+        await page.reload();
+        await page.getByText("Comparar duas empresas", { exact: true }).click();
+        await page
+          .getByLabel("Primeira empresa")
+          .selectOption(entries[0].ticker);
+        await page
+          .getByLabel("Segunda empresa")
+          .selectOption(entries[1].ticker);
+        const annual = comparison
+          .locator("dl > div")
+          .filter({ has: page.getByText("Histórico anual", { exact: true }) });
+        await expect(annual).toHaveCount(1);
+        const [first, second] = [0, 1].map((index) =>
+          annual.locator("[data-annual-history]").nth(index),
+        );
+        await expect(first.locator("li")).toHaveText([
+          "2024 → R$ 2.345.678.900,00",
+          "2023 → 45,2%",
+        ]);
+        await expect(second.locator("dd")).toHaveText([
+          "Não informado",
+          "Não informado",
+        ]);
+        assert.ok(
+          !(await page.locator("body").textContent()).includes(
+            "[object Object]",
+          ),
+        );
+      } finally {
+        delete entries[0].annualHistory;
+      }
     },
   );
   await run(

@@ -16,6 +16,11 @@ A API e os registros existentes continuam como fonte de verdade. A cópia
 
 Os 21 campos permanecem ligados ao ticker e à versão da publicação. Não há
 histórico artificial, cotação ao vivo ou alteração da classificação original.
+
+Duas colunas opcionais trazem o histórico informado pela equipe: `Lucro líquido
+anual` e `Payout anual`, com pares `ANO: valor`. Ficam em `annualHistory`, não
+são colunas do ranking e não saem na rota pública. Formato em
+`docs/RANKING-CORRETOR.md`.
 A taxa de 6,81% é a premissa registrada na fonte, não uma taxa atual consultada.
 
 ## Cálculos e leitura

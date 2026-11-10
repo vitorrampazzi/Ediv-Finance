@@ -8,16 +8,14 @@ import {
   formatSafetyMarginPercent,
   safetyMarginPercent,
 } from "../safety-margin.mjs";
-import { normalizeSeries } from "../server/market/brapi-provider.js";
-import { buildPriceSeries } from "../server/market/price-series.js";
 import { rankingMarketBody } from "../server/market/ranking-market.js";
 
 // Owner's tests B and C in the real interface (docs/MARGEM-E-HISTORICO.md):
 // the ceiling stays at R$ 10,00 while the quote moves 5 → 8 → 10 → 12 → 4,
-// and the ranking, the company page header, the "Cotação atual" block and the
-// chart marker show the same price and margin after every cycle, with no full
-// reload. The market answers are built by the server's own code
-// (rankingMarketBody, buildPriceSeries); brapi.dev is never reached.
+// and the ranking, the company page header and the "Cotação atual" block show
+// the same price and margin after every cycle, with no full reload. The page
+// no longer draws a price chart. The market answers are built by the server's
+// own code (rankingMarketBody); brapi.dev is never reached.
 
 const origin = "http://127.0.0.1:4196";
 const output =
@@ -129,34 +127,6 @@ const quotes = () =>
       canonical(ticker, price, market.checkedAt),
     ]),
   );
-// Real PETR4 closes (brapi, 06/11/2026) up to 04/11, read on 05/11 at 10:00.
-const petr4 = [
-  ["2026-10-28", 52.51, 52.51, 52.51],
-  ["2026-10-29", 52.2, 52.2, 52.2],
-  ["2026-10-30", 52.71, 52.71, 52.71],
-  ["2026-11-03", 50.71, 50.71, 50.71],
-  ["2026-11-04", 47.12, 47.12, 47.12],
-];
-const seriesRows = normalizeSeries(
-  {
-    results: [
-      {
-        symbol: "PETR4",
-        data: {
-          historicalDataPrice: petr4.map(
-            ([date, close, adjustedClose, rawClose]) => ({
-              date: Date.parse(`${date}T03:00:00Z`) / 1000,
-              close,
-              adjustedClose,
-              rawClose,
-            }),
-          ),
-        },
-      },
-    ],
-  },
-  "PETR4",
-);
 function answer(url) {
   const path = url.pathname;
   if (path === "/api/rankings/market") {
@@ -166,33 +136,6 @@ function answer(url) {
       quotes: quotes(),
       checkedAt: market.checkedAt,
       market: marketState(market.checkedAt),
-    });
-  }
-  if (path.startsWith("/api/rankings/price-series/")) {
-    const ticker = path.split("/").at(-1);
-    return buildPriceSeries({
-      ticker,
-      basis: url.searchParams.get("basis") ?? undefined,
-      granularity: url.searchParams.get("granularity") ?? "daily",
-      brapi:
-        ticker === "PETR4"
-          ? {
-              points: seriesRows,
-              checkedAt: "2026-11-05T13:00:00.000Z",
-              freshness: "delayed",
-              reason: null,
-              range: "max",
-              includeRaw: true,
-            }
-          : {
-              points: null,
-              checkedAt: null,
-              freshness: "unavailable",
-              reason: "no_token",
-              includeRaw: false,
-            },
-      quote: quotes().get(ticker) ?? null,
-      now: Date.parse(market.checkedAt),
     });
   }
   if (path.startsWith("/api/market/quote/")) {
@@ -305,7 +248,7 @@ try {
   const documentsAtStart = documents.length;
 
   await run(
-    "B e C: teto fixo em R$ 10,00, cotação 5 → 8 → 10 → 12 → 4 sem recarregar; ranking, empresa e gráfico iguais",
+    "B e C: teto fixo em R$ 10,00, cotação 5 → 8 → 10 → 12 → 4 sem recarregar; ranking e empresa iguais",
     async () => {
       const sequence = [5, 8, 10, 12, 4];
       const expected = ["50,00%", "20,00%", "0,00%", "−20,00%", "60,00%"];
@@ -345,10 +288,8 @@ try {
         await expect(
           block.locator('[data-market-quote-field="ceiling"] dd').first(),
         ).toHaveText("R$ 10,00");
-        // The chart marker is the same market price.
-        await expect(page.locator("[data-marker-note]")).toContainText(
-          `${money(price)}.`,
-        );
+        // No price chart: the page never asks for the price series.
+        await expect(page.locator("[data-price-chart]")).toHaveCount(0);
         assert.equal(marketCalls(), callsBefore, "the page reuses the store");
         await sameDocument();
         await page.goBack();
@@ -364,36 +305,6 @@ try {
     },
   );
 
-  await run(
-    "Gráfico: alternância Diário/Mensal e Ajustado/Sem ajuste com o marcador da cotação",
-    async () => {
-      await row.locator(".dividend-company-link").click();
-      const figure = page.locator("figure[data-price-chart]");
-      await expect(figure).toHaveAttribute("data-price-chart", "ready");
-      await expect(figure).toHaveAttribute("data-basis", "adjusted");
-      await figure
-        .getByRole("button", { name: "Sem ajuste", exact: true })
-        .click();
-      await expect(figure).toHaveAttribute("data-basis", "nominal");
-      await expect(figure.locator("[data-price-basis]")).toContainText(
-        "sem ajuste",
-      );
-      await figure.getByRole("button", { name: "Mensal", exact: true }).click();
-      await expect(figure).toHaveAttribute("data-granularity", "monthly");
-      await expect(figure).toHaveAttribute("data-price-chart", "ready");
-      await expect(page.locator("[data-marker-note]")).toContainText(
-        "R$ 4,00.",
-      );
-      await figure.getByRole("button", { name: "Diário", exact: true }).click();
-      await expect(figure).toHaveAttribute("data-granularity", "daily");
-      // Marker joined: the last close (04/11) is the session before the quote's.
-      await expect(page.locator("[data-marker-note]")).toHaveAttribute(
-        "data-marker-note",
-        "connected",
-      );
-      await sameDocument();
-    },
-  );
   assert.deepEqual(errors, []);
   assert.deepEqual(unknown, []);
 } finally {
