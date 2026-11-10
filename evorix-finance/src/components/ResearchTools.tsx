@@ -3,6 +3,7 @@ import { ChevronDown, Columns2, type LucideIcon } from "lucide-react";
 import { assistantEnabled } from "../lib/features";
 import { CompanyLogo } from "./CompanyLogo";
 import type { Entry } from "../lib/ranking";
+import { annualHistoryText } from "../lib/stockHistory";
 import {
   dividendColumns,
   dividendValue,
@@ -27,6 +28,7 @@ const labels: Record<string, string> = {
   referencePeriod: "Período",
   dataSource: "Fonte",
   dividendAnalysis: "Análise de dividendos",
+  annualHistory: "Histórico anual",
 };
 // The spreadsheet's price and margin are research values. The market price
 // and the dynamic margin live on the ranking and the company page.
@@ -36,7 +38,39 @@ const researchLabels: Partial<Record<string, string>> = {
 };
 const columnLabel = (column: { key: string; label: string }) =>
   researchLabels[column.key] ?? column.label;
+// Year by year, as the team informed it in the publication.
+function AnnualHistoryValue({ entry }: { entry: ResearchEntry }) {
+  const { netIncome, payout } = annualHistoryText(entry.annualHistory);
+  return (
+    <dl data-annual-history>
+      {(
+        [
+          ["Lucro líquido (R$)", netIncome],
+          ["Payout (%)", payout],
+        ] as const
+      ).map(([label, lines]) => (
+        <div key={label} className="mt-2 first:mt-0">
+          <dt className="font-medium">{label}</dt>
+          <dd>
+            {lines ? (
+              <ul>
+                {lines.map((line) => (
+                  <li key={line.year}>
+                    {line.year} → {line.text}
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              "Não informado"
+            )}
+          </dd>
+        </div>
+      ))}
+    </dl>
+  );
+}
 function fieldValue(entry: ResearchEntry, field: string) {
+  if (field === "annualHistory") return <AnnualHistoryValue entry={entry} />;
   if (field === "dividendAnalysis")
     return (
       <dl>
@@ -69,7 +103,11 @@ function fieldValue(entry: ResearchEntry, field: string) {
   )
     return formatDividendValue(dividendValue(entry, column.key), column.format);
   const value = entry[field as keyof ResearchEntry];
-  return value === null || value === undefined || value === ""
+  // A structured field without a view of its own is never printed raw.
+  return value === null ||
+    value === undefined ||
+    value === "" ||
+    typeof value === "object"
     ? "Não informado"
     : String(value);
 }
@@ -200,14 +238,22 @@ export function CompanyComparison({
       </div>
       {a && b && a.ticker !== b.ticker && (
         <dl className="mt-5 space-y-3">
-          {(a.dividendAnalysis || b.dividendAnalysis
-            ? dividendColumns
-                .filter((column) => column.key !== "updatedOn")
-                .map((column) => [column.key, columnLabel(column)])
-            : Object.entries(labels).filter(
-                ([key]) => key !== "rank" && key !== "dividendAnalysis",
-              )
-          ).map(([key, label]) => (
+          {[
+            ...(a.dividendAnalysis || b.dividendAnalysis
+              ? dividendColumns
+                  .filter((column) => column.key !== "updatedOn")
+                  .map((column) => [column.key, columnLabel(column)])
+              : Object.entries(labels).filter(
+                  ([key]) =>
+                    !["rank", "dividendAnalysis", "annualHistory"].includes(
+                      key,
+                    ),
+                )),
+            // Only when the publication brings it for one of the two.
+            ...(a.annualHistory || b.annualHistory
+              ? [["annualHistory", labels.annualHistory]]
+              : []),
+          ].map(([key, label]) => (
             <div key={key} className="rounded-lg bg-evo-bgMain p-3">
               <dt className="text-sm font-semibold">{label}</dt>
               <dd className="mt-2 grid gap-3 text-sm sm:grid-cols-2">

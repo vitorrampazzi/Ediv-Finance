@@ -200,6 +200,12 @@
 .ph-start {
   margin-top: 1.5rem;
 }
+/* The three area cards close the hero, under the copy and the brand. */
+.ph-hero-areas {
+  z-index: 1;
+  grid-column: 1 / -1;
+  margin-top: 1rem;
+}
 .ph-hero-entry,
 .ph-hero-brand-entry {
   animation: ph-enter 350ms var(--ph-ease) both;
@@ -288,6 +294,9 @@
   .ph-hero-brand-entry {
     width: calc(100% + 2rem);
     margin-left: -1rem;
+  }
+  .ph-hero-areas {
+    margin-top: 1.25rem;
   }
 }
 @media (max-width: 479px) {

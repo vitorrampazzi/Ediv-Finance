@@ -22,7 +22,6 @@ import { MarketQuotePanel } from "../LiveQuote";
 import {
   DividendCalendar,
   DividendChart,
-  PriceChart,
   ResultsCharts,
   ValuationChart,
 } from "./Charts";
@@ -982,7 +981,6 @@ function StockPage({
         >
           <SectionHead id="cotacao" n="02" title="Cotação" />
           <CompanyQuote />
-          <PriceChart />
         </section>
 
         <section

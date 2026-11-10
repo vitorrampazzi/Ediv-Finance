@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { authLink } from "../../lib/authDestination";
 import { trackEvent } from "../../lib/analytics";
 import { PublicHeroBrand } from "./PublicHeroBrand";
+import { HomeAreaCards } from "./HomeAreaCards";
 import { TeachingJourney } from "./TeachingJourney";
 import { ResearchSample } from "./ResearchSample";
 import { PublicQuestions } from "./PublicQuestions";
@@ -85,6 +86,7 @@ export function PublicHome({
           <div className="ph-hero-brand-entry">
             <PublicHeroBrand />
           </div>
+          <HomeAreaCards className="ph-hero-areas ph-hero-entry" />
         </div>
       </section>
       <ResearchSample />

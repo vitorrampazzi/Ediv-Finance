@@ -4,26 +4,26 @@
   "sessions": {
     "coordenacao": {
       "phase": "revisao",
-      "summary": "Margem dinâmica e histórico: QA apto com ressalvas; M1 corrigido; PR para revisão e checks",
-      "updatedAt": "2026-11-07T19:50:57.048Z",
+      "summary": "Home 3 cards, proventos por tipo, lucro anual: QA apto com ressalvas, M1 corrigido; PR aberta, sem merge",
+      "updatedAt": "2026-11-10T13:15:41.429Z",
       "claims": []
     },
     "interface": {
       "phase": "revisao",
-      "summary": "Margem dinâmica: loja única /api/rankings/market, ranking/empresa/destaques, gráfico price-series, públicas; test 170 + novos 20, lint/tsc/build ok; dividend 15, public-rankings 10, stock-theme 6, seo 6, public-home 10 PASS; relato interface-margem-2026-11-06",
-      "updatedAt": "2026-11-06T22:39:34.943Z",
+      "summary": "Home 3 cards; empresa sem gráfico de preço, proventos por tipo + payout, lucro líquido anual, só logo branco no claro; Histórico anual na comparação; npm test 272, lint/tsc/build ok; seo 7, public-home 10, stock-theme 6, public-rankings 10, dividend 15, qa-margem 1 PASS; relato interface-home-graficos-2026-11-10",
+      "updatedAt": "2026-11-10T12:48:36.530Z",
       "claims": []
     },
     "backend": {
       "phase": "revisao",
-      "summary": "M1: fechamento final a partir das 19:00 (closingMinute e finalFromMinute 19:00) e TTL curto até 19:40 (settleMinutes 100); testes ajustados (inclusive qa-margem e market-no-migration); npm test 257/257, qa-margem 23/23, lint ok, node --check ok; relato atualizado",
-      "updatedAt": "2026-11-07T08:14:34.355Z",
+      "summary": "annualHistory (Lucro líquido anual / Payout anual) na importação 21 colunas e legado, modelo CSV, diff, docs; npm test 266/266, lint ok; pendência frontend: rótulo annualHistory na comparação; relato backend-home-graficos-2026-11-10",
+      "updatedAt": "2026-11-10T12:14:03.417Z",
       "claims": []
     },
     "qa": {
       "phase": "revisao",
-      "summary": "Margem dinâmica: apto com ressalvas; A–F 23/23 + navegador 2/2 (mutação 11/11), sem 009 7/7, npm test 234, integração 67, browser 123 (public-home instável 1/6), brapi real 8 chamadas; 3 correções pequenas; relato qa-margem-2026-11-06",
-      "updatedAt": "2026-11-07T04:13:50.643Z",
+      "summary": "Home cards e gráficos: apto com ressalvas; npm test 272, lint/tsc/build ok, harness 6, browser sem banco 49 (seo 7, home 10, theme 6, rankings 10, dividend 15, margem 1), integração 74, browser.mjs 32, API annualHistory 6, import 32, somas 369/0, visual 254; M1 legado ';' sem aspas; relato qa-home-graficos-2026-11-10",
+      "updatedAt": "2026-11-10T13:11:53.618Z",
       "claims": []
     }
   }

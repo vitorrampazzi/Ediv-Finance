@@ -9,6 +9,133 @@ const labels = dividendColumns.map(({ label }) => normalizeHeader(label));
 const metrics = dividendColumns.slice(3);
 const text = (value) => String(value ?? "").trim();
 
+// Optional yearly history (docs/HOME-E-GRAFICOS-2026-11-10.md). Each cell holds
+// "ANO: valor" pairs; the result lives next to dividendAnalysis as
+// annualHistory: { netIncome: [{ year, value }] | null, payout: [...] | null }
+// or null when both cells are empty. Neither column is a ranking column.
+export const annualHistoryColumns = [
+  { key: "netIncome", label: "Lucro líquido anual" },
+  { key: "payout", label: "Payout anual" },
+];
+const historyHeaders = annualHistoryColumns.map(({ label }) =>
+  normalizeHeader(label),
+);
+const historyFirstYear = 1990;
+const historyMaxYears = 30;
+const historyMaxCell = 1500;
+
+// Reais in pt-BR (dot for thousands, comma for cents) or plain digits with an
+// optional decimal part. A lone "." between three-digit groups is a thousands
+// separator. Never a percentage.
+function netIncomeValue(raw, where) {
+  const value = raw.replace(/^R\$\s*/i, "").replace(/\s/g, "");
+  let decimal;
+  if (/^-?\d{1,3}(?:\.\d{3})+(?:,\d+)?$/.test(value))
+    decimal = value.replace(/\./g, "").replace(",", ".");
+  else if (/^-?\d+(?:[.,]\d+)?$/.test(value)) decimal = value.replace(",", ".");
+  else
+    throw new ImportError(
+      "Lucro líquido anual inválido " +
+        where +
+        ": use reais como 2.345.678.900,00 ou 2345678900.",
+    );
+  if (Math.abs(Number(decimal)) > 1e15)
+    throw new ImportError("Lucro líquido anual fora do limite " + where + ".");
+  return decimal;
+}
+
+// Percent with or without "%", kept as a fraction with six decimals.
+function payoutValue(raw, where) {
+  const value = raw.replace(/\s/g, "").replace(/%$/, "");
+  if (!/^-?\d+(?:[.,]\d+)?$/.test(value))
+    throw new ImportError(
+      "Payout anual inválido " + where + ": use porcentagem como 45,2 ou 45,2%.",
+    );
+  const percent = Number(value.replace(",", "."));
+  if (percent < -1000 || percent > 1000)
+    throw new ImportError(
+      "Payout anual deve ficar entre -1000% e 1000% " + where + ".",
+    );
+  const fraction = (percent / 100).toFixed(6);
+  return fraction === "-0.000000" ? "0.000000" : fraction;
+}
+
+const historyValue = { netIncome: netIncomeValue, payout: payoutValue };
+
+function parseAnnualSeries(cell, key, line) {
+  const label = annualHistoryColumns.find((column) => column.key === key).label;
+  const where = "na linha " + line;
+  if (!cell) return null;
+  if (cell.length > historyMaxCell)
+    throw new ImportError(label + " muito longo " + where + ".");
+  const pairs = cell
+    .split(/;|\r?\n/)
+    .map((pair) => pair.trim())
+    .filter(Boolean);
+  if (pairs.length > historyMaxYears)
+    throw new ImportError(
+      "Use até " + historyMaxYears + " anos em " + label + " " + where + ".",
+    );
+  const currentYear = new Date().getFullYear();
+  const years = new Set();
+  const items = pairs.map((pair) => {
+    const match = /^(\d{4})\s*[:=]\s*(\S.*)$/.exec(pair);
+    if (!match)
+      throw new ImportError(
+        label +
+          " " +
+          where +
+          ": use pares ANO: valor separados por ponto e vírgula ou quebra de linha.",
+      );
+    const year = Number(match[1]);
+    if (year < historyFirstYear || year > currentYear)
+      throw new ImportError(
+        label +
+          " " +
+          where +
+          ": ano " +
+          match[1] +
+          " fora de " +
+          historyFirstYear +
+          " a " +
+          currentYear +
+          ".",
+      );
+    if (years.has(year))
+      throw new ImportError(
+        label + " " + where + ": ano " + year + " repetido.",
+      );
+    years.add(year);
+    return { year, value: historyValue[key](match[2].trim(), where) };
+  });
+  return items.length ? items.sort((a, b) => a.year - b.year) : null;
+}
+
+export function parseAnnualHistory(cells, line) {
+  const history = Object.fromEntries(
+    annualHistoryColumns.map(({ key }) => [
+      key,
+      parseAnnualSeries(text(cells[key]), key, line),
+    ]),
+  );
+  return Object.values(history).every((series) => series === null)
+    ? null
+    : history;
+}
+
+// Each series may be filled in only one of the two sheets; when both sheets
+// bring the same series, they must match. Returns undefined on a conflict.
+function mergeHistory(a, b) {
+  if (!a || !b) return a ?? b ?? null;
+  const merged = {};
+  for (const { key } of annualHistoryColumns) {
+    if (a[key] && b[key] && JSON.stringify(a[key]) !== JSON.stringify(b[key]))
+      return undefined;
+    merged[key] = a[key] ?? b[key] ?? null;
+  }
+  return merged;
+}
+
 function isDividendRows(rows) {
   const headers = (rows[0] || []).map(normalizeHeader);
   return (
@@ -23,11 +150,13 @@ export function parseDividendRows(rows, sourceFileName = null) {
   if (new Set(headers).size !== headers.length)
     throw new ImportError("Há cabeçalhos repetidos na análise de dividendos.");
   if (
-    headers.length !== labels.length ||
-    headers.some((header) => !labels.includes(header))
+    labels.some((label) => !headers.includes(label)) ||
+    headers.some(
+      (header) => !labels.includes(header) && !historyHeaders.includes(header),
+    )
   )
     throw new ImportError(
-      "Use exatamente as 21 colunas da análise de dividendos, sem campos desconhecidos.",
+      "Use exatamente as 21 colunas da análise de dividendos, sem campos desconhecidos. As únicas colunas extras aceitas são Lucro líquido anual e Payout anual, opcionais.",
     );
   if (rows.length < 2 || rows.length > 301)
     throw new ImportError("Inclua o cabeçalho e de 1 a 300 ativos.");
@@ -35,6 +164,12 @@ export function parseDividendRows(rows, sourceFileName = null) {
     dividendColumns.map(({ key }, index) => [
       key,
       headers.indexOf(labels[index]),
+    ]),
+  );
+  const historyIndexes = Object.fromEntries(
+    annualHistoryColumns.map(({ key }, index) => [
+      key,
+      headers.indexOf(historyHeaders[index]),
     ]),
   );
   const seen = new Set();
@@ -89,6 +224,15 @@ export function parseDividendRows(rows, sourceFileName = null) {
           return [key, value];
         }),
       );
+      const annualHistory = parseAnnualHistory(
+        Object.fromEntries(
+          annualHistoryColumns.map(({ key }) => [
+            key,
+            historyIndexes[key] < 0 ? "" : row[historyIndexes[key]],
+          ]),
+        ),
+        index + 2,
+      );
       return {
         rank: index + 1,
         ticker,
@@ -100,6 +244,7 @@ export function parseDividendRows(rows, sourceFileName = null) {
         thesis: null,
         risks: null,
         dividendAnalysis,
+        annualHistory,
         referencePeriod: dividendAnalysis.updatedOn,
         dataSource: sourceFileName ? text(sourceFileName).slice(0, 500) : null,
       };
@@ -133,16 +278,21 @@ export function parseDividendWorkbook(sheets, sourceFileName = null) {
   const byTicker = new Map(complete.map((entry) => [entry.ticker, entry]));
   for (const entry of ranking) {
     const other = byTicker.get(entry.ticker);
+    const annualHistory = other
+      ? mergeHistory(entry.annualHistory, other.annualHistory)
+      : undefined;
     if (
       !other ||
       entry.companyName !== other.companyName ||
       entry.sector !== other.sector ||
       JSON.stringify(entry.dividendAnalysis) !==
-        JSON.stringify(other.dividendAnalysis)
+        JSON.stringify(other.dividendAnalysis) ||
+      annualHistory === undefined
     )
       throw new ImportError(
         "Dados conflitantes entre as abas para " + entry.ticker,
       );
+    entry.annualHistory = annualHistory;
   }
   return ranking;
 }
@@ -198,6 +348,8 @@ const aliases = {
     "reference_period",
   ],
   dataSource: ["fonte_dados", "fonte_dos_dados", "fonte", "data_source"],
+  netIncomeHistory: ["lucro_liquido_anual"],
+  payoutHistory: ["payout_anual"],
 };
 const fundamentalKeys = [
   "balanceSheet",
@@ -244,6 +396,15 @@ function parseRows(rows) {
     .slice(1)
     .filter((row) => row.some((cell) => String(cell).trim()))
     .map((row, i) => {
+      // More cells than headers means a cell was split (for example a ";"
+      // list without quotes in a ";" CSV): refuse it instead of shifting values
+      // into other columns.
+      if (row.length > headers.length)
+        throw new ImportError(
+          "Há valores sem cabeçalho na linha " +
+            (i + 2) +
+            ". Se uma célula tem vários valores separados por ponto e vírgula, coloque-a entre aspas.",
+        );
       const get = (key) => String(row[indexes[key]] ?? "").trim();
       const ticker = get("ticker").toUpperCase();
       const companyName = get("companyName");
@@ -302,6 +463,10 @@ function parseRows(rows) {
         throw new ImportError(
           "Período ou fonte muito longos na linha " + (i + 2),
         );
+      const annualHistory = parseAnnualHistory(
+        { netIncome: get("netIncomeHistory"), payout: get("payoutHistory") },
+        i + 2,
+      );
       return {
         rank: i + 1,
         ticker,
@@ -315,6 +480,7 @@ function parseRows(rows) {
         ...fundamentals,
         referencePeriod: referencePeriod || null,
         dataSource: dataSource || null,
+        annualHistory,
       };
     });
 }

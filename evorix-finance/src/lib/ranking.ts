@@ -1,5 +1,12 @@
 import type { RankingFundamentalData } from "../components/RankingFundamentals";
 import type { DividendAnalysis } from "../../dividend-analysis.mjs";
+// One year of a series the team types in the research spreadsheet. netIncome
+// values are decimal reais; payout values are fractions ("0.452000" = 45,2%).
+export type AnnualPoint = { year: number; value: string };
+export type AnnualHistory = {
+  netIncome: AnnualPoint[] | null;
+  payout: AnnualPoint[] | null;
+};
 export type Entry = RankingFundamentalData & {
   rank: number;
   ticker: string;
@@ -13,6 +20,8 @@ export type Entry = RankingFundamentalData & {
   sector: string | null;
   referencePrice?: string;
   revenueHistory?: { period: string; value: number }[];
+  // Optional: older publications and the public route do not carry it.
+  annualHistory?: AnnualHistory | null;
 };
 export type Ranking = {
   id: string | null;

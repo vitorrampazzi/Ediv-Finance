@@ -1,8 +1,4 @@
-import {
-  HistoricalDividendChart,
-  HistoryFeedback,
-  PriceSeriesChart,
-} from "./HistoryCharts";
+import { HistoricalDividendChart, HistoryFeedback } from "./HistoryCharts";
 import {
   Area,
   AreaChart,
@@ -28,6 +24,11 @@ import {
 } from "./data";
 import { ChartTip } from "./ui";
 import { dividendColumns, type DividendColumnKey } from "./data";
+import {
+  compactReais,
+  formatReais,
+  netIncomeSeries,
+} from "../../lib/stockHistory";
 
 const TEAL = "var(--fmk-teal)";
 const AMBER = "var(--fmk-amber)";
@@ -163,19 +164,17 @@ function PublicationChart({
   );
 }
 
-/* Prices come from /api/rankings/price-series: the AGF price snapshot mixes
-   bases and is not drawn. Dividend bars keep the approved AGF endpoint. */
-export function PriceChart() {
-  const { company } = useStockData();
-  return <PriceSeriesChart key={company.ticker} />;
-}
+/* Dividend bars by type from the approved AGF endpoint; the payout line is
+   the one the team informs in the publication, when there is one. */
 export function DividendChart() {
   const history = useHistory();
+  const { entry } = useStockData();
   if (history.data?.dividends.length)
     return (
       <HistoricalDividendChart
         key={history.data.ticker}
         history={history.data}
+        payout={entry.annualHistory?.payout}
       />
     );
   return (
@@ -694,9 +693,134 @@ function Leverage() {
   );
 }
 
+/* Net income year by year, as the team informs it in the publication: at most
+   the last ten years, no gap filled and no estimate mixed in. */
+function NetIncomeHistory() {
+  const { entry } = useStockData();
+  const data = netIncomeSeries(entry.annualHistory?.netIncome);
+  const period = data.length
+    ? data.length === 1
+      ? data[0].period
+      : `${data[0].period} a ${data.at(-1)!.period}`
+    : "";
+  return (
+    <figure
+      className="fmk-annual-chart min-w-0 border-t border-fmk-line pt-6 lg:col-span-2"
+      data-annual-chart="net-income"
+      data-annual-state={data.length ? "ready" : "empty"}
+      aria-labelledby="fmk-net-income-title"
+    >
+      <div className="mb-5 flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
+        <h3 id="fmk-net-income-title" className="font-fmk-serif text-xl">
+          Lucro líquido por ano
+        </h3>
+        {data.length > 0 && (
+          <p className="text-xs text-fmk-sub" data-annual-unit>
+            Em R$ · {period}
+          </p>
+        )}
+      </div>
+      {data.length ? (
+        <>
+          <div className="h-[260px]" data-chart-visual>
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart
+                accessibilityLayer
+                title={`Lucro líquido por ano, em reais, ${period}`}
+                data={data}
+                margin={{ top: 8, right: 8, left: 0, bottom: 0 }}
+                barCategoryGap="24%"
+              >
+                <CartesianGrid {...gridProps} />
+                <XAxis dataKey="period" {...axisProps} minTickGap={8} />
+                <YAxis
+                  {...axisProps}
+                  axisLine={false}
+                  width={64}
+                  // The default domain starts at zero, takes in losses and
+                  // keeps round ticks.
+                  tickFormatter={(amount: number) => compactReais(amount)}
+                />
+                <ReferenceLine y={0} stroke="var(--fmk-line)" />
+                <Tooltip
+                  cursor={{ fill: "var(--fmk-line-soft)" }}
+                  position={{ x: 0, y: 0 }}
+                  wrapperStyle={{ maxWidth: "100%" }}
+                  content={({ active, payload }) => {
+                    const row = payload?.[0]?.payload as
+                      (typeof data)[number] | undefined;
+                    return active && row ? (
+                      <div
+                        role="tooltip"
+                        data-net-income-tooltip={row.period}
+                        className="rounded-md border border-fmk-line bg-fmk-raised px-3 py-2 text-xs text-fmk-ink"
+                        style={{
+                          maxWidth: "min(280px, calc(100vw - 32px))",
+                          overflowWrap: "anywhere",
+                        }}
+                      >
+                        <div className="text-fmk-sub">
+                          Lucro líquido em {row.period}
+                        </div>
+                        <div className="mt-1 font-fmk-mono">
+                          {formatReais(row.value)}
+                        </div>
+                      </div>
+                    ) : null;
+                  }}
+                />
+                <Bar
+                  dataKey="value"
+                  name="Lucro líquido"
+                  maxBarSize={56}
+                  isAnimationActive={false}
+                >
+                  {data.map((row) => (
+                    <Cell
+                      key={row.period}
+                      fill={row.value < 0 ? "var(--fmk-down)" : TEAL}
+                    />
+                  ))}
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+          <p className="mt-3 text-xs leading-5 text-fmk-sub" data-annual-source>
+            Fonte: informado pela equipe na publicação. Valores anuais em reais;
+            no eixo, abreviados (mil, mi, bi).
+            {data.some((row) => row.value < 0) &&
+              " Barras em vermelho: prejuízo no ano."}
+          </p>
+          <div className="sr-only">
+            <table>
+              <caption>Lucro líquido por ano, em reais, {period}</caption>
+              <tbody>
+                {data.map((row) => (
+                  <tr key={row.period} data-net-income-year={row.period}>
+                    <th scope="row">{row.period}</th>
+                    <td>{formatReais(row.value)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </>
+      ) : (
+        <p
+          className="rounded-md border border-dashed border-fmk-line px-4 py-3 text-sm text-fmk-sub"
+          data-annual-empty
+        >
+          A publicação não traz o lucro líquido histórico desta empresa.
+        </p>
+      )}
+    </figure>
+  );
+}
+
 export function ResultsCharts() {
   return (
     <div className="grid gap-x-14 gap-y-12 lg:grid-cols-2">
+      <NetIncomeHistory />
       <EarningsToDividend />
       <EarningsGrowth />
       <Leverage />

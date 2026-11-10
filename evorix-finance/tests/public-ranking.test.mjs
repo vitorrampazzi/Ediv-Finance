@@ -140,3 +140,34 @@ test("métricas ausentes ou de tipo indevido viram null sem incluir objetos priv
     ),
   );
 });
+
+test("rota pública não expõe annualHistory, nem com cotação e margem", async () => {
+  const { publicRankingWithMarket } = await import("../server/public-ranking.js");
+  const row = {
+    id: "12",
+    title: "Ranking oficial",
+    created_at: "2026-10-22T12:00:00.000Z",
+    entries_json: JSON.stringify([
+      {
+        rank: 1,
+        ticker: "REAL3",
+        companyName: "Empresa real",
+        dividendAnalysis: { safetyMargin: "0.41", ceilingPrice: "32.74" },
+        annualHistory: {
+          netIncome: [{ year: 2024, value: "PRIVATE_NET_INCOME" }],
+          payout: [{ year: 2024, value: "0.452000" }],
+        },
+      },
+    ]),
+  };
+  for (const body of [
+    publicRanking(row),
+    publicRankingWithMarket(row, { market: null }),
+  ]) {
+    assert.equal(body.entries.length, 1);
+    assert.equal("annualHistory" in body.entries[0], false);
+    assert.equal(JSON.stringify(body).includes("annualHistory"), false);
+    assert.equal(JSON.stringify(body).includes("PRIVATE_"), false);
+    assert.equal(JSON.stringify(body).includes("0.452000"), false);
+  }
+});

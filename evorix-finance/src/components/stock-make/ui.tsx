@@ -73,7 +73,9 @@ export type LegendItem = {
   color: string;
   dash?: string;
   hatch?: boolean;
-  // A point of its own (the latest quote), not a line.
+  // A filled bar segment, not a line.
+  bar?: boolean;
+  // A point of its own, not a line.
   marker?: boolean;
   value?: string;
 };
@@ -112,6 +114,15 @@ export function Legend({
                     fill="var(--fmk-bg)"
                     stroke={it.color}
                     strokeWidth="1.6"
+                  />
+                ) : it.bar ? (
+                  <rect
+                    x="5"
+                    y="0"
+                    width="12"
+                    height="10"
+                    rx="1.5"
+                    fill={it.color}
                   />
                 ) : it.hatch ? (
                   <rect
