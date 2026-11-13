@@ -1,9 +1,14 @@
 import { Router } from "express";
-import { rateLimit } from "express-rate-limit";
+import { ipKeyGenerator, rateLimit } from "express-rate-limit";
 import { z } from "zod";
 import { MysqlLimitStore } from "./limit-store.js";
 import { quoteService } from "./market-service.js";
 import { unavailableQuote } from "./market/quote-service.js";
+import {
+  filterRows,
+  isEquityAsset,
+  sortedEquityRows,
+} from "./market/asset-catalog.js";
 import {
   historyQuerySchema,
   isValidTicker,
@@ -16,19 +21,28 @@ import {
 // docs/MARGEM-E-HISTORICO.md (canonical quote with `session`).
 const router = Router();
 
-function isEquityAsset(asset) {
-  return (
-    asset?.type === "stock" &&
-    (asset.subType == null ||
-      asset.subType === "stock" ||
-      asset.subType === "unit")
-  );
-}
+// Same client identity as the rest of /api (set by identifyClient). Vercel's
+// header is the one the platform supplies; req.ip is only a fallback.
+const clientKey = (req) => req.securityIpKey || ipKeyGenerator(req.ip, 56);
 
 const quoteLimiter = rateLimit({
   windowMs: 60_000,
   limit: 30,
+  keyGenerator: clientKey,
   store: new MysqlLimitStore("market"),
+  standardHeaders: "draft-7",
+  legacyHeaders: false,
+});
+
+// A ticker the shared cache does not hold costs one provider call from the
+// daily budget (450 by default, shared by every visitor). Routes that can
+// trigger it get a tighter ceiling, so one client cannot drain the budget for
+// the others. Company pages refresh a quote every 15 minutes by default.
+const providerLimiter = rateLimit({
+  windowMs: 60_000,
+  limit: 12,
+  keyGenerator: clientKey,
+  store: new MysqlLimitStore("market-provider"),
   standardHeaders: "draft-7",
   legacyHeaders: false,
 });
@@ -72,34 +86,17 @@ router.get("/assets", quoteLimiter, async (req, res) => {
       .status(503)
       .json({ error: "Catálogo de ações indisponível no momento." });
   const normalizedSearch = filters.search.toLocaleLowerCase("pt-BR");
-  const filtered = catalog.entry.value.items
-    .filter((asset) => asset.price !== null)
-    .filter(isEquityAsset)
-    .filter(
-      (asset) =>
-        !normalizedSearch ||
-        `${asset.symbol} ${asset.name} ${asset.sector || ""} ${asset.subSector || ""}`
-          .toLocaleLowerCase("pt-BR")
-          .includes(normalizedSearch),
-    );
-  const sortField = {
-    volume: "volume",
-    change: "changePercent",
-    market_cap: "marketCap",
-  }[filters.sortBy];
-  filtered.sort((left, right) => {
-    const sign = filters.sortOrder === "asc" ? 1 : -1;
-    if (filters.sortBy === "name")
-      return (
-        sign * String(left.name).localeCompare(String(right.name), "pt-BR")
-      );
-    return (
-      sign * ((Number(left[sortField]) || 0) - (Number(right[sortField]) || 0))
-    );
-  });
+  const filtered = filterRows(
+    sortedEquityRows(
+      catalog.entry.value.items,
+      filters.sortBy,
+      filters.sortOrder,
+    ),
+    normalizedSearch,
+  );
   const offset = (filters.page - 1) * filters.limit;
   return res.json({
-    assets: filtered.slice(offset, offset + filters.limit).map((asset) => ({
+    assets: filtered.slice(offset, offset + filters.limit).map(({ asset }) => ({
       symbol: asset.symbol,
       name: asset.name,
       logoUrl: asset.logoUrl,
@@ -139,21 +136,31 @@ router.get("/quotes", quoteLimiter, async (req, res) => {
   });
 });
 
-router.get("/quote/:ticker", quoteLimiter, async (req, res) => {
-  const ticker = tickerSchema.safeParse(req.params.ticker);
-  if (!ticker.success)
-    return res.status(400).json({ error: "Código da ação inválido." });
-  return res.json(await quoteService.quote(ticker.data));
-});
+router.get(
+  "/quote/:ticker",
+  quoteLimiter,
+  providerLimiter,
+  async (req, res) => {
+    const ticker = tickerSchema.safeParse(req.params.ticker);
+    if (!ticker.success)
+      return res.status(400).json({ error: "Código da ação inválido." });
+    return res.json(await quoteService.quote(ticker.data));
+  },
+);
 
-router.get("/history/:ticker", quoteLimiter, async (req, res) => {
-  const ticker = tickerSchema.safeParse(req.params.ticker);
-  const query = historyQuerySchema.safeParse(req.query);
-  if (!ticker.success || !query.success)
-    return res
-      .status(400)
-      .json({ error: "Código da ação ou período inválido." });
-  return res.json(await quoteService.history(ticker.data, query.data.range));
-});
+router.get(
+  "/history/:ticker",
+  quoteLimiter,
+  providerLimiter,
+  async (req, res) => {
+    const ticker = tickerSchema.safeParse(req.params.ticker);
+    const query = historyQuerySchema.safeParse(req.query);
+    if (!ticker.success || !query.success)
+      return res
+        .status(400)
+        .json({ error: "Código da ação ou período inválido." });
+    return res.json(await quoteService.history(ticker.data, query.data.range));
+  },
+);
 
 export { router as marketRouter };
