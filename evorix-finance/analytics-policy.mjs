@@ -18,6 +18,10 @@ const pages = {
   "/app": "Início da escola",
   "/app/ranking": "Ranking de ações",
   "/app/aprender": "Escola de dividendos",
+  // Entry of the account funnel. Only the fixed path is measured: the query
+  // (return address) never leaves, and the token pages stay unmeasured.
+  "/entrar": "Entrar",
+  "/cadastro": "Criar conta",
 };
 
 // Only known routes, static titles and aggregated company screens can leave
@@ -110,8 +114,34 @@ const ctaPlaces = [
   "ranking_preview",
   "account_gate",
 ];
+const navigationPlaces = [
+  "header",
+  "mobile_menu",
+  "footer",
+  "sidebar",
+  "bottom_nav",
+];
+const sections = [
+  "home",
+  "ranking",
+  "aprender",
+  "glossario",
+  "metodologia",
+  "suporte",
+  "assessoria",
+  "privacidade",
+];
+const positions = Array.from({ length: 30 }, (_, index) => index + 1);
 // Closed list: event names and parameter values are fixed here, so no free
 // text, name, e-mail, ticker or identifier can leave the site.
+//
+// Reading guide for the reports:
+// - interest: click_navigation, click_home_area, click_content, open_faq,
+//   open_indicator_help, view_research_section, click_stock_card;
+// - engagement: start_lesson, play_lesson_video, complete_lesson;
+// - intent: click_signup, click_login, start_signup;
+// - conversion: complete_signup (confirmed account), complete_login.
+// One click is a count in an aggregate, never a label on a person.
 export const analyticsEvents = Object.freeze({
   click_signup: { cta_location: ctaPlaces },
   click_login: { cta_location: ctaPlaces },
@@ -119,7 +149,76 @@ export const analyticsEvents = Object.freeze({
     list_location: ["ranking_preview", "member_highlights"],
     list_position: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
   },
+  // Registration form accepted by the server; the account is not confirmed yet.
+  start_signup: {},
   complete_signup: {},
+  complete_login: {},
+  click_navigation: { nav_location: navigationPlaces, destination: sections },
+  click_home_area: {
+    area: ["ranking", "aulas", "glossario"],
+    audience: ["visitor", "member"],
+  },
+  click_content: {
+    content_name: [
+      "explore_lessons",
+      "open_research",
+      "open_full_ranking",
+      "meet_companies",
+      "how_research_is_made",
+      "first_lesson",
+      "contact",
+    ],
+    content_location: [
+      "hero",
+      "final_cta",
+      "member_home",
+      "member_highlights",
+      "teaching_journey",
+      "faq",
+    ],
+  },
+  open_faq: { faq_position: [1, 2, 3, 4, 5, 6, 7, 8] },
+  change_theme: { theme: ["light", "dark"] },
+  // Indicator explanations: the key names the concept, never a company.
+  open_indicator_help: {
+    indicator: [
+      "dividend_yield",
+      "pl",
+      "pvp",
+      "payout",
+      "safety_margin",
+      "ceiling_price",
+      "upside",
+      "roe",
+      "net_income",
+      "revenue",
+      "ebitda",
+      "net_debt",
+      "dividends_per_share",
+      "quote",
+      "other",
+    ],
+  },
+  view_research_section: {
+    section: [
+      "overview",
+      "thesis",
+      "indicators",
+      "results",
+      "dividends",
+      "risks",
+      "sources",
+      "history",
+    ],
+  },
+  change_chart_view: {
+    chart: ["dividends", "net_income", "payout", "price", "comparison"],
+    view: ["annual", "monthly", "daily", "by_type", "adjusted", "nominal"],
+  },
+  start_lesson: { lesson_position: positions },
+  play_lesson_video: { lesson_position: positions },
+  complete_lesson: { lesson_position: positions },
+  search_glossary: {},
 });
 
 export function createConsentStore(storage, now = Date.now) {

@@ -22,9 +22,9 @@ const benefits = [
   },
   {
     icon: TrendingUp,
-    title: "Orientações sobre sua carteira",
+    title: "Orientações sobre suas dúvidas",
     description:
-      "Converse sobre os ativos e objetivos que cadastrou e receba explicações contextualizadas, dentro da atividade e das credenciais do profissional.",
+      "Converse sobre as dúvidas de investimento que você tiver e receba explicações contextualizadas, dentro da atividade e das credenciais do profissional.",
   },
   {
     icon: Target,
@@ -56,7 +56,7 @@ const readiness = [
   "Identificação, categoria profissional, credenciais e vínculo institucional",
   "Horários comerciais e prazo máximo de resposta",
   "Preço, cobrança, renovação e regras de cancelamento",
-  "Como os dados da carteira serão acessados e protegidos",
+  "Como os seus dados serão acessados e protegidos",
 ];
 
 export const Assessoria = () => (
@@ -79,8 +79,8 @@ export const Assessoria = () => (
             Acompanhamento financeiro com conversa humana
           </h1>
           <p className="mt-4 max-w-2xl leading-relaxed text-evo-textSec">
-            A proposta é combinar orientação acessível, acompanhamento da
-            carteira e respostas claras para suas dúvidas. Você pode enviar uma
+            A proposta é combinar orientação acessível, acompanhamento dos seus
+            objetivos e respostas claras para suas dúvidas. Você pode enviar uma
             mensagem a qualquer hora; o atendimento humano acontece em horário
             comercial.
           </p>
@@ -153,8 +153,8 @@ export const Assessoria = () => (
             Acompanhamento por R$ 29,90 ao mês
           </h2>
           <p className="mt-2 text-sm leading-relaxed text-evo-textSec">
-            A proposta reúne canal de dúvidas, acompanhamento educativo da
-            carteira e encontros temáticos. Os limites de cada benefício serão
+            A proposta reúne canal de dúvidas, acompanhamento educativo dos
+            objetivos e encontros temáticos. Os limites de cada benefício serão
             informados junto às condições finais.
           </p>
         </div>

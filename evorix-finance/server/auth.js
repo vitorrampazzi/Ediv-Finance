@@ -23,6 +23,7 @@ import {
   changePasswordSchema,
 } from "./password-schema.js";
 import { smtp, accountEmail, registrationAvailability } from "./mail.js";
+import { emailGreeting } from "./mail-greeting.js";
 import {
   permissionsForRole,
   lockAccessControl,
@@ -193,10 +194,10 @@ async function sendVerification(email, name, token, next) {
     from: config.mailFrom,
     to: email,
     subject: "Confirme seu e-mail — Escola do Dividendo",
-    text: `Olá, ${name}.\n\nPara confirmar seu endereço de e-mail, abra este link em até 30 minutos:\n${link}\n\nSe você não solicitou este cadastro, ignore esta mensagem.`,
+    text: `${emailGreeting(name)}\n\nPara confirmar seu endereço de e-mail, abra este link em até 30 minutos:\n${link}\n\nSe você não solicitou este cadastro, ignore esta mensagem.`,
     html: accountEmail({
       heading: "Confirme seu e-mail",
-      introduction: `Olá, ${name}. Confirme seu endereço para acessar sua conta gratuita na Escola do Dividendo.`,
+      introduction: `${emailGreeting(name)} Confirme seu endereço para acessar sua conta gratuita na Escola do Dividendo.`,
       link,
       action: "Confirmar meu e-mail",
     }),
@@ -285,6 +286,9 @@ export async function currentUser(req) {
 }
 
 export async function requireAuthenticatedUser(req, res, next) {
+  // Upload and draft routes pass here twice (app.js, then their router); the
+  // session read earlier in the same request is reused instead of repeated.
+  if (req.authenticatedUser) return next();
   const user = await currentUser(req);
   if (!user)
     return res

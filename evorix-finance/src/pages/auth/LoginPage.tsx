@@ -11,6 +11,7 @@ import { AuthShell, ErrorMessage } from "../../components/auth/AuthShell";
 import { SessionNotice, SessionStatus } from "../../components/SessionStatus";
 import { ConfirmationHelp } from "../../components/auth/ConfirmationHelp";
 import { ApiError } from "../../lib/api";
+import { trackEvent } from "../../lib/analytics";
 export function LoginPage() {
   const { user, loading, sessionError, login } = useAuth();
   const location = useLocation();
@@ -35,7 +36,10 @@ export function LoginPage() {
     setVerificationEmail("");
     setBusy(true);
     try {
-      await login(email, password);
+      const signedIn = await login(email, password);
+      // The consent banner's audience filter only sees the new account after
+      // this render, so the team's accounts are excluded here as well.
+      if (signedIn.role === "USER") trackEvent("complete_login");
       navigate(destination, { replace: true });
     } catch (reason) {
       if (reason instanceof ApiError && reason.code === "EMAIL_NOT_VERIFIED") {
@@ -76,6 +80,7 @@ export function LoginPage() {
           <input
             id="login-email"
             aria-describedby={error ? "login-error" : undefined}
+            aria-invalid={error ? true : undefined}
             type="email"
             autoComplete="email"
             required
@@ -99,6 +104,7 @@ export function LoginPage() {
           <PasswordInput
             id="login-password"
             aria-describedby={error ? "login-error" : undefined}
+            aria-invalid={error ? true : undefined}
             autoComplete="current-password"
             required
             maxLength={128}

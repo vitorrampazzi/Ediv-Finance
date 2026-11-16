@@ -1,6 +1,16 @@
 import { ChevronDown } from "lucide-react";
 import { Link } from "react-router-dom";
+import type { MouseEvent } from "react";
+import { trackEvent } from "../../lib/analytics";
 import "./public-sections.css";
+
+// Counts which question is opened, by its position in the list.
+function trackQuestion(event: MouseEvent<HTMLDivElement>) {
+  const item = (event.target as Element).closest("summary")?.closest("details");
+  if (!item || item.open) return;
+  const position = [...event.currentTarget.children].indexOf(item) + 1;
+  trackEvent("open_faq", { faq_position: position });
+}
 
 export function PublicQuestions() {
   return (
@@ -11,11 +21,20 @@ export function PublicQuestions() {
           <h2 id="ph-faq-title" className="display-title ph-section-title">
             Como funciona o acesso.
           </h2>
-          <Link className="ph-inline-link" to="/suporte">
+          <Link
+            className="ph-inline-link"
+            to="/suporte"
+            onClick={() =>
+              trackEvent("click_content", {
+                content_name: "contact",
+                content_location: "faq",
+              })
+            }
+          >
             Fale conosco
           </Link>
         </header>
-        <div className="ph-faq-list" data-ph-reveal>
+        <div className="ph-faq-list" data-ph-reveal onClick={trackQuestion}>
           <details className="ph-faq-item">
             <summary>
               A Escola do Dividendo é uma corretora?
@@ -63,8 +82,8 @@ export function PublicQuestions() {
               <p>
                 Sim. A home mostra as empresas e os indicadores da pesquisa
                 publicada pela equipe. DY e P/L refletem a data da planilha; a
-                margem de segurança usa a cotação da brapi.dev. Abra
-                uma empresa para acessar a análise completa com sua conta.
+                margem de segurança usa a cotação da brapi.dev. Abra uma empresa
+                para acessar a análise completa com sua conta.
               </p>
             </div>
           </details>

@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { RankingHighlights } from "../RankingHighlights";
 import { useAuth } from "../../context/authContext";
 import { authLink } from "../../lib/authDestination";
+import { trackEvent } from "../../lib/analytics";
 import { RankingPreview } from "../RankingPreview";
 import { PublicHeroBrand } from "./PublicHeroBrand";
 import { HomeAreaCards } from "./HomeAreaCards";
@@ -30,7 +31,7 @@ export function HomeContent({
   return (
     <>
       <section
-        className={`home-editorial ediv-member-intro mx-auto grid max-w-7xl items-center gap-7 md:grid-cols-[1.15fr_.85fr] md:gap-12 ${member ? "py-3 md:py-8" : "px-4 py-7 sm:px-5 md:px-8 md:py-12"}`}
+        className={`home-editorial ediv-member-intro mx-auto grid max-w-7xl items-center gap-7 md:grid-cols-[1.15fr_.85fr] md:gap-12 ${member ? "member-home-banner" : "px-4 py-7 sm:px-5 md:px-8 md:py-12"}`}
       >
         <div>
           <span className="edition-label">
@@ -61,6 +62,13 @@ export function HomeContent({
                     ? "/aprender"
                     : authLink("cadastro", "/app")
               }
+              onClick={() => {
+                if (member)
+                  trackEvent("click_content", {
+                    content_name: "open_research",
+                    content_location: "member_home",
+                  });
+              }}
               className="inline-flex min-h-12 items-center justify-center gap-2 rounded-lg bg-evo-primary px-4 text-sm font-semibold text-white hover:bg-evo-primaryHover sm:px-5 sm:text-base"
             >
               {user
@@ -74,6 +82,13 @@ export function HomeContent({
             </Link>
             <Link
               to={user ? "/app/aprender" : "/aprender"}
+              onClick={() => {
+                if (member)
+                  trackEvent("click_content", {
+                    content_name: "explore_lessons",
+                    content_location: "member_home",
+                  });
+              }}
               className="inline-flex min-h-11 items-center justify-center gap-2 px-2 text-sm font-medium text-evo-textSec hover:text-evo-textMain sm:px-3"
             >
               <BookOpen size={17} aria-hidden="true" /> Conhecer as aulas

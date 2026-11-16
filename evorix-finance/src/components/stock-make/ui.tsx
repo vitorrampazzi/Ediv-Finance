@@ -1,17 +1,35 @@
 import type { ReactNode } from "react";
-import { Tooltip } from "../Tooltip";
+import { Tooltip, type TooltipContent } from "../Tooltip";
+import { trackEvent } from "../../lib/analytics";
+import { indicatorAnalyticsName } from "../../lib/indicatorDefinitions";
 
-export function InfoTip({ text, label }: { text: string; label: string }) {
+// The explanation opens on hover, on keyboard focus and on tap (a tap pins it;
+// another tap, Escape or a press outside closes it). The button is 24px, the
+// minimum target size, with the 16px mark centred in it.
+export function InfoTip({
+  text,
+  label,
+}: {
+  text: TooltipContent;
+  label: string;
+}) {
   return (
-    <Tooltip content={text} toggleOnClick>
+    <Tooltip
+      content={text}
+      toggleOnClick
+      onOpen={() => {
+        const indicator = indicatorAnalyticsName(text);
+        if (indicator) trackEvent("open_indicator_help", { indicator });
+      }}
+    >
       <button
         type="button"
         aria-label={`O que é ${label}?`}
-        className="fmk-info inline-grid min-h-6 min-w-6 place-items-center align-middle"
+        className="fmk-info inline-grid min-h-6 min-w-6 shrink-0 place-items-center align-middle"
       >
         <span
           aria-hidden
-          className="grid size-4 place-items-center rounded-full border border-fmk-dim/70 font-fmk-serif text-[10px] italic leading-none text-fmk-dim transition-colors"
+          className="fmk-info-mark grid size-4 place-items-center rounded-full border font-fmk-serif text-[10px] font-semibold leading-none"
         >
           i
         </span>

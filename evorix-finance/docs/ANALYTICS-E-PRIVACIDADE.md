@@ -35,6 +35,31 @@ sessão/engajamento. Não há medição automática de formulários, downloads, 
 externos ou vídeos. Não tratamos uma submissão de cadastro como conta criada,
 pois o cadastro tem resposta genérica e exige confirmar o e-mail.
 
+### Eventos próprios (lista fechada em `analytics-policy.mjs`)
+
+Cada evento aceita só os parâmetros e valores listados no código: rótulos curtos
+fixos ou posições de 1 a 30. Valor fora da lista é descartado antes do envio.
+Nenhum evento leva nome, e-mail, ticker, texto digitado ou identificador de conta.
+
+| Etapa | Evento | Parâmetros |
+| --- | --- | --- |
+| Interesse | `click_navigation` | `nav_location` (header, mobile_menu, footer, sidebar, bottom_nav), `destination` (seção fixa) |
+| Interesse | `click_home_area` | `area` (ranking, aulas, glossario), `audience` (visitor, member) |
+| Interesse | `click_content` | `content_name` e `content_location` (valores fixos da home e da área logada) |
+| Interesse | `open_faq` | `faq_position` |
+| Interesse | `open_indicator_help` | `indicator` (grupo do indicador: dividend_yield, pl, payout…) |
+| Interesse | `view_research_section`, `click_stock_card` | seção fixa; posição do card |
+| Engajamento | `start_lesson`, `play_lesson_video`, `complete_lesson` | `lesson_position` |
+| Engajamento | `search_glossary`, `change_chart_view`, `change_theme` | sem texto da busca; visão do gráfico; tema |
+| Intenção | `click_signup`, `click_login` | `cta_location` |
+| Intenção | `start_signup` | nenhum |
+| Conversão | `complete_signup` | nenhum; enviado só depois da confirmação do e-mail, na primeira visita à conta |
+| Conversão | `complete_login` | nenhum |
+
+`complete_signup` é o candidato a evento-chave; a marcação é feita no painel do
+Google pelo responsável. Contagens são agregadas: o painel mostra quantas vezes
+algo aconteceu, nunca quem fez.
+
 ## Consentimento e dados
 
 Antes de permitir estatísticas, o Google não é carregado e não recebe eventos
@@ -57,7 +82,10 @@ como referência, só com protocolo/domínio: sem caminho, consulta ou fragmento
 Campanhas UTM, identificadores de anúncio e referências desconhecidas são
 descartados; esta versão não oferece atribuição detalhada de campanhas.
 
-Rotas de login/cadastro/confirmação/recuperação, perfil, configurações, suporte,
+`/entrar` e `/cadastro` são medidas só pelo caminho fixo, sem a query (que pode
+trazer o destino ou o e-mail), para o funil de cadastro; o aviso de cookies não
+aparece sobre esses dois formulários, e a escolha feita antes continua valendo.
+Rotas de confirmação/recuperação de conta, perfil, configurações, suporte,
 administração, as antigas /mercado e /app/analises e rotas desconhecidas não são medidas. Localhost, previews,
 QA e contas ADMIN/ANALYST não enviam dados, mesmo com permissão local.
 Os consentimentos `ad_storage`, `ad_user_data` e `ad_personalization` ficam

@@ -652,7 +652,9 @@ try {
           );
           await page.locator('a[href="/metodologia"]').first().click();
           await expect(page).toHaveURL(`${root}/metodologia`);
-          await expect(page).toHaveTitle("Escola do Dividendo");
+          await expect(page).toHaveTitle(
+            "Escola do Dividendo | Pesquisa e metodologia",
+          );
           await page.locator('header a[href="/"]').first().click();
           await expect(page).toHaveURL(`${root}/`);
           await expect(page).toHaveTitle("Escola do Dividendo");

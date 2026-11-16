@@ -4,26 +4,50 @@
   "sessions": {
     "coordenacao": {
       "phase": "revisao",
-      "summary": "Home 3 cards, proventos por tipo, lucro anual: QA apto com ressalvas, M1 corrigido; PR aberta, sem merge",
-      "updatedAt": "2026-11-10T13:15:41.429Z",
-      "claims": []
+      "summary": "Integração revisada e validada (tsc, eslint, npm test 294/294, build, navegador sem banco, QA independente com D1/D2 corrigidos); PR e deploy em curso",
+      "updatedAt": "2026-11-16T07:04:03.618Z",
+      "claims": [
+        "src/index.css",
+        "src/typography.css",
+        "public/theme-init.js",
+        "src/lib/theme.ts",
+        "index.html",
+        "tests/theme.test.mjs",
+        "src/components/home",
+        "src/components/sitechrome.tsx",
+        "src/layouts/dashboardlayout.tsx",
+        "src/components/navigation-chrome.css",
+        "src/components/rankinghighlights.tsx",
+        "src/components/rankingpreview.tsx",
+        "docs/evolucao-2026-11-13.md",
+        "docs/harness/relatos/coordenacao-evolucao-2026-11-13.md",
+        "analytics-policy.mjs",
+        "analytics-policy.d.mts",
+        "src/lib/analytics.ts",
+        "tests/analytics.test.mjs",
+        "src/components/privacyconsent.tsx",
+        "src/components/themetoggle.tsx",
+        "site-pages.mjs",
+        "docs/analytics-e-privacidade.md",
+        "docs/seo"
+      ]
     },
     "interface": {
-      "phase": "revisao",
-      "summary": "Home 3 cards; empresa sem gráfico de preço, proventos por tipo + payout, lucro líquido anual, só logo branco no claro; Histórico anual na comparação; npm test 272, lint/tsc/build ok; seo 7, public-home 10, stock-theme 6, public-rankings 10, dividend 15, qa-margem 1 PASS; relato interface-home-graficos-2026-11-10",
-      "updatedAt": "2026-11-10T12:48:36.530Z",
+      "phase": "concluido",
+      "summary": "Tooltips em camadas, ajuda unificada, tema claro na empresa; metodologia, glossário, cursos e formulários; relatos interface-*-2026-11-13",
+      "updatedAt": "2026-11-16T02:36:46.113Z",
       "claims": []
     },
     "backend": {
-      "phase": "revisao",
-      "summary": "annualHistory (Lucro líquido anual / Payout anual) na importação 21 colunas e legado, modelo CSV, diff, docs; npm test 266/266, lint ok; pendência frontend: rótulo annualHistory na comparação; relato backend-home-graficos-2026-11-10",
-      "updatedAt": "2026-11-10T12:14:03.417Z",
+      "phase": "concluido",
+      "summary": "Testes dos tetos por conta e limitadores, SEGURANCA.md e auditoria de rotas; relato backend-evolucao-2026-11-13",
+      "updatedAt": "2026-11-16T02:36:45.931Z",
       "claims": []
     },
     "qa": {
-      "phase": "revisao",
-      "summary": "Home cards e gráficos: apto com ressalvas; npm test 272, lint/tsc/build ok, harness 6, browser sem banco 49 (seo 7, home 10, theme 6, rankings 10, dividend 15, margem 1), integração 74, browser.mjs 32, API annualHistory 6, import 32, somas 369/0, visual 254; M1 legado ';' sem aspas; relato qa-home-graficos-2026-11-10",
-      "updatedAt": "2026-11-10T13:11:53.618Z",
+      "phase": "concluido",
+      "summary": "QA 16/11: 90 cargas (9 paginas x 5 larguras x 2 temas) sem rolagem horizontal, h1 unico, tema e console ok; foco/aria-invalid/teclado ok; dicas da empresa 56/56 checagens. NAO APTO: titulo de /entrar e /cadastro igual a home (criterio de titulo unico falhou, 20/20). Acessibilidade axe nao executada (axe.min.js ausente). Relato: docs/harness/relatos/qa-evolucao-2026-11-13.md",
+      "updatedAt": "2026-11-16T03:16:01.587Z",
       "claims": []
     }
   }

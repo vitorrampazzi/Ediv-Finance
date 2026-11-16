@@ -11,6 +11,7 @@ import {
   RotateCcw,
 } from "lucide-react";
 import { ApiError, apiRequest } from "../lib/api";
+import { trackEvent } from "../lib/analytics";
 import { authLink } from "../lib/authDestination";
 import { useAuth } from "../context/authContext";
 import { useVisitorLearningProgress } from "../lib/visitorLearningProgress";
@@ -62,6 +63,9 @@ const tabForHash = (hash: string): LearningTab =>
       ? "termos"
       : "curso";
 const lessonIds: string[] = learningChapters.map((chapter) => chapter.id);
+// Analytics receives only the lesson's position in the course (1, 2, 3…),
+// never its id or title.
+const lessonPosition = (id: string) => lessonIds.indexOf(id) + 1;
 export function Aprender({
   initialContent,
 }: {
@@ -125,6 +129,8 @@ function LearningSession({
   const [resetRequested, setResetRequested] = useState(false);
   const [answers, setAnswers] = useState<Record<string, number>>({});
   const [search, setSearch] = useState("");
+  // One search_glossary per visit to the page; the typed text is never sent.
+  const searchTracked = useRef(false);
   const location = useLocation();
   const navigate = useNavigate();
   const tabLocation =
@@ -156,6 +162,7 @@ function LearningSession({
 
   function selectLesson(id: string, focusClassroom = false) {
     if (!lessonIds.includes(id)) return;
+    trackEvent("start_lesson", { lesson_position: lessonPosition(id) });
     selectTab("curso");
     const params = new URLSearchParams(location.search);
     params.set("aula", id);
@@ -286,6 +293,9 @@ function LearningSession({
           current.includes(lesson.id) ? current : [...current, lesson.id],
         );
       } else visitorProgress.complete(lesson.id);
+      trackEvent("complete_lesson", {
+        lesson_position: lessonPosition(lesson.id),
+      });
     } catch (err) {
       if (err instanceof ApiError && err.status === 401) {
         await handleExpiredSession(
@@ -373,11 +383,13 @@ function LearningSession({
   const nextCourseId =
     nextCourse?.chapterIds.find((id) => !completed.includes(id)) ??
     nextCourse?.chapterIds[0];
-  const matchingTerms = glossary.filter(([term, text]) =>
-    (term + " " + text)
-      .toLocaleLowerCase("pt-BR")
-      .includes(search.toLocaleLowerCase("pt-BR")),
-  );
+  const matchingTerms = glossary
+    .filter(([term, text]) =>
+      (term + " " + text)
+        .toLocaleLowerCase("pt-BR")
+        .includes(search.toLocaleLowerCase("pt-BR")),
+    )
+    .sort(([a], [b]) => a.localeCompare(b, "pt-BR"));
   return (
     <section
       id="pagina-conteudo"
@@ -604,6 +616,11 @@ function LearningSession({
                       title={selectedLesson.title}
                       embedUrl={selectedChapter.videoEmbedUrl}
                       readingTarget={"#leitura-" + selectedLesson.id}
+                      onPlay={() =>
+                        trackEvent("play_lesson_video", {
+                          lesson_position: lessonPosition(selectedLesson.id),
+                        })
+                      }
                     />
                   )}
                 </div>
@@ -763,7 +780,7 @@ function LearningSession({
           ) : selectedLesson && !selectedLesson.locked ? (
             <>
               <h2 className="text-2xl font-semibold">
-                Teste: {selectedLesson.title}
+                Exercício: {selectedLesson.title}
               </h2>
               <button
                 type="button"
@@ -790,7 +807,7 @@ function LearningSession({
             </>
           ) : (
             <p className="text-sm text-evo-textSec">
-              Escolha uma aula disponível no curso para fazer o teste.
+              Escolha uma aula disponível no curso para fazer o exercício.
             </p>
           ))}
       </section>
@@ -831,7 +848,13 @@ function LearningSession({
                 className="field"
                 placeholder="Buscar dividendo, payout, data-ex…"
                 value={search}
-                onChange={(event) => setSearch(event.target.value)}
+                onChange={(event) => {
+                  if (!searchTracked.current && event.target.value.trim()) {
+                    searchTracked.current = true;
+                    trackEvent("search_glossary");
+                  }
+                  setSearch(event.target.value);
+                }}
               />
             </label>
             <dl className="mt-3 grid gap-x-6 sm:grid-cols-2">
@@ -917,6 +940,7 @@ function LearningSession({
             className="underline"
           >
             Portal do Investidor — CVM
+            <span className="sr-only"> (abre em nova guia)</span>
           </a>{" "}
           e nas fontes oficiais indicadas em cada aula.
         </p>

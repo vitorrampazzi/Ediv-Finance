@@ -158,14 +158,27 @@
   }
 }
 
+/* Signed-in banner: the same reading surface as the public hero, drawn from
+   the theme tokens so it follows light and dark. */
+.member-home-banner {
+  padding: clamp(1.25rem, 3.2vw, 2.75rem);
+  border: 1px solid var(--ediv-border);
+  border-radius: 18px;
+  background: linear-gradient(
+    135deg,
+    var(--ediv-surface) 0%,
+    var(--ediv-inset) 58%,
+    var(--ediv-graphic-surface) 100%
+  );
+}
 .member-home-brand-entry {
   width: 100%;
   min-width: 0;
-  max-width: 540px;
+  max-width: 380px;
   margin-inline: auto;
 }
 @media (max-width: 767px) {
   .member-home-brand-entry {
-    max-width: 380px;
+    max-width: 240px;
   }
 }

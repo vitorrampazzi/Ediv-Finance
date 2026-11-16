@@ -47,6 +47,7 @@ export function ForgotPasswordPage() {
           E-mail
           <input
             aria-describedby={error ? "forgot-error" : undefined}
+            aria-invalid={error ? true : undefined}
             className="field mt-2"
             type="email"
             autoComplete="email"
@@ -71,7 +72,10 @@ export function ForgotPasswordPage() {
           {busy ? "Enviando…" : "Enviar link"}
         </button>
       </form>
-      <Link to="/entrar" className="mt-4 block text-sm underline">
+      <Link
+        to="/entrar"
+        className="mt-4 flex min-h-11 items-center text-sm underline"
+      >
         Voltar ao login
       </Link>
     </AuthShell>

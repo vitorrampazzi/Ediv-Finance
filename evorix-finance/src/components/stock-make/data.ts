@@ -13,6 +13,10 @@ import {
   dividendComparison,
   dividendAnnouncementMonths,
 } from "../../../dividend-insights.mjs";
+import {
+  indicatorHelp,
+  type IndicatorHelp,
+} from "../../lib/indicatorDefinitions";
 
 export { dividendColumns, dividendAnnouncementMonths };
 export type { DividendColumnKey };
@@ -107,58 +111,27 @@ export function useStockMarket() {
   return market;
 }
 
-// The current publication supplies snapshots, not authorized historical series.
-export type PricePoint = {
-  label: string;
-  full: string;
-  price: number;
-  teto: number;
-  justo: number;
-};
-export const priceHistory: PricePoint[] = [];
-export type DividendPoint = {
-  period: string;
-  realizado: number;
-  projetado: number;
-  anterior?: number;
-  dy?: number;
-  status: "realizado" | "projetado";
-};
-export const dividendsAnnual: DividendPoint[] = [];
-export const dividendsMonthly: DividendPoint[] = [];
-export const periodKeys = ["1D", "5D", "1M", "6M", "1A", "5A", "Máx"];
-export const explanations: Partial<Record<DividendColumnKey, string>> = {
-  projectedPE: "Preço em relação ao lucro estimado por ação, em vezes.",
-  averagePE10Years: "Média dos últimos dez anos informada na pesquisa.",
-  peDeviation:
-    "Desvio do P/L informado na planilha, preservado sem substituir por outro cálculo.",
-  referencePrice:
-    "Preço da ação na planilha, na data da pesquisa; não é a cotação de mercado.",
-  ceilingPrice:
-    "Preço teto da fonte. Premissa histórica de yield de 6,81% do Tesouro IPCA+ 2037 com juros semestrais, não taxa de mercado atual. Só muda com uma nova análise.",
-  safetyMargin:
-    "Margem informada na planilha, com o preço da pesquisa. A margem atual, que acompanha a cotação, fica no topo da página e na seção Cotação. Não representa retorno esperado ou garantia.",
-  netDebtToEbitda:
-    "Relação em vezes. Valor negativo isolado não comprova caixa líquido: faltam os sinais separados de dívida e EBITDA.",
-  estimatedNetIncome:
-    "Lucro líquido total estimado, em reais, sem tratá-lo como resultado realizado.",
-  estimatedEps: "Lucro por ação estimado, em reais por ação.",
-  earningsCagr5Years:
-    "Taxa composta de crescimento anual dos lucros em cinco anos; não descreve cada ano isoladamente.",
-  expectedPayout:
-    "Parcela esperada do lucro a distribuir. Pode superar 100%; não é distribuição realizada.",
-  projectedGrossDividendPerShare:
-    "Dividendo bruto projetado por ação, antes de eventuais deduções.",
-  estimatedGrossDividendYield:
-    "Dividend Yield bruto estimado da fonte, em relação ao preço da pesquisa, na data da pesquisa.",
-  announcementFrequency:
-    "Frequência habitual de anúncios, sem garantia de eventos futuros.",
-  announcementMonths:
-    "Meses habituais de anúncio, não datas garantidas de pagamento.",
-  marketValue: "Valor de mercado informado na planilha, na data de referência.",
-  totalShares:
-    "Quantidade total de ações, inclusive frações quando informadas.",
-  updatedOn: "Data de referência da pesquisa.",
+// What each field means: one module for every screen (indicatorDefinitions).
+export const explanations: Partial<Record<DividendColumnKey, IndicatorHelp>> = {
+  projectedPE: indicatorHelp.projectedPE,
+  averagePE10Years: indicatorHelp.averagePE10Years,
+  peDeviation: indicatorHelp.peDeviation,
+  referencePrice: indicatorHelp.referencePrice,
+  ceilingPrice: indicatorHelp.ceilingPrice,
+  // The spreadsheet margin; the dynamic one is in the header and in "Cotação".
+  safetyMargin: indicatorHelp.researchSafetyMargin,
+  netDebtToEbitda: indicatorHelp.netDebtToEbitda,
+  estimatedNetIncome: indicatorHelp.estimatedNetIncome,
+  estimatedEps: indicatorHelp.estimatedEps,
+  earningsCagr5Years: indicatorHelp.earningsCagr5Years,
+  expectedPayout: indicatorHelp.expectedPayout,
+  projectedGrossDividendPerShare: indicatorHelp.projectedGrossDividendPerShare,
+  estimatedGrossDividendYield: indicatorHelp.estimatedGrossDividendYield,
+  announcementFrequency: indicatorHelp.announcementFrequency,
+  announcementMonths: indicatorHelp.announcementMonths,
+  marketValue: indicatorHelp.marketValue,
+  totalShares: indicatorHelp.totalShares,
+  updatedOn: indicatorHelp.updatedOn,
 };
 
 export const axisProps = {

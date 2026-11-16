@@ -114,31 +114,35 @@
   overflow: hidden;
   border: 1px solid var(--ediv-border);
   border-radius: 18px;
+  /* Light theme: an opaque surface of its own. It used to be the dark forest
+     photograph under a translucent layer, so the reading surface depended on
+     that layer being painted over a dark image. */
+  background: linear-gradient(
+    135deg,
+    var(--ediv-surface) 0%,
+    var(--ediv-inset) 58%,
+    var(--ediv-graphic-surface) 100%
+  );
+}
+/* The forest photograph belongs to the dark theme only; the light theme never
+   requests it. */
+:root[data-theme="dark"] .ph-hero-layout {
   background: var(--ediv-inset);
 }
-.ph-hero-layout::before {
+:root[data-theme="dark"] .ph-hero-layout::before {
   position: absolute;
   z-index: -2;
   inset: 0;
   background: url("/ediv-hero-forest.webp") center / cover no-repeat;
   content: "";
 }
-.ph-hero-layout::after {
+:root[data-theme="dark"] .ph-hero-layout::after {
   position: absolute;
   z-index: -1;
   inset: 0;
   background: linear-gradient(105deg, rgb(20 29 35 / 28%), rgb(14 25 30 / 34%));
   pointer-events: none;
   content: "";
-}
-
-/* Keep the forest photograph while providing a light reading surface. */
-:root[data-theme="light"] .ph-hero-layout::after {
-  background: linear-gradient(
-    105deg,
-    rgb(247 248 246 / 97%),
-    rgb(237 243 238 / 88%)
-  );
 }
 .ph-hero-copy {
   z-index: 1;
@@ -157,7 +161,7 @@
   width: 1.6rem;
   height: 2px;
   flex-shrink: 0;
-  background: #4fc0bf;
+  background: var(--ediv-accent);
   content: "";
 }
 .ph-hero-title {
@@ -183,13 +187,7 @@
 }
 .ph-hero .ph-primary {
   min-height: 50px;
-  border-color: #29a9ad;
-  background: #147b7e;
-  color: #fff;
   padding-inline: 1.4rem;
-}
-.ph-hero .ph-primary:active {
-  background: #207d80;
 }
 .ph-hero .ph-text-link {
   color: var(--ediv-muted);
@@ -252,9 +250,6 @@
   .ph-text-link:hover,
   .ph-inline-link:hover {
     text-decoration: underline;
-  }
-  .ph-hero .ph-primary:hover {
-    background: #217b7f;
   }
 }
 @media (min-width: 768px) {

@@ -17,7 +17,8 @@ declare global {
 }
 
 // Stable SSR snapshot; all theme-dependent paint is controlled by root CSS tokens.
-const serverSnapshot: ThemeSnapshot = { theme: "dark", preference: "dark" };
+// Light matches the stylesheet base and the default of public/theme-init.js.
+const serverSnapshot: ThemeSnapshot = { theme: "light", preference: "light" };
 const getServerSnapshot = () => serverSnapshot;
 const getSnapshot = () => window.edivTheme?.getSnapshot() ?? serverSnapshot;
 const subscribe = (listener: () => void) =>

@@ -151,6 +151,13 @@ function MemberRankingHighlights() {
         <Link
           className="inline-flex min-h-11 items-center text-sm text-evo-accent underline underline-offset-4"
           to={showingDemo ? "/app/ranking?visual=demo" : "/app/ranking"}
+          onClick={() => {
+            if (!showingDemo)
+              trackEvent("click_content", {
+                content_name: "open_full_ranking",
+                content_location: "member_highlights",
+              });
+          }}
         >
           {showingDemo ? "Explorar demonstração" : "Abrir ranking completo"}
         </Link>

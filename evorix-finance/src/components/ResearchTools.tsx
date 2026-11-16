@@ -2,6 +2,13 @@ import { useState } from "react";
 import { ChevronDown, Columns2, type LucideIcon } from "lucide-react";
 import { assistantEnabled } from "../lib/features";
 import { CompanyLogo } from "./CompanyLogo";
+import { HelpText } from "./HelpText";
+import {
+  indicatorAnalyticsName,
+  indicatorHelp,
+  type IndicatorKey,
+} from "../lib/indicatorDefinitions";
+import { trackEvent } from "../lib/analytics";
 import type { Entry } from "../lib/ranking";
 import { annualHistoryText } from "../lib/stockHistory";
 import {
@@ -111,34 +118,28 @@ function fieldValue(entry: ResearchEntry, field: string) {
     ? "Não informado"
     : String(value);
 }
-const explanations: Record<string, string> = {
-  expectedReturnPercent:
-    "Compara o preço-alvo com um preço de referência: (alvo / referência − 1) × 100.",
-  targetPrice:
-    "É uma estimativa construída com premissas sobre a empresa e o mercado.",
-  horizonMonths: "É o prazo considerado para o cenário da pesquisa.",
-  balanceSheet:
-    "Apresenta ativos, obrigações e patrimônio líquido da empresa em uma data. Confira o período e as unidades da pesquisa.",
-  incomeStatement:
-    "Apresenta receitas, despesas e resultado de um período. Lucro contábil e dinheiro em caixa são medidas diferentes.",
-  cashFlow:
-    "Mostra entradas e saídas de caixa relacionadas à operação, aos investimentos e ao financiamento.",
-  companyInformation:
-    "Reúne informações sobre a empresa, sua atividade e seu contexto. Confira a fonte e a data de referência.",
-  netDebt:
-    "Relaciona as dívidas consideradas na pesquisa com o caixa e equivalentes disponíveis. A definição pode variar; confira a metodologia do autor.",
-  statistics:
-    "Reúne indicadores e medidas usados na pesquisa. Compare períodos, unidades e critérios equivalentes.",
-};
 export function IndicatorHelp({ field }: { field: string }) {
-  const text = explanations[field];
-  if (!text) return null;
+  // Same texts as the company page: indicatorDefinitions.ts is the only source.
+  const help = Object.prototype.hasOwnProperty.call(indicatorHelp, field)
+    ? indicatorHelp[field as IndicatorKey]
+    : null;
+  if (!help) return null;
   return (
-    <details className="mt-2 rounded-lg border border-evo-border p-2 text-xs">
+    <details
+      className="mt-2 rounded-lg border border-evo-border p-2 text-xs"
+      onToggle={(event) => {
+        const indicator = indicatorAnalyticsName(field);
+        if (event.currentTarget.open && indicator)
+          trackEvent("open_indicator_help", { indicator });
+      }}
+    >
       <summary className="min-h-9 cursor-pointer text-evo-accent">
         Entender este indicador
       </summary>
-      <p className="mt-2 leading-relaxed text-evo-textSec">{text}</p>
+      <HelpText
+        content={help}
+        className="mt-2 leading-relaxed text-evo-textSec"
+      />
       {assistantEnabled && (
         <button
           type="button"

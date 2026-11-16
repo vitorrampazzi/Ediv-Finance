@@ -1,6 +1,7 @@
 import { useEffect, useId, useRef, useState } from "react";
 import { ArrowUpRight, Pause, Play } from "lucide-react";
 import { Link } from "react-router-dom";
+import { trackEvent } from "../../lib/analytics";
 import "./teaching-journey.css";
 
 const teachingSteps = [
@@ -11,6 +12,7 @@ const teachingSteps = [
     detail:
       "No ranking, abra a pesquisa da empresa para consultar o negócio, os indicadores publicados e o contexto que acompanha os números.",
     action: "Conhecer as empresas",
+    content: "meet_companies",
     path: "/#caderno-de-exemplo",
     diagram: "Negócio → receita → resultado",
   },
@@ -21,6 +23,7 @@ const teachingSteps = [
     detail:
       "O preço-alvo faz parte dessa leitura. O que sustenta o cenário e os riscos precisam acompanhar o número.",
     action: "Ver como a pesquisa é feita",
+    content: "how_research_is_made",
     path: "/metodologia",
     diagram: "Premissas → cenário → revisão",
   },
@@ -31,6 +34,7 @@ const teachingSteps = [
     detail:
       "As aulas explicam payout, dividendo por ação e as datas que definem quem recebe cada pagamento.",
     action: "Abrir a primeira aula",
+    content: "first_lesson",
     path: "/aprender",
     diagram: "Resultado → distribuição → acionista",
   },
@@ -423,6 +427,12 @@ export function TeachingJourney() {
                     reloadDocument={step.path.includes("#")}
                     to={step.path}
                     className="ph-teaching-action"
+                    onClick={() =>
+                      trackEvent("click_content", {
+                        content_name: step.content,
+                        content_location: "teaching_journey",
+                      })
+                    }
                   >
                     {step.action}
                     <ArrowUpRight size={16} aria-hidden="true" />

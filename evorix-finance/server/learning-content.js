@@ -211,7 +211,7 @@ export const glossary = [
   ],
   [
     "Dividend yield",
-    "Relação entre proventos por ação de um período e um preço de referência. Pode ser histórico ou projetado.",
+    "Relação entre proventos por ação de um período e um preço de referência. Pode ser histórico ou projetado; sozinho, não indica uma boa escolha.",
   ],
   [
     "Payout",
@@ -243,6 +243,6 @@ export const glossary = [
   ],
   [
     "JCP",
-    "Juros sobre capital próprio, uma modalidade de remuneração ao acionista.",
+    "Juros sobre capital próprio, uma modalidade de remuneração ao acionista. Tem imposto de renda retido na fonte, então o valor líquido recebido é menor que o valor bruto anunciado.",
   ],
 ];

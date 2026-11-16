@@ -19,6 +19,11 @@ import {
   csvDownload,
 } from "./spreadsheet.js";
 import { MysqlLimitStore } from "./limit-store.js";
+import {
+  accountLimits,
+  accountLimitMessages,
+  exceedsAccountLimit,
+} from "./account-limits.js";
 const router = Router();
 router.use(requireAuthenticatedUser);
 const importLimiter = rateLimit({
@@ -121,6 +126,12 @@ async function mutate(userId, work) {
     connection.release();
   }
 }
+// Counted inside mutate(), under the account lock, so two simultaneous writes
+// cannot both pass. Answers 409 with the message, like the other ledger rules.
+function assertRoom(current, adding, kind) {
+  if (exceedsAccountLimit(current, adding, accountLimits[kind]))
+    throw new ImportError(accountLimitMessages[kind]);
+}
 function failure(error, res, next) {
   if (
     error instanceof ImportError ||
@@ -205,6 +216,7 @@ router.post("/transactions", async (req, res, next) => {
     });
   try {
     await mutate(req.authenticatedUser.id, async (c, data) => {
+      assertRoom(data.transactions.length, 1, "portfolioTransactions");
       const row = txRow(parsed.data);
       ledger([...data.transactions, row], data.events);
       await writeTransaction(c, req.authenticatedUser.id, row);
@@ -316,6 +328,7 @@ router.post("/events", async (req, res, next) => {
   };
   try {
     await mutate(req.authenticatedUser.id, async (c, data) => {
+      assertRoom(data.events.length, 1, "portfolioEvents");
       ledger(data.transactions, [...data.events, row]);
       await c.execute(
         "INSERT INTO portfolio_events (id,user_id,ticker,kind,amount,factor,occurred_at,status,note) VALUES(?,?,?,?,?,?,?,?,?)",
@@ -457,6 +470,11 @@ router.post(
           seen.add(key);
           return true;
         });
+        assertRoom(
+          data.transactions.length,
+          unique.length,
+          "portfolioTransactions",
+        );
         ledger([...data.transactions, ...unique], data.events);
         if (req.path === "/import")
           for (const row of unique) {

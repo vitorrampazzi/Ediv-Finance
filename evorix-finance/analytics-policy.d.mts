@@ -11,7 +11,24 @@ export function validMeasurementId(value: unknown): boolean;
 export function analyticsReferrer(value: string): string;
 export function analyticsCampaign(search: string): string;
 export type AnalyticsEventName =
-  "click_signup" | "click_login" | "click_stock_card" | "complete_signup";
+  | "click_signup"
+  | "click_login"
+  | "click_stock_card"
+  | "start_signup"
+  | "complete_signup"
+  | "complete_login"
+  | "click_navigation"
+  | "click_home_area"
+  | "click_content"
+  | "open_faq"
+  | "change_theme"
+  | "open_indicator_help"
+  | "view_research_section"
+  | "change_chart_view"
+  | "start_lesson"
+  | "play_lesson_video"
+  | "complete_lesson"
+  | "search_glossary";
 export const analyticsEvents: Readonly<
   Record<AnalyticsEventName, Record<string, readonly (string | number)[]>>
 >;

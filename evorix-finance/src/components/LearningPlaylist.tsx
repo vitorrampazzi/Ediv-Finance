@@ -220,6 +220,12 @@ export function LearningPlaylist({
                     )}
                   </span>
                   <span className="ediv-learning-lesson-title">
+                    <span
+                      aria-hidden="true"
+                      className="mr-2 tabular-nums text-evo-accent"
+                    >
+                      {String(index + 1).padStart(2, "0")}
+                    </span>
                     {item.title}
                   </span>
                   <span className="ediv-learning-lesson-subtitle">

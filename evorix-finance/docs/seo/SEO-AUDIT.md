@@ -29,7 +29,7 @@
 | 3 | Nenhum dado estruturado | Nenhum JSON-LD nas páginas | Marca e trilha não aparecem para o Google | Média | Corrigido (PR #40) |
 | 4 | LCP no limite no celular | O banner de cookies era o maior elemento e só aparecia depois da checagem de sessão (cerca de 2,5 s). Além disso, havia ~40 KB de biblioteca de animação no JS inicial, a fonte não era pré-carregada e a foto do herói carregava tarde | LCP no limite de 2,5 s | Média | Corrigido (esta PR) |
 | 5 | Prévia do ranking vazia para o Google | Ela vem de `/api/rankings/public`, que o robots.txt bloqueia, então o Google vê "Carregando…" | Conteúdo principal invisível na renderização | Média | Corrigido junto com o item 0 |
-| 6 | Títulos de aba idênticos | `<title>Escola do Dividendo</title>` em todas as páginas, por decisão do dono | O Google tem menos sinal sobre cada página | Média | Depende de decisão do dono |
+| 6 | Títulos de aba idênticos | `<title>Escola do Dividendo</title>` em todas as páginas, por decisão do dono | O Google tem menos sinal sobre cada página | Média | Corrigido em 14/11/2026: "Escola do Dividendo \| Assunto" em cada página pública (marca primeiro, até 60 caracteres, únicos; testes `site.test.mjs` e `seo.dist.mjs`); páginas de conta (fora do índice) dizem o propósito, como "Escola do Dividendo \| Entrar"; a home mantém só a marca |
 | 7 | GA4 sem eventos nem campanhas | Nenhum evento personalizado, e os `utm_*` eram descartados | Impossível medir funis e origens | Média | Corrigido (PR #40) |
 | 8 | Sem aviso de risco visível | Nenhum texto sobre a natureza educativa do conteúdo | Confiabilidade (YMYL) | Média | Corrigido (esta PR) |
 | 9 | `/ranking/` duplicava `/ranking` | Resposta 200 com barra final | Conteúdo duplicado | Baixa | Corrigido (PR #40) |

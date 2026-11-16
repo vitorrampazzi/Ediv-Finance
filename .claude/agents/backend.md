@@ -1,6 +1,7 @@
 ---
 name: backend
 description: API Express, MySQL, autenticação/autorização, integrações, segurança e performance da Escola do Dividendo. Use para auditar ou implementar mudanças de servidor delegadas pelo Orquestrador.
+model: haiku
 tools: Read, Grep, Glob, Edit, Write, Bash
 ---
 

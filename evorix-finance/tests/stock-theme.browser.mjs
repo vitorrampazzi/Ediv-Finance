@@ -164,13 +164,14 @@ try {
         await expect(page.locator(".figma-stock")).toBeVisible();
         // Use the actual control so the DOM, theme store and persisted choice
         // agree. Writing data-theme directly bypasses the application state.
+        // Light is the default for a first visit; dark is chosen in the toggle.
         await expect(page.locator("html")).toHaveAttribute(
           "data-theme",
-          "dark",
+          "light",
         );
-        if (theme === "light") {
+        if (theme === "dark") {
           await page
-            .getByRole("button", { name: "Ativar tema claro", exact: true })
+            .getByRole("button", { name: "Ativar tema escuro", exact: true })
             .click();
         }
         await expect(page.locator("html")).toHaveAttribute("data-theme", theme);

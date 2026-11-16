@@ -2,6 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import {
   analyticsCampaign,
+  analyticsEvents,
   analyticsPage,
   analyticsReferrer,
   validMeasurementId,
@@ -94,8 +95,8 @@ test("one manual page view per route with no auto pageviews or advertising conse
 });
 test("sensitive paths, query, fragments and unknown destinations are not measured", () => {
   for (const path of [
-    "/entrar",
-    "/cadastro",
+    "/entrar?next=/app/perfil",
+    "/cadastro?email=private",
     "/verificar",
     "/redefinir-senha",
     "/recuperar-senha",
@@ -338,7 +339,10 @@ test("only valid campaign tags of the landing page reach Google", () => {
     first[2].page_location,
     "https://escoladodividendo.com.br/?utm_source=whatsapp&utm_medium=grupo",
   );
-  assert.equal(second[2].page_location, "https://escoladodividendo.com.br/ranking");
+  assert.equal(
+    second[2].page_location,
+    "https://escoladodividendo.com.br/ranking",
+  );
   assert.equal(second[2].page_referrer, "https://escoladodividendo.com.br/");
 });
 
@@ -353,10 +357,18 @@ test("new social and AI sources keep only their origin", () => {
 test("events use a closed list and only leave measured pages with consent", () => {
   const fixture = controllerFixture();
   const events = () =>
-    fixture.calls.filter(([type, name]) => type === "event" && name !== "page_view");
-  assert.equal(fixture.controller.track("click_signup", { cta_location: "hero" }), false);
+    fixture.calls.filter(
+      ([type, name]) => type === "event" && name !== "page_view",
+    );
+  assert.equal(
+    fixture.controller.track("click_signup", { cta_location: "hero" }),
+    false,
+  );
   fixture.controller.update({ choice: "granted", pathname: "/" });
-  assert.equal(fixture.controller.track("click_signup", { cta_location: "hero" }), true);
+  assert.equal(
+    fixture.controller.track("click_signup", { cta_location: "hero" }),
+    true,
+  );
   assert.deepEqual(events().at(-1), [
     "event",
     "click_signup",
@@ -372,17 +384,99 @@ test("events use a closed list and only leave measured pages with consent", () =
   for (const [name, params] of [
     ["click_signup", { cta_location: "pessoa@email.com" }],
     ["click_signup", { cta_location: "hero", email: "a@b.com" }],
-    ["click_stock_card", { list_location: "ranking_preview", list_position: 11 }],
+    [
+      "click_stock_card",
+      { list_location: "ranking_preview", list_position: 11 },
+    ],
     ["click_stock_card", { list_location: "ranking_preview", ticker: "TIMS3" }],
     ["purchase", {}],
   ])
     assert.equal(fixture.controller.track(name, params), false, name);
   assert.equal(events().length, 2);
-  fixture.controller.update({ choice: "granted", pathname: "/cadastro" });
-  assert.equal(fixture.controller.track("click_login", { cta_location: "header" }), false);
-  fixture.controller.update({ choice: "granted", pathname: "/", audienceAllowed: false });
+  fixture.controller.update({ choice: "granted", pathname: "/verificar" });
+  assert.equal(
+    fixture.controller.track("click_login", { cta_location: "header" }),
+    false,
+  );
+  fixture.controller.update({
+    choice: "granted",
+    pathname: "/",
+    audienceAllowed: false,
+  });
   assert.equal(fixture.controller.track("complete_signup"), false);
   fixture.controller.update({ choice: "denied", pathname: "/" });
   assert.equal(fixture.controller.track("complete_signup"), false);
   assert.equal(events().length, 2);
+});
+
+test("account funnel pages are measured by fixed path only", () => {
+  assert.deepEqual(analyticsPage("/cadastro"), {
+    path: "/cadastro",
+    title: "Criar conta",
+  });
+  assert.deepEqual(analyticsPage("/entrar/"), {
+    path: "/entrar",
+    title: "Entrar",
+  });
+  const fixture = controllerFixture();
+  fixture.controller.update({ choice: "granted", pathname: "/cadastro" });
+  assert.equal(fixture.controller.track("start_signup"), true);
+  assert.equal(
+    fixture.pageviews().at(-1)[2].page_location,
+    "https://escoladodividendo.com.br/cadastro",
+  );
+  fixture.controller.update({ choice: "granted", pathname: "/entrar" });
+  assert.equal(fixture.controller.track("complete_login"), true);
+  assert.equal(
+    fixture.controller.track("complete_login", { email: "a@b.com" }),
+    false,
+  );
+});
+
+test("interest and engagement events accept only fixed values", () => {
+  const fixture = controllerFixture();
+  fixture.controller.update({ choice: "granted", pathname: "/" });
+  const accepted = [
+    ["click_navigation", { nav_location: "header", destination: "ranking" }],
+    ["click_home_area", { area: "aulas", audience: "visitor" }],
+    [
+      "click_content",
+      { content_name: "explore_lessons", content_location: "hero" },
+    ],
+    ["open_faq", { faq_position: 3 }],
+    ["change_theme", { theme: "dark" }],
+    ["open_indicator_help", { indicator: "pl" }],
+    ["view_research_section", { section: "dividends" }],
+    ["change_chart_view", { chart: "dividends", view: "by_type" }],
+    ["start_lesson", { lesson_position: 1 }],
+    ["play_lesson_video", { lesson_position: 2 }],
+    ["complete_lesson", { lesson_position: 30 }],
+    ["search_glossary", {}],
+  ];
+  for (const [name, params] of accepted)
+    assert.equal(fixture.controller.track(name, params), true, name);
+  const rejected = [
+    [
+      "click_navigation",
+      { nav_location: "header", destination: "/app/perfil" },
+    ],
+    ["open_indicator_help", { indicator: "TIMS3" }],
+    ["view_research_section", { section: "dividends", ticker: "BBSE3" }],
+    ["start_lesson", { lesson_position: 31 }],
+    ["start_lesson", { lesson_position: "1" }],
+    ["search_glossary", { search_term: "dividendo" }],
+    ["open_faq", { faq_position: 0 }],
+  ];
+  for (const [name, params] of rejected)
+    assert.equal(fixture.controller.track(name, params), false, name);
+  // Every parameter value in the list is a short label or a small integer.
+  for (const rules of Object.values(analyticsEvents))
+    for (const values of Object.values(rules))
+      for (const value of values)
+        assert.ok(
+          typeof value === "number"
+            ? Number.isInteger(value) && value > 0 && value <= 30
+            : /^[a-z_]{2,24}$/.test(value),
+          String(value),
+        );
 });

@@ -11,6 +11,7 @@ import {
   requirePermission,
 } from "./permissions.js";
 import { MysqlLimitStore } from "./limit-store.js";
+import { accountLimits, accountLimitMessages } from "./account-limits.js";
 const router = Router();
 router.get("/information", (_req, res) =>
   res.json({
@@ -35,6 +36,32 @@ const limiter = rateLimit({
   standardHeaders: "draft-7",
   legacyHeaders: false,
 });
+// Per account, on top of the limit by IP above: one account cannot bury the
+// team inbox (it lists the 100 most recent conversations) or keep storing text
+// by changing networks. Replies sent by the team in /team are not counted.
+const DAY = 24 * 60 * 60 * 1000;
+const accountLimiter = (prefix, limit, error, skip) =>
+  rateLimit({
+    windowMs: DAY,
+    limit,
+    keyGenerator: (req) => String(req.authenticatedUser.id),
+    skip,
+    store: new MysqlLimitStore(prefix),
+    standardHeaders: "draft-7",
+    legacyHeaders: false,
+    message: { code: "RATE_LIMITED", error },
+  });
+const threadLimiter = accountLimiter(
+  "support-threads-account",
+  accountLimits.supportThreadsPerDay,
+  accountLimitMessages.supportThreads,
+);
+const messageLimiter = accountLimiter(
+  "support-messages-account",
+  accountLimits.supportMessagesPerDay,
+  accountLimitMessages.supportMessages,
+  (req) => Boolean(req.supportTeamView),
+);
 const bodySchema = z.string().trim().min(2).max(3000);
 router.get(["/", "/team"], async (req, res) => {
   const staff = Boolean(req.supportTeamView);
@@ -44,7 +71,7 @@ router.get(["/", "/team"], async (req, res) => {
   );
   return res.json({ canManage: staff, threads });
 });
-router.post("/", limiter, async (req, res) => {
+router.post("/", limiter, threadLimiter, async (req, res) => {
   const parsed = z
     .object({
       subject: z.string().trim().min(3).max(160),
@@ -128,6 +155,7 @@ router.post(
   ["/:id/messages", "/team/:id/messages"],
   limiter,
   access,
+  messageLimiter,
   async (req, res) => {
     const parsed = z
       .object({

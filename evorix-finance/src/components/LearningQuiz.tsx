@@ -47,7 +47,7 @@ export function LearningQuiz({
               "min-h-11 border p-3 text-left text-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-evo-accent disabled:cursor-wait disabled:opacity-60 " +
               (selectedAnswer === index
                 ? "border-evo-accent bg-evo-accent/10"
-                : "border-evo-border hover:bg-white/5")
+                : "border-evo-border hover:bg-evo-card")
             }
             onClick={() => onAnswer(index)}
           >

@@ -4,40 +4,9 @@
 @source "./components/stock-make";
 @config "../tailwind.config.js";
 
+/* Light is the base theme: it applies before any script runs and whenever no
+   saved choice exists. Dark is opt-in through data-theme="dark". */
 :root {
-  --ediv-canvas: #1c2025;
-  --ediv-surface: #242a30;
-  --ediv-inset: #20262b;
-  --ediv-line: rgb(255 255 255 / 10%);
-  --ediv-text: #f2f3f4;
-  --ediv-muted: #bcc6cd;
-  --ediv-accent: #a9d9d1;
-  --ediv-deep: #181d21;
-  --ediv-border: #394149;
-  --ediv-control-border: #7b8990;
-  --ediv-green: #95ccb4;
-  --ediv-red: #f298a0;
-  --ediv-primary: #28665f;
-  --ediv-primary-hover: #34776f;
-  --ediv-on-accent: #142923;
-  --ediv-hover: rgb(255 255 255 / 5%);
-  --ediv-active: rgb(255 255 255 / 8%);
-  --ediv-subtle: rgb(255 255 255 / 3%);
-  --ediv-selection: rgb(169 217 209 / 10%);
-  --ediv-raised: #343e45;
-  --ediv-chrome: rgb(32 38 43 / 97%);
-  --ediv-graphic-surface: #263c3e;
-  --ediv-radius: 14px;
-  --ediv-ease: cubic-bezier(0.2, 0.8, 0.2, 1);
-  color-scheme: dark;
-  font-synthesis: style;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  font-optical-sizing: auto;
-}
-
-:root[data-theme="light"] {
   --ediv-canvas: #f7f8f6;
   --ediv-surface: #ffffff;
   --ediv-inset: #edf1ee;
@@ -61,6 +30,39 @@
   --ediv-chrome: rgb(247 248 246 / 97%);
   --ediv-graphic-surface: #e2eee8;
   color-scheme: light;
+  --ediv-radius: 14px;
+  --ediv-ease: cubic-bezier(0.2, 0.8, 0.2, 1);
+  font-synthesis: style;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  font-optical-sizing: auto;
+}
+
+:root[data-theme="dark"] {
+  --ediv-canvas: #1c2025;
+  --ediv-surface: #242a30;
+  --ediv-inset: #20262b;
+  --ediv-line: rgb(255 255 255 / 10%);
+  --ediv-text: #f2f3f4;
+  --ediv-muted: #bcc6cd;
+  --ediv-accent: #a9d9d1;
+  --ediv-deep: #181d21;
+  --ediv-border: #394149;
+  --ediv-control-border: #7b8990;
+  --ediv-green: #95ccb4;
+  --ediv-red: #f298a0;
+  --ediv-primary: #28665f;
+  --ediv-primary-hover: #34776f;
+  --ediv-on-accent: #142923;
+  --ediv-hover: rgb(255 255 255 / 5%);
+  --ediv-active: rgb(255 255 255 / 8%);
+  --ediv-subtle: rgb(255 255 255 / 3%);
+  --ediv-selection: rgb(169 217 209 / 10%);
+  --ediv-raised: #343e45;
+  --ediv-chrome: rgb(32 38 43 / 97%);
+  --ediv-graphic-surface: #263c3e;
+  color-scheme: dark;
 }
 
 /* Existing SVG illustrations and charts carry presentation attributes. CSS tokens
@@ -80,7 +82,7 @@ svg [fill="#a9d9d1" i] {
 svg [fill="#95ccb4" i] {
   fill: var(--ediv-green);
 }
-:root[data-theme="light"] svg [fill="#28665f" i] {
+:root:not([data-theme="dark"]) svg [fill="#28665f" i] {
   fill: var(--ediv-graphic-surface);
 }
 svg [stroke="#4f5967" i] {
@@ -123,14 +125,14 @@ svg :is([stroke="#95ccb4" i], [stroke="#82b7a0" i]) {
   outline: 2px solid var(--ediv-accent);
   outline-offset: 3px;
 }
-.ediv-theme-light-icon {
+.ediv-theme-dark-icon {
   display: none;
 }
-:root[data-theme="light"] .ediv-theme-light-icon {
+:root[data-theme="dark"] .ediv-theme-light-icon {
+  display: none;
+}
+:root[data-theme="dark"] .ediv-theme-dark-icon {
   display: block;
-}
-:root[data-theme="light"] .ediv-theme-dark-icon {
-  display: none;
 }
 
 @media (forced-colors: active) {
@@ -369,7 +371,7 @@ button:disabled {
 }
 
 .research-insight-stage.is-current {
-  border-left-color: #a9d9d1;
+  border-left-color: var(--ediv-accent);
 }
 
 @media (min-width: 768px) {
@@ -507,17 +509,17 @@ textarea {
 
 @media (prefers-contrast: more) {
   :root {
-    --ediv-line: #7b8990;
-    --ediv-muted: #e0e5e8;
-  }
-  .field,
-  .action-secondary {
-    border-color: #7b8990;
-  }
-  :root[data-theme="light"] {
     --ediv-line: #667e73;
     --ediv-border: #667e73;
     --ediv-muted: #354c42;
+  }
+  .field,
+  .action-secondary {
+    border-color: var(--ediv-control-border);
+  }
+  :root[data-theme="dark"] {
+    --ediv-line: #7b8990;
+    --ediv-muted: #e0e5e8;
   }
 }
 

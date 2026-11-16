@@ -730,9 +730,13 @@ try {
         .locator(".fmk-stats")
         .getByRole("button", { name: "O que é P/L projetado?", exact: true });
       await tip.focus();
-      await expect(page.getByRole("tooltip")).toHaveText(
-        "Preço da pesquisa dividido pelo lucro por ação projetado: quantos anos de lucro, no ritmo projetado, o preço representa. Fica como na data da pesquisa.",
+      // Same layered explanation as the indicator table (indicatorDefinitions.ts).
+      const peHint = page.getByRole("tooltip");
+      await expect(peHint).toContainText("P/L projetado (preço sobre lucro)");
+      await expect(peHint).toContainText(
+        "Preço da pesquisa dividido pelo lucro por ação projetado.",
       );
+      await expect(peHint).toContainText("Estimativa");
       await tip.press("Escape");
       await expect(page.getByRole("tooltip")).toHaveCount(0);
       await expect(tip).toBeFocused();
@@ -838,8 +842,11 @@ try {
           .evaluateAll((nodes) =>
             nodes.map((node) => ({
               key: node.dataset.field,
+              // The layered hint (role="tooltip") is a definition list too.
               label:
-                node.querySelector("dt")?.textContent ||
+                [...node.querySelectorAll("dt")].find(
+                  (term) => !term.closest('[role="tooltip"]'),
+                )?.textContent ||
                 node
                   .querySelector("button")
                   .getAttribute("aria-label")
