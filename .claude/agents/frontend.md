@@ -1,6 +1,7 @@
 ---
 name: frontend
 description: React, TypeScript, Tailwind, UI/UX, animação, responsividade e acessibilidade da Escola do Dividendo. Use para auditar ou implementar mudanças de interface delegadas pelo Orquestrador.
+model: haiku
 tools: Read, Grep, Glob, Edit, Write, Bash
 ---
 

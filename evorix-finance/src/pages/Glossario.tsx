@@ -1,6 +1,19 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { apiRequest } from "../lib/api";
+import { trackEvent } from "../lib/analytics";
 import { Link } from "react-router-dom";
+
+function termId(term: string) {
+  return (
+    "termo-" +
+    term
+      .normalize("NFD")
+      .replace(/[̀-ͯ]/g, "")
+      .toLocaleLowerCase("pt-BR")
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-+|-+$/g, "")
+  );
+}
 
 export function Glossario({
   initialTerms = [],
@@ -9,6 +22,8 @@ export function Glossario({
 }) {
   const [terms, setTerms] = useState(initialTerms);
   const [search, setSearch] = useState("");
+  // One search_glossary per visit; the typed text is never sent.
+  const searchTracked = useRef(false);
   const [error, setError] = useState("");
   useEffect(() => {
     const controller = new AbortController();
@@ -22,11 +37,24 @@ export function Glossario({
       });
     return () => controller.abort();
   }, []);
-  const filtered = terms.filter(([term, definition]) =>
+  const sorted = useMemo(
+    () => [...terms].sort(([a], [b]) => a.localeCompare(b, "pt-BR")),
+    [terms],
+  );
+  const filtered = sorted.filter(([term, definition]) =>
     `${term} ${definition}`
       .toLocaleLowerCase("pt-BR")
       .includes(search.toLocaleLowerCase("pt-BR")),
   );
+  const status = !terms.length
+    ? error
+      ? ""
+      : "Carregando glossário…"
+    : !filtered.length
+      ? "Nenhum termo encontrado."
+      : filtered.length === terms.length
+        ? `${terms.length} termos, em ordem alfabética.`
+        : `${filtered.length} de ${terms.length} termos encontrados.`;
   return (
     <section className="mx-auto max-w-4xl space-y-6 px-5 py-12">
       <h1 className="text-3xl font-bold">Glossário de investimentos</h1>
@@ -38,7 +66,13 @@ export function Glossario({
         <input
           className="field mt-2"
           value={search}
-          onChange={(event) => setSearch(event.target.value)}
+          onChange={(event) => {
+            if (!searchTracked.current && event.target.value.trim()) {
+              searchTracked.current = true;
+              trackEvent("search_glossary");
+            }
+            setSearch(event.target.value);
+          }}
           type="search"
           placeholder="Ex.: dividendos"
         />
@@ -48,11 +82,15 @@ export function Glossario({
           {error}
         </p>
       )}
+      <p role="status" className="text-sm text-evo-textSec">
+        {status}
+      </p>
       <dl className="space-y-4">
         {filtered.map(([term, definition]) => (
           <div
             key={term}
-            className="rounded-xl border border-evo-border bg-evo-card p-5"
+            id={termId(term)}
+            className="scroll-mt-24 rounded-xl border border-evo-border bg-evo-card p-5"
           >
             <dt className="font-semibold">{term}</dt>
             <dd className="mt-2 text-sm leading-relaxed text-evo-textSec">
@@ -61,11 +99,6 @@ export function Glossario({
           </div>
         ))}
       </dl>
-      {!filtered.length && (
-        <p role="status">
-          {terms.length ? "Nenhum termo encontrado." : "Carregando glossário…"}
-        </p>
-      )}
       <Link to="/aprender" className="action-secondary">
         Continuar aprendendo
       </Link>

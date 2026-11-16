@@ -85,10 +85,10 @@ function LessonArt() {
 const questions = [
   [
     "Preciso pagar para começar?",
-    "Não. A conta gratuita dá acesso às pesquisas e às aulas. A assessoria será um serviço separado e ainda está em preparação.",
+    "Não. A conta gratuita dá acesso às pesquisas e às aulas. A assessoria será um serviço separado e ainda não está disponível.",
   ],
   [
-    "O ranking já tem a pesquisa do corretor?",
+    "O ranking já tem pesquisas publicadas?",
     "As pesquisas publicadas aparecem no ranking. Quando a lista está em demonstração, as empresas e os valores são fictícios.",
   ],
   [

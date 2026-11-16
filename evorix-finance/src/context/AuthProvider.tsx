@@ -218,6 +218,7 @@ export function AuthProvider({
         applySessionError("");
         setLoading(false);
         notifySessionChanged();
+        return result.user as AuthUser;
       } finally {
         pendingMutation.current = false;
       }

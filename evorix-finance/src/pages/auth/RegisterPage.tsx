@@ -4,6 +4,7 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 
 import { useAuth } from "../../context/authContext";
 import { ApiError } from "../../lib/api";
+import { trackEvent } from "../../lib/analytics";
 import { authLink, safeAuthDestination } from "../../lib/authDestination";
 import { PasswordInput } from "../../components/PasswordInput";
 import { PasswordRequirements } from "../../components/PasswordRequirements";
@@ -70,6 +71,9 @@ export function RegisterPage() {
         introductionDestination,
         challengeToken || undefined,
       );
+      // Intent only: the reply is generic and the account exists after the
+      // e-mail is confirmed (complete_signup). Nothing typed is sent.
+      trackEvent("start_signup");
       setMessage(result.message || "Cadastro recebido.");
       setVerificationUrl(result.verificationUrl || "");
       setSubmittedEmail(email.trim());
@@ -188,6 +192,10 @@ export function RegisterPage() {
             <input
               id="register-email"
               aria-describedby={error ? "register-error" : undefined}
+              // A password rule error marks the password field, not this one.
+              aria-invalid={
+                error && error !== passwordPolicyHint ? true : undefined
+              }
               type="email"
               autoComplete="email"
               required

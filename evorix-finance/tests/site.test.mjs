@@ -5,6 +5,7 @@ import {
   publicPages,
   pageMetadata,
   accountPaths,
+  accountTitles,
   retiredPages,
   retiredPageDestination,
   siteOrigin,
@@ -44,15 +45,30 @@ test("home usa exatamente o nome público da marca no título", () => {
   assert.equal(home.canonical, "https://escoladodividendo.com.br/");
 });
 
-test("aba do navegador mostra só a marca em todas as rotas", () => {
-  for (const path of [
-    ...Object.keys(publicPages),
-    ...accountPaths,
-    "/app",
-    "/app/ranking",
-    "/404",
-  ])
+test("aba começa pela marca; cada página pública tem título próprio", () => {
+  for (const path of ["/", "/app", "/app/ranking", "/404"])
     assert.equal(pageMetadata(path).title, "Escola do Dividendo");
+  // Account pages: not indexed, but the tab says what the page is for.
+  assert.deepEqual(Object.keys(accountTitles).sort(), [...accountPaths].sort());
+  assert.equal(pageMetadata("/entrar").title, "Escola do Dividendo | Entrar");
+  assert.equal(
+    pageMetadata("/cadastro/").title,
+    "Escola do Dividendo | Criar conta",
+  );
+  for (const path of accountPaths)
+    assert.equal(pageMetadata(path).noindex, true);
+  const titles = new Set();
+  for (const path of Object.keys(publicPages)) {
+    const { title } = pageMetadata(path);
+    assert.ok(title.startsWith("Escola do Dividendo"), path);
+    assert.ok(title.length <= 60, path + ": " + title.length);
+    assert.ok(!titles.has(title), "título repetido em " + path);
+    titles.add(title);
+  }
+  assert.equal(
+    pageMetadata("/ranking").title,
+    "Escola do Dividendo | Ranking de Ações",
+  );
   assert.equal(
     pageMetadata("/ranking").socialTitle,
     "Ranking de Ações | Escola do Dividendo",
@@ -142,8 +158,9 @@ test("dados estruturados: marca na home e trilha nas páginas públicas", () => 
   assert.equal(organization.url, siteOrigin + "/");
   assert.equal(website["@type"], "WebSite");
   assert.equal(website.name, "Escola do Dividendo");
-  const [crumbs] = structuredData("/ranking/");
-  assert.equal(crumbs["@type"], "BreadcrumbList");
+  const crumbs = structuredData("/ranking/").find(
+    (item) => item["@type"] === "BreadcrumbList",
+  );
   assert.deepEqual(
     crumbs.itemListElement.map((item) => [item.name, item.item]),
     [
@@ -172,4 +189,44 @@ test("página de empresa só é indexável fora de QA e sem canonical na casca",
   assert.equal(pageMetadata("/ranking/acao/TIMS3", true).noindex, true);
   assert.equal(pageMetadata("/app/ranking/acao/TIMS3").noindex, true);
   assert.equal(pageMetadata("/ranking/acao/../x").noindex, true);
+});
+
+test("dados estruturados descrevem só o que a página mostra", () => {
+  for (const path of Object.keys(publicPages)) {
+    assert.deepEqual(structuredData(path, true), [], path);
+    const data = structuredData(path);
+    assert.ok(data.length, path);
+    for (const item of data)
+      assert.equal(item["@context"], "https://schema.org", path);
+  }
+  const page = structuredData("/metodologia").find(
+    (item) => item["@type"] === "WebPage",
+  );
+  assert.equal(page.url, "https://escoladodividendo.com.br/metodologia");
+  assert.equal(page.dateModified, publicPages["/metodologia"].updated);
+  assert.equal(page.description, publicPages["/metodologia"].description);
+  const glossary = [["Payout", "Parte do lucro distribuída aos acionistas."]];
+  const terms = structuredData("/glossario", false, { glossary }).find(
+    (item) => item["@type"] === "DefinedTermSet",
+  );
+  assert.deepEqual(terms.hasDefinedTerm, [
+    {
+      "@type": "DefinedTerm",
+      name: "Payout",
+      description: "Parte do lucro distribuída aos acionistas.",
+    },
+  ]);
+  assert.equal(
+    structuredData("/ranking", false, { glossary }).some(
+      (item) => item["@type"] === "DefinedTermSet",
+    ),
+    false,
+  );
+  // Nothing invented: no ratings, reviews, authors or prices anywhere.
+  assert.doesNotMatch(
+    JSON.stringify(
+      Object.keys(publicPages).map((path) => structuredData(path)),
+    ),
+    /aggregateRating|review|author|offers|price/i,
+  );
 });

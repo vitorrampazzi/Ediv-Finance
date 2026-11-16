@@ -13,7 +13,7 @@
 - `interface`: experiência, acessibilidade e frontend; mudanças de contrato passam pela coordenação.
 - `backend`: API, persistência, integrações, autenticação e segurança.
 - `qa`: testes, regressão e validação visual/funcional independente; informa aptidão e limites.
-- Para demandas que envolvam os quatro papéis, o Orquestrador deve usar as ferramentas nativas de subagentes para delegar a frontend, backend e QA, com escopos separados; deve esperar e integrar seus resultados. Os agentes herdam o modelo e as permissões da sessão.
+- Para demandas que envolvam os quatro papéis, o Orquestrador deve usar as ferramentas nativas de subagentes para delegar a frontend, backend e QA, com escopos separados; deve esperar e integrar seus resultados. Os agentes herdam as permissões da sessão. No Claude Code, o Orquestrador usa o Opus e frontend, backend e QA usam o Haiku (`model: haiku` em `../.claude/agents/`); a configuração do Codex em `../.codex/` não muda.
 - Mapeamento dos chats: `docs/harness/SESSOES.md`.
 
 ## Antes de editar e ao entregar

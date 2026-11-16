@@ -27,7 +27,14 @@ import {
 import { fileBody, readUpload, ImportError } from "./spreadsheet.js";
 
 const router = Router();
-router.get("/status", async (_req, res) => res.json(await researchStatus()));
+// Public and the same for everyone (no cookie, session or query is read): the
+// CDN may share it like /public, so visitors and crawlers do not each cost a
+// function call and a query. Errors keep the global no-store header.
+router.get("/status", async (_req, res) => {
+  const status = await researchStatus();
+  sharedCache(res, publicRankingCacheControl);
+  return res.json(status);
+});
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   limit: 20,

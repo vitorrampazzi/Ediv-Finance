@@ -6,10 +6,12 @@ export function LearningVideo({
   title,
   embedUrl,
   readingTarget,
+  onPlay,
 }: {
   title: string;
   embedUrl: string | null;
   readingTarget: string;
+  onPlay?: () => void;
 }) {
   const [loadPlayer, setLoadPlayer] = useState(false);
   const [playerReady, setPlayerReady] = useState(false);
@@ -62,18 +64,21 @@ export function LearningVideo({
               />
             )}
             <p className="mt-4 font-semibold">
-              {approvedUrl ? title : "Vídeos em preparação"}
+              {approvedUrl ? title : "Vídeo em preparação"}
             </p>
             <p className="mt-2 text-sm leading-relaxed text-evo-textSec">
               {approvedUrl
                 ? "Carregue o player para assistir. O provedor de vídeo receberá sua conexão somente ao clicar."
-                : "Enquanto isso, estude pela leitura e pratique com os exercícios."}
+                : "O texto e o exercício desta aula já estão disponíveis. O vídeo desta aula ainda não foi publicado."}
             </p>
             {approvedUrl ? (
               <button
                 type="button"
                 className="action mt-5"
-                onClick={() => setLoadPlayer(true)}
+                onClick={() => {
+                  setLoadPlayer(true);
+                  onPlay?.();
+                }}
               >
                 <CirclePlay size={17} aria-hidden="true" /> Carregar vídeo
               </button>

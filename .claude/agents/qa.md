@@ -1,6 +1,7 @@
 ---
 name: qa
 description: Testes independentes, regressão e validação visual e funcional da Escola do Dividendo. Use para validar uma entrega antes da publicação; não corrige código.
+model: haiku
 tools: Read, Grep, Glob, Bash, Write
 ---
 

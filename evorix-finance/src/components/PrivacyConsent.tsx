@@ -54,9 +54,13 @@ export function PrivacyConsent() {
   // The banner does not wait for the session check; measurement still does.
   const bannerAudience =
     !sessionError && !qaEnvironment && (!user || user.role === "USER");
+  // Sign-in and sign-up are measured only for visitors who already chose;
+  // the question is not asked over those forms.
+  const accountForm = /^\/(entrar|cadastro)\/?$/.test(pathname);
   const banner =
     enabled &&
     bannerAudience &&
+    !accountForm &&
     Boolean(analyticsPage(pathname)) &&
     consent.choice === null &&
     !open;

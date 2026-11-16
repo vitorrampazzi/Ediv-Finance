@@ -39,6 +39,11 @@ function StartAction({
           onClick={() => {
             if (awaitingRegistration)
               trackEvent("click_login", { cta_location: place });
+            else
+              trackEvent("click_content", {
+                content_name: "explore_lessons",
+                content_location: place,
+              });
           }}
         >
           {!awaitingRegistration && <BookOpen size={17} aria-hidden="true" />}
@@ -74,7 +79,8 @@ export function PublicHome({
               <span>dos dividendos.</span>
             </h1>
             <p className="ph-hero-description ph-hero-entry">
-              Pesquisas de ações e aulas para estudar com mais critério.
+              Pesquisas de empresas que pagam dividendos e aulas para entender o
+              negócio, os riscos e o preço pago.
             </p>
             <div className="ph-hero-entry">
               <StartAction

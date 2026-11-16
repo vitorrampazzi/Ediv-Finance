@@ -3,16 +3,16 @@ export const siteOrigin = "https://escoladodividendo.com.br";
 // the sitemap lastmod. Change it together with the content, never per build.
 export const publicPages = {
   "/": {
-    updated: "2026-11-04",
+    updated: "2026-11-14",
     title: "Escola do Dividendo",
     description:
-      "Estude dividendos e leia pesquisas de ações na Escola do Dividendo. Entenda o negócio, os cenários e os riscos de cada empresa, com aulas e exemplos.",
+      "Entenda as empresas por trás dos dividendos: pesquisas de ações com tese, riscos e margem de segurança, e aulas para estudar com visão de longo prazo.",
   },
   "/ranking": {
-    updated: "2026-11-04",
+    updated: "2026-11-14",
     title: "Ranking de Ações | Escola do Dividendo",
     description:
-      "Conheça o Ranking de Ações da Escola do Dividendo. Acesse pesquisas, premissas, horizonte e riscos com uma conta gratuita.",
+      "Veja as empresas do Ranking de Ações da Escola do Dividendo, com Dividend Yield estimado, P/L projetado e margem de segurança. Pesquisa completa com conta gratuita.",
   },
   "/aprender": {
     updated: "2026-10-27",
@@ -98,6 +98,16 @@ export function retiredPageDestination(path) {
 // in the latest publication. The page sets its own canonical once it knows,
 // or noindex for any other ticker; the shell itself carries neither.
 export const publicStockPath = /^\/ranking\/acao\/[A-Za-z0-9]{1,16}$/;
+const brand = "Escola do Dividendo";
+// Account pages are not indexed, but the tab still names what the page is for
+// (WCAG 2.4.2), after the brand.
+export const accountTitles = {
+  "/entrar": "Entrar",
+  "/cadastro": "Criar conta",
+  "/verificar": "Confirmar e-mail",
+  "/recuperar-senha": "Recuperar acesso",
+  "/redefinir-senha": "Nova senha",
+};
 export function pageMetadata(path, qa = false) {
   const metadata = publicPages[normalizedPath(path)];
   if (!metadata && publicStockPath.test(normalizedPath(path)))
@@ -109,10 +119,15 @@ export function pageMetadata(path, qa = false) {
       canonical: null,
       noindex: qa,
     };
-  // A aba sempre mostra a marca; o título da página segue nas prévias sociais.
+  // The tab starts with the brand on every route. Public and account pages add
+  // their own subject after it, so each address has a title of its own; the
+  // home and the signed-in area show the brand alone.
+  const subject = Object.hasOwn(accountTitles, normalizedPath(path))
+    ? accountTitles[normalizedPath(path)]
+    : metadata?.title.split(" | ")[0];
   return {
-    title: "Escola do Dividendo",
-    socialTitle: metadata?.title || "Escola do Dividendo",
+    title: subject && subject !== brand ? brand + " | " + subject : brand,
+    socialTitle: metadata?.title || brand,
     description:
       metadata?.description || "Acesse sua conta na Escola do Dividendo.",
     canonical: metadata ? siteOrigin + normalizedPath(path) : null,
@@ -122,28 +137,63 @@ export function pageMetadata(path, qa = false) {
 
 // Schema.org data for search engines: who publishes the site and where each
 // public page sits. No address or company registration until they are public.
-export function structuredData(path, qa = false) {
+//
+// `glossary` is the list of [term, definition] shown on /glossario; the same
+// text is published as a DefinedTermSet, never anything the page does not show.
+export function structuredData(path, qa = false, { glossary = [] } = {}) {
   const page = publicPages[normalizedPath(path)];
   if (qa || !page) return [];
   const home = siteOrigin + "/";
+  const address = siteOrigin + normalizedPath(path);
+  const webPage = {
+    "@context": "https://schema.org",
+    "@type": "WebPage",
+    name: page.title.split(" | ")[0],
+    description: page.description,
+    url: address,
+    inLanguage: "pt-BR",
+    dateModified: page.updated,
+    isPartOf: { "@type": "WebSite", name: brand, url: home },
+  };
   if (normalizedPath(path) === "/")
     return [
       {
         "@context": "https://schema.org",
         "@type": "Organization",
-        name: "Escola do Dividendo",
+        name: brand,
         url: home,
         logo: siteOrigin + "/ediv-icon-clean-192.png",
+        description: page.description,
       },
       {
         "@context": "https://schema.org",
         "@type": "WebSite",
-        name: "Escola do Dividendo",
+        name: brand,
         url: home,
         inLanguage: "pt-BR",
+        description: page.description,
       },
     ];
+  const terms =
+    normalizedPath(path) === "/glossario" && glossary.length
+      ? [
+          {
+            "@context": "https://schema.org",
+            "@type": "DefinedTermSet",
+            name: "Glossário de investimentos da Escola do Dividendo",
+            url: address,
+            inLanguage: "pt-BR",
+            hasDefinedTerm: glossary.map(([name, description]) => ({
+              "@type": "DefinedTerm",
+              name,
+              description,
+            })),
+          },
+        ]
+      : [];
   return [
+    webPage,
+    ...terms,
     {
       "@context": "https://schema.org",
       "@type": "BreadcrumbList",

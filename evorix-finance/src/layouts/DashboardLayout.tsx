@@ -31,7 +31,7 @@ import { NotificationsMenu } from "../components/NotificationsMenu";
 import { ThemeToggle } from "../components/ThemeToggle";
 import { AccountOnboarding } from "../components/AccountOnboarding";
 import { requestOnboardingReplay } from "../lib/onboarding";
-import { openPrivacyPreferences } from "../lib/analytics";
+import { openPrivacyPreferences, trackNavigation } from "../lib/analytics";
 import { PageContent } from "../components/PageContent";
 import "../components/navigation-chrome.css";
 
@@ -394,6 +394,7 @@ export const DashboardLayout = () => {
         />
         <nav
           id="account-sidebar-navigation"
+          onClick={trackNavigation("sidebar")}
           aria-label="Navegação principal"
           className="min-h-0 flex-1 space-y-7 overflow-y-auto px-4 pb-5"
         >
@@ -539,6 +540,7 @@ function MobileNavigation() {
   return (
     <LayoutGroup id="account-mobile">
       <nav
+        onClick={trackNavigation("bottom_nav")}
         aria-label="Navegação móvel"
         className="ediv-mobile-navigation fixed inset-x-0 bottom-0 z-30 grid grid-cols-3 px-1 pb-[env(safe-area-inset-bottom)] pt-1 lg:hidden"
       >

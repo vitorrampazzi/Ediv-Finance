@@ -82,17 +82,12 @@ export async function prerender() {
         value ? `<meta ${attr}="${name}" content="${escape(value)}" />` : "",
       );
     }
-    // The home hero photo is the largest element of its first screen.
-    const heroImage =
-      path === "/"
-        ? '<link rel="preload" as="image" href="/ediv-hero-forest.webp" fetchpriority="high" />'
-        : "";
     const canonical =
       meta.canonical && !meta.noindex
         ? `<link rel="canonical" href="${meta.canonical}" />`
         : "";
     // JSON is a data block, not a script; "<" is escaped so it cannot end it.
-    const schema = structuredData(path, qa)
+    const schema = structuredData(path, qa, { glossary })
       .map(
         (data) =>
           `<script type="application/ld+json">${JSON.stringify(data).replaceAll("<", "\\u003c")}</script>`,
@@ -101,7 +96,8 @@ export async function prerender() {
     return result
       .replace(
         "</head>",
-        `${heroImage}${pageStyles(path)}${canonical}${schema}<meta name="robots" content="${meta.noindex ? "noindex, nofollow" : "index, follow"}" /></head>`,
+        // No image preload: the light home, the default, has no hero photograph.
+        `${pageStyles(path)}${canonical}${schema}<meta name="robots" content="${meta.noindex ? "noindex, nofollow" : "index, follow"}" /></head>`,
       )
       .replace('<div id="root"></div>', `<div id="root">${content}</div>`);
   }

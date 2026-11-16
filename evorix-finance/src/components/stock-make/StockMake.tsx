@@ -18,7 +18,10 @@ import {
   publicationMarket,
 } from "../../lib/marketData";
 import { CompanyLogo } from "../CompanyLogo";
+import { HelpText } from "../HelpText";
+import { indicatorHelp } from "../../lib/indicatorDefinitions";
 import { MarketQuotePanel } from "../LiveQuote";
+import type { TooltipContent } from "../Tooltip";
 import {
   DividendCalendar,
   DividendChart,
@@ -61,7 +64,7 @@ function Stat({
   title,
 }: {
   label: string;
-  tip: string;
+  tip: TooltipContent;
   children: ReactNode;
   accent?: boolean;
   sub?: string;
@@ -148,7 +151,7 @@ function Header({
               state={view.price.state}
               title={view.price.title}
               sub={priceCaption(view)}
-              tip="Cotação da brapi.dev: a mesma do ranking. Sem cotação válida, aparece o preço da pesquisa, com a data."
+              tip={indicatorHelp.marketPrice}
             >
               {view.price.state === "loading"
                 ? pending(view.price.title)
@@ -158,21 +161,21 @@ function Header({
           <Stat
             label="DY bruto estimado"
             sub="na data da pesquisa"
-            tip="Dividend Yield: dividendos projetados por ação divididos pelo preço da pesquisa. Fica como na data da pesquisa e não muda com a cotação."
+            tip={indicatorHelp.estimatedGrossDividendYield}
           >
             {value("estimatedGrossDividendYield")}
           </Stat>
           <Stat
             label="P/L projetado"
             sub="na data da pesquisa"
-            tip="Preço da pesquisa dividido pelo lucro por ação projetado: quantos anos de lucro, no ritmo projetado, o preço representa. Fica como na data da pesquisa."
+            tip={indicatorHelp.projectedPE}
           >
             {value("projectedPE")}
           </Stat>
           <Stat
             label="Preço-teto"
             sub={research}
-            tip="Preço máximo que a pesquisa considera coerente para o dividendo projetado. Só muda com uma nova análise."
+            tip={indicatorHelp.ceilingPrice}
           >
             {brl(company.teto)}
           </Stat>
@@ -181,7 +184,7 @@ function Header({
             state={view.margin.state}
             title={view.margin.title}
             sub={marginCaption(view)}
-            tip={`Margem de segurança = ${safetyMarginFormula}, recalculada a cada cotação. Fica negativa quando a cotação passa do teto e não garante retorno.`}
+            tip={indicatorHelp.safetyMargin}
           >
             {view.margin.state === "loading"
               ? pending(view.margin.title)
@@ -239,7 +242,7 @@ function Overview() {
   const marginText =
     view.margin.text +
     (view.margin.qualifier ? ` · ${view.margin.qualifier}` : "");
-  const rows: [string, string, string, DataKind, string][] = [
+  const rows: [string, string, TooltipContent, DataKind, string][] = [
     [
       "Lucro líquido estimado",
       profitEst === null ? "Não informado" : `R$ ${num(profitEst, 2)} bi`,
@@ -488,7 +491,7 @@ function Gauge({
 type Ind = {
   key: DividendColumnKey;
   label: string;
-  tip: string;
+  tip: TooltipContent;
   value: string;
   tone?: "up" | "down" | "na";
   kind: DataKind;
@@ -870,7 +873,10 @@ function Learn() {
           className="lg:col-span-6 lg:border-l lg:border-fmk-line lg:pl-10"
         >
           <h3 className="font-fmk-serif text-2xl leading-snug">{l.q}</h3>
-          <p className="mt-4 text-[15px] leading-relaxed text-fmk-sub">{l.a}</p>
+          <HelpText
+            content={l.a}
+            className="mt-4 text-[15px] leading-relaxed text-fmk-sub"
+          />
           <div className="mt-6 border-l-2 border-fmk-teal pl-4">
             <div className="font-fmk-mono text-[11px] uppercase tracking-[0.14em] text-fmk-dim">
               Neste caso
@@ -994,25 +1000,25 @@ function StockPage({
             <Stat
               label="DY estimado"
               sub="na data da pesquisa"
-              tip="Dividendo projetado ÷ preço da pesquisa, na data da pesquisa."
+              tip={indicatorHelp.estimatedGrossDividendYield}
             >
               {value("estimatedGrossDividendYield")}
             </Stat>
             <Stat
               label="Dividendo projetado"
-              tip="Provento bruto por ação projetado para o ano."
+              tip={indicatorHelp.projectedGrossDividendPerShare}
             >
               {brl(company.dpa)}
             </Stat>
-            <Stat label="Payout esperado" tip="Parcela do lucro distribuída.">
+            <Stat label="Payout esperado" tip={indicatorHelp.expectedPayout}>
               {value("expectedPayout")}
             </Stat>
-            <Stat label="Frequência" tip="Número de anúncios por ano.">
+            <Stat label="Frequência" tip={indicatorHelp.announcementFrequency}>
               {value("announcementFrequency")}
             </Stat>
             <Stat
               label="Meses habituais"
-              tip="Meses em que a empresa costuma anunciar proventos."
+              tip={indicatorHelp.announcementMonths}
             >
               {value("announcementMonths")}
             </Stat>

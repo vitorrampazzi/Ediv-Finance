@@ -3,7 +3,9 @@
      so every tab, chart and tooltip follows the same global tokens. */
   --fmk-bg: var(--ediv-canvas);
   --fmk-surface: var(--ediv-inset);
-  --fmk-raised: var(--ediv-surface);
+  /* Light is the base: the page sits on the light-green surfaces of the theme
+     and only the logo tile (.company-logo) stays white, with its thin border. */
+  --fmk-raised: var(--ediv-graphic-surface);
   --fmk-line: var(--ediv-border);
   --fmk-line-soft: var(--ediv-line);
   --fmk-ink: var(--ediv-text);
@@ -11,9 +13,9 @@
   --fmk-dim: var(--ediv-muted);
   --fmk-teal: var(--ediv-accent);
   --fmk-teal-deep: var(--ediv-primary);
-  --fmk-amber: #d6aa62;
-  --fmk-lilac: #a496d8;
-  --fmk-steel: #7599bd;
+  --fmk-amber: #8b5e23;
+  --fmk-lilac: #7052a1;
+  --fmk-steel: #3f678b;
   --fmk-up: var(--ediv-green);
   --fmk-down: var(--ediv-red);
   font-family: var(--ediv-font-sans);
@@ -23,13 +25,11 @@
   min-width: 0;
   -webkit-font-smoothing: antialiased;
 }
-:root[data-theme="light"] .figma-stock {
-  --fmk-amber: #8b5e23;
-  --fmk-lilac: #7052a1;
-  --fmk-steel: #3f678b;
-  /* Light theme: the page sits on the light-green surfaces of the theme and
-     only the logo tile (.company-logo) stays white, with its thin border. */
-  --fmk-raised: var(--ediv-graphic-surface);
+:root[data-theme="dark"] .figma-stock {
+  --fmk-amber: #d6aa62;
+  --fmk-lilac: #a496d8;
+  --fmk-steel: #7599bd;
+  --fmk-raised: var(--ediv-surface);
 }
 .figma-stock .text-fmk-sub {
   color: var(--fmk-sub);

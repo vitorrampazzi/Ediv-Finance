@@ -64,9 +64,9 @@ export function ResetPasswordPage() {
       {done ? (
         <div className="notice-success mt-5">
           Senha alterada. Todas as sessões foram encerradas.{" "}
-          <a className="underline" href="/entrar">
+          <Link className="underline" to="/entrar">
             Entrar novamente
-          </a>
+          </Link>
         </div>
       ) : !token ? (
         <p className="mt-5 text-sm">

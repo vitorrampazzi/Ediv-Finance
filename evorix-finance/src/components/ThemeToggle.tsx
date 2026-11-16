@@ -1,6 +1,7 @@
 import { Tooltip } from "./Tooltip";
 import { Moon, Sun } from "lucide-react";
 import { useTheme } from "../lib/theme";
+import { trackEvent } from "../lib/analytics";
 
 export function ThemeToggle() {
   const { theme, setPreference } = useTheme();
@@ -13,7 +14,10 @@ export function ThemeToggle() {
         type="button"
         className="ediv-theme-control ediv-chrome-icon"
         aria-label={label}
-        onClick={() => setPreference(nextTheme)}
+        onClick={() => {
+          setPreference(nextTheme);
+          trackEvent("change_theme", { theme: nextTheme });
+        }}
       >
         <Sun className="ediv-theme-light-icon" size={19} aria-hidden="true" />
         <Moon className="ediv-theme-dark-icon" size={19} aria-hidden="true" />

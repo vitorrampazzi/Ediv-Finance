@@ -1,7 +1,10 @@
 /* Runs before styles and prerendered markup. Keep external: CSP permits self scripts. */
 (function () {
   var storageKey = "ediv-appearance-v1";
-  var preference = "dark";
+  /* Light is the site default; dark applies only after an explicit choice. The
+     stylesheet has the same base, so a page without this script is light too. */
+  var fallback = "light";
+  var preference = fallback;
   var listeners = new Set();
   function valid(value) {
     return value === "light" || value === "dark";
@@ -60,7 +63,7 @@
     } catch (_) {
       return;
     }
-    preference = valid(event.newValue) ? event.newValue : "dark";
+    preference = valid(event.newValue) ? event.newValue : fallback;
     apply();
   });
 })();

@@ -248,7 +248,7 @@ export function LearningCourseCarousel({
                   <p className="ediv-learning-course-video-status">
                     {availableVideos
                       ? `${availableVideos} ${availableVideos === 1 ? "vídeo disponível" : "vídeos disponíveis"}`
-                      : "Vídeos em preparação"}
+                      : "Vídeos em preparação. Texto e exercícios já disponíveis"}
                   </p>
                   {firstChapterId && (
                     <button

@@ -124,3 +124,32 @@ Referências: [OWASP — SQL](https://cheatsheetseries.owasp.org/cheatsheets/SQL
 [express-rate-limit](https://express-rate-limit.mintlify.app/reference/configuration),
 [cabeçalhos Vercel](https://vercel.com/docs/headers/request-headers),
 [validação Turnstile](https://developers.cloudflare.com/turnstile/get-started/server-side-validation/).
+
+## Tetos por conta e outras proteções (novembro de 2026)
+
+Os tetos por conta limitam o armazenamento e o custo de leitura de cada conta. Os
+limites por IP descritos acima continuam valendo sem alteração.
+
+| Teto | Valor | Onde é aplicado | Resposta quando excedido |
+| --- | --- | --- | --- |
+| Operações da carteira | 10.000 por conta | `POST /api/portfolio/transactions` e importação de planilha (`/api/portfolio/import` e `/import/preview`), dentro do bloqueio da conta | 409 com mensagem de limite |
+| Eventos da carteira | 2.000 por conta | `POST /api/portfolio/events`, dentro do bloqueio da conta | 409 com mensagem de limite |
+| Favoritos | 300 por conta | `PUT /api/favorites/:ticker`; um ticker já presente não conta | 409 com mensagem de limite |
+| Conversas de suporte | 10 por conta por dia (janela de 24 horas) | `POST /api/support/` | 429 com código `RATE_LIMITED` |
+| Mensagens de suporte | 200 por conta por dia (janela de 24 horas) | `POST /api/support/:id/messages`; respostas da equipe em `/team` não contam | 429 com código `RATE_LIMITED` |
+
+- Os tetos da carteira são conferidos dentro da transação com o bloqueio da conta,
+  então dois pedidos simultâneos não passam do limite.
+- O teto de favoritos é conferido antes do `INSERT`, sem bloqueio. Dois pedidos
+  simultâneos de favorito podem passar o teto por uma linha. O objetivo é limitar
+  o armazenamento, não garantir um número exato.
+- O nome informado no cadastro só é repetido no e-mail de confirmação quando é um
+  nome simples: letras, espaços, apóstrofo ou hífen, de 2 a 60 caracteres. Qualquer
+  outro valor (endereços, marcação, números) gera a saudação genérica "Olá.". Assim o
+  formulário não serve para enviar links ou textos arbitrários pelo remetente da escola.
+- `GET /api/rankings/status` não lê cookie, sessão nem query. Por isso responde com o
+  mesmo cabeçalho de cache compartilhado de `/api/rankings/public`
+  (`public, max-age=0, s-maxage=60, stale-while-revalidate=300`), que permite o cache
+  na CDN. Respostas de erro mantêm o cabeçalho geral de `no-store`.
+- Os limites de suporte por conta usam armazenamento compartilhado entre instâncias
+  (`request_limits`), chaveado pelo identificador do usuário.

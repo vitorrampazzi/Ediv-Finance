@@ -1,5 +1,6 @@
 import { ArrowRight, BookA, BookOpen, ChartNoAxesCombined } from "lucide-react";
 import { Link } from "react-router-dom";
+import { trackEvent } from "../../lib/analytics";
 import "./home-area-cards.css";
 
 /** The three areas of the school, at the start of both homes. */
@@ -45,7 +46,17 @@ export function HomeAreaCards({
             key={key}
             className={`home-area${index === 0 ? " home-area--primary" : ""}`}
           >
-            <Link className="home-area-link" to={to} data-home-area={key}>
+            <Link
+              className="home-area-link"
+              to={to}
+              data-home-area={key}
+              onClick={() =>
+                trackEvent("click_home_area", {
+                  area: key,
+                  audience: member ? "member" : "visitor",
+                })
+              }
+            >
               <span className="home-area-icon" aria-hidden="true">
                 <Icon size={index === 0 ? 24 : 21} />
               </span>

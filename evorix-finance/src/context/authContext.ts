@@ -8,7 +8,7 @@ export const AuthContext = createContext<
       sessionError: string;
       refreshSession: () => Promise<void>;
       retrySession: () => Promise<void>;
-      login: (email: string, password: string) => Promise<void>;
+      login: (email: string, password: string) => Promise<AuthUser>;
       logout: () => Promise<void>;
       deleteAccount: (password: string) => Promise<void>;
       register: (

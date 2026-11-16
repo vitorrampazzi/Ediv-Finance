@@ -35,7 +35,7 @@ const quoteLimiter = rateLimit({
 });
 
 // A ticker the shared cache does not hold costs one provider call from the
-// daily budget (450 by default, shared by every visitor). Routes that can
+// daily budget (420 by default, shared by every visitor). Routes that can
 // trigger it get a tighter ceiling, so one client cannot drain the budget for
 // the others. Company pages refresh a quote every 15 minutes by default.
 const providerLimiter = rateLimit({

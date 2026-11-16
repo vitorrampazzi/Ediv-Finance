@@ -1,4 +1,5 @@
 import { useSyncExternalStore } from "react";
+import type { MouseEvent } from "react";
 import {
   type AnalyticsEventName,
   createAnalyticsController,
@@ -133,4 +134,35 @@ export function trackEvent(
   params?: Record<string, string | number>,
 ) {
   controller?.track(name, params);
+}
+
+const sectionByPath: Record<string, string> = {
+  "/": "home",
+  "/ranking": "ranking",
+  "/aprender": "aprender",
+  "/glossario": "glossario",
+  "/metodologia": "metodologia",
+  "/suporte": "suporte",
+  "/assessoria": "assessoria",
+  "/privacidade": "privacidade",
+};
+
+// One handler on a navigation container: counts which section a menu link
+// opens. Links to anything outside the fixed sections are not counted.
+export function trackNavigation(
+  nav_location: "header" | "mobile_menu" | "footer" | "sidebar" | "bottom_nav",
+) {
+  return (event: MouseEvent<HTMLElement>) => {
+    const link = (event.target as Element).closest?.("a[href]");
+    const href = link?.getAttribute("href");
+    if (!href || !href.startsWith("/")) return;
+    const path =
+      href
+        .split(/[?#]/)[0]
+        .replace(/^\/app(?=\/|$)/, "")
+        .replace(/\/+$/, "") || "/";
+    const destination = sectionByPath[path];
+    if (destination)
+      trackEvent("click_navigation", { nav_location, destination });
+  };
 }

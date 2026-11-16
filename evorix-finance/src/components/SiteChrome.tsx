@@ -13,7 +13,11 @@ import { Link, NavLink, Outlet, useLocation } from "react-router-dom";
 import { useAuth } from "../context/authContext";
 import { PageContent } from "./PageContent";
 import { ThemeToggle } from "./ThemeToggle";
-import { openPrivacyPreferences, trackEvent } from "../lib/analytics";
+import {
+  openPrivacyPreferences,
+  trackEvent,
+  trackNavigation,
+} from "../lib/analytics";
 import "./navigation-chrome.css";
 
 export function SiteHeader({
@@ -93,6 +97,7 @@ export function SiteHeader({
             </span>
           </Link>
           <nav
+            onClick={trackNavigation("header")}
             aria-label="Navegação principal"
             className="ediv-public-links hidden items-center gap-2 lg:flex"
           >
@@ -190,6 +195,7 @@ export function SiteHeader({
           {mobileMenuOpen && (
             <nav
               id="public-mobile-menu"
+              onClick={trackNavigation("mobile_menu")}
               aria-label="Navegação móvel"
               className="ediv-chrome-popover ediv-public-menu absolute inset-x-4 top-[calc(100%-0.25rem)] z-50 grid gap-1 p-2 lg:hidden"
             >
@@ -235,7 +241,10 @@ export function SiteFooter({
   const { user } = useAuth();
 
   return (
-    <footer className="site-footer ediv-site-footer">
+    <footer
+      className="site-footer ediv-site-footer"
+      onClick={trackNavigation("footer")}
+    >
       <div className="mx-auto max-w-7xl px-4 py-6 sm:px-5 md:px-8 md:py-12">
         <div className="grid grid-cols-2 gap-x-5 gap-y-5 sm:gap-8 lg:grid-cols-[1.5fr_1fr_1fr]">
           <div className="col-span-2 lg:col-span-1">

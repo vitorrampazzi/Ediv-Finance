@@ -22,10 +22,14 @@ const root = (html) => html.slice(html.indexOf('<div id="root">'));
 
 test("páginas públicas chegam prontas para indexação", () => {
   const descriptions = new Set();
+  const titles = new Set();
   for (const path of Object.keys(publicPages)) {
     const html = read(pageFile(path));
     const canonical = siteOrigin + path;
-    assert.match(html, /<title>Escola do Dividendo<\/title>/, path);
+    const title = html.match(/<title>([^<]*)<\/title>/)?.[1];
+    assert.ok(title?.startsWith("Escola do Dividendo"), path);
+    assert.ok(!titles.has(title), `título repetido em ${path}`);
+    titles.add(title);
     const description = meta(html, "name", "description");
     assert.ok(description && description.length >= 50, path);
     assert.ok(!descriptions.has(description), `descrição repetida em ${path}`);
