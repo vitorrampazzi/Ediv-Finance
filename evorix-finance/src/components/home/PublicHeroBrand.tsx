@@ -40,24 +40,30 @@ export function PublicHeroBrand() {
         </svg>
 
         <div className="ph-brand-mark">
-          <img
-            className="ph-brand-logo ph-brand-logo-depth"
-            src="/ediv-logo-clean.png"
-            alt=""
-            width="508"
-            height="503"
-            decoding="async"
-            draggable="false"
-          />
-          <img
-            className="ph-brand-logo ph-brand-logo-main"
-            src="/ediv-logo-clean.png"
-            alt=""
-            width="508"
-            height="503"
-            decoding="async"
-            draggable="false"
-          />
+          <picture>
+            <source type="image/webp" srcSet="/ediv-logo-clean.webp" />
+            <img
+              className="ph-brand-logo ph-brand-logo-depth"
+              src="/ediv-logo-clean.png"
+              alt=""
+              width="508"
+              height="503"
+              decoding="async"
+              draggable="false"
+            />
+          </picture>
+          <picture>
+            <source type="image/webp" srcSet="/ediv-logo-clean.webp" />
+            <img
+              className="ph-brand-logo ph-brand-logo-main"
+              src="/ediv-logo-clean.png"
+              alt=""
+              width="508"
+              height="503"
+              decoding="async"
+              draggable="false"
+            />
+          </picture>
         </div>
       </div>
     </div>

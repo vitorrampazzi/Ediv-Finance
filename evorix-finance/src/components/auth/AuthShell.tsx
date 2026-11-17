@@ -21,6 +21,8 @@ export function AuthShell({
         >
           <img
             src="/ediv-icon-clean-192.png"
+            width="192"
+            height="192"
             alt=""
             aria-hidden="true"
             className="h-8 w-8 object-contain"
