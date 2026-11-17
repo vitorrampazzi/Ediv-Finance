@@ -1,4 +1,5 @@
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
+import { useAuth } from "../context/authContext";
 import { pageImports } from "../lib/pageImports";
 
 type PageImporter = () => Promise<unknown>;
@@ -42,12 +43,15 @@ function normalizePath(pathname: string) {
   return pathname.replace(/\/+$/, "").toLowerCase() || "/";
 }
 
-function importsForPath(pathname: string): PageImporter[] {
+function importsForPath(pathname: string, signedIn: boolean): PageImporter[] {
   const path = normalizePath(pathname);
   const publicPage = publicPages[path];
   if (publicPage) return [publicPage];
+  // A visitor gets PublicCompany (PublicStock.tsx), so only a signed-in account
+  // warms StockResearch. The public page always loads first.
   if (/^\/ranking\/acao\/[^/]+$/.test(path)) {
-    return [pageImports.stockResearch];
+    if (!signedIn) return [pageImports.publicStock];
+    return [pageImports.publicStock, pageImports.stockResearch];
   }
   const memberPage = memberPages[path];
   if (memberPage) return [pageImports.dashboard, memberPage];
@@ -68,6 +72,13 @@ function preload(importer: PageImporter) {
 
 /** Warms page code only when a visitor points at, focuses or presses a link. */
 export function NavigationIntent() {
+  const { user, loading } = useAuth();
+  // The listeners below are registered once; this ref carries the current
+  // session into them without re-subscribing on every auth change.
+  const signedIn = useRef(false);
+  useEffect(() => {
+    signedIn.current = Boolean(user) && !loading;
+  }, [user, loading]);
   useEffect(() => {
     function handleIntent(event: Event) {
       const connection = (navigator as ConnectionNavigator).connection;
@@ -118,7 +129,8 @@ export function NavigationIntent() {
       ) {
         return;
       }
-      for (const importer of importsForPath(url.pathname)) preload(importer);
+      for (const importer of importsForPath(url.pathname, signedIn.current))
+        preload(importer);
     }
 
     document.addEventListener("pointerover", handleIntent, { passive: true });

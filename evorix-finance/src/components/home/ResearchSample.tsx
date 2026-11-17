@@ -15,6 +15,10 @@ import {
 import "./public-sections.css";
 import "./public-home.css";
 
+// Static copy, shown while loading too, so the skeleton and the list share its height.
+const publicationNote =
+  "DY e P/L da pesquisa publicada; a margem de segurança acompanha a cotação da brapi.dev. Margem de segurança não representa retorno garantido.";
+
 export function ResearchSample({
   showAccessActions = true,
   lockedPreview = false,
@@ -42,12 +46,65 @@ export function ResearchSample({
           </div>
         </header>
         {loading ? (
-          <p
-            role="status"
-            className={`ph-ranking-state ph-ranking-loading${lockedPreview ? " ph-ranking-loading-locked" : ""}`}
-          >
-            Carregando ranking publicado…
-          </p>
+          <div aria-busy="true">
+            <p role="status" className="sr-only">
+              Carregando ranking publicado…
+            </p>
+            {/* Same classes and line boxes as the loaded list, so nothing below moves. */}
+            <div
+              aria-hidden="true"
+              className="motion-safe:animate-pulse"
+            >
+              <div className="ph-ranking-publication">
+                <h3>Ranking de Ações</h3>
+                <p>{publicationNote}</p>
+              </div>
+              <ol className="ph-ranking-preview">
+                {[0, 1, 2].map((index) => (
+                  <li key={index} className="ph-ranking-company">
+                    <h3>
+                      <span className="ph-ranking-company-link">
+                        <span className="company-logo company-logo--md" />
+                        <span>
+                          <strong className="block h-[1lh] w-3/5 rounded-full bg-evo-border/30 text-transparent">
+                            &nbsp;
+                          </strong>
+                          <span className="block h-[1lh] w-2/5 rounded-full bg-evo-border/20 text-transparent">
+                            &nbsp;
+                          </span>
+                        </span>
+                      </span>
+                    </h3>
+                    <dl>
+                      {metrics.map((key) => (
+                        <div key={key}>
+                          <dt>
+                            {
+                              dividendColumns.find((item) => item.key === key)!
+                                .label
+                            }
+                          </dt>
+                          <dd>
+                            <span className="block h-[1lh] w-20 rounded-full bg-evo-border/30 text-transparent">
+                              &nbsp;
+                            </span>
+                            {key === "safetyMargin" && (
+                              <small className="ph-ranking-qualifier">
+                                <span className="block h-[1lh] w-24 rounded-full bg-evo-border/20 text-transparent">
+                                  &nbsp;
+                                </span>
+                              </small>
+                            )}
+                          </dd>
+                        </div>
+                      ))}
+                    </dl>
+                  </li>
+                ))}
+              </ol>
+            </div>
+            {lockedPreview && <LockedRows />}
+          </div>
         ) : error ? (
           <div className="ph-ranking-state">
             <p role="alert">{error}</p>
@@ -63,11 +120,7 @@ export function ResearchSample({
           <>
             <div className="ph-ranking-publication">
               <h3>Ranking de Ações</h3>
-              <p>
-                DY e P/L da pesquisa publicada; a margem de segurança acompanha
-                a cotação da brapi.dev. Margem de segurança não
-                representa retorno garantido.
-              </p>
+              <p>{publicationNote}</p>
             </div>
             <ol
               id="public-ranking-results"

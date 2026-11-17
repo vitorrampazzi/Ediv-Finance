@@ -95,7 +95,7 @@
   border-radius: inherit;
   background: var(--learning-accent);
   transform-origin: left;
-  transition: transform 260ms cubic-bezier(0.22, 1, 0.36, 1);
+  transition: transform 260ms var(--ediv-ease-emphasis);
 }
 
 .ediv-learning-progress-note {
@@ -146,8 +146,8 @@
   cursor: pointer;
   touch-action: manipulation;
   transition:
-    background-color 140ms ease-out,
-    transform 160ms ease-out;
+    background-color var(--ediv-duration-fast) ease-out,
+    transform var(--ediv-duration-fast) ease-out;
 }
 
 .ediv-learning-navigation-button:disabled {
@@ -198,8 +198,8 @@
   border-radius: 1.125rem;
   background: var(--learning-surface);
   transition:
-    border-color 160ms ease-out,
-    background-color 160ms ease-out;
+    border-color var(--ediv-duration-fast) ease-out,
+    background-color var(--ediv-duration-fast) ease-out;
 }
 
 .ediv-learning-course-selected {
@@ -283,8 +283,8 @@
   cursor: pointer;
   touch-action: manipulation;
   transition:
-    background-color 140ms ease-out,
-    transform 160ms ease-out;
+    background-color var(--ediv-duration-fast) ease-out,
+    transform var(--ediv-duration-fast) ease-out;
 }
 
 .ediv-learning-course-action:active {
@@ -375,8 +375,8 @@
   text-align: left;
   cursor: pointer;
   transition:
-    background-color 140ms ease-out,
-    border-color 140ms ease-out;
+    background-color var(--ediv-duration-fast) ease-out,
+    border-color var(--ediv-duration-fast) ease-out;
 }
 
 .ediv-learning-lesson-selected {

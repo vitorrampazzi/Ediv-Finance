@@ -1,5 +1,8 @@
 # Interface da Ediv
 
+> Retirado: `RankingPreview.tsx`, citado neste documento, foi removido em 17/11/2026 (Eixo C, C2). Ver o histórico do git.
+
+
 A interface acompanha a leitura de uma pesquisa: títulos, resumos de empresas, dados com rótulos e o texto da tese. A home apresenta o produto e os temas Empresa, Pesquisa e Dividendos.
 
 ## Texto

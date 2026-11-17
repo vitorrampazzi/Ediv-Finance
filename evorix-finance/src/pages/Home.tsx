@@ -3,7 +3,6 @@ import { useAuth } from "../context/authContext";
 import { useRegistrationAvailability } from "../hooks/useRegistrationAvailability";
 import { SessionNotice } from "../components/SessionStatus";
 import { PublicHome } from "../components/home/PublicHome";
-export { HomeContent } from "../components/home/AccountHomeContent";
 
 export function Home() {
   const { user, sessionError } = useAuth();

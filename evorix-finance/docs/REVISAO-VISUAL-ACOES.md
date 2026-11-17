@@ -1,5 +1,8 @@
 # Revisão visual e experiência de ações — 24/10/2026
 
+> Retirado: `DividendDashboard.tsx`, `fundamental-center.css` e `ComparativeDividendChart.tsx`, citados neste documento, foram removidos em 17/11/2026 (Eixo C, C2). Ver o histórico do git.
+
+
 ## Referências e evidências
 
 Os arquivos ficam em `C:/Users/vitor/Pictures/Screenshots/`.

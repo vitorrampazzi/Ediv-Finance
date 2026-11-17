@@ -118,7 +118,6 @@ function App() {
   return (
     <BrowserRouter>
       <PageMetadata />
-      <NavigationIntent />
       {qaEnvironment && (
         <aside className="border-b border-evo-accent/30 bg-evo-card px-4 py-3 text-center text-xs text-evo-textMain">
           <strong>POC · Ambiente QA</strong> · Pesquisa de ações e escola de
@@ -126,6 +125,7 @@ function App() {
         </aside>
       )}
       <AuthProvider>
+        <NavigationIntent />
         <PrivacyConsent />
         <PageErrorBoundary>
           <Suspense fallback={<PageLoading />}>

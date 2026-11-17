@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { ReactNode } from "react";
 import { AuthContext } from "./authContext";
-import { ApiError } from "../lib/api";
+import { ApiError, sessionRequest } from "../lib/api";
 
 export interface AuthUser {
   id: string;
@@ -18,46 +18,6 @@ interface ApiMessage {
   error?: string;
   user?: AuthUser;
   verificationUrl?: string;
-}
-
-async function apiRequest(
-  path: string,
-  init: RequestInit = {},
-): Promise<ApiMessage> {
-  let response: Response;
-  try {
-    response = await fetch(path, {
-      ...init,
-      credentials: "same-origin",
-      cache: "no-store",
-      signal: init.signal
-        ? AbortSignal.any([init.signal, AbortSignal.timeout(30000)])
-        : AbortSignal.timeout(30000),
-      headers: {
-        Accept: "application/json",
-        ...(init.body ? { "Content-Type": "application/json" } : {}),
-        ...init.headers,
-      },
-    });
-  } catch {
-    throw new Error(
-      "Não foi possível conectar ao servidor. Confira sua conexão e tente novamente.",
-    );
-  }
-  const body =
-    response.status === 204 ? {} : await response.json().catch(() => ({}));
-  if (!response.ok)
-    throw new ApiError(
-      body.error ||
-        (response.status === 429
-          ? "Muitas solicitações. Aguarde alguns instantes antes de tentar novamente."
-          : response.status === 503
-            ? "O serviço está ocupado. Tente novamente em instantes."
-            : "Não foi possível concluir a solicitação. Tente novamente."),
-      response.status,
-      typeof body.code === "string" ? body.code : undefined,
-    );
-  return body;
 }
 
 export function AuthProvider({
@@ -111,7 +71,7 @@ export function AuthProvider({
       return pendingRefresh.current.promise;
     lastRefreshAt.current = Date.now();
     const controller = new AbortController();
-    const promise: Promise<void> = apiRequest("/api/auth/me", {
+    const promise: Promise<void> = sessionRequest<ApiMessage>("/api/auth/me", {
       signal: controller.signal,
     })
       .then((result) => {
@@ -208,7 +168,7 @@ export function AuthProvider({
       invalidateRefresh();
       pendingMutation.current = true;
       try {
-        const result = await apiRequest("/api/auth/login", {
+        const result = await sessionRequest<ApiMessage>("/api/auth/login", {
           method: "POST",
           body: JSON.stringify({ email, password }),
         });
@@ -230,7 +190,7 @@ export function AuthProvider({
     invalidateRefresh();
     pendingMutation.current = true;
     try {
-      await apiRequest("/api/auth/logout", { method: "POST" });
+      await sessionRequest<ApiMessage>("/api/auth/logout", { method: "POST" });
       sessionRevision.current += 1;
       applyUser(null);
       applySessionError("");
@@ -246,7 +206,7 @@ export function AuthProvider({
       invalidateRefresh();
       pendingMutation.current = true;
       try {
-        await apiRequest("/api/auth/me", {
+        await sessionRequest<ApiMessage>("/api/auth/me", {
           method: "DELETE",
           body: JSON.stringify({ password, confirmation: "EXCLUIR" }),
         });
@@ -270,7 +230,7 @@ export function AuthProvider({
       next?: string,
       challengeToken?: string,
     ) =>
-      apiRequest("/api/auth/register", {
+      sessionRequest<ApiMessage>("/api/auth/register", {
         method: "POST",
         body: JSON.stringify({
           name,
@@ -285,7 +245,7 @@ export function AuthProvider({
 
   const resendVerification = useCallback(
     (email: string, next?: string) =>
-      apiRequest("/api/auth/verification/resend", {
+      sessionRequest<ApiMessage>("/api/auth/verification/resend", {
         method: "POST",
         body: JSON.stringify({ email, next }),
       }),

@@ -4,7 +4,6 @@ import { RankingHighlights } from "../RankingHighlights";
 import { useAuth } from "../../context/authContext";
 import { authLink } from "../../lib/authDestination";
 import { trackEvent } from "../../lib/analytics";
-import { RankingPreview } from "../RankingPreview";
 import { PublicHeroBrand } from "./PublicHeroBrand";
 import { HomeAreaCards } from "./HomeAreaCards";
 import { usePublicHomeMotion } from "./usePublicHomeMotion";
@@ -108,7 +107,7 @@ export function HomeContent({
             </p>
           )}
         </div>
-        {member ? <MemberHomeBrand /> : <RankingPreview />}
+        <MemberHomeBrand />
         <HomeAreaCards member={Boolean(user)} className="md:col-span-2" />
       </section>
 

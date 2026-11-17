@@ -22,7 +22,7 @@
 }
 
 .ediv-brand-link img {
-  transition: transform 160ms ease-out;
+  transition: transform var(--ediv-duration-fast) ease-out;
 }
 
 .ediv-brand-link:active img {

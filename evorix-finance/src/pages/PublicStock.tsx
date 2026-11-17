@@ -5,6 +5,7 @@ import { useAuth } from "../context/authContext";
 import { AccountGate } from "../components/AccountGate";
 import { CompanyLogo } from "../components/CompanyLogo";
 import { MarketQuotePanel } from "../components/LiveQuote";
+import { PublicCompanySkeleton } from "../components/PublicCompanySkeleton";
 import { RankingAccessLanding } from "../components/RankingAccessLanding";
 import {
   publicMetrics,
@@ -30,11 +31,7 @@ const page = "mx-auto max-w-6xl px-4 py-6 sm:px-6 md:py-10";
 export function PublicStock() {
   const { user, loading } = useAuth();
   if (loading)
-    return (
-      <p role="status" className={page}>
-        Verificando seu acesso à pesquisa…
-      </p>
-    );
+    return <PublicCompanySkeleton label="Verificando seu acesso à pesquisa…" />;
   return user ? <StockResearch /> : <PublicCompany />;
 }
 
@@ -158,11 +155,7 @@ function PublicCompany() {
 
   if (loading)
     return (
-      <section className={`${page} min-h-[70vh]`} aria-busy="true">
-        <p role="status" className="text-sm text-evo-textSec">
-          Carregando a pesquisa da empresa…
-        </p>
-      </section>
+      <PublicCompanySkeleton label="Carregando a pesquisa da empresa…" />
     );
   if (error)
     return (

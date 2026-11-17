@@ -1,5 +1,8 @@
 # Home pública: composição e revisão
 
+> Retirado: `ReadingChecklist.tsx`, `LearningTerms.tsx` e `src/lib/publicHomeTerms.ts`, citados neste documento, foram removidos em 17/11/2026 (Eixo C, C2). Ver o histórico do git.
+
+
 ## Estrutura
 
 `Home.tsx` mantém a verificação de sessão, o estado de recuperação e o redirecionamento

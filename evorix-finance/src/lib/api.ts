@@ -19,15 +19,17 @@ export class ApiError extends Error {
 export async function apiRequest<T>(
   path: string,
   init: RequestInit = {},
+  options: { timeoutMs?: number } = {},
 ): Promise<T> {
+  const timeoutMs = options.timeoutMs ?? 45000;
   let response: Response;
   try {
     response = await fetch(path, {
       ...init,
       credentials: "same-origin",
       signal: init.signal
-        ? AbortSignal.any([init.signal, AbortSignal.timeout(45000)])
-        : AbortSignal.timeout(45000),
+        ? AbortSignal.any([init.signal, AbortSignal.timeout(timeoutMs)])
+        : AbortSignal.timeout(timeoutMs),
       headers: {
         Accept: "application/json",
         ...(init.body ? { "Content-Type": "application/json" } : {}),
@@ -62,4 +64,10 @@ export async function apiRequest<T>(
     );
   }
   return body as T;
+}
+
+// Session requests (login, logout, /api/auth/me, registration): never cached,
+// 30 s timeout. `cache` is set after `...init`, so a caller cannot override it.
+export function sessionRequest<T>(path: string, init: RequestInit = {}): Promise<T> {
+  return apiRequest<T>(path, { ...init, cache: "no-store" }, { timeoutMs: 30000 });
 }

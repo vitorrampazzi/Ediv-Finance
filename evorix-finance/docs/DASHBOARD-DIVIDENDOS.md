@@ -1,5 +1,8 @@
 # Dashboard individual de dividendos
 
+> Retirado: `src/components/DividendDashboard.tsx`, citado neste documento, foi removido em 17/11/2026 (Eixo C, C2). Ver o histórico do git.
+
+
 Evolução de interface baseada na main `7010102`, sem alterar os dados importados.
 A API e os registros existentes continuam como fonte de verdade. A cópia
 `Lista de Ações analisadas (1).xlsx` tem o mesmo SHA256 do arquivo auditado:

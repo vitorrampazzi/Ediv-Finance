@@ -6,7 +6,7 @@ import { PageErrorBoundary } from "./PageErrorBoundary";
 export function PageLoading() {
   return (
     <section
-      className="mx-auto min-h-[50vh] w-full max-w-7xl px-4 py-8 sm:px-6"
+      className="mx-auto min-h-screen w-full max-w-7xl px-4 py-8 sm:px-6"
       aria-busy="true"
     >
       <p role="status" className="text-sm text-evo-textSec">

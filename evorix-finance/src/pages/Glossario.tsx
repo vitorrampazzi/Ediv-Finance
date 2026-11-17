@@ -15,12 +15,43 @@ function termId(term: string) {
   );
 }
 
-export function Glossario({
-  initialTerms = [],
-}: {
-  initialTerms?: string[][];
-}) {
-  const [terms, setTerms] = useState(initialTerms);
+// The prerendered page embeds the same terms in this element (scripts/prerender.mjs),
+// so the first client render matches the HTML the visitor already sees.
+const embeddedId = "ediv-glossario";
+
+function isTermList(value: unknown): value is string[][] {
+  return (
+    Array.isArray(value) &&
+    value.every(
+      (pair) =>
+        Array.isArray(pair) &&
+        pair.length === 2 &&
+        pair.every((text) => typeof text === "string"),
+    )
+  );
+}
+
+function readEmbeddedTerms(): string[][] {
+  if (typeof document === "undefined") return [];
+  try {
+    const element = document.getElementById(embeddedId);
+    const data: unknown = element?.textContent
+      ? JSON.parse(element.textContent)
+      : null;
+    return isTermList(data) ? data : [];
+  } catch {
+    return [];
+  }
+}
+
+function sameTerms(a: string[][], b: string[][]) {
+  return JSON.stringify(a) === JSON.stringify(b);
+}
+
+export function Glossario({ initialTerms }: { initialTerms?: string[][] }) {
+  const [terms, setTerms] = useState(
+    () => initialTerms ?? readEmbeddedTerms(),
+  );
   const [search, setSearch] = useState("");
   // One search_glossary per visit; the typed text is never sent.
   const searchTracked = useRef(false);
@@ -30,7 +61,12 @@ export function Glossario({
     apiRequest<{ glossary: string[][] }>("/api/learning", {
       signal: controller.signal,
     })
-      .then((data) => setTerms(data.glossary))
+      // Same content keeps the current list, so nothing blinks or reorders.
+      .then((data) =>
+        setTerms((current) =>
+          sameTerms(current, data.glossary) ? current : data.glossary,
+        ),
+      )
       .catch(() => {
         if (!controller.signal.aborted)
           setError("Não foi possível atualizar o glossário. Tente novamente.");
@@ -56,7 +92,9 @@ export function Glossario({
         ? `${terms.length} termos, em ordem alfabética.`
         : `${filtered.length} de ${terms.length} termos encontrados.`;
   return (
-    <section className="mx-auto max-w-4xl space-y-6 px-5 py-12">
+    <section
+      className={`mx-auto max-w-4xl space-y-6 px-5 py-12${!terms.length && !error ? " min-h-screen" : ""}`}
+    >
       <h1 className="text-3xl font-bold">Glossário de investimentos</h1>
       <p className="text-evo-textSec">
         Explicações simples para acompanhar as aulas e compreender as pesquisas.
