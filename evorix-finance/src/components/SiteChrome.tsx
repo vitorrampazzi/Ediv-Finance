@@ -88,6 +88,8 @@ export function SiteHeader({
           >
             <img
               src="/ediv-icon-clean-192.png"
+              width="192"
+              height="192"
               alt=""
               aria-hidden="true"
               className="h-10 w-10 object-contain"
@@ -255,6 +257,8 @@ export function SiteFooter({
             >
               <img
                 src="/ediv-icon-clean-192.png"
+                width="192"
+                height="192"
                 alt=""
                 aria-hidden="true"
                 className="h-9 w-9 object-contain"
@@ -268,8 +272,8 @@ export function SiteFooter({
             </p>
             <p className="mt-2 max-w-sm text-xs leading-relaxed text-evo-textSec">
               Conteúdo educativo, sem recomendação individual de investimento.
-              Investir envolve riscos, e resultados passados não garantem
-              resultados futuros.
+              Investir envolve riscos; dividendos e resultados futuros não são
+              garantidos.
             </p>
           </div>
           <div>
