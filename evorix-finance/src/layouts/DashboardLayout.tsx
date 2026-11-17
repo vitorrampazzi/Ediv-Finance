@@ -256,7 +256,7 @@ function ProfileMenu({
               <Link
                 to="/app/perfil"
                 onClick={() => setMenuRoute(null)}
-                className="flex min-h-10 items-center gap-3 rounded-lg px-3 text-sm text-evo-textSec hover:bg-white/[0.04] hover:text-evo-textMain"
+                className="flex min-h-11 items-center gap-3 rounded-lg px-3 text-sm text-evo-textSec hover:bg-white/[0.04] hover:text-evo-textMain"
               >
                 <CircleUserRound size={16} aria-hidden="true" /> Perfil
               </Link>
@@ -283,7 +283,7 @@ function ProfileMenu({
               <Link
                 to="/app/config"
                 onClick={() => setMenuRoute(null)}
-                className="flex min-h-10 items-center gap-3 rounded-lg px-3 text-sm text-evo-textSec hover:bg-white/[0.04] hover:text-evo-textMain"
+                className="flex min-h-11 items-center gap-3 rounded-lg px-3 text-sm text-evo-textSec hover:bg-white/[0.04] hover:text-evo-textMain"
               >
                 <Settings size={16} aria-hidden="true" /> Configurações
               </Link>
@@ -319,7 +319,7 @@ function ProfileMenu({
                     setLoggingOut(false);
                   }
                 }}
-                className="flex min-h-10 w-full items-center gap-3 rounded-lg px-3 text-sm text-evo-red hover:bg-evo-red/5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-evo-red disabled:cursor-wait disabled:opacity-60"
+                className="flex min-h-11 w-full items-center gap-3 rounded-lg px-3 text-sm text-evo-red hover:bg-evo-red/5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-evo-red disabled:cursor-wait disabled:opacity-60"
               >
                 <LogOut size={16} aria-hidden="true" />
                 {loggingOut ? "Saindo…" : "Sair da conta"}
@@ -371,6 +371,8 @@ export const DashboardLayout = () => {
             >
               <img
                 src="/ediv-icon-clean-192.png"
+                width="192"
+                height="192"
                 alt=""
                 aria-hidden="true"
                 className="h-10 w-10 object-contain"
@@ -464,6 +466,8 @@ export const DashboardLayout = () => {
           <div className="flex min-w-0 items-center gap-3">
             <img
               src="/ediv-icon-clean-192.png"
+              width="192"
+              height="192"
               alt=""
               aria-hidden="true"
               className="h-8 w-8 shrink-0 object-contain lg:hidden"
