@@ -1,5 +1,8 @@
 # Leitura personalizada da carteira
 
+> Retirado: a interface de Carteira, Painel e Favoritos descrita aqui foi removida do código em 17/11/2026 (Eixo C, C2); as rotas e o cálculo do servidor continuam. Ver o histórico do git.
+
+
 O painel apresenta valores calculados pela API a partir dos registros do usuário.
 Não usa IA, não envia a carteira a um modelo e não promete retornos futuros.
 

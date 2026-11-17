@@ -1,5 +1,8 @@
 # Central de análise fundamentalista
 
+> Retirado: a central descrita aqui (`DividendDashboard.tsx`, `ComparativeDividendChart.tsx` e `fundamental-center.css`) foi removida em 17/11/2026 (Eixo C, C2). Ver o histórico do git.
+
+
 ## Referências analisadas individualmente
 
 | Captura fornecida                     | Observação                                                                   | Implementação com a fonte disponível                                                                                                     |
