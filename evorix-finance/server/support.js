@@ -10,19 +10,25 @@ import {
   lockActiveUser,
   requirePermission,
 } from "./permissions.js";
-import { MysqlLimitStore } from "./limit-store.js";
+import { MysqlLimitStore, sharedCache } from "./limit-store.js";
 import { accountLimits, accountLimitMessages } from "./account-limits.js";
 const router = Router();
-router.get("/information", (_req, res) =>
-  res.json({
+// Same body for every visitor: the fields come from environment variables read
+// once at startup, so they change only with a new deploy (which purges the edge).
+// Keep the hour as a safety margin if config changes without a redeploy.
+const informationCacheControl =
+  "public, max-age=0, s-maxage=3600, stale-while-revalidate=86400";
+router.get("/information", (_req, res) => {
+  sharedCache(res, informationCacheControl);
+  return res.json({
     email: config.supportEmail,
     hours: config.supportHours,
     professionalName: config.professionalName,
     category: config.professionalCategory,
     registration: config.professionalRegistration,
     subscriptionsAvailable: false,
-  }),
-);
+  });
+});
 router.use(requireAuthenticatedUser, requirePermission("support:own"));
 // The team namespace always requires staff access, even for the thread owner.
 router.use("/team", requirePermission("support:manage"), (req, _res, next) => {
