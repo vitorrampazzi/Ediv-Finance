@@ -132,6 +132,21 @@ test("links internos das páginas públicas levam a rotas existentes", () => {
   assert.deepEqual(broken, []);
 });
 
+test("home pré-renderizada carrega a folha que traz os cards e a marca", () => {
+  const html = read("index.html");
+  const sheets = [
+    ...html.matchAll(/<link rel="stylesheet"[^>]*href="\/assets\/([^"]+\.css)"/g),
+  ].map(([, name]) => name);
+  const hasCards = sheets.some((name) => {
+    const css = read(`assets/${name}`);
+    return css.includes(".home-areas") && css.includes(".ph-brand");
+  });
+  assert.ok(
+    hasCards,
+    `nenhum <link rel="stylesheet"> de index.html traz .home-areas e .ph-brand: ${sheets.join(", ")}`,
+  );
+});
+
 test("home pré-renderizada traz os três cards das áreas, o ranking primeiro", () => {
   const html = root(read("index.html"));
   // Attribute order is React's; read each one from the tag.
@@ -148,4 +163,34 @@ test("home pré-renderizada traz os três cards das áreas, o ranking primeiro",
   ]);
   assert.match(html, /class="home-area home-area--primary"/);
   assert.match(html, /aria-label="Áreas da Escola do Dividendo"/);
+});
+
+test("glossário pré-renderizado embute a lista fora do #root, com o mesmo número de termos", () => {
+  const html = read("glossario/index.html");
+  const embedded = html.match(
+    /<script type="application\/json" id="ediv-glossario">([^<]*)<\/script>/,
+  );
+  assert.ok(embedded, "script#ediv-glossario ausente em glossario/index.html");
+  assert.equal(html.match(/id="ediv-glossario"/g)?.length, 1);
+  const rootStart = html.indexOf('<div id="root">');
+  assert.ok(rootStart >= 0, "#root ausente");
+  assert.ok(embedded.index > rootStart, "script antes do #root");
+  // The script must come after #root closes, so createRoot cannot clear it.
+  const insideRoot = html.slice(rootStart, embedded.index);
+  assert.equal(
+    insideRoot.match(/<div[\s>]/g)?.length,
+    insideRoot.match(/<\/div>/g)?.length,
+    "#root não está fechado antes do script",
+  );
+  const terms = JSON.parse(embedded[1]);
+  assert.ok(Array.isArray(terms) && terms.length > 0, "lista vazia");
+  for (const pair of terms)
+    assert.ok(
+      Array.isArray(pair) &&
+        pair.length === 2 &&
+        pair.every((text) => typeof text === "string" && text.trim() !== ""),
+      `par inválido: ${JSON.stringify(pair)}`,
+    );
+  const rendered = insideRoot.match(/<dt[\s>]/g)?.length ?? 0;
+  assert.equal(terms.length, rendered, "termos do JSON diferem do HTML visível");
 });

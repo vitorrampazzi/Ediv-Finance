@@ -34,10 +34,20 @@ export async function prerender() {
     .filter((name) => name.endsWith(".css"))
     .sort();
   const pageCss = {
-    "/": /^(?:Home|ResearchSample|AccountHomeContent)-[\w-]+\.css$/,
+    "/": /^(?:Home|ResearchSample|usePublicHomeMotion)-[\w-]+\.css$/,
     "/ranking": /^ResearchSample-[\w-]+\.css$/,
     "/aprender": /^Aprender-[\w-]+\.css$/,
   };
+  // A pattern that matches no stylesheet means a chunk was renamed. Failing here
+  // keeps the build from publishing a page without its CSS.
+  for (const [path, pattern] of Object.entries(pageCss)) {
+    if (!cssFiles.some((name) => pattern.test(name))) {
+      throw new Error(
+        `prerender: nenhum CSS em dist/assets casa ${pattern} (rota ${path}). ` +
+          "O chunk pode ter sido renomeado; atualize pageCss em scripts/prerender.mjs.",
+      );
+    }
+  }
   const pageStyles = (path) =>
     cssFiles
       .filter(
@@ -99,7 +109,11 @@ export async function prerender() {
         // No image preload: the light home, the default, has no hero photograph.
         `${pageStyles(path)}${canonical}${schema}<meta name="robots" content="${meta.noindex ? "noindex, nofollow" : "index, follow"}" /></head>`,
       )
-      .replace('<div id="root"></div>', `<div id="root">${content}</div>`);
+      .replace(
+        '<div id="root"></div>',
+        // Outside #root, which createRoot clears on start. Same JSON rule as the schema above.
+        `<div id="root">${content}</div>${path === "/glossario" ? `<script type="application/json" id="ediv-glossario">${JSON.stringify(glossary).replaceAll("<", "\\u003c")}</script>` : ""}`,
+      );
   }
   for (const path of Object.keys(publicPages)) {
     const dir = path === "/" ? "dist" : "dist" + path;
