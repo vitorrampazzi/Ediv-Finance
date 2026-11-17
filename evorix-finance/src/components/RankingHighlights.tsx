@@ -141,7 +141,8 @@ function MemberRankingHighlights() {
           <p className="mt-2 max-w-2xl text-sm text-evo-textSec">
             {showingDemo ? (
               "Abra uma empresa de exemplo para conhecer o formato da pesquisa."
-            ) : entries.some((entry) => entry.dividendAnalysis) ? (
+            ) : (!publication && !error) ||
+              entries.some((entry) => entry.dividendAnalysis) ? (
               "Consulte as análises de dividendos: preço de mercado da brapi.dev, e a margem de segurança que acompanha a cotação."
             ) : (
               <>Leia a tese e confira o prazo de cada cenário.</>
@@ -184,9 +185,66 @@ function MemberRankingHighlights() {
           </Link>
         </div>
       ) : !publication ? (
-        <p role="status" className="mt-5 text-sm text-evo-textSec">
-          Carregando publicação…
-        </p>
+        <div aria-busy="true">
+          <p role="status" className="sr-only">
+            Carregando publicação…
+          </p>
+          {/* Same rows and line boxes as the loaded list; only the data is a bar. */}
+          <div
+            aria-hidden="true"
+            className="motion-safe:animate-pulse"
+          >
+            <p className="mt-5 text-xs text-evo-textSec">Ranking de Ações</p>
+            <div className="mt-3 border-t border-evo-border">
+              {[0, 1, 2].map((index) => (
+                <div
+                  key={index}
+                  className="grid min-w-0 grid-cols-[minmax(0,1fr)_auto] items-center gap-x-3 gap-y-3 border-b border-evo-border py-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.5fr)_auto] lg:gap-x-6 lg:py-5"
+                >
+                  <div className="company-identity min-w-0">
+                    <span className="company-logo company-logo--md" />
+                    <div className="company-identity-copy">
+                      <h3 className="font-semibold">
+                        <span className="block h-[1lh] w-16 rounded-full bg-evo-border/30 text-transparent">
+                          &nbsp;
+                        </span>
+                      </h3>
+                      <p className="mt-1 text-xs">
+                        <span className="block h-[1lh] w-40 max-w-full rounded-full bg-evo-border/20 text-transparent">
+                          &nbsp;
+                        </span>
+                      </p>
+                      <p className="mt-0.5 text-xs text-evo-textSec">
+                        Pesquisa de dividendos
+                      </p>
+                    </div>
+                  </div>
+                  <dl className="col-span-2 row-start-2 grid grid-cols-3 items-end gap-x-3 lg:col-span-1 lg:col-start-2 lg:row-start-1 lg:gap-x-6">
+                    {[
+                      "Preço de mercado",
+                      "Preço teto",
+                      "Margem de segurança",
+                    ].map((label) => (
+                      <div key={label} className="min-w-0">
+                        <dt className="text-[0.6875rem] leading-4 text-evo-textSec sm:text-xs">
+                          {label}
+                        </dt>
+                        <dd className="mt-1 font-numbers text-base sm:text-lg">
+                          <span className="block h-[1lh] w-16 rounded-full bg-evo-border/30 text-transparent">
+                            &nbsp;
+                          </span>
+                        </dd>
+                      </div>
+                    ))}
+                  </dl>
+                  <span className="col-start-2 row-start-1 text-xs text-evo-accent sm:text-sm lg:col-start-3">
+                    Ler pesquisa
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
       ) : (
         <>
           <p className="mt-5 text-xs text-evo-textSec">
