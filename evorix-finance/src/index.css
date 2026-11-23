@@ -32,6 +32,11 @@
   --ediv-chrome: rgb(247 248 246 / 97%);
   --ediv-graphic-surface: #e2eee8;
   color-scheme: light;
+  /* "only" stops browsers from auto-darkening the light theme (Android
+     force-dark, Samsung Internet dark mode). Plain "light" above is the
+     fallback for browsers that do not parse "only". Dark stays opt-in via
+     data-theme="dark". */
+  color-scheme: only light;
   --ediv-radius: 14px;
   /* Escala de movimento: fast 150 ms (cor, transform de toque), base 180 ms
      (bordas, estados), slow 250 ms (abertura de menus). --ediv-ease-out é uma
