@@ -9,7 +9,7 @@ import {
 test("guest serialization retains the first lesson but no quiz; member quizzes stay intact", () => {
   const original = structuredClone(lessons);
   const preview = serializeLessons(false);
-  assert.equal(preview.length, 11);
+  assert.equal(preview.length, 7);
   assert.deepEqual(Object.keys(preview[0]), [
     "id",
     "title",
@@ -44,17 +44,21 @@ test("guest serialization retains the first lesson but no quiz; member quizzes s
       ["acoes", 1],
       ["corretora", 2],
       ["comprar-acoes", 0],
-      ["dividendos", 0],
-      ["carteira", 1],
       ["inflacao", 0],
       ["ciclos", 2],
       ["fundamentalista", 0],
       ["preco-teto", 2],
-      ["ranking", 1],
-      ["risco", 2],
     ],
   );
   assert.deepEqual(lessons, original);
+  assert.deepEqual(
+    learningCourses.map(({ id, chapterIds }) => [id, chapterIds]),
+    [
+      ["primeiros-passos", ["acoes", "corretora", "comprar-acoes"]],
+      ["economia", ["inflacao", "ciclos"]],
+      ["analise", ["fundamentalista", "preco-teto"]],
+    ],
+  );
   assert.deepEqual(
     serializeLessons(false),
     preview,

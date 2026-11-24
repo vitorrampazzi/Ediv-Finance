@@ -151,30 +151,30 @@ try {
       assert.equal(after.createdAt, event.createdAt);
     });
     await t.test("curso/aula: permissão, validação, destino, versão e concorrência", async () => {
-      assert.equal((await publish({ courseId: "pesquisa", version: "qa-v1" }, a)).status, 403);
-      assert.equal((await publish({ courseId: "pesquisa", version: "qa-v1" }, null)).status, 401);
+      assert.equal((await publish({ courseId: "analise", version: "qa-v1" }, a)).status, 403);
+      assert.equal((await publish({ courseId: "analise", version: "qa-v1" }, null)).status, 401);
       for (const body of [
-        { courseId: "missing", version: "v1" }, { courseId: "pesquisa", lessonId: "carteira", version: "v1" },
-        { courseId: "pesquisa", version: "bad version" }, { courseId: "pesquisa" },
-        { courseId: "pesquisa", version: "v1", extra: true },
+        { courseId: "missing", version: "v1" }, { courseId: "economia", lessonId: "acoes", version: "v1" },
+        { courseId: "analise", version: "bad version" }, { courseId: "analise" },
+        { courseId: "analise", version: "v1", extra: true },
       ]) assert.equal((await publish(body)).status, 400);
       const before = await list(a);
       await request(a, "/api/learning");
       assert.equal((await list(a)).unreadCount, before.unreadCount, "catálogo não anuncia conteúdo");
-      const responses = await Promise.all(Array.from({ length: 4 }, () => publish({ courseId: "pesquisa", version: "qa-v1" })));
+      const responses = await Promise.all(Array.from({ length: 4 }, () => publish({ courseId: "analise", version: "qa-v1" })));
       assert.ok(responses.every((response) => response.status === 200));
       assert.equal(new Set(responses.map((response) => response.body.notificationId)).size, 1);
-      const lesson = await publish({ courseId: "dividendos", lessonId: "carteira", version: "qa-v1" }, accounts.admin);
+      const lesson = await publish({ courseId: "primeiros-passos", lessonId: "corretora", version: "qa-v1" }, accounts.admin);
       assert.equal(lesson.status, 200);
       const data = await list(a);
       const courseEvent = data.notifications.find((entry) => entry.id === responses[0].body.notificationId);
       assert.equal(courseEvent.type, "course");
-      assert.equal(courseEvent.sourceId, "pesquisa");
-      assert.equal(courseEvent.href, "/app/aprender?aula=ranking#sala-de-aula");
+      assert.equal(courseEvent.sourceId, "analise");
+      assert.equal(courseEvent.href, "/app/aprender?aula=fundamentalista#sala-de-aula");
       const lessonEvent = data.notifications.find((entry) => entry.id === lesson.body.notificationId);
       assert.equal(lessonEvent.type, "lesson");
-      assert.equal(lessonEvent.href, "/app/aprender?aula=carteira#sala-de-aula");
-      const next = await publish({ courseId: "pesquisa", version: "qa-v2" });
+      assert.equal(lessonEvent.href, "/app/aprender?aula=corretora#sala-de-aula");
+      const next = await publish({ courseId: "analise", version: "qa-v2" });
       assert.notEqual(next.body.notificationId, courseEvent.id);
     });
     await t.test("rollback real em falha do evento não deixa publicação/chave/mudanças", async () => {
@@ -183,7 +183,7 @@ try {
       try {
         await fixture.clearLimits();
         assert.equal((await request(analyst, "/api/rankings", upload("Rollback QA"))).status, 500);
-        assert.equal((await publish({ courseId: "pesquisa", version: "rollback-qa" })).status, 500);
+        assert.equal((await publish({ courseId: "analise", version: "rollback-qa" })).status, 500);
         assert.deepEqual(await totals(), before);
       } finally { await pool.query("ALTER TABLE notification_events DROP CHECK notifications_qa_fail"); }
     });
@@ -218,7 +218,7 @@ try {
       await fixture.clearLimits();
       for (let i = 0; i < 45; i++) {
         if (i % 10 === 0) await fixture.clearLimits();
-        assert.equal((await publish({ courseId: "pesquisa", version: "pagination-" + i })).status, 200);
+        assert.equal((await publish({ courseId: "analise", version: "pagination-" + i })).status, 200);
       }
       for (const cursor of ["0", "-1", "1.2", "abc", "18446744073709551616"]) {
         assert.equal((await request(a, "/api/notifications?cursor=" + encodeURIComponent(cursor))).status, 400);

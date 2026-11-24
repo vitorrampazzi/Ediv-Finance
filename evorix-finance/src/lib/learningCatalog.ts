@@ -2,14 +2,10 @@ export type LessonId =
   | "acoes"
   | "corretora"
   | "comprar-acoes"
-  | "dividendos"
-  | "carteira"
   | "inflacao"
   | "ciclos"
   | "fundamentalista"
-  | "preco-teto"
-  | "ranking"
-  | "risco";
+  | "preco-teto";
 
 export type LearningChapter = {
   id: LessonId;
@@ -42,18 +38,6 @@ export const learningChapters: LearningChapter[] = [
     videoEmbedUrl: "https://www.youtube-nocookie.com/embed/iyGSotDRekU",
   },
   {
-    id: "dividendos",
-    subtitle: "Proventos, dividend yield e calendário",
-    readingMinutes: 8,
-    videoEmbedUrl: null,
-  },
-  {
-    id: "carteira",
-    subtitle: "Lucro, caixa e sustentabilidade dos pagamentos",
-    readingMinutes: 8,
-    videoEmbedUrl: null,
-  },
-  {
     id: "inflacao",
     subtitle: "Preços, poder de compra e o papel do Banco Central",
     readingMinutes: 3,
@@ -77,18 +61,6 @@ export const learningChapters: LearningChapter[] = [
     readingMinutes: 3,
     videoEmbedUrl: "https://www.youtube-nocookie.com/embed/o7UuO2uPP1I",
   },
-  {
-    id: "ranking",
-    subtitle: "Tese, premissas e limites de uma previsão",
-    readingMinutes: 6,
-    videoEmbedUrl: null,
-  },
-  {
-    id: "risco",
-    subtitle: "O negócio por trás do número",
-    readingMinutes: 7,
-    videoEmbedUrl: null,
-  },
 ];
 
 export const learningCourses = [
@@ -99,14 +71,6 @@ export const learningCourses = [
     description:
       "Entenda o que é ser sócio de uma empresa, como funciona a corretora e como fazer a sua primeira compra.",
     chapterIds: ["acoes", "corretora", "comprar-acoes"] as LessonId[],
-  },
-  {
-    id: "dividendos",
-    eyebrow: "Escola do Dividendo",
-    title: "Da empresa ao dividendo",
-    description:
-      "Conheça o caminho entre o resultado do negócio, a geração de caixa e o pagamento ao acionista.",
-    chapterIds: ["dividendos", "carteira"] as LessonId[],
   },
   {
     id: "economia",
@@ -123,14 +87,6 @@ export const learningCourses = [
     description:
       "Escolha setores e empresas com a análise fundamentalista e calcule até quanto pagar por uma ação pagadora de dividendos.",
     chapterIds: ["fundamentalista", "preco-teto"] as LessonId[],
-  },
-  {
-    id: "pesquisa",
-    eyebrow: "Fundamentos da pesquisa",
-    title: "Leia uma análise com autonomia",
-    description:
-      "Entenda as hipóteses do corretor, o prazo do cenário e o que pode fazer a tese mudar.",
-    chapterIds: ["ranking", "risco"] as LessonId[],
   },
 ];
 

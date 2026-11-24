@@ -35,7 +35,7 @@ try {
     });
     assert.equal(publication.status, 201);
     const educational = await request(accounts.analyst, "/api/notifications/publish-learning", {
-      method: "POST", body: { courseId: "pesquisa", version: "backup-v1" },
+      method: "POST", body: { courseId: "analise", version: "backup-v1" },
     });
     assert.equal(educational.status, 200);
     assert.equal((await request(accounts.a, "/api/notifications/read-all", { method: "POST" })).status, 200);

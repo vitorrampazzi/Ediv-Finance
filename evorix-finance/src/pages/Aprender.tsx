@@ -16,10 +16,8 @@ import { authLink } from "../lib/authDestination";
 import { useAuth } from "../context/authContext";
 import { useVisitorLearningProgress } from "../lib/visitorLearningProgress";
 import { AccountGate } from "../components/AccountGate";
-import { MobileDisclosure } from "../components/MobileDisclosure";
 import { assistantEnabled } from "../lib/features";
 import { LearningVideo } from "../components/LearningVideo";
-import { LearningPractice } from "../components/LearningPractice";
 import { LearningPlaylist } from "../components/LearningPlaylist";
 import { LearningCourseCarousel } from "../components/LearningCourseCarousel";
 import { LearningJourney } from "../components/LearningJourney";
@@ -52,16 +50,8 @@ export type LearningData = {
 const learningTabs = [
   { id: "curso", label: "Curso" },
   { id: "testes", label: "Testes" },
-  { id: "laboratorio", label: "Laboratório de conceitos" },
-  { id: "termos", label: "Termos das aulas" },
 ] as const;
 type LearningTab = (typeof learningTabs)[number]["id"];
-const tabForHash = (hash: string): LearningTab =>
-  hash === "#laboratorio"
-    ? "laboratorio"
-    : ["#learning-glossary-title", "#termos"].includes(hash)
-      ? "termos"
-      : "curso";
 const lessonIds: string[] = learningChapters.map((chapter) => chapter.id);
 // Analytics receives only the lesson's position in the course (1, 2, 3…),
 // never its id or title.
@@ -128,19 +118,15 @@ function LearningSession({
   const [sessionExpired, setSessionExpired] = useState(false);
   const [resetRequested, setResetRequested] = useState(false);
   const [answers, setAnswers] = useState<Record<string, number>>({});
-  const [search, setSearch] = useState("");
-  // One search_glossary per visit to the page; the typed text is never sent.
-  const searchTracked = useRef(false);
   const location = useLocation();
   const navigate = useNavigate();
   const tabLocation =
     location.key + location.pathname + location.search + location.hash;
   const [tabState, setTabState] = useState({
     key: tabLocation,
-    tab: tabForHash(location.hash),
+    tab: "curso" as LearningTab,
   });
-  const activeTab =
-    tabState.key === tabLocation ? tabState.tab : tabForHash(location.hash);
+  const activeTab = tabState.key === tabLocation ? tabState.tab : "curso";
   const tabButtons = useRef<(HTMLButtonElement | null)[]>([]);
   const selectTab = (tab: LearningTab) =>
     setTabState({ key: tabLocation, tab });
@@ -216,7 +202,6 @@ function LearningSession({
       ? { id: lesson.id, title: lesson.title, locked: true }
       : lesson,
   );
-  const glossary = content?.glossary || [];
   useEffect(() => {
     if (
       !content ||
@@ -383,13 +368,6 @@ function LearningSession({
   const nextCourseId =
     nextCourse?.chapterIds.find((id) => !completed.includes(id)) ??
     nextCourse?.chapterIds[0];
-  const matchingTerms = glossary
-    .filter(([term, text]) =>
-      (term + " " + text)
-        .toLocaleLowerCase("pt-BR")
-        .includes(search.toLocaleLowerCase("pt-BR")),
-    )
-    .sort(([a], [b]) => a.localeCompare(b, "pt-BR"));
   return (
     <section
       id="pagina-conteudo"
@@ -754,12 +732,7 @@ function LearningSession({
                   Próximo curso: {nextCourse?.title}{" "}
                   <ArrowRight size={15} aria-hidden="true" />
                 </button>
-              ) : (
-                <a href="#laboratorio" className="action justify-center">
-                  Praticar no laboratório{" "}
-                  <ArrowRight size={15} aria-hidden="true" />
-                </a>
-              )}
+              ) : null}
             </nav>
           </section>
         )}
@@ -811,73 +784,15 @@ function LearningSession({
             </p>
           ))}
       </section>
-      <section
-        role="tabpanel"
-        id="learning-panel-laboratorio"
-        aria-labelledby="learning-tab-laboratorio"
-        hidden={activeTab !== "laboratorio"}
-      >
-        <LearningPractice />
-      </section>
-      <div
-        role="tabpanel"
-        id="learning-panel-termos"
-        aria-labelledby="learning-tab-termos"
-        hidden={activeTab !== "termos"}
-      >
-        <section aria-labelledby="learning-glossary-title">
-          <div className="flex flex-wrap items-end justify-between gap-3">
-            <h2 id="learning-glossary-title" className="text-2xl font-semibold">
-              Termos das aulas
-            </h2>
-            <Link
-              to="/glossario"
-              className="inline-flex min-h-11 items-center gap-2 text-sm text-evo-accent"
-            >
-              Abrir glossário completo{" "}
-              <ArrowRight size={15} aria-hidden="true" />
-            </Link>
-          </div>
-          <MobileDisclosure
-            title="Buscar conceitos no glossário"
-            className="mt-4"
-          >
-            <label className="block">
-              <span className="sr-only">Buscar um conceito</span>
-              <input
-                className="field"
-                placeholder="Buscar dividendo, payout, data-ex…"
-                value={search}
-                onChange={(event) => {
-                  if (!searchTracked.current && event.target.value.trim()) {
-                    searchTracked.current = true;
-                    trackEvent("search_glossary");
-                  }
-                  setSearch(event.target.value);
-                }}
-              />
-            </label>
-            <dl className="mt-3 grid gap-x-6 sm:grid-cols-2">
-              {matchingTerms.map(([term, text]) => (
-                <div key={term} className="border-b border-evo-border py-4">
-                  <dt className="font-semibold">{term}</dt>
-                  <dd className="mt-2 text-sm leading-relaxed text-evo-textSec">
-                    {text}
-                  </dd>
-                </div>
-              ))}
-            </dl>
-            {glossary.length > 0 && matchingTerms.length === 0 && (
-              <p role="status" className="mt-4 text-sm text-evo-textSec">
-                Nenhum conceito encontrado. Tente outro termo.
-              </p>
-            )}
-          </MobileDisclosure>
-        </section>
-      </div>
       <footer className="flex flex-wrap items-center justify-between gap-4 border-t border-evo-border pt-6">
         <Link to={user ? "/app/ranking" : "/ranking"} className="action">
           Abrir pesquisas do ranking <ArrowRight size={16} aria-hidden="true" />
+        </Link>
+        <Link
+          to="/glossario"
+          className="inline-flex min-h-11 items-center gap-2 text-sm text-evo-accent"
+        >
+          Glossário <ArrowRight size={15} aria-hidden="true" />
         </Link>
         {user && (
           <button

@@ -734,11 +734,11 @@ try {
   await check(
     "Progresso de aula sobrevive à recarga e outra sessão",
     async () => {
-      await page.goto(root + "/app/aprender#risco");
+      await page.goto(root + "/app/aprender#corretora");
       await page.getByRole("tab", { name: "Testes", exact: true }).click();
       await page
         .getByRole("button", {
-          name: "Não; pode reduzir concentração, mas não elimina riscos",
+          name: "Executar a sua ordem na bolsa e registrar as ações em seu nome",
           exact: true,
         })
         .click();
@@ -758,7 +758,7 @@ try {
       const other = await context(null);
       await other.addCookies(await guest.cookies());
       const otherPage = await other.newPage();
-      await otherPage.goto(root + "/app/aprender#risco");
+      await otherPage.goto(root + "/app/aprender#corretora");
       await expect(
         otherPage.getByRole("progressbar", {
           name: "Progresso dos exercícios",

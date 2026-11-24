@@ -57,10 +57,10 @@ export function RankingAccessLanding({
         <div className="flex flex-wrap items-center justify-between gap-3 text-sm">
           <Link
             className="inline-flex min-h-11 items-center gap-2 text-evo-accent underline"
-            to="/aprender#ranking"
+            to="/aprender#preco-teto"
           >
-            <BookOpen size={16} aria-hidden="true" /> Como interpretar uma
-            previsão
+            <BookOpen size={16} aria-hidden="true" /> Entender preço-teto e
+            margem
           </Link>
         </div>
       )}

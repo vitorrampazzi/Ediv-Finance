@@ -375,13 +375,13 @@ function MemberIncomeRanking() {
             </p>
             <div className="ranking-header-actions mt-5 flex flex-wrap gap-2 sm:gap-3">
               <Link
-                to={learningPath + "#ranking"}
+                to={learningPath + "#preco-teto"}
                 className="inline-flex min-h-11 items-center gap-2 text-sm font-medium text-evo-accent"
               >
                 <BookOpen size={17} aria-hidden="true" />
-                <span className="sm:hidden">Como ler</span>
+                <span className="sm:hidden">Preço-teto e margem</span>
                 <span className="hidden sm:inline">
-                  Como interpretar o ranking
+                  Entender preço-teto e margem
                 </span>
               </Link>
               {(showingDemo || (!loading && !hasRealPublication)) && (

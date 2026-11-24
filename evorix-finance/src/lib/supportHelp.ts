@@ -70,7 +70,7 @@ export const supportAnswers: SupportAnswer[] = [
     ],
     link: {
       label: "Rever os conceitos nas aulas",
-      to: "/app/aprender#ranking",
+      to: "/app/aprender#preco-teto",
     },
   },
   {
@@ -90,14 +90,14 @@ export const supportAnswers: SupportAnswer[] = [
       "O dividend yield relaciona os proventos considerados com um preço de referência. Um preço menor pode elevar esse indicador sem que a empresa tenha aumentado sua distribuição.",
       "Compare também a geração de caixa, o lucro, o endividamento e a recorrência dos pagamentos.",
     ],
-    link: { label: "Estudar dividendos", to: "/app/aprender#dividendos" },
+    link: { label: "Estudar dividendos", to: "/app/aprender#comprar-acoes" },
   },
   {
     id: "dividendo-jcp",
     topicId: "dividendos",
     question: "Como encontro o significado de dividendos, payout e JCP?",
     paragraphs: [
-      "Use o glossário para consultar os termos e, depois, as aulas para entender como eles se relacionam. O laboratório de conceitos traz exemplos numéricos para praticar a leitura dos indicadores.",
+      "Use o glossário para consultar os termos e, depois, as aulas para entender como eles se relacionam. As aulas trazem exemplos numéricos para praticar a leitura dos indicadores.",
       "Nos exemplos educativos, observe sempre qual período e preço foram usados no cálculo. Isso ajuda a comparar informações com a mesma base.",
     ],
     link: { label: "Consultar o glossário", to: "/glossario" },
