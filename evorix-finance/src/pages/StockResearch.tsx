@@ -389,7 +389,7 @@ function MemberStockResearch() {
                   {story.dividendLens}
                 </p>
                 <Link
-                  to={learningPath + "#dividendos"}
+                  to={learningPath + "#comprar-acoes"}
                   className="mt-3 inline-flex min-h-11 items-center gap-2 text-sm text-evo-accent underline"
                 >
                   <BookOpen size={16} aria-hidden="true" /> Aprender sobre
@@ -522,10 +522,10 @@ function MemberStockResearch() {
             </dl>
             <ResearchCoverage entry={entry} />
             <Link
-              to={learningPath + "#ranking"}
+              to={learningPath + "#preco-teto"}
               className="mt-7 inline-flex min-h-11 items-center gap-2 text-evo-accent underline"
             >
-              Como interpretar a pesquisa{" "}
+              Entender preço-teto e margem{" "}
               <ArrowUpRight size={14} aria-hidden="true" />
             </Link>
             <Link
@@ -591,7 +591,7 @@ function MemberStockResearch() {
           </Link>
         ) : (
           <Link
-            to={learningPath + "#ranking"}
+            to={learningPath}
             className="flex min-h-16 items-center justify-between gap-3 rounded-lg border border-evo-border p-4 text-sm text-evo-accent hover:border-evo-accent/50"
           >
             Continuar nos minicursos <BookOpen size={17} aria-hidden="true" />

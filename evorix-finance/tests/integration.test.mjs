@@ -627,7 +627,7 @@ try {
         assert.deepEqual(member.body.glossary, glossary);
         assert.equal(
           (
-            await request(a, "/api/learning/progress/risco", {
+            await request(a, "/api/learning/progress/corretora", {
               method: "PUT",
               body: { answer: 0 },
             })
@@ -636,7 +636,7 @@ try {
         );
         assert.equal(
           (
-            await request(a, "/api/learning/progress/risco", {
+            await request(a, "/api/learning/progress/corretora", {
               method: "PUT",
               body: { answer: 2 },
             })
@@ -644,7 +644,7 @@ try {
           200,
         );
         assert.deepEqual((await request(a, "/api/learning")).body.completed, [
-          "risco",
+          "corretora",
         ]);
         assert.deepEqual(
           (await request(b, "/api/learning")).body.completed,

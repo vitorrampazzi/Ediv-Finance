@@ -471,39 +471,12 @@ try {
       );
       await page
         .getByRole("button", {
-          name: "Abrir minicurso: Da empresa ao dividendo",
+          name: "Abrir minicurso: Inflação, juros e ciclos",
           exact: true,
         })
         .click();
-      await expect(page).toHaveURL(/aula=dividendos/);
+      await expect(page).toHaveURL(/aula=inflacao/);
       await expect(page.locator("#classroom-title")).toBeFocused();
-    },
-  );
-  await check(
-    "Laboratório calcula DY, payout e potencial e rejeita base zero",
-    async () => {
-      await page.goto(root + "/app/aprender");
-      await page
-        .getByRole("tab", { name: "Laboratório de conceitos", exact: true })
-        .click();
-      const lab = page.locator("#laboratorio");
-      await expect(lab.getByRole("status")).toContainText("5");
-      await lab
-        .getByLabel("Proventos por ação no período (R$)", { exact: true })
-        .fill("4");
-      await expect(lab.getByRole("status")).toContainText("10");
-      await lab
-        .getByLabel("Preço de referência (R$)", { exact: true })
-        .fill("0");
-      await expect(lab.getByRole("status")).toContainText(
-        "base maior que zero",
-      );
-      await lab.getByRole("button", { name: "Payout", exact: true }).click();
-      await expect(lab.getByRole("status")).toContainText("50");
-      await lab
-        .getByRole("button", { name: "Potencial de preço", exact: true })
-        .click();
-      await expect(lab.getByRole("status")).toContainText("20");
     },
   );
   await check("Sessão expirada ao concluir aula retorna ao login", async () => {

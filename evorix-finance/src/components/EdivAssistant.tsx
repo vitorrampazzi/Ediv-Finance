@@ -38,20 +38,20 @@ function getLocalAnswer(question: string): LocalAnswer {
   if (/diversific|concentracao|risco/.test(normalized))
     return {
       text: "Diversificar é distribuir investimentos entre ativos e fontes de risco diferentes. Isso pode reduzir o impacto de problemas em uma empresa, mas não elimina perdas nem os riscos do mercado. Ter muitos tickers do mesmo setor pode continuar concentrando riscos.",
-      href: "/aprender#risco",
+      href: "/aprender#acoes",
       linkLabel: "Entender riscos",
     };
   if (/dividendo|jcp|provento/.test(normalized))
     return {
       text: "Dividendos e JCP são distribuições da empresa. Um pagamento anunciado ainda não é dinheiro recebido. A valorização é a mudança no preço do ativo. Ao estudar uma empresa, observe sua geração de caixa, as datas informadas e a sustentabilidade dos pagamentos; distribuições futuras não são garantidas.",
-      href: "/aprender#dividendos",
+      href: "/aprender#comprar-acoes",
       linkLabel: "Entender dividendos",
     };
   if (/preco.alvo|potencial|horizonte|tese/.test(normalized))
     return {
       text: "Preço-alvo é uma estimativa baseada em premissas. O potencial compara esse alvo com um preço de referência; não é probabilidade de lucro. Horizonte informa o prazo do cenário. Leia a tese, os riscos e a data, pois mudanças na empresa ou no mercado podem invalidar as premissas.",
-      href: "/aprender#ranking",
-      linkLabel: "Interpretar uma previsão",
+      href: "/aprender#preco-teto",
+      linkLabel: "Entender o preço-teto",
     };
   if (
     /\b(ia|inteligencia artificial|chatgpt|robo|assistente)\b/.test(normalized)

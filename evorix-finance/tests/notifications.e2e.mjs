@@ -24,7 +24,7 @@ try {
   catch { browser = await chromium.launch({ headless: true, channel: "chrome" }); }
   await test("notificações E2E: browser → API real → MySQL descartável → destino e logout", async () => {
     const publication = await fixture.request(fixture.accounts.analyst, "/api/notifications/publish-learning", {
-      method: "POST", body: { courseId: "pesquisa", version: "e2e-v1" },
+      method: "POST", body: { courseId: "analise", version: "e2e-v1" },
     });
     assert.equal(publication.status, 200);
     const context = await browser.newContext({ reducedMotion: "reduce" });
@@ -43,12 +43,12 @@ try {
       await page.getByRole("button", { name: "Entrar", exact: true }).click();
       await page.waitForURL((url) => url.pathname === "/app");
       await page.getByRole("button", { name: /Notificações/ }).click();
-      const link = page.locator('#ediv-notifications a[href="/app/aprender?aula=ranking#sala-de-aula"]');
+      const link = page.locator('#ediv-notifications a[href="/app/aprender?aula=fundamentalista#sala-de-aula"]');
       await expect(link).toBeVisible();
       await link.click();
-      await page.waitForURL((url) => url.pathname === "/app/aprender" && url.searchParams.get("aula") === "ranking" && url.hash === "#sala-de-aula");
+      await page.waitForURL((url) => url.pathname === "/app/aprender" && url.searchParams.get("aula") === "fundamentalista" && url.hash === "#sala-de-aula");
       await expect(page.locator("#sala-de-aula")).toBeVisible();
-      await expect(page.locator("#sala-de-aula").getByRole("heading", { level: 2 })).toHaveText("Como interpretar uma previsão");
+      await expect(page.locator("#sala-de-aula").getByRole("heading", { level: 2 })).toHaveText("Análise fundamentalista: do setor à empresa");
       await expect.poll(async () => {
         const response = await page.request.get("http://127.0.0.1:4180/api/notifications");
         const data = await response.json();
