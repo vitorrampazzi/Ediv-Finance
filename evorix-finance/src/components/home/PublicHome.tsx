@@ -29,7 +29,7 @@ function StartAction({
           }}
         >
           {awaitingRegistration
-            ? "Começar pela primeira aula"
+            ? "Começar pela aula aberta"
             : "Criar conta grátis"}
           <ArrowRight size={18} aria-hidden="true" />
         </Link>
@@ -53,7 +53,7 @@ function StartAction({
       <p className="ph-access-note">
         {awaitingRegistration
           ? "Novos cadastros em preparação"
-          : "Conta gratuita · Primeira aula aberta."}
+          : "Conta gratuita · Uma aula aberta."}
       </p>
     </div>
   );
@@ -109,7 +109,7 @@ export function PublicHome({
             <h2 id="ph-final-title" className="display-title">
               Comece por uma empresa.
               <br />
-              Ou pela primeira aula.
+              Ou pela aula aberta.
             </h2>
             <p>Pesquisas, conceitos e exercícios no mesmo lugar.</p>
           </div>

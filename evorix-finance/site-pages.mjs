@@ -15,7 +15,7 @@ export const publicPages = {
       "Veja as empresas do Ranking de Ações da Escola do Dividendo, com Dividend Yield estimado, P/L projetado e margem de segurança. Pesquisa completa com conta gratuita.",
   },
   "/aprender": {
-    updated: "2026-11-23",
+    updated: "2026-11-24",
     title: "Aulas sobre dividendos | Escola do Dividendo",
     description:
       "Aulas em vídeo e texto sobre ações, dividendos, inflação, juros, análise fundamentalista e preço-teto, com a visão de longo prazo da Escola do Dividendo.",

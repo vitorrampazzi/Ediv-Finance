@@ -3,7 +3,7 @@ import { readFile, mkdir, writeFile } from "node:fs/promises";
 import { createServer } from "vite";
 import { chromium } from "playwright";
 import { expect } from "playwright/test";
-import { lessons, glossary } from "../server/learning-content.js";
+import { lessons, glossary, openLessonId } from "../server/learning-content.js";
 
 // Frontend audit only. Every API response is local and fictitious; no SQL or providers.
 const tooltipOnly = process.env.EDIV_A11Y_TOOLTIP_ONLY === "true";
@@ -138,8 +138,8 @@ try {
         data = {
           lessons: member
             ? lessons
-            : lessons.map((lesson, index) =>
-                index
+            : lessons.map((lesson) =>
+                lesson.id !== openLessonId
                   ? { id: lesson.id, title: lesson.title, locked: true }
                   : {
                       id: lesson.id,

@@ -3,7 +3,7 @@ import {
   createVisitorLearningProgress,
   type VisitorLearningSnapshot,
 } from "../../visitor-learning-progress.mjs";
-import { learningChapters } from "./learningCatalog";
+import { openLessonId } from "./learningCatalog";
 
 let browserStore: ReturnType<typeof createVisitorLearningProgress> | undefined;
 const emptySnapshot: VisitorLearningSnapshot = Object.freeze({
@@ -19,9 +19,7 @@ function store() {
     } catch {
       /* Session-only progress. */
     }
-    browserStore = createVisitorLearningProgress(storage, [
-      learningChapters[0].id,
-    ]);
+    browserStore = createVisitorLearningProgress(storage, [openLessonId]);
   }
   return browserStore;
 }

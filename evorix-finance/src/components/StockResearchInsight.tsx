@@ -105,7 +105,7 @@ export function StockResearchInsight({
     return (
       <section
         id="insight"
-        className="scroll-mt-40 border-b border-evo-border py-7"
+        className="scroll-mt-40 py-7"
       >
         <h2 className="display-title text-2xl sm:text-3xl">
           Leitura visual do cenário
@@ -169,7 +169,7 @@ export function StockResearchInsight({
     <section
       id="insight"
       aria-labelledby={`${graphicId}-heading`}
-      className="research-insight scroll-mt-40 border-b border-evo-border py-7 sm:py-9"
+      className="research-insight scroll-mt-40 py-7 sm:py-9"
     >
       <div className="mb-5 flex flex-wrap items-end justify-between gap-3">
         <div>

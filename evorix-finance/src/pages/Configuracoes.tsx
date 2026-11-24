@@ -43,7 +43,7 @@ function Section({
   return (
     <section
       aria-labelledby={id}
-      className="grid gap-5 border-b border-evo-border py-8 last:border-b-0 md:grid-cols-[minmax(0,15rem)_minmax(0,1fr)] md:gap-12"
+      className="grid gap-5 py-8 md:grid-cols-[minmax(0,15rem)_minmax(0,1fr)] md:gap-12"
     >
       <div>
         <h2 id={id} className="text-base font-semibold">
@@ -181,7 +181,7 @@ export const Configuracoes = () => {
   };
   return (
     <div className="mx-auto max-w-5xl">
-      <header className="border-b border-evo-border pb-6">
+      <header className="pb-6">
         <p className="edition-label">Sua conta</p>
         <h1 className="mt-2 text-2xl font-semibold sm:text-3xl">
           Configurações
@@ -379,7 +379,7 @@ export const Configuracoes = () => {
             </button>
           </div>
         </form>
-        <div className="mt-6 border-t border-evo-border pt-6">
+        <div className="mt-6 pt-6">
           <Row
             title="Sessões abertas"
             text={

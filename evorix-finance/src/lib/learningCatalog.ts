@@ -1,6 +1,6 @@
 export type LessonId =
-  | "acoes"
   | "corretora"
+  | "acoes"
   | "comprar-acoes"
   | "inflacao"
   | "ciclos"
@@ -20,16 +20,16 @@ export type LearningChapter = {
 // Keep URLs null until the selected videos are ready for publication.
 export const learningChapters: LearningChapter[] = [
   {
-    id: "acoes",
-    subtitle: "O que você ganha e o que pode perder ao virar sócio",
-    readingMinutes: 3,
-    videoEmbedUrl: "https://www.youtube-nocookie.com/embed/opr1WI9KnX8",
-  },
-  {
     id: "corretora",
     subtitle: "A porta de entrada para a bolsa",
     readingMinutes: 2,
     videoEmbedUrl: "https://www.youtube-nocookie.com/embed/I3ns4SmiCHg",
+  },
+  {
+    id: "acoes",
+    subtitle: "O que você ganha e o que pode perder ao virar sócio",
+    readingMinutes: 3,
+    videoEmbedUrl: "https://www.youtube-nocookie.com/embed/opr1WI9KnX8",
   },
   {
     id: "comprar-acoes",
@@ -69,8 +69,8 @@ export const learningCourses = [
     eyebrow: "Comece por aqui",
     title: "Primeiros passos na bolsa",
     description:
-      "Entenda o que é ser sócio de uma empresa, como funciona a corretora e como fazer a sua primeira compra.",
-    chapterIds: ["acoes", "corretora", "comprar-acoes"] as LessonId[],
+      "Entenda como funciona a corretora, o que é ser sócio de uma empresa e como fazer a sua primeira compra.",
+    chapterIds: ["corretora", "acoes", "comprar-acoes"] as LessonId[],
   },
   {
     id: "economia",
@@ -89,6 +89,9 @@ export const learningCourses = [
     chapterIds: ["fundamentalista", "preco-teto"] as LessonId[],
   },
 ];
+
+// Única aula aberta ao visitante; as outras pedem conta. Espelha openLessonId em server/learning-content.js.
+export const openLessonId: LessonId = "acoes";
 
 export function approvedVideoEmbed(value: string | null): string | null {
   if (!value) return null;

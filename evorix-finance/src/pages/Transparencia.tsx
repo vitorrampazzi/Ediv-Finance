@@ -17,7 +17,7 @@ export function Suporte() {
   };
   return (
     <section className="mx-auto max-w-6xl space-y-6 px-4 py-6 sm:space-y-10 sm:px-6 sm:py-12">
-      <header className="border-b border-evo-border pb-7">
+      <header className="pb-7">
         <p className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[.16em] text-evo-accent">
           <Headphones size={16} aria-hidden="true" />
           Central de ajuda · Escola do Dividendo
@@ -41,7 +41,7 @@ export function Suporte() {
       <SupportHelpCenter publicView={!user} onContact={contact} />
       <section
         aria-labelledby="contact-information-title"
-        className="space-y-5 border-t border-evo-border pt-7"
+        className="space-y-5 pt-7"
       >
         <h2 id="contact-information-title" className="text-xl font-semibold">
           Como falar com a Escola do Dividendo

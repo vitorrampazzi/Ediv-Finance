@@ -154,7 +154,7 @@ export function RegisterPage() {
             {availability.current.message}
           </p>
           <Link className="action w-full" to="/aprender">
-            Explorar primeira aula
+            Explorar a aula aberta
           </Link>
           <Link className="action-secondary w-full" to="/ranking">
             Conhecer o ranking

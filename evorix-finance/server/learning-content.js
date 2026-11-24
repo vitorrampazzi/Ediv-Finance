@@ -3,7 +3,7 @@ export const learningCourses = [
   {
     id: "primeiros-passos",
     title: "Primeiros passos na bolsa",
-    chapterIds: ["acoes", "corretora", "comprar-acoes"],
+    chapterIds: ["corretora", "acoes", "comprar-acoes"],
   },
   {
     id: "economia",
@@ -17,7 +17,53 @@ export const learningCourses = [
   },
 ];
 
+// Única aula aberta ao visitante; as outras pedem conta. Espelha openLessonId em src/lib/learningCatalog.ts.
+export const openLessonId = "acoes";
+
 export const lessons = [
+  {
+    id: "corretora",
+    title: "O que é uma corretora de investimentos",
+    text: "Para comprar ações, fundos imobiliários ou títulos de renda fixa, você precisa de um intermediário: um banco ou uma corretora de investimentos. A corretora funciona como uma corretora de imóveis: aproxima quem quer comprar de quem quer vender e cuida da parte operacional. Antes de investir, porém, vem a reserva de emergência.",
+    sections: [
+      {
+        title: "Banco ou corretora?",
+        text: "Os bancos também dão acesso a investimentos, mas costumam oferecer principalmente produtos ligados à própria instituição. A corretora reúne produtos de vários emissores: ações, fundos imobiliários, CDBs de diferentes bancos, LCI, LCA e debêntures, que são empréstimos feitos a uma empresa sem virar sócio dela. Mais opções ajudam a comparar taxas, custos e riscos antes de escolher.",
+      },
+      {
+        title: "Como a corretora funciona no dia a dia",
+        text: "Você abre uma conta, transfere o dinheiro do seu banco e envia a ordem de compra pelo site, pelo aplicativo ou pelo home broker. A corretora executa a ordem na B3, a bolsa brasileira, e as ações passam a ficar registradas em seu nome. Na prática, você vira acionista, um pequeno sócio da empresa, sem precisar lidar diretamente com a bolsa.",
+      },
+      {
+        title: "Como escolher uma corretora",
+        text: "Alguns critérios ajudam. Solidez: uma instituição grande e com várias linhas de negócio tende a oferecer mais estrutura e estabilidade. Variedade de produtos: para você comparar antes de investir. Custos claros: taxas de corretagem e de custódia, quando houver. E, principalmente, bom atendimento: alguém que responda às suas dúvidas sobre ordens, extratos e produtos. Confira também se a instituição é autorizada pelo Banco Central e registrada na CVM. Se um dia quiser investir em empresas de outros países, existem corretoras especializadas nisso.",
+      },
+    ],
+    takeaways: [
+      "A corretora é a intermediária entre você e a bolsa: executa suas ordens e registra os ativos em seu nome.",
+      "Ela costuma oferecer mais variedade de produtos do que o banco tradicional.",
+      "Escolha pela solidez, pela variedade, pelos custos e pelo atendimento.",
+    ],
+    question: "Qual é o papel da corretora quando você compra uma ação?",
+    choices: [
+      "Garantir que a ação vai se valorizar",
+      "Definir quanto de dividendo a empresa vai pagar",
+      "Executar a sua ordem na bolsa e registrar as ações em seu nome",
+    ],
+    answer: 2,
+    explanation:
+      "A corretora é intermediária: recebe a sua ordem, executa na B3 e cuida do registro. Ela não garante resultado nem decide sobre os proventos da empresa.",
+    sources: [
+      {
+        title: "Portal do Investidor: como investir",
+        url: "https://www.gov.br/investidor/pt-br/investir/como-investir",
+      },
+      {
+        title: "B3 Bora Investir: o que é home broker",
+        url: "https://borainvestir.b3.com.br/glossario/home-broker/",
+      },
+    ],
+  },
   {
     id: "acoes",
     title: "Ações: vantagens e riscos",
@@ -60,51 +106,8 @@ export const lessons = [
       "Com juros mais altos, a renda fixa paga mais e muitos investidores migram para ela. Essa venda derruba preços mesmo quando o negócio da empresa não mudou.",
     sources: [
       {
-        title: "Portal do Investidor — o que são ações",
+        title: "Portal do Investidor: o que são ações",
         url: "https://www.gov.br/investidor/pt-br/investir/tipos-de-investimentos/acoes",
-      },
-    ],
-  },
-  {
-    id: "corretora",
-    title: "O que é uma corretora de investimentos",
-    text: "Para comprar ações, fundos imobiliários ou títulos de renda fixa, você precisa de um intermediário: um banco ou uma corretora de investimentos. A corretora funciona como uma corretora de imóveis: aproxima quem quer comprar de quem quer vender e cuida da parte operacional. Antes de investir, porém, vem a reserva de emergência.",
-    sections: [
-      {
-        title: "Banco ou corretora?",
-        text: "Os bancos também dão acesso a investimentos, mas costumam oferecer principalmente produtos ligados à própria instituição. A corretora reúne produtos de vários emissores: ações, fundos imobiliários, CDBs de diferentes bancos, LCI, LCA e debêntures, que são empréstimos feitos a uma empresa sem virar sócio dela. Mais opções ajudam a comparar taxas, custos e riscos antes de escolher.",
-      },
-      {
-        title: "Como a corretora funciona no dia a dia",
-        text: "Você abre uma conta, transfere o dinheiro do seu banco e envia a ordem de compra pelo site, pelo aplicativo ou pelo home broker. A corretora executa a ordem na B3, a bolsa brasileira, e as ações passam a ficar registradas em seu nome. Na prática, você vira acionista, um pequeno sócio da empresa, sem precisar lidar diretamente com a bolsa.",
-      },
-      {
-        title: "Como escolher uma corretora",
-        text: "Alguns critérios ajudam. Solidez: uma instituição grande e com várias linhas de negócio tende a oferecer mais estrutura e estabilidade. Variedade de produtos: para você comparar antes de investir. Custos claros: taxas de corretagem e de custódia, quando houver. E, principalmente, bom atendimento: alguém que responda às suas dúvidas sobre ordens, extratos e produtos. Confira também se a instituição é autorizada pelo Banco Central e registrada na CVM. Se um dia quiser investir em empresas de outros países, existem corretoras especializadas nisso.",
-      },
-    ],
-    takeaways: [
-      "A corretora é a intermediária entre você e a bolsa: executa suas ordens e registra os ativos em seu nome.",
-      "Ela costuma oferecer mais variedade de produtos do que o banco tradicional.",
-      "Escolha pela solidez, pela variedade, pelos custos e pelo atendimento.",
-    ],
-    question: "Qual é o papel da corretora quando você compra uma ação?",
-    choices: [
-      "Garantir que a ação vai se valorizar",
-      "Definir quanto de dividendo a empresa vai pagar",
-      "Executar a sua ordem na bolsa e registrar as ações em seu nome",
-    ],
-    answer: 2,
-    explanation:
-      "A corretora é intermediária: recebe a sua ordem, executa na B3 e cuida do registro. Ela não garante resultado nem decide sobre os proventos da empresa.",
-    sources: [
-      {
-        title: "Portal do Investidor — como investir",
-        url: "https://www.gov.br/investidor/pt-br/investir/como-investir",
-      },
-      {
-        title: "B3 Bora Investir — o que é home broker",
-        url: "https://borainvestir.b3.com.br/glossario/home-broker/",
       },
     ],
   },
@@ -150,19 +153,19 @@ export const lessons = [
       "O desdobramento divide cada ação em duas e o preço pela metade. A quantidade dobra, mas o valor total da posição não muda: R$ 30.000 antes e depois.",
     sources: [
       {
-        title: "B3 Bora Investir — o que é ticker",
+        title: "B3 Bora Investir: o que é ticker",
         url: "https://borainvestir.b3.com.br/glossario/ticker/",
       },
       {
-        title: "B3 Bora Investir — desdobramento",
+        title: "B3 Bora Investir: desdobramento",
         url: "https://borainvestir.b3.com.br/glossario/desdobramento/",
       },
       {
-        title: "B3 Bora Investir — grupamento",
+        title: "B3 Bora Investir: grupamento",
         url: "https://borainvestir.b3.com.br/glossario/grupamento/",
       },
       {
-        title: "B3 Bora Investir — subscrição",
+        title: "B3 Bora Investir: subscrição",
         url: "https://borainvestir.b3.com.br/glossario/subscricao/",
       },
     ],
@@ -209,15 +212,15 @@ export const lessons = [
       "A procura não mudou; o que caiu foi a oferta. Menos produto para a mesma procura eleva o preço: é um choque de oferta.",
     sources: [
       {
-        title: "Banco Central — o que é inflação",
+        title: "Banco Central: o que é inflação",
         url: "https://www.bcb.gov.br/controleinflacao/oqueinflacao",
       },
       {
-        title: "B3 Bora Investir — IPCA",
+        title: "B3 Bora Investir: IPCA",
         url: "https://borainvestir.b3.com.br/glossario/ipca/",
       },
       {
-        title: "B3 Bora Investir — poder de compra",
+        title: "B3 Bora Investir: poder de compra",
         url: "https://borainvestir.b3.com.br/glossario/poder-de-compra/",
       },
     ],
@@ -260,11 +263,11 @@ export const lessons = [
       "Juros altos podem derrubar preços mesmo de empresas que continuam lucrando. A decisão depende do negócio e do preço em relação ao preço-teto, e não do ciclo sozinho.",
     sources: [
       {
-        title: "Banco Central — taxa Selic",
+        title: "Banco Central: taxa Selic",
         url: "https://www.bcb.gov.br/controleinflacao/taxaselic",
       },
       {
-        title: "Banco Central — Copom",
+        title: "Banco Central: Copom",
         url: "https://www.bcb.gov.br/controleinflacao/copom",
       },
     ],
@@ -315,11 +318,11 @@ export const lessons = [
       "O top-down parte do cenário, com juros, inflação e crescimento, para chegar aos setores. Depois, o bottom-up escolhe as empresas dentro deles.",
     sources: [
       {
-        title: "B3 Bora Investir — análise fundamentalista",
+        title: "B3 Bora Investir: análise fundamentalista",
         url: "https://borainvestir.b3.com.br/objetivos-financeiros/tudo-sobre-a-analise-fundamentalista-no-mundo-dos-investimentos/",
       },
       {
-        title: "B3 Bora Investir — dividendos",
+        title: "B3 Bora Investir: dividendos",
         url: "https://borainvestir.b3.com.br/glossario/dividendos/",
       },
     ],
@@ -370,20 +373,20 @@ export const lessons = [
       "Preço-teto = R$ 3,00 ÷ 0,06 = R$ 50,00. Acima desse preço, o dividendo médio passa a render menos de 6% ao ano sobre o valor pago.",
     sources: [
       {
-        title: "B3 Bora Investir — valor intrínseco",
+        title: "B3 Bora Investir: valor intrínseco",
         url: "https://borainvestir.b3.com.br/glossario/valor-intrinseco/",
       },
       {
-        title: "B3 Bora Investir — dividend yield: o que é e como calcular",
+        title: "B3 Bora Investir: dividend yield, o que é e como calcular",
         url: "https://borainvestir.b3.com.br/objetivos-financeiros/investir-melhor/dividend-yield-o-que-e-e-como-calcular/",
       },
     ],
   },
 ];
 export function serializeLessons(authenticated) {
-  return lessons.map((lesson, index) => {
+  return lessons.map((lesson) => {
     if (authenticated) return { ...lesson, locked: false };
-    if (index !== 0)
+    if (lesson.id !== openLessonId)
       return { id: lesson.id, title: lesson.title, locked: true };
     const { id, title, text, sections, takeaways, sources } = lesson;
     return { id, title, text, sections, takeaways, sources, locked: false };

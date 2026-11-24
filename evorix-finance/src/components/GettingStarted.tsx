@@ -137,7 +137,7 @@ export function GettingStarted({ compact = false }: GettingStartedProps) {
             <ArrowRight size={16} aria-hidden="true" />
           </Link>
         </div>
-        <ol className="mt-5 grid gap-x-8 border-t border-evo-border sm:mt-6 md:grid-cols-2">
+        <ol className="mt-5 grid gap-x-8 sm:mt-6 md:grid-cols-2">
           {[
             {
               Art: ResearchArt,

@@ -65,7 +65,7 @@ export function Metodologia() {
 
   return (
     <article className="mx-auto max-w-6xl space-y-10 px-5 py-9 sm:px-8 md:py-14">
-      <header className="border-b border-evo-border pb-8">
+      <header className="pb-8">
         <p className="text-xs font-semibold uppercase tracking-[.18em] text-evo-accent">
           Pesquisa e transparência
         </p>
@@ -95,7 +95,7 @@ export function Metodologia() {
       </section>
       <section
         aria-labelledby="philosophy-title"
-        className="border-t border-evo-border pt-8"
+        className="pt-8"
       >
         <h2 id="philosophy-title" className="text-2xl font-semibold">
           O que a escola procura
@@ -116,7 +116,7 @@ export function Metodologia() {
       </section>
       <section
         aria-labelledby="reading-guide-title"
-        className="border-t border-evo-border pt-8"
+        className="pt-8"
       >
         <h2 id="reading-guide-title" className="text-2xl font-semibold">
           Um roteiro para ler com contexto
@@ -134,7 +134,7 @@ export function Metodologia() {
       </section>
       <section
         aria-labelledby="methods-title"
-        className="border-t border-evo-border pt-8"
+        className="pt-8"
       >
         <h2 id="methods-title" className="text-2xl font-semibold">
           Critérios, autoria e fontes
@@ -187,7 +187,7 @@ export function Metodologia() {
           </a>
         )}
       </section>
-      <footer className="flex flex-wrap gap-3 border-t border-evo-border pt-7">
+      <footer className="flex flex-wrap gap-3 pt-7">
         <Link className="action" to={user ? "/app/ranking" : "/ranking"}>
           <FileText size={16} aria-hidden="true" /> Explorar a pesquisa{" "}
           <ArrowRight size={16} aria-hidden="true" />

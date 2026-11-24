@@ -5,8 +5,10 @@ import { fileURLToPath } from "node:url";
 import { chromium } from "playwright";
 import { expect } from "playwright/test";
 import { createFixture } from "./fixture.mjs";
-import { lessons } from "../server/learning-content.js";
+import { lessons, openLessonId } from "../server/learning-content.js";
 import { marketFixture } from "./market-fixture.mjs";
+const lessonById = (id) => lessons.find((lesson) => lesson.id === id);
+const openLesson = lessonById(openLessonId);
 const market = marketFixture();
 
 const fixture = await createFixture();
@@ -156,18 +158,18 @@ try {
     await expect(publicPage.locator("#public-mobile-menu")).toHaveCount(0);
   });
   await check(
-    "Visitante lê primeira aula e catálogo bloqueado, sem testes públicos",
+    "Visitante lê a aula aberta e o catálogo bloqueado, sem testes públicos",
     async () => {
       await publicPage.goto(root + "/aprender#acoes");
       await expect(publicPage.locator("#sala-de-aula")).toContainText(
-        lessons[0].text,
+        openLesson.text,
       );
       await publicPage.locator('[data-playlist-item="corretora"]').click();
       await expect(publicPage.locator("#sala-de-aula")).toContainText(
         /conta gratuita|criar conta/i,
       );
       await expect(publicPage.locator("#sala-de-aula")).not.toContainText(
-        lessons[1].text,
+        lessonById("corretora").text,
       );
       await publicPage
         .getByRole("tab", { name: "Testes", exact: true })
@@ -224,7 +226,7 @@ try {
             }),
           ).toBeVisible();
           await expect(progress(learner)).toHaveCount(0);
-          for (const choice of lessons[0].choices)
+          for (const choice of openLesson.choices)
             await expect(
               learner.getByRole("button", { name: choice, exact: true }),
             ).toHaveCount(0);
@@ -234,6 +236,22 @@ try {
       },
     );
   }
+  await check(
+    "Visitante clica em Abrir minicurso de Primeiros passos e cai na aula aberta",
+    async () => {
+      await publicPage.goto(root + "/aprender");
+      await publicPage
+        .getByRole("button", {
+          name: "Abrir minicurso: Primeiros passos na bolsa",
+          exact: true,
+        })
+        .click();
+      await expect(publicPage).toHaveURL(/aula=acoes/);
+      await expect(publicPage.locator("#classroom-title")).toContainText(
+        openLesson.title,
+      );
+    },
+  );
   await check("Ranking filtra e limpar filtros recupera a lista", async () => {
     await page.goto(root + "/app/ranking?visual=real");
     await expect(
@@ -398,7 +416,7 @@ try {
       await page.goto(root + "/app/aprender#acoes");
       await page.getByRole("tab", { name: "Testes", exact: true }).click();
       await page
-        .getByRole("button", { name: lessons[0].choices[0], exact: true })
+        .getByRole("button", { name: openLesson.choices[0], exact: true })
         .click();
       await expect(progress(page)).toHaveAttribute("aria-valuenow", "0");
       await page.route("**/api/learning/progress/acoes", (route) =>
@@ -411,7 +429,7 @@ try {
       try {
         await page
           .getByRole("button", {
-            name: lessons[0].choices[lessons[0].answer],
+            name: openLesson.choices[openLesson.answer],
             exact: true,
           })
           .click();
@@ -453,13 +471,13 @@ try {
     "Playlist no celular mantém foco e posição; Voltar restaura a aula",
     async () => {
       await page.setViewportSize({ width: 360, height: 900 });
-      await page.goto(root + "/app/aprender?aula=acoes#sala-de-aula");
-      const first = page.locator('[data-playlist-item="acoes"]');
+      await page.goto(root + "/app/aprender?aula=corretora#sala-de-aula");
+      const first = page.locator('[data-playlist-item="corretora"]');
       await first.click();
       const before = await page.evaluate(() => window.scrollY);
       await first.press("ArrowRight");
-      await expect(page).toHaveURL(/aula=corretora/);
-      await expect(page.locator('[data-playlist-item="corretora"]')).toBeFocused();
+      await expect(page).toHaveURL(/aula=acoes/);
+      await expect(page.locator('[data-playlist-item="acoes"]')).toBeFocused();
       const after = await page.evaluate(() => window.scrollY);
       assert.ok(
         Math.abs(after - before) <= 4,
@@ -490,7 +508,7 @@ try {
     ]);
     await expiredPage
       .getByRole("button", {
-        name: lessons[0].choices[lessons[0].answer],
+        name: openLesson.choices[openLesson.answer],
         exact: true,
       })
       .click();

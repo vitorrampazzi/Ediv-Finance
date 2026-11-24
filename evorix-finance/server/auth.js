@@ -193,7 +193,7 @@ async function sendVerification(email, name, token, next) {
   await smtp.sendMail({
     from: config.mailFrom,
     to: email,
-    subject: "Confirme seu e-mail — Escola do Dividendo",
+    subject: "Confirme seu e-mail na Escola do Dividendo",
     text: `${emailGreeting(name)}\n\nPara confirmar seu endereço de e-mail, abra este link em até 30 minutos:\n${link}\n\nSe você não solicitou este cadastro, ignore esta mensagem.`,
     html: accountEmail({
       heading: "Confirme seu e-mail",
@@ -686,7 +686,7 @@ router.post("/password/forgot", forgotLimiter, async (req, res) => {
         await smtp.sendMail({
           from: config.mailFrom,
           to: rows[0].email,
-          subject: "Redefina sua senha — Escola do Dividendo",
+          subject: "Redefina sua senha na Escola do Dividendo",
           text: `Use o link em até 30 minutos: ${url}\nSe não solicitou, ignore. Sua senha não mudou.`,
           html: accountEmail({
             heading: "Redefina sua senha",

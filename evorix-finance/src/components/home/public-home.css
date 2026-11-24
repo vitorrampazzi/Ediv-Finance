@@ -100,7 +100,6 @@
 }
 .ph-hero {
   padding-top: clamp(0.75rem, 1.6vw, 1.5rem);
-  border-bottom: 1px solid var(--ph-border);
   background: var(--ediv-canvas);
 }
 .ph-hero-layout.ph-container {
@@ -215,7 +214,6 @@
 }
 .ph-final {
   background: var(--ediv-inset);
-  border-top: 1px solid var(--ph-border);
 }
 .ph-final-layout {
   display: grid;

@@ -26,6 +26,7 @@ import {
   approvedVideoEmbed,
   learningChapters,
   learningCourses,
+  openLessonId,
 } from "../lib/learningCatalog";
 
 type Lesson = {
@@ -139,12 +140,14 @@ function LearningSession({
   const handledLocationRef = useRef<string | null>(null);
   const queryLesson = new URLSearchParams(location.search).get("aula");
   const hashLesson = location.hash.slice(1).replace(/^leitura-/, "");
+  // Quem tem conta começa pela primeira da ordem; o visitante, pela aula aberta.
+  const defaultLessonId = user ? lessonIds[0] : openLessonId;
   const selectedId =
     queryLesson && lessonIds.includes(queryLesson)
       ? queryLesson
       : lessonIds.includes(hashLesson)
         ? hashLesson
-        : lessonIds[0];
+        : defaultLessonId;
 
   function selectLesson(id: string, focusClassroom = false) {
     if (!lessonIds.includes(id)) return;
@@ -197,8 +200,8 @@ function LearningSession({
       });
     return () => controller.abort();
   }, [userId, authLoading, refreshSession, revision]);
-  const lessons: Lesson[] = (content?.lessons || []).map((lesson, index) =>
-    !user && index > 0
+  const lessons: Lesson[] = (content?.lessons || []).map((lesson) =>
+    !user && lesson.id !== openLessonId
       ? { id: lesson.id, title: lesson.title, locked: true }
       : lesson,
   );
@@ -327,9 +330,12 @@ function LearningSession({
     }
   }
   const selectedLesson =
-    lessons.find((lesson) => lesson.id === selectedId) ?? lessons[0];
+    lessons.find((lesson) => lesson.id === selectedId) ??
+    lessons.find((lesson) => lesson.id === defaultLessonId) ??
+    lessons[0];
   const selectedChapter =
     learningChapters.find((chapter) => chapter.id === selectedLesson?.id) ??
+    learningChapters.find((chapter) => chapter.id === defaultLessonId) ??
     learningChapters[0];
   const selectedCourse =
     learningCourses.find((course) =>
@@ -373,7 +379,7 @@ function LearningSession({
       id="pagina-conteudo"
       className="mx-auto max-w-6xl space-y-6 px-4 py-5 sm:space-y-9 sm:px-6 sm:py-8"
     >
-      <header className="section-masthead">
+      <header className="section-masthead section-masthead--sem-linha">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between sm:gap-6">
           <div className="min-w-0 flex-1">
             <p className="edition-label">Escola do Dividendo / Aprender</p>
@@ -403,7 +409,7 @@ function LearningSession({
                 · progresso salvo na sua conta
               </>
             ) : (
-              "Primeira aula aberta. Entre para fazer os testes e salvar seu progresso."
+              "Aula aberta. Entre para fazer os testes e salvar seu progresso."
             )}
           </p>
           <a
@@ -511,7 +517,7 @@ function LearningSession({
       )}
       {!user && !loading && content && (
         <p className="text-sm text-evo-textSec">
-          A primeira aula e o glossário são abertos. A conta gratuita dá acesso
+          Uma aula e o glossário são abertos. A conta gratuita dá acesso
           às demais aulas e salva seu progresso.
         </p>
       )}
@@ -521,6 +527,9 @@ function LearningSession({
         aria-labelledby="learning-tab-curso"
         hidden={activeTab !== "curso"}
       >
+        <p className="mb-5 rounded-xl border border-evo-border bg-evo-bgMain px-4 py-3 text-sm leading-6 text-evo-textSec">
+          Os vídeos seguem a ordem do curso. Algumas falas citam aulas que ainda vão entrar no site.
+        </p>
         {content && !authLoading && user && (
           <LearningJourney
             persisted={Boolean(user) || visitorProgress.persisted}
@@ -542,7 +551,7 @@ function LearningSession({
           <section
             ref={classroomRef}
             id="sala-de-aula"
-            className="scroll-mt-24 border-t border-evo-border pt-7"
+            className="scroll-mt-24 pt-7"
             aria-labelledby="classroom-title"
           >
             <p className="text-xs uppercase tracking-[0.14em] text-evo-textSec">
@@ -699,7 +708,7 @@ function LearningSession({
             )}
             <nav
               aria-label="Continuar o aprendizado"
-              className="mt-6 flex flex-col gap-3 border-t border-evo-border pt-5 sm:flex-row sm:justify-between"
+              className="mt-6 flex flex-col gap-3 pt-5 sm:flex-row sm:justify-between"
             >
               {previousLesson ? (
                 <button
@@ -784,7 +793,7 @@ function LearningSession({
             </p>
           ))}
       </section>
-      <footer className="flex flex-wrap items-center justify-between gap-4 border-t border-evo-border pt-6">
+      <footer className="flex flex-wrap items-center justify-between gap-4 pt-6">
         <Link to={user ? "/app/ranking" : "/ranking"} className="action">
           Abrir pesquisas do ranking <ArrowRight size={16} aria-hidden="true" />
         </Link>
@@ -854,7 +863,7 @@ function LearningSession({
             rel="noreferrer"
             className="underline"
           >
-            Portal do Investidor — CVM
+            Portal do Investidor, da CVM
             <span className="sr-only"> (abre em nova guia)</span>
           </a>{" "}
           e nas fontes oficiais indicadas em cada aula.

@@ -54,7 +54,7 @@ export function PublicQuestions() {
             </summary>
             <div className="ph-faq-expand">
               <p>
-                A primeira aula é aberta. Uma conta gratuita com e-mail
+                Uma das aulas é aberta. Uma conta gratuita com e-mail
                 confirmado libera as pesquisas e a continuação da trilha de
                 aprendizado. Não há cobrança habilitada nesta versão.
               </p>

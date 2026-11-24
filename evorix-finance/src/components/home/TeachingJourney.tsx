@@ -33,7 +33,7 @@ const teachingSteps = [
     text: "Parte do resultado pode ser distribuída aos acionistas. Entenda essa relação antes de comparar os pagamentos.",
     detail:
       "As aulas explicam payout, dividendo por ação e as datas que definem quem recebe cada pagamento.",
-    action: "Abrir a primeira aula",
+    action: "Abrir a aula aberta",
     content: "first_lesson",
     path: "/aprender",
     diagram: "Resultado → distribuição → acionista",

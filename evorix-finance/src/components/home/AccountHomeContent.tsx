@@ -45,7 +45,7 @@ export function HomeContent({
           </h1>
           <p className="mt-3 max-w-xl text-sm leading-6 text-evo-textSec sm:mt-5 sm:text-base">
             {awaitingRegistration && !user
-              ? "Conheça o ranking e a primeira aula enquanto preparamos a abertura dos cadastros."
+              ? "Conheça o ranking e a aula aberta enquanto preparamos a abertura dos cadastros."
               : member
                 ? "Abra a pesquisa de uma empresa ou continue suas aulas."
                 : "Na Escola do Dividendo, você lê pesquisas de ações e estuda as empresas que distribuem lucros."}
@@ -75,7 +75,7 @@ export function HomeContent({
                   ? "Abrir pesquisas"
                   : "Ir para meu início"
                 : awaitingRegistration
-                  ? "Começar pela primeira aula"
+                  ? "Começar pela aula aberta"
                   : "Criar conta grátis"}{" "}
               <ArrowRight size={17} aria-hidden="true" />
             </Link>
@@ -95,7 +95,7 @@ export function HomeContent({
           </div>
           {!user && !awaitingRegistration && (
             <p className="mt-3 text-sm leading-relaxed text-evo-textSec">
-              Conta gratuita · Primeira aula aberta.
+              Conta gratuita · Uma aula aberta.
             </p>
           )}
           {awaitingRegistration && !user && (
