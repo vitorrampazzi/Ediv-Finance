@@ -158,11 +158,11 @@ try {
   await check(
     "Visitante lê primeira aula e catálogo bloqueado, sem testes públicos",
     async () => {
-      await publicPage.goto(root + "/aprender#ranking");
+      await publicPage.goto(root + "/aprender#acoes");
       await expect(publicPage.locator("#sala-de-aula")).toContainText(
         lessons[0].text,
       );
-      await publicPage.locator('[data-playlist-item="risco"]').click();
+      await publicPage.locator('[data-playlist-item="corretora"]').click();
       await expect(publicPage.locator("#sala-de-aula")).toContainText(
         /conta gratuita|criar conta/i,
       );
@@ -214,7 +214,7 @@ try {
             };
           }, failure);
           const learner = await isolated.newPage();
-          await learner.goto(root + "/aprender#ranking");
+          await learner.goto(root + "/aprender#acoes");
           await learner
             .getByRole("tab", { name: "Testes", exact: true })
             .click();
@@ -395,13 +395,13 @@ try {
   await check(
     "Resposta errada não conclui; falha ao salvar oferece retry sem progresso falso",
     async () => {
-      await page.goto(root + "/app/aprender#ranking");
+      await page.goto(root + "/app/aprender#acoes");
       await page.getByRole("tab", { name: "Testes", exact: true }).click();
       await page
         .getByRole("button", { name: lessons[0].choices[0], exact: true })
         .click();
       await expect(progress(page)).toHaveAttribute("aria-valuenow", "0");
-      await page.route("**/api/learning/progress/ranking", (route) =>
+      await page.route("**/api/learning/progress/acoes", (route) =>
         route.fulfill({
           status: 503,
           contentType: "application/json",
@@ -420,7 +420,7 @@ try {
         );
         await expect(progress(page)).toHaveAttribute("aria-valuenow", "0");
       } finally {
-        await page.unroute("**/api/learning/progress/ranking");
+        await page.unroute("**/api/learning/progress/acoes");
       }
       await page
         .getByRole("button", { name: "Tentar salvar novamente", exact: true })
@@ -453,13 +453,13 @@ try {
     "Playlist no celular mantém foco e posição; Voltar restaura a aula",
     async () => {
       await page.setViewportSize({ width: 360, height: 900 });
-      await page.goto(root + "/app/aprender?aula=ranking#sala-de-aula");
-      const first = page.locator('[data-playlist-item="ranking"]');
+      await page.goto(root + "/app/aprender?aula=acoes#sala-de-aula");
+      const first = page.locator('[data-playlist-item="acoes"]');
       await first.click();
       const before = await page.evaluate(() => window.scrollY);
       await first.press("ArrowRight");
-      await expect(page).toHaveURL(/aula=risco/);
-      await expect(page.locator('[data-playlist-item="risco"]')).toBeFocused();
+      await expect(page).toHaveURL(/aula=corretora/);
+      await expect(page.locator('[data-playlist-item="corretora"]')).toBeFocused();
       const after = await page.evaluate(() => window.scrollY);
       assert.ok(
         Math.abs(after - before) <= 4,
@@ -509,7 +509,7 @@ try {
   await check("Sessão expirada ao concluir aula retorna ao login", async () => {
     const expired = await context(fixture.accounts.b);
     const expiredPage = await expired.newPage();
-    await expiredPage.goto(root + "/app/aprender#ranking");
+    await expiredPage.goto(root + "/app/aprender#acoes");
     await expect(expiredPage.locator("#classroom-title")).toBeVisible();
     await expiredPage.getByRole("tab", { name: "Testes", exact: true }).click();
     await fixture.pool.execute("DELETE FROM user_sessions WHERE user_id=?", [

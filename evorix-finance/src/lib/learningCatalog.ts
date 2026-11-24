@@ -1,4 +1,15 @@
-export type LessonId = "ranking" | "risco" | "dividendos" | "carteira";
+export type LessonId =
+  | "acoes"
+  | "corretora"
+  | "comprar-acoes"
+  | "dividendos"
+  | "carteira"
+  | "inflacao"
+  | "ciclos"
+  | "fundamentalista"
+  | "preco-teto"
+  | "ranking"
+  | "risco";
 
 export type LearningChapter = {
   id: LessonId;
@@ -13,16 +24,22 @@ export type LearningChapter = {
 // Keep URLs null until the selected videos are ready for publication.
 export const learningChapters: LearningChapter[] = [
   {
-    id: "ranking",
-    subtitle: "Tese, premissas e limites de uma previsão",
-    readingMinutes: 6,
-    videoEmbedUrl: null,
+    id: "acoes",
+    subtitle: "O que você ganha e o que pode perder ao virar sócio",
+    readingMinutes: 3,
+    videoEmbedUrl: "https://www.youtube-nocookie.com/embed/opr1WI9KnX8",
   },
   {
-    id: "risco",
-    subtitle: "O negócio por trás do número",
-    readingMinutes: 7,
-    videoEmbedUrl: null,
+    id: "corretora",
+    subtitle: "A porta de entrada para a bolsa",
+    readingMinutes: 2,
+    videoEmbedUrl: "https://www.youtube-nocookie.com/embed/I3ns4SmiCHg",
+  },
+  {
+    id: "comprar-acoes",
+    subtitle: "Ticker, lote padrão e o que muda na sua posição",
+    readingMinutes: 3,
+    videoEmbedUrl: "https://www.youtube-nocookie.com/embed/iyGSotDRekU",
   },
   {
     id: "dividendos",
@@ -36,16 +53,52 @@ export const learningChapters: LearningChapter[] = [
     readingMinutes: 8,
     videoEmbedUrl: null,
   },
+  {
+    id: "inflacao",
+    subtitle: "Preços, poder de compra e o papel do Banco Central",
+    readingMinutes: 3,
+    videoEmbedUrl: "https://www.youtube-nocookie.com/embed/lgTWQVok9lg",
+  },
+  {
+    id: "ciclos",
+    subtitle: "Por que o preço muda mesmo quando o negócio não muda",
+    readingMinutes: 2,
+    videoEmbedUrl: "https://www.youtube-nocookie.com/embed/DfFnkAXHd6o",
+  },
+  {
+    id: "fundamentalista",
+    subtitle: "Top-down, bottom-up e os setores perenes",
+    readingMinutes: 3,
+    videoEmbedUrl: "https://www.youtube-nocookie.com/embed/mLL51LnRMw8",
+  },
+  {
+    id: "preco-teto",
+    subtitle: "Até quanto pagar por uma ação pagadora de dividendos",
+    readingMinutes: 3,
+    videoEmbedUrl: "https://www.youtube-nocookie.com/embed/o7UuO2uPP1I",
+  },
+  {
+    id: "ranking",
+    subtitle: "Tese, premissas e limites de uma previsão",
+    readingMinutes: 6,
+    videoEmbedUrl: null,
+  },
+  {
+    id: "risco",
+    subtitle: "O negócio por trás do número",
+    readingMinutes: 7,
+    videoEmbedUrl: null,
+  },
 ];
 
 export const learningCourses = [
   {
-    id: "pesquisa",
-    eyebrow: "Fundamentos da pesquisa",
-    title: "Leia uma análise com autonomia",
+    id: "primeiros-passos",
+    eyebrow: "Comece por aqui",
+    title: "Primeiros passos na bolsa",
     description:
-      "Entenda as hipóteses do corretor, o prazo do cenário e o que pode fazer a tese mudar.",
-    chapterIds: ["ranking", "risco"] as LessonId[],
+      "Entenda o que é ser sócio de uma empresa, como funciona a corretora e como fazer a sua primeira compra.",
+    chapterIds: ["acoes", "corretora", "comprar-acoes"] as LessonId[],
   },
   {
     id: "dividendos",
@@ -54,6 +107,30 @@ export const learningCourses = [
     description:
       "Conheça o caminho entre o resultado do negócio, a geração de caixa e o pagamento ao acionista.",
     chapterIds: ["dividendos", "carteira"] as LessonId[],
+  },
+  {
+    id: "economia",
+    eyebrow: "Economia para o investidor",
+    title: "Inflação, juros e ciclos",
+    description:
+      "Veja como inflação e juros mexem com o lucro das empresas e com o preço das ações, e por que o negócio continua sendo o centro da análise.",
+    chapterIds: ["inflacao", "ciclos"] as LessonId[],
+  },
+  {
+    id: "analise",
+    eyebrow: "Análise e preço",
+    title: "Do negócio ao preço-teto",
+    description:
+      "Escolha setores e empresas com a análise fundamentalista e calcule até quanto pagar por uma ação pagadora de dividendos.",
+    chapterIds: ["fundamentalista", "preco-teto"] as LessonId[],
+  },
+  {
+    id: "pesquisa",
+    eyebrow: "Fundamentos da pesquisa",
+    title: "Leia uma análise com autonomia",
+    description:
+      "Entenda as hipóteses do corretor, o prazo do cenário e o que pode fazer a tese mudar.",
+    chapterIds: ["ranking", "risco"] as LessonId[],
   },
 ];
 
