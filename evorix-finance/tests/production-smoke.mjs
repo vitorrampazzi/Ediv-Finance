@@ -110,11 +110,18 @@ await check(
     assert.equal(response.status, 200);
     const data = await response.json();
     assert.equal(data.access, "preview");
-    assert.ok(data.lessons[0].text || data.lessons[0].sections?.length);
+    const open = data.lessons.find((lesson) => !lesson.locked);
+    assert.ok(open, "a aula aberta deve existir");
+    assert.equal(
+      data.lessons.filter((lesson) => !lesson.locked).length,
+      1,
+      "só uma aula aberta ao visitante",
+    );
+    assert.ok(open.text || open.sections?.length);
     assert.ok(
       data.lessons
-        .slice(1)
-        .every((lesson) => lesson.locked && !lesson.text && !lesson.answer),
+        .filter((lesson) => lesson.locked)
+        .every((lesson) => !lesson.text && !lesson.answer),
     );
     return {
       status: response.status,

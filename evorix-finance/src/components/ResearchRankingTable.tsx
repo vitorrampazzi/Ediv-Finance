@@ -45,8 +45,8 @@ export function ResearchRankingTable({
           <caption className="sr-only">
             Resumos dos módulos de pesquisa por empresa
             {demo
-              ? " — demonstração com dados fictícios"
-              : " — publicação selecionada"}
+              ? " (demonstração com dados fictícios)"
+              : " (publicação selecionada)"}
             .
           </caption>
           <colgroup>

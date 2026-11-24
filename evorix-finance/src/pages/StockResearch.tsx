@@ -34,7 +34,7 @@ const money = new Intl.NumberFormat("pt-BR", {
   currency: "BRL",
 });
 const page = "mx-auto max-w-6xl px-4 py-6 sm:px-6 md:py-10";
-const section = "scroll-mt-40 border-t border-evo-border py-7 sm:py-9";
+const section = "scroll-mt-40 py-7 sm:py-9";
 
 export function StockResearch() {
   const { user, loading } = useAuth();
@@ -319,7 +319,7 @@ function MemberStockResearch() {
       <StockResearchInsight key={entry.ticker} entry={entry} demo={demo} />
       <div className="grid gap-x-10 lg:grid-cols-[minmax(0,1fr)_15rem]">
         <div className="min-w-0">
-          <section id="tese" className={section + " border-t-0"}>
+          <section id="tese" className={section}>
             <h2 className="display-title text-2xl sm:text-3xl">
               {demo ? "Tese do exemplo" : "Tese da pesquisa"}
             </h2>
@@ -483,7 +483,7 @@ function MemberStockResearch() {
           </section>
         </div>
         <aside
-          className="min-w-0 border-t border-evo-border py-7 text-xs lg:border-l lg:border-t-0 lg:pl-7"
+          className="min-w-0 py-7 text-xs lg:border-l lg:pl-7"
           aria-label="Contexto da publicação"
         >
           <div className="lg:sticky lg:top-40">
@@ -539,7 +539,7 @@ function MemberStockResearch() {
       </div>
       <nav
         aria-label="Outras pesquisas desta publicação"
-        className="grid gap-3 border-t border-evo-border py-6 sm:grid-cols-2"
+        className="grid gap-3 py-6 sm:grid-cols-2"
       >
         {previous ? (
           <Link

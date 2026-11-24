@@ -62,7 +62,7 @@ export const Perfil = () => {
 
   return (
     <section className="mx-auto max-w-4xl">
-      <header className="flex flex-col gap-5 border-b border-evo-border pb-8 sm:flex-row sm:items-center sm:gap-6">
+      <header className="flex flex-col gap-5 pb-8 sm:flex-row sm:items-center sm:gap-6">
         <span
           aria-hidden="true"
           className="ediv-account-avatar flex h-20 w-20 shrink-0 items-center justify-center rounded-full text-2xl font-semibold"
@@ -99,7 +99,7 @@ export const Perfil = () => {
 
       <section
         aria-labelledby="profile-learning"
-        className="border-b border-evo-border py-8"
+        className="py-8"
       >
         <div className="flex flex-wrap items-end justify-between gap-x-6 gap-y-2">
           <div>

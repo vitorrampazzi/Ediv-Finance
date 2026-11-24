@@ -235,7 +235,7 @@ test("tooltips: São Paulo date, value, basis, status and source", () => {
   const latest = rowTooltip(rows[4], series, { ceiling: false, marker, now });
   assert.equal(
     latest.title,
-    "Cotação mais recente — preço nominal de mercado",
+    "Cotação mais recente: preço nominal de mercado",
   );
   assert.deepEqual(latest.lines, [
     ["Cotação", "R$ 19,62"],
@@ -245,7 +245,7 @@ test("tooltips: São Paulo date, value, basis, status and source", () => {
   ]);
   assert.equal(
     markerTitle({ checkedAt: "2026-11-04T20:55:00Z", stale: true }, now),
-    "Cotação mais recente — preço nominal de mercado (defasada)",
+    "Cotação mais recente: preço nominal de mercado (defasada)",
   );
   const monthly = parsePriceSeries(
     {

@@ -5,7 +5,7 @@ import { getResearchCoverage } from "../lib/researchCoverage";
 export function ResearchCoverage({ entry }: { entry: Entry }) {
   const coverage = getResearchCoverage(entry);
   return (
-    <details className="mt-5 border-y border-evo-border py-3">
+    <details className="mt-5 py-3">
       <summary className="min-h-11 cursor-pointer py-2 text-sm font-semibold">
         Conteúdo disponível · {coverage.filled}/{coverage.total}
       </summary>

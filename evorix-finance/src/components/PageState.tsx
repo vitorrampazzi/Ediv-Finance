@@ -22,7 +22,7 @@ export function PageState({
     kind === "loading" ? LoaderCircle : kind === "error" ? CircleAlert : Inbox;
   return (
     <section
-      className="border-y border-evo-border py-7"
+      className="py-7"
       role={kind === "error" ? "alert" : "status"}
     >
       <div className="flex items-start gap-3">

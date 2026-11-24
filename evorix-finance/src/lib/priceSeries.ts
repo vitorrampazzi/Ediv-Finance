@@ -395,7 +395,7 @@ export const incompleteText = (date: string | null) =>
 
 export function markerTitle(marker: Pick<SeriesMarker, "checkedAt" | "stale">) {
   return (
-    "Cotação mais recente — preço nominal de mercado" +
+    "Cotação mais recente: preço nominal de mercado" +
     (marker.stale ? " (defasada)" : "")
   );
 }

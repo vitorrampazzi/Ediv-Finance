@@ -2,7 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { createFixture } from "./fixture.mjs";
 import { zipSync, strToU8 } from "fflate";
-import { lessons, glossary } from "../server/learning-content.js";
+import { lessons, glossary, openLessonId } from "../server/learning-content.js";
 const fixture = await createFixture();
 const { accounts, pool, request, password, state } = fixture;
 const { admin, analyst, a, b } = accounts;
@@ -597,15 +597,20 @@ try {
           "sections",
           "takeaways",
           "sources",
-        ])
-          assert.deepEqual(guest.body.lessons[0][key], lessons[0][key]);
+        ]) {
+          const guestOpen = guest.body.lessons.find(
+            (lesson) => lesson.id === openLessonId,
+          );
+          const source = lessons.find((lesson) => lesson.id === openLessonId);
+          assert.deepEqual(guestOpen[key], source[key]);
+        }
         for (const lesson of guest.body.lessons)
           for (const key of ["question", "choices", "answer", "explanation"])
             assert.equal(Object.hasOwn(lesson, key), false);
         assert.deepEqual(
-          guest.body.lessons.slice(1),
+          guest.body.lessons.filter((lesson) => lesson.id !== openLessonId),
           lessons
-            .slice(1)
+            .filter((lesson) => lesson.id !== openLessonId)
             .map(({ id, title }) => ({ id, title, locked: true })),
         );
         assert.equal(
@@ -651,7 +656,9 @@ try {
           [],
         );
         assert.equal(
-          (await request(null, "/api/learning")).body.lessons[1].locked,
+          (await request(null, "/api/learning")).body.lessons.find(
+            (lesson) => lesson.id === "corretora",
+          ).locked,
           true,
         );
         await request(a, "/api/learning/progress", { method: "DELETE" });

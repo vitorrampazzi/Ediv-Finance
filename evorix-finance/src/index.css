@@ -247,6 +247,11 @@ button:disabled {
   border-bottom: 1px solid var(--ediv-line);
 }
 
+/* Só /aprender: sem a linha de baixo; o espaçamento do cabeçalho fica igual. */
+.section-masthead.section-masthead--sem-linha {
+  border-bottom: 0;
+}
+
 .journey-preview {
   background: var(--ediv-inset);
 }

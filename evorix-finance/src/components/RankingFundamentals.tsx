@@ -30,7 +30,7 @@ const modules = [
   ["balanceSheet", "Balanço patrimonial", Landmark],
   [
     "incomeStatement",
-    "DRE — Demonstração do Resultado do Exercício",
+    "DRE (Demonstração do Resultado do Exercício)",
     ReceiptText,
   ],
   ["cashFlow", "Fluxo de caixa", Wallet],

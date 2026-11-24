@@ -29,7 +29,7 @@ export function LearningQuiz({
   onAnswer: (answer: number) => void;
 }) {
   return (
-    <fieldset className="border-y border-evo-border px-0 py-5">
+    <fieldset className="px-0 py-5">
       <legend className="pr-3 font-semibold">Confira o que aprendeu</legend>
       <p className="mb-4 text-sm leading-relaxed">{lesson.question}</p>
       <p className="mb-4 text-xs leading-relaxed text-evo-textSec">

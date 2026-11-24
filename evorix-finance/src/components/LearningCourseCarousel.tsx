@@ -1,7 +1,7 @@
 import { Tooltip } from "./Tooltip";
 import { useEffect, useId, useRef, useState } from "react";
 import { ArrowLeft, ArrowRight, CheckCircle2, Clock3 } from "lucide-react";
-import { approvedVideoEmbed } from "../lib/learningCatalog";
+import { approvedVideoEmbed, openLessonId } from "../lib/learningCatalog";
 import "./learning-workspace.css";
 
 type Course = {
@@ -171,8 +171,10 @@ export function LearningCourseCarousel({
               .filter((chapter) => course.chapterIds.includes(chapter.id))
               .reduce((sum, chapter) => sum + chapter.readingMinutes, 0);
             const firstChapterId =
-              course.chapterIds.find((id) => !completed.includes(id)) ??
-              course.chapterIds[0];
+              !isAuthenticated && course.chapterIds.includes(openLessonId)
+                ? openLessonId
+                : (course.chapterIds.find((id) => !completed.includes(id)) ??
+                  course.chapterIds[0]);
             const courseFinished =
               count === course.chapterIds.length && count > 0;
             const availableVideos = chapters.filter(
@@ -198,8 +200,8 @@ export function LearningCourseCarousel({
                         <CheckCircle2 size={13} aria-hidden="true" />
                       )}
                       {!isAuthenticated
-                        ? course.chapterIds.includes(chapters[0]?.id)
-                          ? "Primeira aula aberta"
+                        ? course.chapterIds.includes(openLessonId)
+                          ? "Aula aberta"
                           : "Entre para acessar"
                         : courseFinished
                           ? "Concluído"

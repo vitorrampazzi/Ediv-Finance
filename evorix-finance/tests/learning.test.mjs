@@ -3,14 +3,40 @@ import assert from "node:assert/strict";
 import {
   learningCourses,
   lessons,
+  openLessonId,
   serializeLessons,
 } from "../server/learning-content.js";
+import {
+  learningChapters,
+  learningCourses as clientCourses,
+  openLessonId as clientOpenLessonId,
+} from "../src/lib/learningCatalog.ts";
 
-test("guest serialization retains the first lesson but no quiz; member quizzes stay intact", () => {
+const lessonOrder = [
+  "corretora",
+  "acoes",
+  "comprar-acoes",
+  "inflacao",
+  "ciclos",
+  "fundamentalista",
+  "preco-teto",
+];
+
+test("guest serialization retains only the open lesson (acoes) and no quiz; member quizzes stay intact", () => {
   const original = structuredClone(lessons);
   const preview = serializeLessons(false);
-  assert.equal(preview.length, 7);
-  assert.deepEqual(Object.keys(preview[0]), [
+  assert.equal(openLessonId, "acoes");
+  assert.deepEqual(
+    preview.map((lesson) => lesson.id),
+    lessonOrder,
+  );
+  assert.deepEqual(
+    preview.filter((lesson) => !lesson.locked).map((lesson) => lesson.id),
+    [openLessonId],
+  );
+  const open = preview.find((lesson) => lesson.id === openLessonId);
+  const source = original.find((lesson) => lesson.id === openLessonId);
+  assert.deepEqual(Object.keys(open), [
     "id",
     "title",
     "text",
@@ -20,8 +46,8 @@ test("guest serialization retains the first lesson but no quiz; member quizzes s
     "locked",
   ]);
   for (const key of ["id", "title", "text", "sections", "takeaways", "sources"])
-    assert.deepEqual(preview[0][key], original[0][key]);
-  assert.equal(preview[0].locked, false);
+    assert.deepEqual(open[key], source[key]);
+  assert.equal(open.locked, false);
   for (const lesson of preview)
     for (const key of ["question", "choices", "answer", "explanation"])
       assert.equal(
@@ -30,8 +56,10 @@ test("guest serialization retains the first lesson but no quiz; member quizzes s
         `${lesson.id}/${key} must not reach guests`,
       );
   assert.deepEqual(
-    preview.slice(1),
-    original.slice(1).map(({ id, title }) => ({ id, title, locked: true })),
+    preview.filter((lesson) => lesson.id !== openLessonId),
+    original
+      .filter((lesson) => lesson.id !== openLessonId)
+      .map(({ id, title }) => ({ id, title, locked: true })),
   );
   const full = serializeLessons(true);
   assert.deepEqual(
@@ -41,8 +69,8 @@ test("guest serialization retains the first lesson but no quiz; member quizzes s
   assert.deepEqual(
     full.map(({ id, answer }) => [id, answer]),
     [
-      ["acoes", 1],
       ["corretora", 2],
+      ["acoes", 1],
       ["comprar-acoes", 0],
       ["inflacao", 0],
       ["ciclos", 2],
@@ -54,7 +82,7 @@ test("guest serialization retains the first lesson but no quiz; member quizzes s
   assert.deepEqual(
     learningCourses.map(({ id, chapterIds }) => [id, chapterIds]),
     [
-      ["primeiros-passos", ["acoes", "corretora", "comprar-acoes"]],
+      ["primeiros-passos", ["corretora", "acoes", "comprar-acoes"]],
       ["economia", ["inflacao", "ciclos"]],
       ["analise", ["fundamentalista", "preco-teto"]],
     ],
@@ -104,5 +132,21 @@ test("catalog integrity: unique ids, valid answers, courses cover every lesson o
     covered,
     ids,
     "lessons follow the course order and each lesson sits in exactly one course",
+  );
+});
+
+test("server and client catalogs agree on lesson order, courses and the open lesson", () => {
+  assert.equal(clientOpenLessonId, openLessonId);
+  assert.deepEqual(
+    learningChapters.map((chapter) => chapter.id),
+    lessons.map((lesson) => lesson.id),
+  );
+  assert.deepEqual(
+    clientCourses.map(({ id, chapterIds }) => [id, chapterIds]),
+    learningCourses.map(({ id, chapterIds }) => [id, chapterIds]),
+  );
+  assert.ok(
+    learningCourses.some((course) => course.chapterIds.includes(openLessonId)),
+    "the open lesson must belong to a course",
   );
 });
