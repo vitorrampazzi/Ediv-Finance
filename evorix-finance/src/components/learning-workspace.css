@@ -85,7 +85,7 @@
   margin-top: 0.625rem;
   overflow: hidden;
   border-radius: 1rem;
-  background: var(--ediv-line);
+  background: var(--ediv-border);
 }
 
 .ediv-learning-progress-track > span {
@@ -117,6 +117,35 @@
   align-items: center;
   justify-content: space-between;
   gap: 1rem;
+}
+
+/* Celular: título e setas na mesma linha; a descrição ocupa a largura abaixo. */
+@media (max-width: 639px) {
+  .ediv-learning-section-heading {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 0.5rem 1rem;
+  }
+
+  .ediv-learning-section-heading > div:first-child {
+    display: contents;
+  }
+
+  .ediv-learning-section-heading > div:first-child > h2 {
+    grid-column: 1;
+    grid-row: 1;
+  }
+
+  .ediv-learning-section-heading > div:first-child > p {
+    grid-column: 1 / -1;
+    grid-row: 2;
+  }
+
+  .ediv-learning-section-heading > div[role="group"] {
+    grid-column: 2;
+    grid-row: 1;
+  }
 }
 
 .ediv-learning-section-title {

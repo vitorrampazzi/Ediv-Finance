@@ -1,0 +1,17 @@
+/* Cabeçalho de /aprender: o título e a etiqueta ficam à esquerda; a animação
+   do ranking (OrbitCoins variant="learning") fica na coluna da direita.
+   No celular, a animação usa o mesmo tamanho do cabeçalho do ranking. */
+
+@media (max-width: 639px) {
+  .learning-heading {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 4.25rem;
+    gap: 0.75rem;
+    align-items: start;
+  }
+
+  .learning-header-visual .research-visual {
+    width: 4.25rem;
+    height: 4rem;
+  }
+}

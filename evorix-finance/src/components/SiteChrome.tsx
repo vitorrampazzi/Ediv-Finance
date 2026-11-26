@@ -76,14 +76,14 @@ export function SiteHeader({
       >
         <a
           href="#conteudo"
-          className="sr-only z-50 rounded bg-evo-primary px-4 py-2 text-white focus:not-sr-only focus:fixed focus:left-4 focus:top-4"
+          className="sr-only z-50 inline-flex min-h-11 items-center rounded bg-evo-primary px-4 py-2 text-white focus:not-sr-only focus:fixed focus:left-4 focus:top-4"
         >
           Pular para o conteúdo
         </a>
         <div className="relative mx-auto flex min-h-16 max-w-7xl items-center justify-between gap-3 px-4 py-3 sm:px-5 md:min-h-20 md:px-8">
           <Link
             to={user ? "/app" : "/"}
-            className="ediv-brand-link flex shrink-0 items-center gap-3"
+            className="ediv-brand-link flex min-h-11 shrink-0 items-center gap-3"
             aria-label="Escola do Dividendo, página inicial"
           >
             <img
@@ -252,7 +252,7 @@ export function SiteFooter({
           <div className="col-span-2 lg:col-span-1">
             <Link
               to={user ? "/app" : "/"}
-              className="inline-flex items-center gap-3"
+              className="inline-flex min-h-11 items-center gap-3"
               aria-label="Escola do Dividendo, página inicial"
             >
               <img

@@ -220,9 +220,9 @@ export function DividendCalendar() {
           Mês habitual de anúncio
         </span>
       </div>
-      <div className="mt-5 overflow-x-auto">
-        <div className="min-w-[420px]">
-          <div className="grid grid-cols-[44px_repeat(12,1fr)] gap-1.5 pb-1.5 font-fmk-mono text-[10px] text-fmk-dim">
+      <div className="mt-5">
+        <div>
+          <div className="grid grid-cols-[2.25rem_repeat(12,minmax(0,1fr))] gap-1 pb-1.5 font-fmk-mono text-xs text-fmk-dim">
             <span />
             {MONTHS.map((m, i) => (
               <span key={i} className="text-center">
@@ -230,13 +230,14 @@ export function DividendCalendar() {
               </span>
             ))}
           </div>
-          <div className="grid grid-cols-[44px_repeat(12,1fr)] items-center gap-1.5 py-[3px]">
-            <span className="font-fmk-mono text-[10px] text-fmk-sub">
+          <div className="grid grid-cols-[2.25rem_repeat(12,minmax(0,1fr))] items-center gap-1 py-[3px]">
+            <span className="font-fmk-mono text-xs text-fmk-sub">
               Meses
             </span>
             {MONTH_FULL.map((m, i) => (
               <span
                 key={m}
+                role="img"
                 data-month={i + 1}
                 data-announced={months?.includes(i + 1) || false}
                 aria-label={
@@ -345,7 +346,7 @@ function Axis({
   unit?: string;
 }) {
   return (
-    <div aria-hidden className="relative mt-2 h-4 text-[11px] text-fmk-dim">
+    <div aria-hidden className="relative mt-2 h-4 text-xs text-fmk-dim">
       {ticks.map((t, i) => (
         <span
           key={t}
@@ -426,7 +427,7 @@ function EarningsToDividend() {
         <dl className="grid grid-cols-2 gap-x-6 gap-y-5">
           <div className="col-span-2">
             <dt className="text-xs text-fmk-sub">Lucro líquido estimado</dt>
-            <dd className="mt-1 font-fmk-serif text-4xl tracking-tight text-fmk-teal">
+            <dd className={`mt-1 font-fmk-serif tracking-tight ${profit === null ? "text-base italic text-fmk-dim" : "text-4xl text-fmk-teal"}`}>
               {profit === null
                 ? "Não informado"
                 : Math.abs(profit) >= 1e9
@@ -470,7 +471,7 @@ function EarningsToDividend() {
                   )}
                 </div>
               </div>
-              <div className="mt-2 flex justify-between text-[11px] text-fmk-dim">
+              <div className="mt-2 flex justify-between text-xs text-fmk-dim">
                 <span>R$ 0</span>
                 <span>LPA estimado {brl(lpa)}</span>
               </div>
@@ -551,7 +552,7 @@ function EarningsGrowth() {
       }
     >
       <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
-        <span className="font-fmk-serif text-4xl tracking-tight text-fmk-teal">
+        <span className={`font-fmk-serif tracking-tight ${rateText === "Não informado" ? "text-base italic text-fmk-dim" : "text-4xl text-fmk-teal"}`}>
           {rateText}
         </span>
         <span className="text-sm text-fmk-sub">ao ano</span>
@@ -846,7 +847,7 @@ export function ValuationChart() {
     >
       <div className="grid gap-x-12 gap-y-8 md:grid-cols-[minmax(0,4fr)_minmax(0,8fr)] md:items-end">
         <div>
-          <p className="font-fmk-serif text-4xl tracking-tight text-fmk-teal">
+          <p className={`font-fmk-serif tracking-tight ${value("peDeviation") === "Não informado" ? "text-base italic text-fmk-dim" : "text-4xl text-fmk-teal"}`}>
             {value("peDeviation")}
           </p>
           <p className="mt-1 text-sm text-fmk-sub">

@@ -137,7 +137,7 @@ export const explanations: Partial<Record<DividendColumnKey, IndicatorHelp>> = {
 export const axisProps = {
   tick: {
     fill: "var(--fmk-dim)",
-    fontSize: 11,
+    fontSize: 12,
     fontFamily: "Instrument Sans, sans-serif",
   },
   axisLine: { stroke: "var(--fmk-line)" },

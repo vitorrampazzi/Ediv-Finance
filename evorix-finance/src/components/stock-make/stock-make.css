@@ -165,6 +165,20 @@
   white-space: nowrap;
   font-variant-numeric: tabular-nums;
 }
+/* Celular: valor longo quebra em vez de estourar a largura da tela. */
+@media (max-width: 639px) {
+  .figma-stock .fmk-exact {
+    white-space: normal;
+    overflow-wrap: anywhere;
+    min-width: 0;
+  }
+  /* Área de toque de 44 px no botão de ajuda, sem mudar o tamanho visual do ícone. */
+  .figma-stock .fmk-info::before {
+    content: "";
+    position: absolute;
+    inset: -10px;
+  }
+}
 .figma-stock .fmk-metric-row {
   min-width: 0;
 }

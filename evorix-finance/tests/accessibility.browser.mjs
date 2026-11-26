@@ -485,6 +485,28 @@ try {
         },
       );
       await interaction(
+        "Notificações: Enter, Tab para dentro do painel e Escape devolvem o foco ao sino",
+        async () => {
+          const trigger = page.getByRole("button", {
+            name: /^Notificações/,
+          });
+          await trigger.focus();
+          await trigger.press("Enter");
+          await expect(trigger).toHaveAttribute("aria-expanded", "true");
+          // Sem itens, o painel não tem nada focável: o Tab sai do menu e ele fecha. Nesse caso só o Escape é testado.
+          const dentro = page.locator(
+            "#ediv-notifications button, #ediv-notifications a[href]",
+          );
+          if ((await dentro.count()) > 0) {
+            await page.keyboard.press("Tab");
+            await expect(dentro.first()).toBeFocused();
+          }
+          await page.keyboard.press("Escape");
+          await expect(trigger).toHaveAttribute("aria-expanded", "false");
+          await expect(trigger).toBeFocused();
+        },
+      );
+      await interaction(
         "Menu lateral recolhido: nome e tooltip por teclado",
         async () => {
           await page

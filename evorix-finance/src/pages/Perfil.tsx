@@ -134,7 +134,7 @@ export const Perfil = () => {
               <span className="text-evo-textSec">exercícios concluídos</span>
             </p>
             <div
-              className="mt-3 h-1.5 overflow-hidden rounded-full bg-evo-bgSec"
+              className="mt-3 h-1.5 overflow-hidden rounded-full bg-evo-border"
               role="progressbar"
               aria-label="Progresso dos exercícios"
               aria-valuenow={completed.length}

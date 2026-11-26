@@ -25,7 +25,7 @@ export function InfoTip({
       <button
         type="button"
         aria-label={`O que é ${label}?`}
-        className="fmk-info inline-grid min-h-6 min-w-6 shrink-0 place-items-center align-middle"
+        className="fmk-info relative inline-grid min-h-6 min-w-6 shrink-0 place-items-center align-middle"
       >
         <span
           aria-hidden
@@ -72,7 +72,7 @@ export function Seg<T extends string>({
           disabled={disabled || disabledOptions.includes(o)}
           title={hint?.(o)}
           onClick={() => onChange(o)}
-          className={`min-h-8 min-w-10 whitespace-nowrap rounded px-3 font-fmk-mono text-xs transition-colors ${
+          className={`min-h-8 max-sm:min-h-11 min-w-10 whitespace-nowrap rounded px-3 font-fmk-mono text-xs transition-colors ${
             o === value
               ? "bg-fmk-raised text-fmk-ink ring-1 ring-fmk-line"
               : "text-fmk-sub hover:text-fmk-ink"
@@ -123,7 +123,7 @@ export function Legend({
               aria-pressed={on}
               disabled={disabled}
               onClick={() => onToggle(it.key)}
-              className={`group flex min-h-8 items-center gap-2 text-xs transition-opacity ${on ? "text-fmk-ink" : "text-fmk-dim line-through opacity-60"}`}
+              className={`group flex min-h-8 max-sm:min-h-11 items-center gap-2 text-xs transition-opacity ${on ? "text-fmk-ink" : "text-fmk-dim line-through opacity-60"}`}
             >
               <svg width="22" height="10" aria-hidden>
                 {it.marker ? (
@@ -212,7 +212,7 @@ export function ChartTip({
       className="min-w-40 rounded-md border border-fmk-line bg-fmk-raised px-3 py-2.5 text-xs shadow-none"
       style={{ maxWidth: "100%", overflowWrap: "anywhere" }}
     >
-      <div className="mb-2 border-b border-fmk-line pb-1.5 font-fmk-mono text-[11px] text-fmk-sub">
+      <div className="mb-2 border-b border-fmk-line pb-1.5 font-fmk-mono text-xs text-fmk-sub">
         {head}
       </div>
       <ul className="space-y-1.5">
@@ -255,7 +255,7 @@ export type DataKind = keyof typeof tagMap;
 export function Tag({ kind }: { kind: DataKind }) {
   const t = tagMap[kind];
   return (
-    <span className="inline-flex items-center gap-1.5 font-fmk-mono text-[10px] uppercase tracking-wider text-fmk-dim">
+    <span className="inline-flex items-center gap-1.5 font-fmk-mono text-xs uppercase tracking-wider text-fmk-dim">
       <span className={`size-2 rounded-full ${t.dot}`} aria-hidden />
       {t.label}
     </span>
@@ -278,7 +278,7 @@ export function SectionHead({
   return (
     <div className="mb-8 flex flex-wrap items-end justify-between gap-4 border-t border-fmk-line pt-8">
       <div className="max-w-2xl">
-        <div className="mb-2 font-fmk-mono text-[11px] uppercase tracking-[0.16em] text-fmk-dim">
+        <div className="mb-2 font-fmk-mono text-xs uppercase tracking-[0.16em] text-fmk-dim">
           {n} · {title}
         </div>
         <h2

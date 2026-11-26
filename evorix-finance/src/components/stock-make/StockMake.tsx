@@ -79,7 +79,7 @@ function Stat({
         <InfoTip label={label} text={tip} />
       </div>
       <div
-        className={`mt-1.5 font-fmk-serif text-[clamp(20px,7vw,28px)] leading-none [overflow-wrap:anywhere] md:text-3xl ${accent ? "text-fmk-teal" : ""}`}
+        className={`mt-1.5 font-fmk-serif leading-none [overflow-wrap:anywhere] ${children === "Não informado" ? "text-base italic text-fmk-dim md:text-lg" : `text-[clamp(20px,7vw,28px)] md:text-3xl ${accent ? "text-fmk-teal" : ""}`}`}
         data-summary-value
         title={title}
       >
@@ -87,7 +87,7 @@ function Stat({
       </div>
       {sub && (
         <div
-          className="mt-1.5 font-fmk-mono text-[11px] text-fmk-dim"
+          className="mt-1.5 font-fmk-mono text-xs text-fmk-dim"
           data-summary-sub
         >
           {sub}
@@ -121,13 +121,13 @@ function Header({
         {backLink}
 
         <div className="mt-4 flex flex-wrap items-end justify-between gap-6">
-          <div className="flex items-center gap-5">
+          <div className="flex items-center gap-5 max-sm:flex-col max-sm:items-start">
             <CompanyLogo ticker={company.ticker} size="lg" loading="eager" />
             <div>
               <h1
                 ref={titleRef}
                 tabIndex={-1}
-                className="font-fmk-serif text-4xl font-medium leading-tight tracking-tight md:text-5xl"
+                className="font-fmk-serif text-[1.75rem] font-medium leading-tight tracking-tight sm:text-4xl md:text-5xl"
               >
                 {company.short}
               </h1>
@@ -301,13 +301,13 @@ function Overview() {
           <div className="fmk-overview-figures fmk-overview-market">
             <div>
               <div className="text-sm text-fmk-sub">Valor de mercado</div>
-              <div className="mt-2 font-fmk-serif text-6xl leading-none tracking-tight md:text-7xl">
+              <div className={`mt-2 font-fmk-serif leading-none tracking-tight ${marketCapBi === null ? "text-lg italic text-fmk-dim md:text-xl" : "text-6xl md:text-7xl"}`}>
                 {marketCapBi === null ? "Não informado" : num(marketCapBi, 1)}
                 {marketCapBi !== null && (
                   <span className="ml-1 text-3xl text-fmk-sub">bi</span>
                 )}
               </div>
-              <p className="mt-3 font-fmk-mono text-[11px] text-fmk-dim">
+              <p className="mt-3 font-fmk-mono text-xs text-fmk-dim">
                 {value("totalShares")} ações · valor de mercado da fonte
               </p>
             </div>
@@ -347,7 +347,7 @@ function Overview() {
                   <div className="mx-auto h-5 w-px bg-fmk-ink" />
                 </div>
                 <div
-                  className="absolute -top-0.5 whitespace-nowrap font-fmk-mono text-[11px] text-fmk-ink"
+                  className="absolute -top-0.5 whitespace-nowrap font-fmk-mono text-xs text-fmk-ink"
                   style={{
                     left: `${trackPos}%`,
                     transform: `translateX(-${trackPos}%)`,
@@ -356,7 +356,7 @@ function Overview() {
                   {priceLabel}
                 </div>
                 <div
-                  className="absolute top-8 whitespace-nowrap font-fmk-mono text-[11px] text-fmk-amber"
+                  className="absolute top-8 whitespace-nowrap font-fmk-mono text-xs text-fmk-amber"
                   style={{
                     left: `${ceilingPos}%`,
                     transform: `translateX(-${ceilingPos}%)`,
@@ -365,7 +365,7 @@ function Overview() {
                   teto {brl(company.teto)}
                 </div>
                 {ceilingPos >= 30 && (
-                  <div className="absolute left-0 top-8 font-fmk-mono text-[11px] text-fmk-dim">
+                  <div className="absolute left-0 top-8 font-fmk-mono text-xs text-fmk-dim">
                     R$ 0
                   </div>
                 )}
@@ -393,7 +393,7 @@ function Overview() {
                     <Tag kind={kind} />
                   </span>
                   <span
-                    className={`w-28 text-right font-fmk-serif text-2xl ${tone}`}
+                    className={`w-28 text-right font-fmk-serif ${v === "Não informado" ? "text-base italic text-fmk-dim" : `text-2xl ${tone}`}`}
                   >
                     {v}
                   </span>
@@ -405,7 +405,7 @@ function Overview() {
 
         <div className="space-y-10 lg:col-span-5 lg:border-l lg:border-fmk-line lg:pl-10">
           <div>
-            <h3 className="font-fmk-mono text-[11px] uppercase tracking-[0.14em] text-fmk-dim">
+            <h3 className="font-fmk-mono text-xs uppercase tracking-[0.14em] text-fmk-dim">
               Entenda esta empresa
             </h3>
             <p className="mt-3 font-fmk-serif text-xl leading-snug">
@@ -413,7 +413,7 @@ function Overview() {
             </p>
           </div>
           <div>
-            <h3 className="font-fmk-mono text-[11px] uppercase tracking-[0.14em] text-fmk-dim">
+            <h3 className="font-fmk-mono text-xs uppercase tracking-[0.14em] text-fmk-dim">
               Insights quantitativos
             </h3>
             <ul className="fmk-overview-insights mt-4 divide-y divide-fmk-line-soft">
@@ -638,7 +638,7 @@ function Indicators() {
                 <li
                   key={it.label}
                   data-field={it.key}
-                  className="fmk-metric-row grid grid-cols-[1fr_auto] items-center gap-x-4 border-b border-fmk-line-soft py-3.5 sm:grid-cols-[minmax(0,1fr)_104px_auto_96px]"
+                  className="fmk-metric-row grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 border-b border-fmk-line-soft py-3.5 sm:grid-cols-[minmax(0,1fr)_104px_auto_96px]"
                 >
                   <span className="flex items-center gap-2 text-sm text-fmk-sub">
                     {it.label}
@@ -684,7 +684,7 @@ function Company() {
       />
       <div className="grid gap-12 lg:grid-cols-12">
         <div className="lg:col-span-7">
-          <h3 className="font-fmk-mono text-[11px] uppercase tracking-[0.14em] text-fmk-dim">
+          <h3 className="font-fmk-mono text-xs uppercase tracking-[0.14em] text-fmk-dim">
             Sobre a empresa
           </h3>
           <p className="mt-3 max-w-prose font-fmk-serif text-2xl leading-snug">
@@ -702,7 +702,7 @@ function Company() {
               <p>Indisponível nesta publicação.</p>
             </div>
           </div>
-          <h3 className="mt-12 font-fmk-mono text-[11px] uppercase tracking-[0.14em] text-fmk-dim">
+          <h3 className="mt-12 font-fmk-mono text-xs uppercase tracking-[0.14em] text-fmk-dim">
             Estrutura societária
           </h3>
           <p className="mt-4 text-sm text-fmk-sub">
@@ -711,7 +711,7 @@ function Company() {
         </div>
         <div className="space-y-10 lg:col-span-5 lg:border-l lg:border-fmk-line lg:pl-10">
           <div>
-            <h3 className="font-fmk-mono text-[11px] uppercase tracking-[0.14em] text-fmk-dim">
+            <h3 className="font-fmk-mono text-xs uppercase tracking-[0.14em] text-fmk-dim">
               Institucional
             </h3>
             <dl className="mt-3 divide-y divide-fmk-line-soft text-sm">
@@ -735,7 +735,7 @@ function Company() {
             </dl>
           </div>
           <div>
-            <h3 className="font-fmk-mono text-[11px] uppercase tracking-[0.14em] text-fmk-dim">
+            <h3 className="font-fmk-mono text-xs uppercase tracking-[0.14em] text-fmk-dim">
               Administração
             </h3>
             <p className="mt-3 text-sm text-fmk-sub">
@@ -743,7 +743,7 @@ function Company() {
             </p>
           </div>
           <div>
-            <h3 className="font-fmk-mono text-[11px] uppercase tracking-[0.14em] text-fmk-dim">
+            <h3 className="font-fmk-mono text-xs uppercase tracking-[0.14em] text-fmk-dim">
               Fatos relevantes
             </h3>
             <p className="mt-3 text-sm text-fmk-sub">
@@ -815,13 +815,13 @@ function Learn() {
         lede="Explicações curtas para ler cada indicador com mais segurança. Conteúdo educativo, sem recomendação personalizada."
       />
       <div className="grid gap-10 lg:grid-cols-12">
-        <ul
+        <div
           className="lg:col-span-6"
           role="tablist"
           aria-label="Perguntas frequentes"
         >
           {lessons.map((x, n) => (
-            <li key={x.q} className="border-b border-fmk-line-soft">
+            <div key={x.q} role="presentation" className="border-b border-fmk-line-soft">
               <button
                 role="tab"
                 tabIndex={n === i ? 0 : -1}
@@ -863,9 +863,9 @@ function Learn() {
                   {x.q}
                 </span>
               </button>
-            </li>
+            </div>
           ))}
-        </ul>
+        </div>
         <div
           id="fmk-lesson-panel"
           role="tabpanel"
@@ -878,7 +878,7 @@ function Learn() {
             className="mt-4 text-[15px] leading-relaxed text-fmk-sub"
           />
           <div className="mt-6 border-l-2 border-fmk-teal pl-4">
-            <div className="font-fmk-mono text-[11px] uppercase tracking-[0.14em] text-fmk-dim">
+            <div className="font-fmk-mono text-xs uppercase tracking-[0.14em] text-fmk-dim">
               Neste caso
             </div>
             <p className="mt-1 text-sm leading-relaxed">{l.ex}</p>

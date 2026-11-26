@@ -316,6 +316,16 @@ try {
               status: 200,
               json: publication,
             },
+            "/api/support/information": {
+              status: 200,
+              json: {
+                email: "",
+                hours: "",
+                professionalName: "",
+                category: "",
+                registration: "",
+              },
+            },
           };
           if (!responses[pathname]) unexpectedRequests.push(pathname);
           await route.fulfill(

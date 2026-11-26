@@ -27,7 +27,7 @@ export function AccountGate({
           <LockKeyhole size={18} aria-hidden="true" />
         </span>
         <div className="min-w-0">
-          <p className="text-[11px] font-semibold uppercase tracking-wider text-evo-accent">
+          <p className="text-xs font-semibold uppercase tracking-wider text-evo-accent">
             Conta gratuita
           </p>
           <h2 className="mt-1 font-semibold">{title}</h2>
