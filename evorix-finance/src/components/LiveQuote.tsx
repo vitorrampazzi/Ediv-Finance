@@ -80,9 +80,9 @@ const variants = {
   research: {
     root: "live-quote-block mb-12 border-b border-fmk-line pb-8",
     heading:
-      "font-fmk-mono text-[11px] uppercase tracking-[0.14em] text-fmk-dim",
+      "font-fmk-mono text-xs uppercase tracking-[0.14em] text-fmk-dim",
     card: "",
-    meta: "font-fmk-mono text-[11px] text-fmk-dim",
+    meta: "font-fmk-mono text-xs text-fmk-dim",
     price: "font-fmk-serif text-4xl leading-none tracking-tight",
     change: "font-fmk-mono text-sm",
     fields:

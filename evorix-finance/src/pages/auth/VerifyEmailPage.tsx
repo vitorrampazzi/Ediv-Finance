@@ -104,7 +104,7 @@ export function VerifyEmailPage() {
       </div>
       <Link
         to={authLink("entrar", destination)}
-        className="mt-5 inline-flex min-h-10 items-center gap-2 text-sm font-medium text-evo-accent hover:text-evo-accent"
+        className="mt-5 inline-flex min-h-11 items-center gap-2 text-sm font-medium text-evo-accent hover:text-evo-accent"
       >
         <ArrowLeft size={16} aria-hidden="true" /> Ir para entrar
       </Link>

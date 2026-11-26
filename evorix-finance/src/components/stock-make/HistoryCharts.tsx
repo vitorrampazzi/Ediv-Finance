@@ -86,7 +86,7 @@ function DividendTip({
       className="min-w-44 rounded-md border border-fmk-line bg-fmk-raised px-3 py-2.5 text-xs shadow-none"
       style={{ maxWidth: "100%", overflowWrap: "anywhere" }}
     >
-      <div className="mb-2 border-b border-fmk-line pb-1.5 font-fmk-mono text-[11px] text-fmk-sub">
+      <div className="mb-2 border-b border-fmk-line pb-1.5 font-fmk-mono text-xs text-fmk-sub">
         Pagos em {periodText(row.period)} · R$ por ação
       </div>
       <dl className="space-y-1.5">
@@ -106,7 +106,7 @@ function DividendTip({
               </dd>
             </div>
             {row[`${kind}Future`] > 0 && (
-              <p className="mt-0.5 text-right text-[11px] text-fmk-sub">
+              <p className="mt-0.5 text-right text-xs text-fmk-sub">
                 inclui {formatDividendPerShare(row[`${kind}Future`])} agendado
               </p>
             )}

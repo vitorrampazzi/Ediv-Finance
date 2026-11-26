@@ -37,9 +37,13 @@
 .company-logo--lg img {
   padding: 8px;
 }
-.company-logo-fallback {
+/* Mais específico que as regras de tipografia das páginas (ex.: `.ph-ranking-company-link span span`),
+   que antes davam 13 px e cor de texto claro ao código dentro do logo (reprovava no escuro). */
+.company-logo .company-logo-fallback {
+  color: #25333b;
   font: 600 9px/1.1 var(--ediv-font-sans);
   letter-spacing: -0.03em;
+  white-space: nowrap;
 }
 .company-logo--sm .company-logo-fallback {
   font-size: 7px;

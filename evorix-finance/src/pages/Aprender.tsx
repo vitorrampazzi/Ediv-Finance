@@ -22,6 +22,8 @@ import { LearningPlaylist } from "../components/LearningPlaylist";
 import { LearningCourseCarousel } from "../components/LearningCourseCarousel";
 import { LearningJourney } from "../components/LearningJourney";
 import { LearningQuiz } from "../components/LearningQuiz";
+import { OrbitCoins } from "../components/OrbitCoins";
+import "./aprender.css";
 import {
   approvedVideoEmbed,
   learningChapters,
@@ -107,6 +109,15 @@ function LearningSession({
   const [revision, setRevision] = useState(0);
   const [loadedRevision, setLoadedRevision] = useState<number | null>(null);
   const loading = loadedRevision !== revision || authLoading;
+  const loadingStatus = loading && (
+    <div
+      role="status"
+      className="space-y-3 border-l-2 border-evo-accent pl-4 text-sm text-evo-textSec"
+    >
+      <p>{content ? "Atualizando aulas e progresso…" : "Carregando aulas…"}</p>
+      {!content && <div aria-hidden="true" className="h-20 rounded-lg bg-evo-card/50" />}
+    </div>
+  );
   const [error, setError] = useState("");
   const [progressError, setProgressError] = useState<{
     lessonId?: string;
@@ -123,6 +134,10 @@ function LearningSession({
   const navigate = useNavigate();
   const tabLocation =
     location.key + location.pathname + location.search + location.hash;
+  // Na área da conta, o aviso de carregamento fica dentro do painel, onde
+  // entra o cartão da trilha: não empurra o painel quando some. No público,
+  // continua acima das abas, como antes.
+  const inAccount = location.pathname.startsWith("/app");
   const [tabState, setTabState] = useState({
     key: tabLocation,
     tab: "curso" as LearningTab,
@@ -380,24 +395,27 @@ function LearningSession({
       className="mx-auto max-w-6xl space-y-6 px-4 py-5 sm:space-y-9 sm:px-6 sm:py-8"
     >
       <header className="section-masthead section-masthead--sem-linha">
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between sm:gap-6">
-          <div className="min-w-0 flex-1">
+        <div className="learning-heading sm:flex sm:items-start sm:justify-between sm:gap-6">
+          <div className="learning-heading-copy min-w-0 flex-1">
             <p className="edition-label">Escola do Dividendo / Aprender</p>
-            <h1 className="display-title mt-3 max-w-3xl text-3xl sm:text-5xl">
+            <h1 className="display-title mt-3 max-w-3xl text-[1.75rem] sm:text-5xl">
               O que sustenta um dividendo?
             </h1>
             <p className="mt-3 max-w-2xl text-sm leading-6 text-evo-textSec">
               Aulas sobre análise de empresas e a distribuição de lucros.
             </p>
+            <p className="mt-3 inline-flex items-center gap-2 text-xs font-medium text-evo-textSec">
+              <BookOpen
+                size={16}
+                className="text-evo-accent"
+                aria-hidden="true"
+              />
+              Aulas e exercícios
+            </p>
           </div>
-          <p className="inline-flex shrink-0 items-center gap-2 self-start text-xs font-medium text-evo-textSec sm:mt-1">
-            <BookOpen
-              size={16}
-              className="text-evo-accent"
-              aria-hidden="true"
-            />
-            Aulas e exercícios
-          </p>
+          <div className="learning-header-visual shrink-0 self-start sm:self-center">
+            <OrbitCoins variant="learning" size="sm" />
+          </div>
         </div>
         <div className="mt-3 flex flex-wrap items-center justify-between gap-4 sm:mt-6">
           <p className="hidden text-sm text-evo-textSec sm:block">
@@ -422,7 +440,7 @@ function LearningSession({
         </div>
         {user && (
           <div
-            className="mt-3 h-1 bg-evo-bgMain"
+            className="mt-3 hidden h-1 bg-evo-border sm:block"
             role="progressbar"
             aria-label="Progresso dos exercícios"
             aria-valuenow={completed.length}
@@ -480,22 +498,7 @@ function LearningSession({
           </button>
         ))}
       </div>
-      {loading && (
-        <div
-          role="status"
-          className="space-y-3 border-l-2 border-evo-accent pl-4 text-sm text-evo-textSec"
-        >
-          <p>
-            {content ? "Atualizando aulas e progresso…" : "Carregando aulas…"}
-          </p>
-          {!content && (
-            <div
-              aria-hidden="true"
-              className="h-20 rounded-lg bg-evo-card/50"
-            />
-          )}
-        </div>
-      )}
+      {!inAccount && loadingStatus}
       {error && (
         <div className="notice-error space-y-3">
           <p role="alert">{error}</p>
@@ -526,10 +529,12 @@ function LearningSession({
         id="learning-panel-curso"
         aria-labelledby="learning-tab-curso"
         hidden={activeTab !== "curso"}
+        className="space-y-7"
       >
-        <p className="mb-5 rounded-xl border border-evo-border bg-evo-bgMain px-4 py-3 text-sm leading-6 text-evo-textSec">
+        <p className="rounded-xl border border-evo-border bg-evo-bgMain px-4 py-3 text-sm leading-6 text-evo-textSec">
           Os vídeos seguem a ordem do curso. Algumas falas citam aulas que ainda vão entrar no site.
         </p>
+        {inAccount && loadingStatus}
         {content && !authLoading && user && (
           <LearningJourney
             persisted={Boolean(user) || visitorProgress.persisted}
@@ -551,7 +556,7 @@ function LearningSession({
           <section
             ref={classroomRef}
             id="sala-de-aula"
-            className="scroll-mt-24 pt-7"
+            className="scroll-mt-24"
             aria-labelledby="classroom-title"
           >
             <p className="text-xs uppercase tracking-[0.14em] text-evo-textSec">
@@ -577,7 +582,7 @@ function LearningSession({
                 </span>
               )}
               <a
-                className="inline-flex min-h-9 items-center gap-1 text-evo-accent underline underline-offset-4"
+                className="inline-flex min-h-11 items-center gap-1 text-evo-accent underline underline-offset-4"
                 href="#cursos"
               >
                 <ArrowLeft size={13} aria-hidden="true" /> Todos os minicursos
@@ -670,7 +675,7 @@ function LearningSession({
                         {selectedLesson.sources.map((source) => (
                           <li key={source.url}>
                             <a
-                              className="inline-flex min-h-6 items-center text-evo-accent underline underline-offset-4"
+                              className="inline-flex min-h-11 items-center text-evo-accent underline underline-offset-4"
                               href={source.url}
                               target="_blank"
                               rel="noreferrer"
@@ -708,25 +713,28 @@ function LearningSession({
             )}
             <nav
               aria-label="Continuar o aprendizado"
-              className="mt-6 flex flex-col gap-3 pt-5 sm:flex-row sm:justify-between"
+              className="mt-6 flex flex-col gap-3 sm:flex-row sm:justify-between"
             >
               {previousLesson ? (
                 <button
                   type="button"
-                  className="action-secondary justify-center"
+                  className="action-secondary justify-center font-semibold sm:order-none"
                   onClick={() => selectLesson(previousLesson.id, true)}
                 >
                   <ArrowLeft size={15} aria-hidden="true" /> Aula anterior
                 </button>
               ) : (
-                <a href="#cursos" className="action-secondary justify-center">
+                <a
+                  href="#cursos"
+                  className="action-secondary justify-center font-semibold sm:order-none"
+                >
                   Escolher outro curso
                 </a>
               )}
               {nextLesson ? (
                 <button
                   type="button"
-                  className="action justify-center"
+                  className="action order-first justify-between sm:order-none sm:justify-center"
                   onClick={() => selectLesson(nextLesson.id, true)}
                 >
                   Próxima aula: {nextLesson.title}{" "}
@@ -735,7 +743,7 @@ function LearningSession({
               ) : nextCourseId ? (
                 <button
                   type="button"
-                  className="action justify-center"
+                  className="action order-first justify-between sm:order-none sm:justify-center"
                   onClick={() => selectLesson(nextCourseId, true)}
                 >
                   Próximo curso: {nextCourse?.title}{" "}
@@ -752,6 +760,7 @@ function LearningSession({
         aria-labelledby="learning-tab-testes"
         hidden={activeTab !== "testes"}
       >
+        {inAccount && loadingStatus}
         {activeTab === "testes" &&
           (!user ? (
             <AccountGate
@@ -793,7 +802,7 @@ function LearningSession({
             </p>
           ))}
       </section>
-      <footer className="flex flex-wrap items-center justify-between gap-4 pt-6">
+      <footer className="flex flex-wrap items-center justify-between gap-3 pt-6">
         <Link to={user ? "/app/ranking" : "/ranking"} className="action">
           Abrir pesquisas do ranking <ArrowRight size={16} aria-hidden="true" />
         </Link>
@@ -806,7 +815,7 @@ function LearningSession({
         {user && (
           <button
             type="button"
-            className="action-secondary"
+            className="action-secondary font-semibold"
             disabled={
               progressBusy ||
               loading ||
@@ -855,13 +864,13 @@ function LearningSession({
             {progressError.message}
           </p>
         )}
-        <p className="w-full text-xs leading-relaxed text-evo-textSec">
+        <p className="mt-3 w-full text-xs leading-relaxed text-evo-textSec">
           Aprofunde seus estudos no{" "}
           <a
             href="https://www.gov.br/investidor/pt-br"
             target="_blank"
             rel="noreferrer"
-            className="underline"
+            className="inline! min-h-0! underline"
           >
             Portal do Investidor, da CVM
             <span className="sr-only"> (abre em nova guia)</span>

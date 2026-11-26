@@ -226,7 +226,7 @@ function MemberRankingHighlights() {
                       "Margem de segurança",
                     ].map((label) => (
                       <div key={label} className="min-w-0">
-                        <dt className="text-[0.6875rem] leading-4 text-evo-textSec sm:text-xs">
+                        <dt className="text-[0.75rem] leading-4 text-evo-textSec sm:text-xs">
                           {label}
                         </dt>
                         <dd className="mt-1 font-numbers text-base sm:text-lg">
@@ -293,7 +293,7 @@ function MemberRankingHighlights() {
                   {kpis(entry, showingDemo, views?.get(entry.ticker)).map(
                     ([label, value, qualifier, title]) => (
                       <div key={label} className="min-w-0" data-kpi={label}>
-                        <dt className="text-[0.6875rem] leading-4 text-evo-textSec sm:text-xs">
+                        <dt className="text-[0.75rem] leading-4 text-evo-textSec sm:text-xs">
                           {label}
                         </dt>
                         <dd
@@ -303,7 +303,7 @@ function MemberRankingHighlights() {
                           {value}
                         </dd>
                         {qualifier && (
-                          <dd className="text-[0.6875rem] leading-4 text-evo-textSec">
+                          <dd className="text-[0.75rem] leading-4 text-evo-textSec">
                             {qualifier}
                           </dd>
                         )}

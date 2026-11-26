@@ -342,14 +342,14 @@ export const DashboardLayout = () => {
 
   return (
     <div className="account-workspace flex min-h-screen bg-evo-bgMain font-sans text-evo-textMain">
-      <nav aria-label="Atalho para o conteúdo">
+      <div>
         <a
           href="#conteudo"
-          className="sr-only z-50 rounded bg-evo-primary px-4 py-2 text-white focus:not-sr-only focus:fixed focus:left-4 focus:top-4"
+          className="sr-only z-50 inline-flex min-h-11 items-center rounded bg-evo-primary px-4 py-2 text-white focus:not-sr-only focus:fixed focus:left-4 focus:top-4"
         >
           Pular para o conteúdo
         </a>
-      </nav>
+      </div>
       <aside
         className={`ediv-account-sidebar hidden shrink-0 transition-[width] duration-200 motion-reduce:transition-none lg:sticky lg:top-0 lg:flex lg:h-screen lg:min-h-0 lg:flex-col ${collapsed ? "w-20" : "w-60"}`}
       >
